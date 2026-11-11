@@ -1,0 +1,16 @@
+const {chromium}=require('playwright');
+(async()=>{const b=await chromium.launch();const ctx=await b.newContext({viewport:{width:390,height:844},hasTouch:true,isMobile:true});const p=await ctx.newPage();const errs=[];p.on('pageerror',e=>errs.push(e.message));await p.goto('file://'+__dirname+'/page.html');await p.waitForTimeout(500);
+let pass=0;const fails=[];const ok=(c,m)=>{if(c)pass++;else fails.push(m);};const R=(f,a)=>p.evaluate(f,a);const go=async(v,a)=>{await R(([v,a])=>window.__lifeos.App.go(v,a||{}),[v,a]);await p.waitForTimeout(200);};const text=()=>p.locator('#view').innerText();
+const ad=n=>{const d=new Date();d.setDate(d.getDate()+n);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;};
+await R(([a,b,t])=>{const L=window.__lifeos;L.put(Object.assign({},L.get.settings(),{carryOver:true,introDone:true}),{silent:true});
+const T=(id,title,x)=>L.put(Object.assign({id,kind:'task',title,notes:'',steps:[],date:null,time:null,repeat:{type:'never',end:null},reminder:null,deadline:null,priority:'normal',part:null,area:null,createdAt:Date.now()},x),{silent:true});
+T('l1','Late one',{date:a,nudgeOff:t});T('r1','Water plants',{date:t,repeat:{type:'custom',n:1,unit:'day',end:null}});T('u1','Later thing',{date:b});T('d1','Finished',{date:t,doneDates:{[t]:Date.now()}});
+L.put({id:'hp',kind:'habit',title:'Floss',days:[0,2,4],logs:{},color:'sage',createdAt:Date.now()-20*864e5,startDate:a,paused:true,pausedAt:Date.now()-10*864e5},{silent:true});
+L.put({id:'hw',kind:'habit',title:'Run',days:[],target:3,logs:{},color:'sage',createdAt:Date.now()-20*864e5},{silent:true});L.App.refresh();},[ad(-4),ad(3),ad(0)]);
+await go('tasks');let t=await text();ok(/4 days late/.test(t),'late label');ok(/Daily/.test(t)&&!/Repeats/.test(t),'repeat label');
+await p.locator('#view .chip',{hasText:'Upcoming'}).first().click();await p.waitForTimeout(250);t=await text();ok(/Today\s*2/.test(t),'today count kept '+t.slice(0,200));ok(!/Done today/.test(t),'no done bar on upcoming');
+await p.locator('#view .chip',{hasText:'Today'}).first().click();await p.waitForTimeout(250);ok(/Done today/.test(await text()),'done bar on today');
+await go('habit',{id:'hp'});t=await text();ok(/Resume habit/.test(t)&&!/Skip today/.test(t)&&!/Done today/.test(t),'paused page');ok((await p.locator('.calgrid .miss').count())===0,'no missed while paused');
+await p.getByRole('button',{name:/Status/}).click();await p.waitForTimeout(250);ok(/Active/.test(await text()),'status toggles');
+await go('habit',{id:'hw'});t=await text();ok(!/Skip today/.test(t)&&/Done today/.test(t),'weekly no skip');
+ok(!errs.length,'errs '+errs);console.log(JSON.stringify({pass,fails},null,1));await b.close();})().catch(e=>{console.log('CRASH',e.message.slice(0,500));process.exit(1);});

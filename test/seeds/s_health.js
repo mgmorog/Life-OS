@@ -1,0 +1,11 @@
+E('Health','workouts',{what:'Run',min:32,miles:3.1,feel:'Steady',date:ad(-1)});E('Health','workouts',{what:'Upper body',min:45,feel:'Hard',date:ad(-3)});E('Health','workouts',{what:'Yoga',min:30,feel:'Easy',date:ad(-6)});E('Health','workouts',{what:'Run',min:40,miles:4,feel:'Steady',date:ad(-9)});
+E('Health','workouts',{t:'routine',what:'Push day',kind:'Strength',min:50,ex:'Bench press, 3 x 8, 140\nOverhead press, 3 x 10, 75\nDips, 3 x 12'});
+E('Health','meals',{meal:'Breakfast',what:'Oatmeal and berries',tag:'None',date:ad(0)});E('Health','meals',{meal:'Lunch',what:'Chicken salad',tag:'Prep',date:ad(0)});E('Health','meals',{meal:'Dinner',what:'Tacos',tag:'Out',date:ad(-1)});
+E('Health','meals',{t:'recipe',what:'Sheet pan salmon',min:25,serves:2,ing:'Salmon\nBroccoli\nLemon',how:'Roast at 425 for 15 min'});
+E('Health','measure',{what:'Weight',unit:'lb',logs:[{date:ad(-28),v:198},{date:ad(-21),v:197},{date:ad(-14),v:195.5},{date:ad(-7),v:195},{date:ad(-1),v:194}]});
+E('Health','measure',{what:'Blood pressure, top number',unit:'mmHg',logs:[{date:ad(-20),v:128},{date:ad(-2),v:122}]});
+E('Health','care',{what:'Dentist cleaning',who:'Dr. Patel',date:ad(9),time:'14:30',every:180,last:ad(-170),qs:'Ask about night guard'});
+E('Health','care',{what:'Annual physical',who:'Dr. Lee',every:365,last:ad(-400)});E('Health','care',{what:'Eye exam',every:730,last:ad(-200)});
+E('Health','care',{t:'med',what:'Vitamin D',time:'08:00',note:'1 tablet with food',supply:4});E('Health','care',{t:'med',what:'Allergy pill',time:'21:00',note:'1 tablet',supply:40});
+E('Health','care',{t:'provider',what:'Dr. Lee',note:'Primary care',phone:'716-555-0100'});E('Health','care',{t:'ins',what:'Medical',carrier:'BlueCross',member:'XJ1234567',group:'88231',phone:'800-555-0199'});
+E('Health','checkin',{e:'Good',water:6,sleep:7.5,date:ad(-1)});E('Health','checkin',{e:'Low',water:3,sleep:5,note:'Late night',date:ad(-2)});E('Health','checkin',{e:'OK',water:5,sleep:7,date:ad(-3)});

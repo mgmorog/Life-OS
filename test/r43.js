@@ -1,0 +1,17 @@
+const {chromium}=require('playwright');
+(async()=>{const b=await chromium.launch();const p=await (await b.newContext({viewport:{width:390,height:844},hasTouch:true,isMobile:true})).newPage();const errs=[];p.on('pageerror',e=>errs.push(e.message));await p.goto('file://'+__dirname+'/page.html');await p.waitForTimeout(500);
+let pass=0;const fails=[];const ok=(c,m)=>{if(c)pass++;else fails.push(m);};const R=(f,a)=>p.evaluate(f,a);const text=()=>p.locator('#view').innerText();
+const ad=n=>{const d=new Date();d.setDate(d.getDate()+n);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;};
+await R(([y5,y3])=>{const L=window.__lifeos;L.put(Object.assign({},L.get.settings(),{introDone:true}),{silent:true});
+L.put({id:'p2',kind:'project',title:'Taxes',area:'Finances',deadline:y3,createdAt:Date.now()-864e5*30},{silent:true});L.put({id:'p4',kind:'project',title:'Garage',createdAt:Date.now()},{silent:true});
+const T=(id,title,x)=>L.put(Object.assign({id,kind:'task',title,notes:'',steps:[],date:null,time:null,repeat:{type:'never',end:null},reminder:null,deadline:null,priority:'normal',part:'p2',order:0,createdAt:Date.now()-864e5*30},x),{silent:true});
+T('a','Gather W-2s',{date:y5});T('b','Send to accountant',{order:1});L.App.go('projects');},[ad(-5),ad(-3)]);
+await p.waitForTimeout(250);let t=await text();ok(/Gather W-2s/.test(t)&&/5 days late/.test(t),'next task on card, late');ok(/3 days late/.test(t)&&!/No progress/.test(t),'late wins over stale');
+await R(()=>window.__lifeos.App.go('plan',{id:'p2'}));await p.waitForTimeout(250);t=await text();ok(!/^Project ·/m.test(t)&&!/Overdue/.test(t)&&/3 days late/.test(t),'plan header');
+await R(()=>window.__lifeos.App.go('plan',{id:'p4'}));await p.waitForTimeout(250);t=await text();ok(/List the steps/.test(t)&&!/Plan in Studio/.test(t)&&!/Press and hold/.test(t),'empty project');
+await R(()=>window.__lifeos.App.go('plan',{id:'p2'}));await p.waitForTimeout(250);
+await p.getByRole('button',{name:'Options'}).click();await p.waitForTimeout(250);await p.getByText('Mark done',{exact:true}).click();await p.waitForTimeout(400);
+ok(/2 tasks are still open/.test(await p.locator('.sheet').last().innerText()),'finish asks');
+await p.locator('.sheet').last().getByRole('button',{name:/Mark them done too/}).click();await p.waitForTimeout(400);
+ok(await R(()=>window.__lifeos.get.id('p2').finished&&!window.__lifeos.get.all('task').some(t=>t.part==='p2'&&!Object.keys(t.doneDates||{}).length)),'tasks closed');
+ok(!errs.length,'errs '+errs);console.log(JSON.stringify({pass,fails},null,1));await b.close();})().catch(e=>{console.log('CRASH',e.message.slice(0,500));process.exit(1);});

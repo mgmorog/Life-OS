@@ -1,0 +1,17 @@
+const {chromium}=require('playwright');
+(async()=>{const b=await chromium.launch();const p=await (await b.newContext({viewport:{width:390,height:844},hasTouch:true,isMobile:true})).newPage();const errs=[];p.on('pageerror',e=>errs.push(e.message));await p.goto('file://'+__dirname+'/page.html');await p.waitForTimeout(500);
+let pass=0;const fails=[];const ok=(c,m)=>{if(c)pass++;else fails.push(m);};const R=(f,a)=>p.evaluate(f,a);const text=()=>p.locator('#view').innerText();
+const ad=n=>{const d=new Date();d.setDate(d.getDate()+n);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;};
+await R(([y,t,f])=>{const L=window.__lifeos;L.put(Object.assign({},L.get.settings(),{introDone:true,carryOver:true}),{silent:true});L.put({id:'pj',kind:'project',title:'Kitchen remodel',area:'Home',createdAt:Date.now()},{silent:true});
+const T=(id,title,x)=>L.put(Object.assign({id,kind:'task',title,notes:'',steps:[],date:null,time:null,repeat:{type:'never',end:null},reminder:null,deadline:null,priority:'normal',part:null,area:null,createdAt:Date.now()},x),{silent:true});
+T('a','Plain today',{date:t});T('h','Urgent today',{date:t,priority:'high'});T('dl','Taxes',{deadline:y});T('dt','Due today thing',{deadline:t});T('df','Later due',{deadline:f});T('pp','Cabinets',{date:t,part:'pj',area:'Home'});L.App.go('tasks');},[ad(-1),ad(0),ad(4)]);
+await p.waitForTimeout(250);let t=await text();
+ok(/4 left today|5 left today/.test(t)&&/5 left today/.test(t),'count '+t.slice(0,60));
+const ov=t.split('TODAY')[0];ok(/Taxes/.test(ov)&&/Due yesterday/.test(ov),'deadline overdue in overdue');ok(/Due today thing/.test(t.split('TODAY')[1]||''),'due today in today');
+ok(t.indexOf('Urgent today')<t.indexOf('Plain today'),'high first');ok((await p.locator('.oflag').count())===1,'flag shown');
+ok(/Kitchen remodel/.test(t)&&!/Cabinets\nHome/.test(t),'project in meta');
+await p.locator('#view .oviews .chip',{hasText:'Anytime'}).click();await p.waitForTimeout(250);t=await text();ok(/Later due/.test(t)&&!/Taxes/.test(t),'anytime excludes due');
+await p.locator('#view .oviews .chip',{hasText:'Today'}).first().click();await p.waitForTimeout(250);
+await p.locator('.tick-host',{hasText:'Taxes'}).locator('.tick').click();await p.waitForTimeout(1300);t=await text();ok(/4 left today/.test(t),'tick deadline task '+t.slice(0,60));
+await R(()=>window.__lifeos.App.go('today'));await p.waitForTimeout(300);
+ok(!errs.length,'errs '+errs);console.log(JSON.stringify({pass,fails},null,1));await b.close();})().catch(e=>{console.log('CRASH',e.message.slice(0,500));process.exit(1);});

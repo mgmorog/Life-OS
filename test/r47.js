@@ -1,0 +1,27 @@
+const {chromium}=require('playwright');
+(async()=>{const b=await chromium.launch();const p=await (await b.newContext({viewport:{width:390,height:844},hasTouch:true,isMobile:true})).newPage();const errs=[];p.on('pageerror',e=>errs.push(e.message));await p.goto('file://'+__dirname+'/page.html');await p.waitForTimeout(500);
+let pass=0;const fails=[];const ok=(c,m)=>{if(c)pass++;else fails.push(m);};const R=(f,a)=>p.evaluate(f,a);const text=()=>p.locator('#view').innerText();
+await R(()=>{const L=window.__lifeos;L.put(Object.assign({},L.get.settings(),{introDone:true}),{silent:true});});
+await R(()=>{const L=window.__lifeos,ad=n=>{const d=new Date();d.setDate(d.getDate()+n);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;};
+const areas=['Work','Home','Health',null,'Finances'];let n=0;
+for(let i=1;i<56;i++){const cnt=1+(i%3);for(let j=0;j<cnt;j++){const done=(i+j)%4!==0;L.put({id:'t'+(n++),kind:'task',title:'Task '+n,date:ad(-i),repeat:{type:'never'},steps:[],area:areas[(i+j)%5],doneDates:done?{[ad(-i)]:Date.now()-i*864e5}:{},createdAt:Date.now()-60*864e5},{silent:true});}}
+L.put({id:'late1',kind:'task',title:'Call the bank',date:ad(-3),repeat:{type:'never'},steps:[],createdAt:Date.now()},{silent:true});L.put({id:'late2',kind:'task',title:'Return library books',date:ad(-1),repeat:{type:'never'},steps:[],createdAt:Date.now()},{silent:true});
+const logs={};for(let i=1;i<56;i++)if(i%3)logs[ad(-i)]=true;L.put({id:'h1',kind:'habit',title:'Meditate',days:[0,1,2,3,4,5,6],logs,area:'Health',createdAt:Date.now()-60*864e5,startDate:ad(-60)},{silent:true});
+const wl={};for(let i=1;i<56;i+=3)wl[ad(-i)]=true;L.put({id:'h2',kind:'habit',title:'Gym',days:[],target:3,logs:wl,area:'Health',createdAt:Date.now()-60*864e5,startDate:ad(-60)},{silent:true});
+L.put({id:'b1',kind:'block',title:'Team meeting',date:ad(-60),start:600,dur:60,repeat:{type:'weekly'},createdAt:Date.now()-60*864e5},{silent:true});
+L.put({id:'g1',kind:'goal',title:'Run a half marathon',track:'milestones',steps:[{id:'m',t:'5K',d:true}, {id:'m2',t:'10K'}],deadline:ad(70),createdAt:Date.now()-30*864e5},{silent:true});
+L.put({id:'rv1',kind:'review',period:'week',week:ad(-13),wins:'Shipped the intake form',blocks:'Too many meetings',next:'Protect mornings',createdAt:Date.now()-7*864e5,stats:{done:12,open:3,habit:6}},{silent:true});
+L.put({id:'rv2',kind:'review',period:'month',week:ad(-38),wins:'Good month for health',next:'Budget review',createdAt:Date.now()-38*864e5},{silent:true});
+L.put({id:'i1',kind:'idea',title:'Look into standing desks',createdAt:Date.now()},{silent:true});
+L.App.refresh();});
+await R(()=>window.__lifeos.App.go('reviews'));await p.waitForTimeout(300);let t=await text();
+ok(/October \d{4} review/.test(t),'month review title');ok(/last one/.test(t),'last review shown');
+await p.locator('#view .li',{hasText:'Week of'}).first().click();await p.waitForTimeout(400);ok(/finished/.test(await p.locator('.sheet').last().innerText()),'stats in past review');
+await R(()=>{document.querySelectorAll('.sheet,.scrim').forEach(x=>x.remove());document.documentElement.classList.remove('sheet-up');document.body.style.cssText='';window.__lifeos.App.state.rv=null;window.__lifeos.App.go('review');});await p.waitForTimeout(300);
+await R(()=>window.scrollTo(0,document.documentElement.scrollHeight));await p.waitForTimeout(100);await p.getByRole('button',{name:'Next',exact:true}).click();await p.waitForTimeout(300);t=await text();
+ok(/Show all \d+/.test(t),'open loops capped');const n0=await R(()=>window.__lifeos.get.all('task').filter(x=>!x.archived).length);
+await p.getByRole('button',{name:/Drop \d+ older/}).click();await p.waitForTimeout(300);ok(await R(n=>window.__lifeos.get.all('task').filter(x=>!x.archived).length<n,n0),'bulk drop');
+await p.locator('#toast button').click();await p.waitForTimeout(300);ok(await R(n=>window.__lifeos.get.all('task').filter(x=>!x.archived).length===n,n0),'bulk drop undo');
+await R(()=>window.__lifeos.App.go('insights'));await p.waitForTimeout(300);t=await text();
+ok(/points on the 4 weeks before|Same as the 4 weeks before/.test(t),'trend');ok(/Habits kept/i.test(t),'habits card');ok(/Still open from past days/i.test(t),'open card');
+ok(!errs.length,'errs '+errs);console.log(JSON.stringify({pass,fails},null,1));await b.close();})().catch(e=>{console.log('CRASH',e.message.slice(0,500));process.exit(1);});

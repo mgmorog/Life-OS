@@ -1,0 +1,10 @@
+const {chromium}=require('playwright');
+(async()=>{const b=await chromium.launch();const p=await (await b.newContext({viewport:{width:390,height:844},hasTouch:true,isMobile:true})).newPage();const errs=[];p.on('pageerror',e=>errs.push(e.message));await p.goto('file://'+__dirname+'/page.html');await p.waitForTimeout(500);
+let pass=0;const fails=[];const ok=(c,m)=>{if(c)pass++;else fails.push(m);};const R=(f,a)=>p.evaluate(f,a);const text=()=>p.locator('#view').innerText();const sh=()=>p.locator('.sheet').last();
+await R(()=>{const L=window.__lifeos;L.put(Object.assign({},L.get.settings(),{introDone:true}),{silent:true});const I=(id,title,x)=>L.put(Object.assign({id,kind:'idea',title,notes:'',photos:[],createdAt:Date.now()-864e5},x||{}),{silent:true});
+I('u','https://www.nytimes.com/2026/11/01/well/sleep-tips.html');I('p','Unnamed Idea',{photos:[{url:'data:image/png;base64,iVBORw0KGgo='}]});I('n','Pay car insurance by Friday',{notes:'Policy ends the 15th\nCall agent'});I('w','Look into www.example.com later');L.App.go('inbox');});
+await p.waitForTimeout(250);let t=await text();
+ok(/Sleep tips · nytimes\.com/.test(t)&&!/https:\/\/www\.nytimes/.test(t),'url label');ok(/Photo from /.test(t)&&!/Unnamed Idea/.test(t),'photo label');ok(/Policy ends the 15th/.test(t),'note preview');ok(/Look into www\.example\.com later/.test(t),'sentence with url kept');
+await p.locator('.otidy').click();await p.waitForTimeout(400);const s=await sh().innerText();ok(/Delete/.test(s)&&/(Keep for later|Later)/.test(s),'tidy actions');
+const bb=await sh().getByRole('button',{name:/^Delete$/}).boundingBox();ok(bb&&bb.y+bb.height<844,'actions above fold');
+ok(!errs.length,'errs '+errs);console.log(JSON.stringify({pass,fails},null,1));await b.close();})().catch(e=>{console.log('CRASH',e.message.slice(0,500));process.exit(1);});

@@ -1,0 +1,10 @@
+const {chromium}=require('playwright');
+(async()=>{const b=await chromium.launch();const p=await (await b.newContext({viewport:{width:390,height:844},hasTouch:true,isMobile:true})).newPage();const errs=[];p.on('pageerror',e=>errs.push(e.message));await p.goto('file://'+__dirname+'/page.html');await p.waitForTimeout(500);
+let pass=0;const fails=[];const ok=(c,m)=>{if(c)pass++;else fails.push(m);};const R=(f,a)=>p.evaluate(f,a);const text=()=>p.locator('#view').innerText();
+await R(()=>{const L=window.__lifeos,ad=n=>{const d=new Date();d.setDate(d.getDate()+n);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;};L.put(Object.assign({},L.get.settings(),{introDone:true}),{silent:true});
+const H=(id,x)=>L.put(Object.assign({id,kind:'habit',title:id,days:[0,1,2,3,4,5,6],target:7,logs:{},color:'sage',createdAt:Date.now()-864e5*40,startDate:ad(-40)},x),{silent:true});
+H('Water',{track:'count',goalN:8,unit:'glasses'});H('Gym',{days:[],target:3});H('Floss',{paused:true,pausedAt:Date.now()});H('Old',{archived:true,archivedAt:Date.now()});L.App.state.habTab='all';L.App.go('habits');});
+await p.waitForTimeout(250);let t=await text();ok(/8 glasses · Every day/.test(t),'goal in list');ok(/Paused\s*1\b/.test(t),'paused count '+t.slice(0,200));
+await R(()=>{window.__lifeos.App.state.habTab='today';window.__lifeos.App.refresh();});await p.waitForTimeout(250);t=await text();ok(/Plan (it|them) on a free day|the week is full|days? left|Planned for/i.test(t),'weekly note '+t);
+await R(()=>window.__lifeos.App.go('habit',{id:'Water'}));await p.waitForTimeout(250);t=await text();ok(/Last 30 days/.test(t),'30 day stat');
+ok(!errs.length,'errs '+errs);console.log(JSON.stringify({pass,fails},null,1));await b.close();})().catch(e=>{console.log('CRASH',e.message.slice(0,500));process.exit(1);});

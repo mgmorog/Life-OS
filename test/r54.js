@@ -1,0 +1,25 @@
+const {chromium}=require('playwright');
+(async()=>{const b=await chromium.launch();const ctx=await b.newContext({viewport:{width:390,height:844}});const p=await ctx.newPage();const errs=[];p.on('pageerror',e=>errs.push(e.message));await p.goto('file://'+__dirname+'/page.html');await p.waitForTimeout(500);
+let pass=0;const fails=[];const ok=(c,m)=>{if(c)pass++;else fails.push(m);};const R=(f,a)=>p.evaluate(f,a);const text=()=>p.locator('#view').innerText();const menu=async l=>{await p.locator('.menu button,[role=menu] button',{hasText:l}).first().click();await p.waitForTimeout(300);};
+const ad=n=>{const d=new Date();d.setDate(d.getDate()+n);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;};
+const swipe=(sel,txt,from,to)=>R(([sel,txt,from,to])=>{const n=[...document.querySelectorAll(sel)].find(x=>x.innerText.includes(txt));const T=(type,x)=>n.dispatchEvent(new TouchEvent(type,{touches:type==='touchend'?[]:[new Touch({identifier:1,target:n,clientX:x,clientY:300})],changedTouches:[new Touch({identifier:1,target:n,clientX:x,clientY:300})],bubbles:true}));T('touchstart',from);T('touchmove',(from+to)/2);T('touchmove',to);T('touchend',to);},[sel,txt,from,to]);
+await R(([t,y,old])=>{const L=window.__lifeos;L.put(Object.assign({},L.get.settings(),{introDone:true,carryOver:false}),{silent:true});
+const T=(id,title,x)=>L.put(Object.assign({id,kind:'task',title,notes:'',steps:[],date:null,time:null,repeat:{type:'never',end:null},priority:'normal',createdAt:Date.now()},x),{silent:true});
+T('a','Swipe done',{date:t});T('b','Swipe later',{date:t});T('c','Deadline only',{deadline:ad5()});function ad5(){const d=new Date();d.setDate(d.getDate()+5);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
+T('d','Finished y',{date:y,doneDates:{[y]:Date.now()-864e5}});T('o','Old overdue',{date:old});
+L.put({id:'p1',kind:'project',title:'Garage',createdAt:Date.now()},{silent:true});
+for(let i=0;i<2;i++)L.put({id:'iold'+i,kind:'idea',title:'Ancient '+i,notes:'',photos:[],createdAt:Date.now()-90*864e5},{silent:true});
+L.App.state.taskTab='today';L.App.go('tasks');},[ad(0),ad(-1),ad(-3)]);
+await p.waitForTimeout(300);
+const qa=p.locator('#li-new-task');await qa.fill('Pay rent Friday ! #fin');await p.waitForTimeout(200);let t=await text();ok(/High priority/.test(t)&&/Finances/.test(t),'quick add chips');await qa.press('Enter');await p.waitForTimeout(300);
+ok(await R(()=>{const x=window.__lifeos.get.all('task').find(t=>t.title==='Pay rent');return x&&x.priority==='high'&&x.area==='Finances';}),'quick add parsed');
+await p.mouse.move(5,5);await p.locator('#view .li',{hasText:'Swipe later'}).click({button:'right'});await p.waitForTimeout(250);ok(await p.getByText('Mark high priority').count()>0,'priority in menu');await menu('Add to a project');await p.locator('.sheet .li',{hasText:'Garage'}).click();await p.waitForTimeout(300);ok(await R(()=>window.__lifeos.get.id('b').part==='p1'),'add to project');
+await swipe('.swr .li','Swipe done',100,260);await p.waitForTimeout(400);ok(await R(t=>!!(window.__lifeos.get.id('a').doneDates||{})[t],ad(0)),'swipe right done');
+await swipe('.swr .li','Swipe later',300,120);await p.waitForTimeout(500);ok(await R(t=>window.__lifeos.get.id('b').date===t,ad(1)),'swipe left tomorrow');
+await R(()=>{window.__lifeos.App.state.taskTab='anytime';window.__lifeos.App.refresh();});await p.waitForTimeout(300);await p.getByRole('button',{name:'Do Deadline only today'}).click();await p.waitForTimeout(300);ok(await R(t=>window.__lifeos.get.id('c').date===t,ad(0)),'do it today');
+await R(()=>{window.__lifeos.App.state.taskTab='done';window.__lifeos.App.refresh();});await p.waitForTimeout(300);t=await text();ok(/YESTERDAY/i.test(t)&&/Finished y/.test(t),'done grouped');
+await R(()=>window.__lifeos.App.go('today'));await p.waitForTimeout(400);t=await text();ok(/1 overdue ›/.test(t),'overdue pill '+t.slice(0,200));
+const hb=p.getByRole('button',{name:'Hide finished items'});ok(await hb.count()>0,'hide toggle');if(await hb.count()){await hb.click();await p.waitForTimeout(300);ok(!/Swipe done/.test(await p.locator('.anytime').innerText().catch(()=>'')),'done hidden');}
+await R(()=>window.__lifeos.App.go('inbox'));await p.waitForTimeout(300);await p.getByRole('button',{name:/options|More/i}).first().click().catch(()=>{});await p.waitForTimeout(250);ok(await p.getByText(/Clear 2 older than 60 days/).count()>0,'clear old menu');await p.keyboard.press('Escape');
+const n0=await R(()=>window.__lifeos.get.all('idea').length);await p.locator('.ocapt').click();await p.waitForTimeout(400);await p.locator('#f-cap-notes').fill('- Eggs idea\n- Call Sam\n- Fix bike');await p.locator('.sheet').last().getByRole('button',{name:'Save',exact:true}).click();await p.waitForTimeout(400);ok(await R(n=>window.__lifeos.get.all('idea').length===n+3,n0),'capture split');
+ok(!errs.length,'errs '+errs);console.log(JSON.stringify({pass,fails},null,1));await b.close();})().catch(e=>{console.log('CRASH',e.message.slice(0,500));process.exit(1);});

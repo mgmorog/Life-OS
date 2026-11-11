@@ -1,0 +1,13 @@
+const {chromium}=require('playwright');
+(async()=>{const b=await chromium.launch();const p=await (await b.newContext({viewport:{width:390,height:844},hasTouch:true,isMobile:true})).newPage();const errs=[];p.on('pageerror',e=>errs.push(e.message));await p.goto('file://'+__dirname+'/page.html');await p.waitForTimeout(500);
+let pass=0;const fails=[];const ok=(c,m)=>{if(c)pass++;else fails.push(m);};const R=(f,a)=>p.evaluate(f,a);const text=()=>p.locator('#view').innerText();
+await R(()=>{const L=window.__lifeos;L.put(Object.assign({},L.get.settings(),{introDone:true}),{silent:true});
+L.put({id:'rm',kind:'routine',title:'Morning',steps:[{id:'a',t:'Make bed',min:2},{id:'b',t:'Plan',min:1}],days:[0,1,2,3,4,5,6],setTime:0,runs:{},color:'amber',createdAt:Date.now()},{silent:true});L.App.go('routines');});
+await p.waitForTimeout(250);let t=await text();ok(/Still to do · planned 12:00 AM/i.test(t),'past time label '+t.slice(0,160));ok(/Daily · 12:00 AM/.test(t),'daily meta');
+await R(()=>window.__lifeos.App.go('routine',{id:'rm'}));await p.waitForTimeout(250);t=await text();ok(!/Status/.test(t),'no dead status row');
+await p.getByRole('button',{name:/Mark done/}).click();await p.waitForTimeout(300);ok(/Done today at/.test(await text()),'mark done');ok(await R(()=>!!window.__lifeos.get.id('rm').runs[Object.keys(window.__lifeos.get.id('rm').runs)[0]]),'run stored');
+await R(()=>{window.__lifeos.App.state.player=null;window.__lifeos.App.go('player',{id:'rm'});});await p.waitForTimeout(250);
+await p.getByRole('button',{name:'Start'}).click();await p.waitForTimeout(200);
+await R(()=>{const PL=window.__lifeos.App.state.player;PL.endAt-=60000;});await p.waitForTimeout(1300);
+ok(/1:0\d|0:5\d/.test(await p.locator('.timer').innerText()),'timer follows clock '+await p.locator('.timer').innerText());
+ok(!errs.length,'errs '+errs);console.log(JSON.stringify({pass,fails},null,1));await b.close();})().catch(e=>{console.log('CRASH',e.message.slice(0,500));process.exit(1);});

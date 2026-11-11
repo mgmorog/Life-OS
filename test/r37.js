@@ -1,0 +1,19 @@
+const {chromium}=require('playwright');
+(async()=>{const b=await chromium.launch();const ctx=await b.newContext({viewport:{width:390,height:844},hasTouch:true,isMobile:true});const p=await ctx.newPage();const errs=[];p.on('console',m=>{if(m.text().startsWith('HIT'))console.log(m.text());});p.on('pageerror',e=>errs.push(e.message));await p.goto('file://'+__dirname+'/page.html');await p.waitForTimeout(500);
+let pass=0;const fails=[];const ok=(c,m)=>{if(c)pass++;else fails.push(m);};const R=(f,a)=>p.evaluate(f,a);const go=async(v,a)=>{await R(([v,a])=>window.__lifeos.App.go(v,a||{}),[v,a]);await p.waitForTimeout(170);};const text=()=>p.locator('#view').innerText();const sh=()=>p.locator('.sheet').last();
+const ad=n=>{const d=new Date();d.setDate(d.getDate()+n);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;};
+await R(a=>{const L=window.__lifeos;L.put(Object.assign({},L.get.settings(),{carryOver:true,introDone:true}),{silent:true});L.put({id:'c1',kind:'task',title:'Call the pharmacy',notes:'',steps:[],date:a,time:null,repeat:{type:'never',end:null},reminder:null,deadline:null,priority:'normal',part:null,area:null,createdAt:Date.now()},{silent:true});L.put({id:'h1',kind:'habit',title:'Read',days:[],target:3,dur:30,logs:{},color:'sage',createdAt:Date.now()},{silent:true});L.App.refresh();},ad(-2));
+await go('today');let hero=await p.locator('.daycard').first().innerText();ok(/carried over/.test(hero),'carried '+hero.slice(0,80));
+await p.locator('.tick-host',{hasText:'Call the pharmacy'}).first().locator('.tick').click();await p.waitForTimeout(1200);hero=await p.locator('.daycard').first().innerText();ok(/All done/.test(hero)&&/1 of 1 done/.test(hero)&&!/clear day/.test(hero),'all done '+hero.slice(0,120));
+await p.locator('.tick-host',{hasText:'Call the pharmacy'}).first().locator('.tick').click();await p.waitForTimeout(1200);ok(/From /.test(await p.locator('.tick-host',{hasText:'Call the pharmacy'}).first().innerText()),'from label back');
+// steps drag then tap on x does not delete
+await p.locator('#fab').first().click();await p.waitForTimeout(400);const tsk=sh().getByRole('button',{name:/^Task/}).first();if(await tsk.count()){await tsk.click();await p.waitForTimeout(400);}else{await R(()=>{});}
+await R(()=>{document.querySelectorAll('.sheet').forEach(s=>s.remove());document.querySelectorAll('.scrim').forEach(s=>s.remove());});
+await R(()=>window.__lifeos.App.refresh());await p.waitForTimeout(200);
+await p.locator('.chip,button',{hasText:'+ Task'}).first().click();await p.waitForTimeout(450);
+await sh().getByRole('button',{name:/Add a step/}).click();await p.waitForTimeout(150);await sh().locator('.steps input').last().fill('one');await sh().getByRole('button',{name:/Add a step/}).click();await p.waitForTimeout(150);await sh().locator('.steps input').last().fill('two');
+const h=sh().locator('.steps .h').nth(1),bx=await h.boundingBox(),x0=await sh().locator('.steps .x').first().boundingBox();
+await p.mouse.move(bx.x+bx.width/2,bx.y+bx.height/2);await p.mouse.down();await p.mouse.move(bx.x+bx.width/2,bx.y-30,{steps:8});await p.waitForTimeout(150);await p.mouse.move(x0.x+x0.width/2,x0.y+x0.height/2,{steps:4});await p.mouse.up();await R(()=>{document.querySelector('.sheet:last-of-type .steps .x').click();});await p.waitForTimeout(250);
+const vals=await sh().locator('.steps input').evaluateAll(n=>n.map(x=>x.value));ok(vals.length===2,'no step removed '+vals);ok(vals[0]==='two','reordered '+vals);
+await p.waitForTimeout(600);await sh().locator('.steps .x').first().click();await p.waitForTimeout(200);ok((await sh().locator('.steps input').count())===1,'x still works later');
+ok(!errs.length,'errs '+errs);console.log(JSON.stringify({pass,fails},null,1));await b.close();})().catch(e=>{console.log('CRASH',e.message.slice(0,500));process.exit(1);});

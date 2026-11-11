@@ -1,0 +1,9 @@
+node_modules/
+dist-pwa/
+test/*.png
+test/page.html
+test/res/
+.env*
+.vercel
+*.log
+test-pwa/cert/

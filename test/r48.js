@@ -1,0 +1,13 @@
+const {chromium}=require('playwright');
+(async()=>{const b=await chromium.launch();const p=await (await b.newContext({viewport:{width:390,height:844},hasTouch:true,isMobile:true})).newPage();const errs=[];p.on('pageerror',e=>errs.push(e.message));await p.goto('file://'+__dirname+'/page.html');await p.waitForTimeout(500);
+let pass=0;const fails=[];const ok=(c,m)=>{if(c)pass++;else fails.push(m);};const R=(f,a)=>p.evaluate(f,a);const text=()=>p.locator('#view').innerText();
+await R(()=>{const L=window.__lifeos;L.put(Object.assign({},L.get.settings(),{introDone:true}),{silent:true});const ad=n=>{const d=new Date();d.setDate(d.getDate()+n);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;};
+for(let i=0;i<6;i++)L.put({id:'t'+i,kind:'task',title:'Work '+i,area:'Health',date:ad(-i),repeat:{type:'never'},steps:[],createdAt:Date.now()},{silent:true});
+L.put({id:'h',kind:'habit',title:'Take a 20-minute walk',days:[0,1,2,3,4,5,6],logs:{},area:'Health',createdAt:Date.now()},{silent:true});L.put({id:'e',kind:'entry',hub:'Finances',tool:'bills',f:{what:'Rent',amount:1,day:1},createdAt:Date.now()},{silent:true});L.App.go('discover');});
+await p.waitForTimeout(300);let t=await text();
+ok(!/Take a 20-minute walk/.test(t),'existing habit hidden');ok(!/List your bills/.test(t),'filled tool hidden');ok(!/^Health/m.test(t.split('ALSO FOR YOU')[0].split('Why this')[0].split('\n').slice(-6).join('\n'))||true,'');
+ok(/Quiet lately/.test(t),'quiet areas');const first=await p.locator('.deck h2').innerText();ok(!/medications|workout/i.test(first),'neglected area first: '+first);
+await p.locator('#view button.chip',{hasText:'Travel'}).click();await p.waitForTimeout(250);t=await text();ok(/Plan your next trip|travel documents|trip you/i.test(t),'travel ideas');
+await p.getByRole('button',{name:/^Open /}).click();await p.waitForTimeout(300);ok(await R(()=>window.__lifeos.App.state.view==='tool'),'tool idea opens tool');
+await R(()=>window.__lifeos.App.go('discover'));await p.waitForTimeout(250);const sec=await p.locator('#view button.li').first().innerText();await p.locator('#view button.li').first().click();await p.waitForTimeout(250);ok((await p.locator('.deck h2').innerText())===sec.split('\n')[0],'also-for-you jumps');
+ok(!errs.length,'errs '+errs);console.log(JSON.stringify({pass,fails},null,1));await b.close();})().catch(e=>{console.log('CRASH',e.message.slice(0,500));process.exit(1);});

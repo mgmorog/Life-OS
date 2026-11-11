@@ -1,0 +1,13 @@
+const {chromium}=require('playwright');
+(async()=>{const b=await chromium.launch();const p=await (await b.newContext({viewport:{width:390,height:844},hasTouch:true,isMobile:true})).newPage();const errs=[];p.on('pageerror',e=>errs.push(e.message));await p.goto('file://'+__dirname+'/page.html');await p.waitForTimeout(500);
+let pass=0;const fails=[];const ok=(c,m)=>{if(c)pass++;else fails.push(m);};const R=(f,a)=>p.evaluate(f,a);const text=()=>p.locator('#view').innerText();
+await R(()=>{const L=window.__lifeos;L.put(Object.assign({},L.get.settings(),{introDone:true}),{silent:true});
+L.put({id:'e2',kind:'entry',hub:'Home',tool:'chores',f:{what:'Old chore',every:7},archived:true,archivedAt:Date.now()-864e5,createdAt:Date.now()},{silent:true});
+L.put({id:'t3',kind:'task',title:'Delete me',repeat:{type:'never'},steps:[],createdAt:Date.now()},{silent:true});L.remove('t3');L.App.go('archive');});
+await p.waitForTimeout(250);let t=await text();ok(/Old chore/.test(t)&&/Home · Chores/.test(t),'entry title in archive');
+await p.locator('#view .sw-front',{hasText:'Old chore'}).click();await p.waitForTimeout(250);ok(await p.getByText('Open',{exact:true}).count()>0,'open option');ok(!(await p.getByText('Delete for good').count()),'no misleading label');
+await p.getByText('Restore',{exact:true}).last().click();await p.waitForTimeout(250);ok(await R(()=>!window.__lifeos.get.id('e2').archived),'restored');ok(/Old chore restored/.test(await p.locator('#toast').innerText()),'restore toast');
+await R(()=>window.__lifeos.App.go('trash'));await p.waitForTimeout(250);await p.locator('#view .li',{hasText:'Delete me'}).getByRole('button',{name:'Restore'}).click();await p.waitForTimeout(250);
+ok(/Restored to Tasks/.test(await p.locator('#toast').innerText()),'trash restore says where');ok(await R(()=>!!window.__lifeos.get.id('t3')&&!window.__lifeos.get.all('trashed').length),'trash restore clean');
+await R(()=>window.__lifeos.App.go('photos'));await p.waitForTimeout(250);ok(/recipes or home info/.test(await text()),'photos copy');
+ok(!errs.length,'errs '+errs);console.log(JSON.stringify({pass,fails},null,1));await b.close();})().catch(e=>{console.log('CRASH',e.message.slice(0,500));process.exit(1);});

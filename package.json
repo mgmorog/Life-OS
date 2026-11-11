@@ -1,0 +1,20 @@
+{
+  "name": "life-os",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Life OS: one place for your days, plans and life areas.",
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs --target pwa",
+    "build:artifact": "node build.mjs --target artifact",
+    "test:pwa": "node test-pwa/run.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "2.45.4",
+    "web-push": "3.6.7",
+    "esbuild": "0.24.0"
+  }
+}

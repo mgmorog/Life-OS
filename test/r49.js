@@ -1,0 +1,14 @@
+const {chromium}=require('playwright');
+(async()=>{const b=await chromium.launch();const p=await (await b.newContext({viewport:{width:390,height:844},hasTouch:true,isMobile:true})).newPage();const errs=[];p.on('pageerror',e=>errs.push(e.message));await p.goto('file://'+__dirname+'/page.html');await p.waitForTimeout(500);
+let pass=0;const fails=[];const ok=(c,m)=>{if(c)pass++;else fails.push(m);};const R=(f,a)=>p.evaluate(f,a);const text=()=>p.locator('#view').innerText();
+await R(()=>{const L=window.__lifeos;L.put(Object.assign({},L.get.settings(),{introDone:true}),{silent:true});L.App.go('tools');});await p.waitForTimeout(250);
+ok(/Nothing saved yet/.test(await text()),'empty resources');
+await R(()=>{const L=window.__lifeos;L.put({id:'r1',kind:'resource',title:'Sleep tips',url:'https://www.nytimes.com/x',area:'Health',createdAt:Date.now()},{silent:true});L.put({id:'r2',kind:'resource',title:'Cheat sheet',notes:'Spend steps\nmore',area:'Career',createdAt:Date.now()},{silent:true});L.App.refresh();});
+await p.waitForTimeout(250);let t=await text();ok(/Health · nytimes\.com/.test(t)&&/Career · Spend steps/.test(t),'resource meta');ok(/All · 2/.test(t),'area chips');
+await p.locator('#view button.chip',{hasText:'Career'}).click();await p.waitForTimeout(200);t=await text();ok(!/Sleep tips/.test(t),'filter works');
+await p.locator('#view .li',{hasText:'Weekly reset'}).click();await p.waitForTimeout(300);await R(()=>window.__lifeos.App.go('tools'));await p.waitForTimeout(250);
+await p.locator('#view .li',{hasText:'Weekly reset'}).click();await p.waitForTimeout(300);ok(await R(()=>window.__lifeos.get.all('routine').filter(r=>r.title==='Weekly reset').length===1),'no duplicate template');
+await R(()=>window.__lifeos.App.go('tools'));await p.waitForTimeout(250);await p.locator('#view .li',{hasText:'Home upkeep basics'}).click();await p.waitForTimeout(300);
+ok(await R(()=>{const e=window.__lifeos.get.all('entry').filter(x=>x.tool==='upkeep');return e.length===5;}),'upkeep entries');ok((await text()).match(/\bSUN\b|\bMON\b/g)==null||!(/(\b8\b[\s\S]*){5}/.test(await text())),'spread');
+ok(!/0 of 0 done/.test(await text()),'no 0 of 0');
+ok(!errs.length,'errs '+errs);console.log(JSON.stringify({pass,fails},null,1));await b.close();})().catch(e=>{console.log('CRASH',e.message.slice(0,500));process.exit(1);});

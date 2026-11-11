@@ -1,0 +1,15 @@
+const {chromium}=require('playwright');
+(async()=>{const b=await chromium.launch();const p=await (await b.newContext({viewport:{width:390,height:844},hasTouch:true,isMobile:true})).newPage();const errs=[];p.on('pageerror',e=>errs.push(e.message));await p.goto('file://'+__dirname+'/page.html');await p.waitForTimeout(500);
+let pass=0;const fails=[];const ok=(c,m)=>{if(c)pass++;else fails.push(m);};const R=(f,a)=>p.evaluate(f,a);const text=()=>p.locator('#view').innerText();
+const ad=n=>{const d=new Date();d.setDate(d.getDate()+n);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;};
+await R(([late,d2])=>{const L=window.__lifeos;L.put(Object.assign({},L.get.settings(),{introDone:true}),{silent:true});
+const G=(id,title,x)=>L.put(Object.assign({id,kind:'goal',title,notes:'',steps:[],track:'milestones',createdAt:Date.now()-864e5*60},x),{silent:true});
+G('w','Lose weight',{track:'number',numStart:200,numTarget:185,numCur:194,numUnit:'lb'});G('m','Save',{track:'number',numStart:0,numTarget:10000,numCur:2500,numUnit:'$',deadline:late});
+G('l','Calm home',{track:'linked'});L.put({id:'t',kind:'task',title:'Tidy',part:'l',repeat:{type:'never'},steps:[],doneDates:{[d2]:Date.now()-2*864e5},createdAt:Date.now()},{silent:true});
+G('e','Cook',{});G('d','Promotion',{track:'done'});L.App.go('goals');},[ad(-10),ad(-2)]);
+await p.waitForTimeout(250);let t=await text();
+ok(/Was due/.test(t),'late goal');
+ok(/Calm home\s*100%\s*Linked work/.test(t),'linked progress counts');ok(/No milestones yet/.test(t),'empty milestones');
+await R(()=>window.__lifeos.App.go('plan',{id:'w'}));await p.waitForTimeout(250);ok(/194 lb now · 9 lb to go/.test(await text()),'decreasing number');await R(()=>window.__lifeos.App.go('plan',{id:'d'}));await p.waitForTimeout(250);t=await text();ok(/Not achieved yet/.test(t)&&!/0%/.test(t),'done-track page');
+await R(()=>window.__lifeos.App.go('plan',{id:'m'}));await p.waitForTimeout(250);t=await text();ok(/\$2,500 of \$10,000/.test(t),'money format');ok(/Was due .* days ago/.test(t)&&!/\bOverdue\b/.test(t),'late page');
+ok(!errs.length,'errs '+errs);console.log(JSON.stringify({pass,fails},null,1));await b.close();})().catch(e=>{console.log('CRASH',e.message.slice(0,500));process.exit(1);});

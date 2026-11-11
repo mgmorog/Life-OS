@@ -9,7 +9,7 @@ html.standalone input,html.standalone textarea,html.standalone [contenteditable]
 .si-card{width:100%;max-width:360px;background:var(--card);border:1px solid var(--line);border-radius:22px;padding:22px;box-shadow:var(--shadow-1)}
 .si-card form{display:grid;gap:12px}
 .si-sub{margin:0 0 4px;color:var(--ink-2);font-size:15px;line-height:1.45}
-.si-sub b{color:var(--ink);font-weight:600;word-break:break-all}
+.si-sub b{color:var(--ink);font-weight:600;display:inline-block;max-width:100%;overflow-wrap:anywhere}
 .si input{font:inherit;font-size:17px;width:100%;min-height:50px;padding:0 14px;border:1px solid var(--line);border-radius:14px;background:var(--bg);color:var(--ink);outline:0;box-sizing:border-box}
 .si input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
 .si input.si-code{font-size:26px;letter-spacing:.35em;text-align:center;font-variant-numeric:tabular-nums}
@@ -20,3 +20,10 @@ html.standalone input,html.standalone textarea,html.standalone [contenteditable]
 .si-msg{min-height:20px;margin:10px 2px 0;color:var(--now);font-size:14px}
 .upd{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--bar) + env(safe-area-inset-bottom) + 14px);z-index:9000;border:0;border-radius:999px;background:var(--ink);color:#fff;font:inherit;font-size:14px;padding:12px 18px;box-shadow:var(--shadow-3);white-space:nowrap}
 .upd b{color:#BCD0C4;margin-left:4px}
+.si-steps{margin:4px 0 14px;padding-left:22px;color:var(--ink);font-size:15px;line-height:1.7}
+.si-big{font-family:var(--display);font-size:24px;margin:0 0 6px;color:var(--ink)}
+.si-wait{display:flex;gap:8px;justify-content:center;margin:6px 0 14px}
+.si-wait span{width:8px;height:8px;border-radius:50%;background:var(--accent);opacity:.25;animation:siw 1.2s var(--ease) infinite}
+.si-wait span:nth-child(2){animation-delay:.2s}.si-wait span:nth-child(3){animation-delay:.4s}
+@keyframes siw{40%{opacity:1;transform:scale(1.15)}}
+@media (prefers-reduced-motion:reduce){.si-wait span{animation:none;opacity:.6}}

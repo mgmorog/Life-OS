@@ -94,3 +94,12 @@ create policy "own photos write" on storage.objects for insert to authenticated
   with check (bucket_id = 'photos' and (storage.foldername(name))[1] = auth.uid()::text);
 create policy "own photos delete" on storage.objects for delete to authenticated
   using (bucket_id = 'photos' and (storage.foldername(name))[1] = auth.uid()::text);
+
+-- One-time sign-in handoffs from Safari to the Home Screen app (server-only; no one else can read them)
+create table if not exists public.handoffs (
+  id            text primary key,
+  user_id       uuid not null references auth.users(id) on delete cascade,
+  refresh_token text not null,
+  created_at    timestamptz not null default now()
+);
+alter table public.handoffs enable row level security;

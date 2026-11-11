@@ -8,12 +8,13 @@ const root = new URL('..', import.meta.url).pathname;
 export const SERVICE = 'service-key';
 export function startServer(port) {
   const users = new Map(), tokens = new Map(); // email → user ; access token → user
-  const T = { records: [], push_subs: [], reminders: [], cal_feeds: [] };
-  const KEYS = { records: ['user_id', 'id'], push_subs: ['endpoint'], reminders: ['user_id', 'key'], cal_feeds: ['token'] };
+  const T = { records: [], push_subs: [], reminders: [], cal_feeds: [], handoffs: [] };
+  const mail = [];
+  const KEYS = { records: ['user_id', 'id'], push_subs: ['endpoint'], reminders: ['user_id', 'key'], cal_feeds: ['token'], handoffs: ['id'] };
   const files = new Map(), pushes = [], log = [];
   let clock = Date.now();
   const stamp = () => (clock = Math.max(clock + 1, Date.now()));
-  const sessionFor = u => { const access_token = 'tok-' + u.id + '-' + Math.random().toString(36).slice(2, 8); tokens.set(access_token, u); return { access_token, refresh_token: 'ref-' + access_token, token_type: 'bearer', expires_in: 3600, expires_at: Math.floor(Date.now() / 1000) + 3600, user: u }; };
+  const sessionFor = u => { const b64 = o => Buffer.from(JSON.stringify(o)).toString('base64url'); const access_token = b64({ alg: 'HS256', typ: 'JWT' }) + '.' + b64({ sub: u.id, email: u.email, role: 'authenticated', aud: 'authenticated', exp: Math.floor(Date.now() / 1000) + 3600, n: Math.random() }) + '.sig'; tokens.set(access_token, u); return { access_token, refresh_token: 'ref-' + access_token, token_type: 'bearer', expires_in: 3600, expires_at: Math.floor(Date.now() / 1000) + 3600, user: u }; };
   const who = req => { const b = String(req.headers.authorization || '').replace(/^Bearer /, ''); if (b === SERVICE) return 'admin'; return tokens.get(b) || null; };
   const body = req => new Promise(r => { const c = []; req.on('data', d => c.push(d)); req.on('end', () => r(Buffer.concat(c))); });
   const json = (res, code, obj, hd = {}) => { res.writeHead(code, { 'content-type': 'application/json', ...hd }); res.end(obj === undefined ? '' : JSON.stringify(obj)); };
@@ -32,7 +33,7 @@ export function startServer(port) {
     log.push(req.method + ' ' + p);
     try {
       /* ---- auth ---- */
-      if (p === '/auth/v1/otp') { const b = JSON.parse(await body(req)); if (!users.has(b.email)) users.set(b.email, { id: 'u' + (users.size + 1) + '0000000-0000-0000-0000-000000000000'.slice(0, 30), email: b.email, aud: 'authenticated', role: 'authenticated' }); return json(res, 200, {}); }
+      if (p === '/auth/v1/otp') { const b = JSON.parse(await body(req)); const isNew = !users.has(b.email); if (isNew) users.set(b.email, { id: 'u' + (users.size + 1) + '0000000-0000-0000-0000-000000000000'.slice(0, 30), email: b.email, aud: 'authenticated', role: 'authenticated' }); const ss = sessionFor(users.get(b.email)); mail.push({ to: b.email, link: (q.get('redirect_to') || 'http://x/') + `#access_token=${ss.access_token}&refresh_token=${ss.refresh_token}&expires_in=3600&token_type=bearer&type=magiclink` }); return json(res, 200, {}); }
       if (p === '/auth/v1/verify') { const b = JSON.parse(await body(req)); const us = users.get(b.email); if (!us || b.token !== '123456') return json(res, 403, { code: 403, error_code: 'otp_expired', msg: 'Token has expired or is invalid' }); return json(res, 200, sessionFor(us)); }
       if (p === '/auth/v1/user') { const w = who(req); return w && w !== 'admin' ? json(res, 200, w) : json(res, 401, { msg: 'invalid' }); }
       if (p === '/auth/v1/token') { const b = JSON.parse(await body(req)); const us = tokens.get(String(b.refresh_token).replace(/^ref-/, '')); return us ? json(res, 200, sessionFor(us)) : json(res, 400, { error: 'invalid_grant' }); }
@@ -70,7 +71,7 @@ export function startServer(port) {
           const b = JSON.parse(await body(req)); const rows = filt(tab.filter(own), q); rows.forEach(r => Object.assign(r, b));
           return /representation/.test(req.headers.prefer || '') ? json(res, 200, rows) : (res.writeHead(204), res.end());
         }
-        if (req.method === 'DELETE') { const rows = new Set(filt(tab.filter(own), q)); T[name] = tab.filter(r => !rows.has(r)); res.writeHead(204); return res.end(); }
+        if (req.method === 'DELETE') { const rows = new Set(filt(tab.filter(own), q)); T[name] = tab.filter(r => !rows.has(r)); return /representation/.test(req.headers.prefer || '') ? json(res, 200, [...rows]) : (res.writeHead(204), res.end()); }
       }
       /* ---- storage ---- */
       if (p.startsWith('/storage/v1/object/sign/')) {
@@ -86,7 +87,7 @@ export function startServer(port) {
       /* ---- fake push service ---- */
       if (p === '/fakepush') { pushes.push({ headers: req.headers, len: (await body(req)).length }); res.writeHead(201); return res.end(); }
       /* ---- Vercel functions ---- */
-      const api = p === '/api/push-tick' ? 'push-tick' : p === '/api/push-test' ? 'push-test' : p === '/api/claude' ? 'claude' : p === '/api/cal' || p.startsWith('/cal/') ? 'cal' : null;
+      const api = p === '/api/handoff' ? 'handoff' : p === '/api/push-tick' ? 'push-tick' : p === '/api/push-test' ? 'push-test' : p === '/api/claude' ? 'claude' : p === '/api/cal' || p.startsWith('/cal/') ? 'cal' : null;
       if (api) {
         const mod = await import(join(root, 'api', api + '.js'));
         const raw = await body(req); req.body = raw.length && /json/.test(req.headers['content-type'] || '') ? JSON.parse(raw) : {};
@@ -102,5 +103,5 @@ export function startServer(port) {
       res.end(readFileSync(f));
     } catch (e) { console.error(e); json(res, 500, { message: String(e) }); }
   });
-  return new Promise(r => srv.listen(port, () => r({ srv, T, users, files, pushes, log, close: () => new Promise(c => { srv.closeAllConnections && srv.closeAllConnections(); srv.close(c); }) })));
+  return new Promise(r => srv.listen(port, () => r({ srv, T, mail, users, files, pushes, log, close: () => new Promise(c => { srv.closeAllConnections && srv.closeAllConnections(); srv.close(c); }) })));
 }

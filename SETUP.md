@@ -10,9 +10,7 @@ Create an empty **private** repository called `life-os`. No README or licence. C
 ## 2. Supabase
 1. New project `life-os`, Free plan, region East US. Save the database password somewhere safe; the app doesn't need it.
 2. **SQL Editor › New query**: paste all of `supabase/schema.sql`, then **Run**.
-3. **Authentication › Emails › Magic Link** template: make sure the body includes `{{ .Token }}` (this is the 6-digit code). For example:
-   `Your Life OS code is {{ .Token }}. It expires in an hour.`
-4. **Authentication › URL Configuration**: set Site URL to your Vercel address (after step 3).
+3. **Authentication › URL Configuration** (after step 3 below): set **Site URL** to your Vercel address, and under **Redirect URLs** add your Vercel address followed by `/**` (for example `https://life-os-kohl-eight.vercel.app/**`). Sign-in emails contain a link; this lets the link hand the sign-in back to the Home Screen app.
 5. **Project Settings › API**: you'll need the Project URL, the `anon` `public` key and the `service_role` key. The service_role key is a password: paste it only into Vercel, never into a chat.
 
 ## 3. Vercel
@@ -38,7 +36,7 @@ Supabase **SQL Editor**: paste `supabase/cron.sql`, replace `YOUR-APP.vercel.app
 
 ## 5. On your iPhone
 1. Open the Vercel address in **Safari**, tap **Share › Add to Home Screen**.
-2. Open Life OS from the Home Screen and sign in with the code from your email.
+2. Open Life OS from the Home Screen, enter your email, tap the link in the email (it opens Safari), then go back to Life OS. It signs in by itself.
 3. In Supabase › **Authentication › Sign In / Providers**, turn off **Allow new users to sign up**, so only you can use it.
 4. Move your data: in Life OS on claude.ai, **Settings › Data & recovery › Export with photos**. In the home-screen app, **Settings › Data & recovery › Restore from a backup**.
 5. **Settings › Reviews & reminders › Notifications**: turn on reminders and allow them.

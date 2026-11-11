@@ -34,17 +34,28 @@ async function device(name) {
   page.on('console', m => { if (m.type() === 'error' && !/websocket|realtime|ERR_CONNECTION|Failed to load resource/i.test(m.text())) errors.push(`${name} console: ${m.text()}`); });
   return { ctx, page };
 }
-async function signIn(page, email) {
+// the Home Screen app asks for a link; the link opens in "Safari" (a separate browser context); the app signs itself in
+async function signIn(page, email, { sameBrowser = false } = {}) {
   await page.goto(BASE + '/');
-  await page.waitForSelector('#si-email', { timeout: 10000 });
+  await page.waitForSelector('#si-email, .si-steps', { timeout: 10000 });
+  if (await page.$('.si-steps')) await page.getByText('Different email').click(); // the app remembers a link it is waiting on
+  await page.waitForSelector('#si-email');
+  const n = S.mail.length;
   await page.fill('#si-email', email); await page.click('.si-btn');
-  await page.waitForSelector('#si-code');
-  await page.fill('#si-code', '000000');
-  await page.waitForFunction(() => /didn’t work/.test(document.querySelector('.si-msg').textContent));
-  await page.fill('#si-code', '123456'); // auto-submits at 6 digits
-  await page.waitForSelector('.si', { state: 'detached', timeout: 8000 });
+  await page.waitForSelector('.si-steps');
+  const link = (await wait(() => S.mail.length > n && S.mail[S.mail.length - 1])).link;
+  if (!/\?handoff=[0-9a-f]{40}#access_token=/.test(link)) throw new Error('link missing handoff: ' + link);
+  if (sameBrowser) { await page.goto(link); }
+  else {
+    const safari = await browser.newContext(); const sp = await safari.newPage();
+    await sp.goto(link); await sp.waitForSelector('.si-big', { timeout: 8000 });
+    lastSafari = { text: await sp.evaluate(() => document.body.innerText), auth: await sp.evaluate(() => localStorage.getItem('lifeos-auth')) };
+    await sp.screenshot({ path: root + 'test/pwa-safari.png' }); await safari.close();
+  }
+  await page.waitForSelector('.si', { state: 'detached', timeout: 10000 });
   await page.waitForFunction(() => window.__lifeos && window.__lifeos.store.mode === 'synced', null, { timeout: 12000 });
 }
+let lastSafari = null;
 
 try {
   /* sign-in + first device */
@@ -52,8 +63,14 @@ try {
   await A.page.goto(BASE + '/');
   ok('sign-in screen shows first', !!(await A.page.waitForSelector('#si-email', { timeout: 10000 }).catch(() => null)));
   await A.page.screenshot({ path: root + 'test/pwa-signin.png' });
+  await A.page.fill('#si-email', 'me@example.com'); await A.page.click('.si-btn'); await A.page.waitForSelector('.si-steps');
+  await A.page.screenshot({ path: root + 'test/pwa-wait.png' });
   await signIn(A.page, 'me@example.com');
-  ok('signed in and synced', true);
+  ok('signed in through the email link', true);
+  ok('Safari says to go back to the app', /You’re signed in/.test(lastSafari.text) && /Home Screen/.test(lastSafari.text));
+  ok('Safari keeps no sign-in of its own', !lastSafari.auth);
+  ok('handoff is used up', S.T.handoffs.length === 0);
+  ok('handoff link refuses a second pickup', (await fetch(BASE + '/api/handoff?id=' + 'a'.repeat(40))).status === 204);
   ok('manifest + icons linked', await A.page.evaluate(() => !!document.querySelector('link[rel=manifest]') && !!document.querySelector('link[rel=apple-touch-icon]')));
   const man = await (await fetch(BASE + '/manifest.webmanifest')).json();
   ok('manifest is standalone with 3 icons', man.display === 'standalone' && man.icons.length === 3);
@@ -151,7 +168,8 @@ try {
 
   /* another person can't see your data */
   const C = await device('C');
-  await signIn(C.page, 'someone@example.com');
+  await signIn(C.page, 'someone@example.com', { sameBrowser: true });
+  ok('link opened in the same browser signs in there', true);
   ok('another account starts empty', await C.page.evaluate(id => !window.__lifeos.recs.has(id), oid));
   const leak = await C.page.evaluate(() => window.lifeosPWA.sb.from('records').select('id').then(r => r.data.length));
   ok('another account reads none of your rows', leak === S.T.records.filter(r => r.user_id === [...S.users.values()][1].id && !r.deleted).length || leak === S.T.records.filter(r => r.user_id === [...S.users.values()][1].id).length);

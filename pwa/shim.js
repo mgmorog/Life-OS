@@ -22,58 +22,94 @@ function mapErr(e, status) {
 }
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-/* ---------- sign-in: a 6-digit code by email, so it completes inside the home-screen app ---------- */
+/* ---------- sign-in: a link by email ----------
+   On iPhone the link opens in Safari, which doesn't share sign-in with the Home Screen app.
+   So the app makes a one-time secret, puts it in the link, and waits; Safari hands the session
+   back through /api/handoff under that secret, and the app picks it up. */
 let session = null;
 let signedIn;
 const signedInP = new Promise(r => (signedIn = r));
 const h = (tag, attrs = {}, ...kids) => { const n = document.createElement(tag); for (const [k, v] of Object.entries(attrs)) { if (k.startsWith('on')) n.addEventListener(k.slice(2), v); else if (v != null && v !== false) n.setAttribute(k, v === true ? '' : v); } kids.flat().forEach(c => c != null && n.append(c)); return n; };
+const rand = () => { const b = new Uint8Array(20); crypto.getRandomValues(b); return [...b].map(x => x.toString(16).padStart(2, '0')).join(''); };
+const shell = () => { const card = h('div', { class: 'si-card' }); const wrap = h('div', { class: 'si', role: 'dialog', 'aria-modal': 'true', 'aria-labelledby': 'si-h' }, h('div', { class: 'si-mark', 'aria-hidden': 'true' }), h('h1', { id: 'si-h' }, 'Life OS'), card); document.body.append(wrap); return { wrap, card }; };
+const sendErr = (error) => /rate|seconds|security purposes/i.test(error.message) ? 'Too many emails for now. Wait a few minutes, then send again.' : /signups? not allowed|not found/i.test(error.message) ? 'This email isn’t set up for this Life OS.' : !navigator.onLine ? 'You’re offline. Connect and try again.' : 'Couldn’t send the email. Try again.';
 
 function signInScreen() {
-  const card = h('div', { class: 'si-card' });
-  const wrap = h('div', { class: 'si', role: 'dialog', 'aria-modal': 'true', 'aria-labelledby': 'si-h' },
-    h('div', { class: 'si-mark', 'aria-hidden': 'true' }), h('h1', { id: 'si-h' }, 'Life OS'), card);
-  let email = ls.get('lifeos-email') || '';
+  const { wrap, card } = shell();
+  let email = ls.get('lifeos-email') || '', poller = null;
   const msg = h('p', { class: 'si-msg', role: 'status', 'aria-live': 'polite' });
+  const done = s => { clearInterval(poller); ls.set('lifeos-handoff', null); session = s; wrap.classList.add('out'); setTimeout(() => wrap.remove(), 320); signedIn(s); };
+  async function send() {
+    const id = rand(); ls.set('lifeos-handoff', id);
+    const { error } = await sb.auth.signInWithOtp({ email, options: { shouldCreateUser: true, emailRedirectTo: `${location.origin}/?handoff=${id}` } });
+    return error;
+  }
+  async function check() {
+    const id = ls.get('lifeos-handoff'); if (!id) return;
+    try {
+      const r = await fetch('/api/handoff?id=' + id, { cache: 'no-store' }); if (r.status !== 200) return;
+      const { refresh_token } = await r.json();
+      const { data, error } = await sb.auth.refreshSession({ refresh_token });
+      if (!error && data.session) done(data.session);
+    } catch (e) {}
+  }
   const stepEmail = () => {
-    card.replaceChildren();
+    clearInterval(poller); card.replaceChildren(); msg.textContent = '';
     const inp = h('input', { id: 'si-email', type: 'email', inputmode: 'email', autocomplete: 'email', placeholder: 'you@example.com', value: email, required: true, 'aria-label': 'Email' });
-    const btn = h('button', { class: 'si-btn', type: 'submit' }, 'Email me a code');
+    const btn = h('button', { class: 'si-btn', type: 'submit' }, 'Email me a sign-in link');
     const form = h('form', { onsubmit: async e => {
-      e.preventDefault(); email = inp.value.trim().toLowerCase(); if (!/^\S+@\S+\.\S+$/.test(email)) { msg.textContent = 'Enter your email address.'; return; }
+      e.preventDefault(); if (btn.disabled) return; email = inp.value.trim().toLowerCase(); if (!/^\S+@\S+\.\S+$/.test(email)) { msg.textContent = 'Enter your email address.'; return; }
       btn.disabled = true; btn.textContent = 'Sending…'; msg.textContent = '';
-      const { error } = await sb.auth.signInWithOtp({ email, options: { shouldCreateUser: true } });
-      btn.disabled = false; btn.textContent = 'Email me a code';
-      if (error) { msg.textContent = /rate|seconds/i.test(error.message) ? 'Please wait a minute before asking for another code.' : /signups? not allowed|not found/i.test(error.message) ? 'This email isn’t set up for this Life OS.' : !navigator.onLine ? 'You’re offline. Connect and try again.' : 'Couldn’t send the code. Try again.'; return; }
-      ls.set('lifeos-email', email); stepCode();
+      const error = await send();
+      btn.disabled = false; btn.textContent = 'Email me a sign-in link';
+      if (error) { msg.textContent = sendErr(error); return; }
+      ls.set('lifeos-email', email); stepWait();
     } }, h('p', { class: 'si-sub' }, 'Sign in to keep your plans in sync across your devices.'), inp, btn);
     card.append(form, msg); setTimeout(() => inp.focus(), 50);
   };
-  const stepCode = () => {
-    card.replaceChildren();
-    const inp = h('input', { id: 'si-code', inputmode: 'numeric', autocomplete: 'one-time-code', pattern: '[0-9]*', maxlength: '8', placeholder: '123456', 'aria-label': 'Code from the email', class: 'si-code' });
-    const btn = h('button', { class: 'si-btn', type: 'submit' }, 'Sign in');
-    const form = h('form', { onsubmit: async e => {
-      e.preventDefault(); if (btn.disabled) return; const token = inp.value.replace(/\D/g, ''); if (token.length < 6) { msg.textContent = 'Enter the code from the email.'; return; }
-      btn.disabled = true; btn.textContent = 'Checking…'; msg.textContent = '';
-      const { data, error } = await sb.auth.verifyOtp({ email, token, type: 'email' });
-      btn.disabled = false; btn.textContent = 'Sign in';
-      if (error || !data.session) { msg.textContent = !navigator.onLine ? 'You’re offline. Connect and try again.' : 'That code didn’t work, or it has expired. Check it, or send a new one.'; inp.select(); return; }
-      session = data.session; wrap.classList.add('out'); setTimeout(() => wrap.remove(), 320); signedIn(session);
-    } }, h('p', { class: 'si-sub' }, 'We sent a code to ', h('b', {}, email), '.'), inp, btn,
+  const stepWait = () => {
+    card.replaceChildren(); msg.textContent = '';
+    card.append(
+      h('p', { class: 'si-sub' }, 'We sent a sign-in link to ', h('b', {}, email), '.'),
+      h('ol', { class: 'si-steps' }, h('li', {}, 'Open the email and tap the link.'), h('li', {}, 'Come back here. You’ll be signed in.')),
+      h('div', { class: 'si-wait', 'aria-hidden': 'true' }, h('span'), h('span'), h('span')),
       h('div', { class: 'si-links' },
-        h('button', { type: 'button', class: 'si-link', onclick: async e => { const b = e.currentTarget; b.disabled = true; const { error } = await sb.auth.signInWithOtp({ email, options: { shouldCreateUser: true } }); b.disabled = false; msg.textContent = error ? (/rate|seconds/i.test(error.message) ? 'Please wait a minute before asking for another code.' : 'Couldn’t send the code. Try again.') : 'New code sent.'; } }, 'Send a new code'),
-        h('button', { type: 'button', class: 'si-link', onclick: stepEmail }, 'Different email')));
-    inp.addEventListener('input', () => { if (inp.value.replace(/\D/g, '').length === 6) form.requestSubmit(); });
-    card.append(form, msg); setTimeout(() => inp.focus(), 50);
+        h('button', { type: 'button', class: 'si-link', onclick: async e => { const b = e.currentTarget; b.disabled = true; const error = await send(); b.disabled = false; msg.textContent = error ? sendErr(error) : 'Sent a new link. Use the newest email.'; } }, 'Send again'),
+        h('button', { type: 'button', class: 'si-link', onclick: stepEmail }, 'Different email')),
+      msg);
+    clearInterval(poller); poller = setInterval(() => { if (!document.hidden) check(); }, 2000);
   };
-  stepEmail(); document.body.append(wrap);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) check(); });
+  if (ls.get('lifeos-handoff') && email) stepWait(); else stepEmail();
 }
 
+/* the page Safari opens from the email link */
+async function landing() {
+  const hp = new URLSearchParams(location.hash.slice(1)), qp = new URLSearchParams(location.search);
+  const handoff = qp.get('handoff'), at = hp.get('access_token'), rt = hp.get('refresh_token'), err = hp.get('error_description') || qp.get('error_description');
+  if (!at && !err) return false;
+  history.replaceState(null, '', '/');
+  if (err) { await ready(); const { card } = shell(); card.append(h('p', { class: 'si-sub' }, /expired|invalid/i.test(err) ? 'That link has expired or was already used. Open Life OS and send a new one.' : 'That link didn’t work. Open Life OS and send a new one.')); return true; }
+  // this browser is the one waiting (desktop, or Safari without the Home Screen app): just sign in here
+  if (!handoff || ls.get('lifeos-handoff') === handoff) { ls.set('lifeos-handoff', null); const { data } = await sb.auth.setSession({ access_token: at, refresh_token: rt }); if (data && data.session) { session = data.session; signedIn(session); } return 'continue'; }
+  // otherwise pass the session to the Home Screen app, and leave nothing signed in here
+  await ready(); const { card } = shell();
+  const r = await fetch('/api/handoff', { method: 'POST', headers: { 'content-type': 'application/json', authorization: 'Bearer ' + at }, body: JSON.stringify({ id: handoff, refresh_token: rt }) }).catch(() => null);
+  card.append(r && r.ok
+    ? h('div', {}, h('p', { class: 'si-big' }, 'You’re signed in.'), h('p', { class: 'si-sub' }, 'Go back to Life OS on your Home Screen. It opens signed in. You can close this tab.'))
+    : h('p', { class: 'si-sub' }, 'Couldn’t finish signing in. Go back to Life OS and send a new link.'));
+  return true;
+}
+const ready = () => new Promise(r => document.body ? r() : addEventListener('DOMContentLoaded', r));
+
 async function startAuth() {
+  const l = await landing().catch(e => { console.warn(e); return false; });
+  if (l === true) return; // the handoff page; the app itself doesn't start here
+  sb.auth.onAuthStateChange((ev, s) => { if (s) session = s; });
+  if (l === 'continue' && session) return;
   const { data } = await sb.auth.getSession().catch(() => ({ data: {} }));
   if (data && data.session) { session = data.session; signedIn(session); }
-  else if (document.body) signInScreen(); else addEventListener('DOMContentLoaded', signInScreen);
-  sb.auth.onAuthStateChange((ev, s) => { if (s) session = s; });
+  else { await ready(); signInScreen(); }
 }
 const token = async () => { const { data } = await sb.auth.getSession(); return data.session ? data.session.access_token : session && session.access_token; };
 

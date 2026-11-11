@@ -12,7 +12,7 @@ create table if not exists public.records (
 create index if not exists records_user_updated on public.records (user_id, updated_at);
 
 -- the server stamps every change, so devices with wrong clocks still sync in order
-create or replace function public.records_stamp() returns trigger language plpgsql as $$
+create or replace function public.records_stamp() returns trigger language plpgsql set search_path = '' as $$
 begin new.updated_at := (extract(epoch from clock_timestamp()) * 1000)::bigint; return new; end $$;
 drop trigger if exists records_stamp on public.records;
 create trigger records_stamp before insert or update on public.records for each row execute function public.records_stamp();
@@ -58,7 +58,7 @@ create policy "own reminders" on public.reminders for all to authenticated
   using (user_id = auth.uid()) with check (user_id = auth.uid());
 
 -- replaces your schedule in one step; a reminder already sent stays sent unless its time changed
-create or replace function public.set_reminders(items jsonb) returns void language plpgsql security invoker as $$
+create or replace function public.set_reminders(items jsonb) returns void language plpgsql security invoker set search_path = '' as $$
 begin
   delete from public.reminders r where r.user_id = auth.uid()
     and not exists (select 1 from jsonb_array_elements(items) x where x->>'key' = r.key);

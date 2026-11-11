@@ -282,3 +282,12 @@ window.lifeosPWA = {
 };
 document.documentElement.classList.add('pwa'); if (standalone) document.documentElement.classList.add('standalone');
 startAuth();
+// opened in Safari on iPhone: once in a while, point to the Home Screen app, which runs full screen with reminders
+if (isIOS && !standalone) setTimeout(function nudge() {
+  if (!session || document.querySelector('.si,.sheet,.a2hs')) return setTimeout(nudge, 5000);
+  const last = +ls.get('lifeos-a2hs') || 0; if (Date.now() - last < 7 * 864e5) return;
+  const bar = h('div', { class: 'a2hs', role: 'status' }, h('img', { src: '/icons/apple-touch-icon.png', alt: '' }),
+    h('div', { style: 'flex:1;min-width:0' }, h('b', {}, 'Open Life OS from your Home Screen'), h('small', {}, 'It runs full screen there, with reminders. Not added yet? Tap Share › Add to Home Screen.')),
+    h('button', { 'aria-label': 'Dismiss', onclick: () => { ls.set('lifeos-a2hs', Date.now()); bar.remove(); } }, '×'));
+  document.body.append(bar); ls.set('lifeos-a2hs', Date.now());
+}, 2500);

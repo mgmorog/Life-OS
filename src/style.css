@@ -803,7 +803,7 @@ html{background:var(--bg)}
 .oix{width:36px;height:44px;flex:none;display:grid;place-items:center;color:var(--ink-3);margin:-8px 0}
 .li>.grip{margin:-8px 0}
 .osech{margin-top:10px;min-height:44px}.osecn{flex:1;min-width:0;text-align:left;font-size:20px;line-height:24px}
-.oaddi{display:flex;align-items:center;gap:12px;min-height:48px;padding:0 16px;color:var(--accent-text);border-top:1px solid var(--line-2)}.list>.oaddi:first-child{border-top:0}.oaddi input{flex:1;min-width:0;border:0;outline:0;background:none;font-size:15.5px;min-height:44px;color:var(--ink)}
+.oaddi{display:flex;align-items:center;gap:12px;min-height:48px;padding:0 16px;color:var(--accent-text);border-top:1px solid var(--line-2)}.list>.oaddi:first-child{border-top:0}.oaddi input{flex:1;min-width:0;border:0;outline:0;background:none;font-size:16px;min-height:44px;color:var(--ink)}
 .oaddsec{display:flex;align-items:center;justify-content:center;gap:8px;min-height:48px;flex:none;border:1px dashed var(--line);border-radius:16px;color:var(--accent-text);font-weight:600;font-size:15px}
 @property --p{syntax:'<number>';inherits:true;initial-value:0}
 .ring{transition:--p .7s cubic-bezier(.22,.9,.3,1)}
@@ -1149,3 +1149,23 @@ p,.sub,small,.li small{text-wrap:pretty}
 /* past days read as past without dropping below readable contrast */
 .slot.past{opacity:1;background:#F6F6F2}
 .slot.past .slot-h .d b,.slot.past .slot-h{color:var(--ink-3)}
+/* v66 · a row whose control is a segmented picker puts the picker on its own line, so labels like Estimate and Timeframe never get cut */
+.row:has(>.val>.seg){grid-template-columns:var(--icon-col) minmax(0,1fr);grid-template-rows:auto auto;row-gap:8px;padding-block:12px 12px}
+.row:has(>.val>.seg)>.ic,.row:has(>.val>.seg)>.lab{grid-row:1;align-self:center}
+.row:has(>.val>.seg)>.val{grid-column:2/-1;grid-row:2;justify-self:stretch;padding-left:0;margin-right:0;display:block}
+.row:has(>.val>.seg) .seg{margin-left:0;width:100%}
+/* v66 · Calendar: one marker per state. Today = outline; selected = filled date circle; today and selected = just the filled circle */
+.heat.sel{box-shadow:none}
+.heat.today.sel{box-shadow:none}
+/* v66 · pages slide like an iPhone app: deeper pages come in from the right, going back comes from the left */
+.viewin-push{animation:vPush .34s cubic-bezier(.2,.8,.2,1) both}
+.viewin-pop{animation:vPop .3s cubic-bezier(.2,.8,.2,1) both}
+.viewin-swiped{animation:vSwiped .22s var(--ease) both}
+@keyframes vPush{from{opacity:0;transform:translateX(36px)}to{opacity:1;transform:none}}
+@keyframes vPop{from{opacity:0;transform:translateX(-28px)}to{opacity:1;transform:none}}
+@keyframes vSwiped{from{opacity:.4;transform:translateX(-14px)}to{opacity:1;transform:none}}
+html.a-motion .viewin-push,html.a-motion .viewin-pop,html.a-motion .viewin-swiped{animation:viewIn .2s linear both}
+@media (prefers-reduced-motion:reduce){.viewin-push,.viewin-pop,.viewin-swiped{animation:viewIn .2s linear both}}
+/* sliding pages never make the screen wider than the phone */
+html,body{overflow-x:clip}
+#view{overflow-x:clip}

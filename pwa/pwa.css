@@ -1,7 +1,17 @@
 /* home-screen app only: sign-in, update notice */
 html.pwa,html.pwa body{background:var(--bg)}
-html.standalone body{-webkit-user-select:none;user-select:none}
-html.standalone input,html.standalone textarea,html.standalone [contenteditable]{-webkit-user-select:text;user-select:text}
+/* feels like an app, not a page: no text selection or long-press link previews on the interface, no double-tap zoom, no grey tap flash */
+html.pwa body{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;touch-action:manipulation}
+html.pwa input,html.pwa textarea,html.pwa [contenteditable],html.pwa .selectable{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
+html.pwa a,html.pwa img,html.pwa button{-webkit-touch-callout:none;-webkit-user-drag:none}
+html.pwa *{-webkit-tap-highlight-color:transparent}
+/* in Safari: a quiet nudge to open the real app */
+.a2hs{position:fixed;left:12px;right:12px;bottom:calc(var(--bar) + env(safe-area-inset-bottom) + 14px);z-index:8500;display:flex;align-items:center;gap:12px;padding:12px 8px 12px 14px;border-radius:18px;background:var(--card);border:1px solid var(--line);box-shadow:var(--shadow-3);font-family:var(--body);color:var(--ink);font-size:14.5px;line-height:1.35;max-width:456px;margin:0 auto;animation:a2hsIn .35s var(--ease) both}
+.a2hs img{width:40px;height:40px;border-radius:10px;flex:none}
+.a2hs b{display:block;font-weight:600}
+.a2hs small{display:block;color:var(--ink-2);font-size:13px}
+.a2hs button{width:40px;height:40px;border-radius:50%;flex:none;display:grid;place-items:center;color:var(--ink-2);font-size:22px;line-height:1;background:none;border:0}
+@keyframes a2hsIn{from{opacity:0;transform:translateY(10px)}}
 .si{position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:calc(env(safe-area-inset-top) + 24px) 24px calc(env(safe-area-inset-bottom) + 24px);font-family:var(--body);color:var(--ink);transition:opacity .3s var(--ease),transform .3s var(--ease)}
 .si.out{opacity:0;transform:scale(.985)}
 .si-mark{width:64px;height:64px;border-radius:50%;background:var(--accent);box-shadow:inset 0 0 0 10px var(--accent-soft),var(--shadow-2);margin-bottom:18px}

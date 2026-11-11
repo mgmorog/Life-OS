@@ -6,11 +6,11 @@ const App={
     const y=scrollY;S.scrolls=S.scrolls||{};S.scrolls[S.view]=y;
     if(view==='today')S._fresh=S._fresh||S.view!=='today';
     (S.stack=S.stack||[]).push({view:S.view,params:S.params,y});if(S.stack.length>30)S.stack.shift();
-    S.view=view;S.params=params;S.entering=true;
+    S.view=view;S.params=params;S.entering=true;S.dir=TOPS.includes(view)?'tab':'push';
     try{if(/^[a-z-]+$/.test(view))history.replaceState(null,'','#'+(view==='settings'?'prefs':view));}catch(e){}
     this.render();window.scrollTo(0,0);
   },
-  back(fallback){const S=this.state;const p=(S.stack||[]).pop();let y=0;if(p&&p.view!==S.view){S.view=p.view;S.params=p.params;y=p.y||0;}else{S.view=fallback||'more';S.params={};}S.entering=true;this.render();window.scrollTo(0,y);},
+  back(fallback){const S=this.state;const p=(S.stack||[]).pop();let y=0;if(p&&p.view!==S.view){S.view=p.view;S.params=p.params;y=p.y||0;}else{S.view=fallback||'more';S.params={};}S.entering=true;S.dir=S._swiped?'swiped':'pop';S._swiped=false;this.render();window.scrollTo(0,y);},
   refresh(){clearTimeout(this._r);this._r=setTimeout(()=>this.render(),0);if(PWA.on)PWA.afterChange();},
   dataReady(){this.state.loading=false;purgeTrash();migrate();{const s0=get.settings();if(!s0.tickHalo&&recs.has('settings'))put(Object.assign({},DEFAULT_SETTINGS,s0,{completed:'fade',celebrate:'flow',tickHalo:true}),{silent:true});}applyPrefs();{const s1=get.settings();if(s1.seenVer==null&&s1.introDone)setSettings({seenVer:APP_VER-1});let hv='';try{hv=location.hash.slice(1);}catch(e){}if(!hv&&this.state.view==='today'&&s1.startPage&&s1.startPage!=='today')this.state.view=s1.startPage;if(!hv&&!s1.introDone&&!OB_TEST()&&![...recs.values()].some(r=>r.kind!=='settings'))this.state.view='welcome';}try{travelMigrate();tripReturn();nwAutoSnap();}catch(e){console.warn(e);}Gcal.start();this.render();checkReminders();if(PWA.on)PWA.afterChange();},
   render(){
@@ -32,7 +32,7 @@ const App={
     root.replaceChildren(frag);
     animateFills(root,S);
     if(flipBefore)flipPlay(root,flipBefore);
-    if(S.entering){const pg=root.firstElementChild;if(pg&&S._painted&&S.view!=='today')pg.classList.add('viewin');S.entering=false;}
+    if(S.entering){const pg=root.firstElementChild;if(pg&&S._painted&&(S.view!=='today'||S.dir==='pop'||S.dir==='swiped'))pg.classList.add(S.dir==='push'?'viewin-push':S.dir==='pop'?'viewin-pop':S.dir==='swiped'?'viewin-swiped':'viewin');S.dir=null;S.entering=false;}
     S.lastView=S.view;
     const d2=$('#st-dock');if(d2)d2.scrollLeft=dockL;
     this.navbar();
@@ -70,3 +70,17 @@ try{const h=location.hash.slice(1);const simple=['today','studio','calendar','mo
 App.render();
 connect();
 setTimeout(checkReminders,1500);
+
+/* swipe in from the left edge to go back, like an iPhone app (pages with a back button only) */
+(()=>{const EDGE=26;let t=null;const V=()=>$('#view');
+  const canBack=()=>!sheetStack.length&&!$('.menu')&&!$('.confirm.on')&&!TOPS.includes(App.state.view)&&!!document.querySelector('#view .pghead .back');
+  const reset=(v,anim)=>{v.style.transition=anim?'transform .28s cubic-bezier(.2,.8,.2,1),opacity .28s':'';v.style.transform='';v.style.opacity='';if(anim)setTimeout(()=>{v.style.transition='';},300);};
+  addEventListener('touchstart',e=>{if(e.touches.length!==1)return;const x=e.touches[0].clientX;if(x>EDGE||!canBack()){t=null;return;}t={x0:x,y0:e.touches[0].clientY,t0:Date.now(),on:false,dx:0};},{passive:true});
+  addEventListener('touchmove',e=>{if(!t)return;const p=e.touches[0],dx=p.clientX-t.x0,dy=p.clientY-t.y0;
+    if(!t.on){if(Math.abs(dy)>10&&Math.abs(dy)>Math.abs(dx)){t=null;return;}if(dx<8)return;t.on=true;}
+    e.preventDefault();t.dx=Math.max(0,dx);const v=V(),w=innerWidth;v.style.transition='';v.style.transform=`translateX(${t.dx}px)`;v.style.opacity=String(1-Math.min(.35,t.dx/w*.5));},{passive:false});
+  const end=()=>{if(!t)return;const s=t;t=null;if(!s.on)return;const v=V(),w=innerWidth,vel=s.dx/Math.max(1,Date.now()-s.t0);
+    if(s.dx>w*.33||(vel>.45&&s.dx>40)){v.style.transition='transform .2s cubic-bezier(.2,.8,.2,1),opacity .2s';v.style.transform=`translateX(${w}px)`;v.style.opacity='0';
+      buzz(8);setTimeout(()=>{const b=document.querySelector('#view .pghead .back');App.state._swiped=true;reset(v,false);if(b)b.click();else App.back();},190);}
+    else reset(v,true);};
+  addEventListener('touchend',end,{passive:true});addEventListener('touchcancel',end,{passive:true});})();

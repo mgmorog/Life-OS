@@ -63,7 +63,7 @@ function formCtx(rerender){
       const pp=ctx.panel('part','',any?types.filter(t=>get.all(t).length).map(t=>el('div',{style:'margin-bottom:10px'},el('div',{class:'lbl3'},name[t]),el('div',{class:'chips'},get.all(t).map(o=>el('button',{class:'chip'+(D.part===o.id?' on':''),'aria-pressed':String(D.part===o.id),onclick:pick(o)},t==='habit'?`${o.title} · ${habitWeek(o,todayK())} of ${o.target}`:o.title))))):el('p',{class:'muted small',style:'margin-bottom:8px'},`No ${types.map(t=>name[t].toLowerCase()).join(' or ')} yet`),
         el('div',{style:'display:flex;flex-wrap:wrap;gap:4px 18px;margin-top:8px'},D.part?el('button',{class:'linkbtn',onclick:pick(null)},'None'):null,types.includes('goal')?el('button',{class:'linkbtn',onclick:e=>{e.stopPropagation();goalSheet(null,{after:r=>{D.part=r.id;rerender();}});}},'+ New goal'):null,types.includes('project')?el('button',{class:'linkbtn',onclick:e=>{e.stopPropagation();projectSheet(null,{after:r=>{D.part=r.id;rerender();}});}},'+ New project'):null));g.append(pp);}
   };
-  ctx.areaRow=(g,D)=>{g.append(ctx.row('area','leaf','Life area',D.area||'None',{valOn:!!D.area}));
+  ctx.areaRow=(g,D)=>{g.append(ctx.row('area',D.area?areaIcon(D.area):'leaf','Life area',D.area||'None',{valOn:!!D.area}));
     if(ctx.open==='area')g.append(ctx.panel('area','',el('div',{class:'chips'},(get.settings().areas||AREAS).map(a=>el('button',{class:'chip'+(D.area===a?' on':''),'aria-pressed':String(D.area===a),onclick:e=>{e.stopPropagation();D.area=D.area===a?null:a;ctx.open=null;rerender();}},a)))));};
   /* one Appearance row: a live preview in the row, color and icon in its panel */
   ctx.appearanceRow=(g,D,chip)=>{const cur=D.color||'sage';

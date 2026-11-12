@@ -67,7 +67,7 @@ function orderSheet({title,init,max,word,limit,groups,info,exact=false,onDone}){
     groups.forEach(([label,ids])=>{const f=ids.filter(x=>!D.includes(x));if(f.length)box.append(el('div',{class:'lbl'},label),el('div',{class:'list'},f.map(pickRow)));});}
   return inst;
 }
-const pinInfo=id=>{if(id&&id.startsWith('area:')){const a=id.slice(5);return (get.settings().areas||AREAS).includes(a)?{n:a,i:'leaf',go:()=>App.go('area',{name:a}),c:''}:null;}const p=PLACES[id];if(!p)return null;return{n:p.n,i:p.i,go:()=>App.go(id),c:placeCount(id).c};};
+const pinInfo=id=>{if(id&&id.startsWith('area:')){const a=id.slice(5);return (get.settings().areas||AREAS).includes(a)?{n:a,i:areaIcon(a),go:()=>App.go('area',{name:a}),c:''}:null;}const p=PLACES[id];if(!p)return null;return{n:p.n,i:p.i,go:()=>App.go(id),c:placeCount(id).c};};
 function editPins(){const s=get.settings();orderSheet({title:'Edit pinned',init:(s.pinned||[]).filter(pinInfo),max:4,word:'pinned',limit:'Four is the limit. Remove one to add another.',info:pinInfo,groups:[['Places',['inbox','tasks','habits','goals','projects','routines','lists','reviews','insights','discover','tools','photos','archive','trash','today','calendar','studio','areas']],['Life areas',(s.areas||AREAS).map(a=>'area:'+a)]],onDone:D=>setSettings({pinned:D})});}
 /* search */
 function searchIndex(){

@@ -24,6 +24,19 @@ minus:'<path d="M5 12h14"/>',
  bell:'<path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/>',
  target:'<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.4" fill="currentColor"/>',
  flag:'<path d="M5 21V4m0 0h11l-2 4.5 2 4.5H5"/>',
+ a_health:'<path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/><path d="M8 12h2l1-2 2 4 1-2h2"/>',
+ a_home:'<path d="M4 11l8-6 8 6"/><path d="M6 9.5V19h12V9.5"/><path d="M10 19v-5h4v5"/>',
+ a_money:'<rect x="3.5" y="6.5" width="17" height="12" rx="2"/><path d="M3.5 10h17"/><circle cx="16" cy="14.5" r="1" fill="currentColor"/>',
+ a_people:'<circle cx="9" cy="8.5" r="3"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0"/><circle cx="16.5" cy="9.5" r="2.5"/><path d="M15.5 14.2A4.5 4.5 0 0 1 20.5 19"/>',
+ a_career:'<rect x="3.5" y="7.5" width="17" height="12" rx="2"/><path d="M9 7.5V6a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 6v1.5M3.5 12.5h17"/>',
+ a_learn:'<path d="M12 6.5C10 5 7 4.5 4 5v13c3-.5 6 0 8 1.5 2-1.5 5-2 8-1.5V5c-3-.5-6 0-8 1.5z"/><path d="M12 6.5v13"/>',
+ a_rec:'<path d="M3 19l6-10 4 6 2-3 6 7z"/><circle cx="17" cy="6.5" r="1.8"/>',
+ a_growth:'<path d="M12 20v-8"/><path d="M12 12c0-4 3-6 7-6 0 4-3 6-7 6z"/><path d="M12 14c0-3-2.5-5-6-5 0 3 2.5 5 6 5z"/>',
+ a_admin:'<path d="M4 7.5V18a1.5 1.5 0 0 0 1.5 1.5h13A1.5 1.5 0 0 0 20 18V9.5A1.5 1.5 0 0 0 18.5 8H12l-2-2.5H5.5A1.5 1.5 0 0 0 4 7v.5z"/>',
+ a_family:'<path d="M4 11l8-6 8 6"/><path d="M6 9.5V19h12V9.5"/><path d="M12 17s-3-1.8-3-4a1.6 1.6 0 0 1 3-.9 1.6 1.6 0 0 1 3 .9c0 2.2-3 4-3 4z"/>',
+ a_pets:'<path d="M12 12.5c-2.6 0-5 2.6-5 4.8 0 1.5 1.2 2.2 2.6 2.2.9 0 1.6-.4 2.4-.4s1.5.4 2.4.4c1.4 0 2.6-.7 2.6-2.2 0-2.2-2.4-4.8-5-4.8z"/><circle cx="5" cy="10.5" r="1.8"/><circle cx="9" cy="6" r="1.8"/><circle cx="15" cy="6" r="1.8"/><circle cx="19" cy="10.5" r="1.8"/>',
+ a_travel:'<path d="M10.5 9.5V5a1.5 1.5 0 0 1 3 0v4.5l7 4v2l-7-2V18l2 1.5V21l-3.5-1-3.5 1v-1.5l2-1.5v-4.5l-7 2v-2z" stroke-linejoin="round"/>',
+ a_comm:'<circle cx="12" cy="7" r="2.5"/><circle cx="5.5" cy="10" r="2"/><circle cx="18.5" cy="10" r="2"/><path d="M7.5 19a4.5 4.5 0 0 1 9 0M2.5 18a3 3 0 0 1 5-2.2M21.5 18a3 3 0 0 0-5-2.2"/>',
  leaf:'<path d="M5 19c0-8 5-13 15-14-1 10-6 15-14 15"/><path d="M5 19 13 11"/>',
  palette:'<path d="M12 3.5a8.5 8.5 0 1 0 0 17c1.2 0 1.8-.8 1.8-1.7 0-1.3-1-1.6-1-2.6s.8-1.7 1.9-1.7h2.1a3.7 3.7 0 0 0 3.7-3.7c0-4.2-3.8-7.3-8.5-7.3z"/><circle cx="7.8" cy="11.5" r="1.1" fill="currentColor" stroke="none"/><circle cx="10.5" cy="7.6" r="1.1" fill="currentColor" stroke="none"/><circle cx="15" cy="7.8" r="1.1" fill="currentColor" stroke="none"/>',
  shapes:'<rect x="4" y="4" width="7" height="7" rx="2"/><rect x="13" y="4" width="7" height="7" rx="2"/><rect x="4" y="13" width="7" height="7" rx="2"/><circle cx="16.5" cy="16.5" r="3.5"/>',
@@ -57,6 +70,8 @@ const GL=Object.fromEntries(GLYPHS.map(([id,n,p])=>[id,{n,p}]));
 const glyph=(id,w=18,s=1.8)=>GL[id]?sv(GL[id].p,w,s):'';
 const COLORS=[['sage','Sage','#466B5A'],['blue','Blue','#4A6E9C'],['plum','Plum','#735B98'],['rose','Rose','#A8625F'],['clay','Clay','#8A6A50'],['ochre','Ochre','#8A6731'],['olive','Olive','#677A38'],['slate','Slate','#5D6573']];
 const colorHex=c=>!c?COLORS[0][2]:c[0]==='#'?c:(COLORS.find(x=>x[0]===c)||COLORS[0])[2];
+const AREA_ICON={Health:'a_health',Home:'a_home',Finances:'a_money',Relationships:'a_people',Career:'a_career',Learning:'a_learn',Recreation:'a_rec',Travel:'a_travel','Personal growth':'a_growth','Life admin':'a_admin',Family:'a_family',Pets:'a_pets',Community:'a_comm'};
+const areaIcon=a=>AREA_ICON[a]||'leaf';
 const AREAS=['Health','Home','Finances','Relationships','Career','Learning','Recreation','Travel','Personal growth'];
 const AREA_COLOR={Health:'#466B5A',Home:'#8A6A50',Finances:'#677A38',Relationships:'#A8625F',Career:'#4A6E9C',Learning:'#735B98',Recreation:'#8A6731',Travel:'#3F7680','Personal growth':'#5D6573'};
 

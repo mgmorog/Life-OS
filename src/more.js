@@ -11,12 +11,12 @@ function placeCount(id){
   const tk=todayK();
   switch(id){
     case 'inbox':{const n=get.all('idea').length;return{c:n||'',s:n?`${n} idea${n>1?'s':''} to sort`:'Nothing to sort'};}
-    case 'tasks':{const d=carried().length+get.all('task').filter(t=>t.date&&occursOn(t.date,t.repeat,tk,t.skip)&&!isDone(t,tk)).length;return{c:d?`${d} today`:'',s:d?`${d} left today`:`${get.all('task').filter(isOpenTask).length} open`};}
+    case 'tasks':{const d=carried().length+get.all('task').filter(t=>t.date&&occursOn(t.date,t.repeat,tk,t.skip)&&!isDone(t,tk)).length;return{c:d?`${d} today`:'',s:d?`${d} left today`:(n=>n?`${n} open`:'None yet')(get.all('task').filter(isOpenTask).length)};}
     case 'habits':{const hs=get.all('habit'),l=habitsToday().filter(h=>!habitDone(h,tk)).length;return{c:l?`${l} left`:'',s:hs.length?(l?`${l} left today`:`${hs.length} active`):'None yet'};}
     case 'routines':{const r=get.all('routine');return{c:'',s:r.length?`${r.length} routine${r.length>1?'s':''}`:'None yet'};}
     case 'projects':{const p=get.all('project');return{c:'',s:p.length?`${p.length} active`:'None yet'};}
     case 'goals':{const g=get.all('goal');return{c:'',s:g.length?`${g.length} active`:'None yet'};}
-    case 'lists':{const l=get.all('list');return{c:'',s:l.length?`${l.length} list${l.length>1?'s':''}`:'Shopping, packing, anything'};}
+    case 'lists':{const l=get.all('list');return{c:'',s:l.length?`${l.length} list${l.length>1?'s':''}`:'None yet'};}
     case 'reviews':return{c:'',s:`Weekly review due ${DOW[get.settings().reviewDay??0].slice(0,3)}`};
     case 'insights':return{c:'',s:'Plans vs. what happened'};
     default:return{c:'',s:''};

@@ -112,7 +112,7 @@ function viewToday(root){
   const tm=addD(sel,1),tmk=k(tm),td=dayItems(tmk),tl=[...td.allDay,...td.timed,...td.anytime],firstT=td.timed[0];
   page.append(el('section',{class:'card'+(first?' fade-up':''),style:first?'animation-delay:.12s':null},el('button',{class:'tmr',onclick:()=>{goDay(tmk);scrollTo({top:0,behavior:'smooth'});}},
     el('div',{class:'tile'},el('small',{},DOW[tm.getDay()].slice(0,3).toUpperCase()),el('span',{},String(tm.getDate()))),
-    el('div',{class:'grow'},el('h3',{},isToday?'Tomorrow':relDay(tmk)),el('p',{},tl.length?`${tl.length} planned${firstT?' · first at '+fmtT(firstT.time):''}`:'Nothing planned')),
+    el('div',{class:'grow'},el('h3',{},isToday?'Tomorrow':relDay(tmk)),el('p',{},tl.length?`${tl.length} planned${firstT?' · first at '+fmtT(firstT.time):''}`:'Nothing planned yet')),
     el('span',{class:'chev',html:ic('chevr',16,2.2)}))));
   root.append(page);
   S._painted=true;S._anim=null;

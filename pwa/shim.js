@@ -251,12 +251,14 @@ async function checkUpdate(manual) {
     const v = await (await fetch('/version.json', { cache: 'no-store' })).json();
     if (!v.build || v.build === cfg.build) return false;
     const reg = navigator.serviceWorker && (await navigator.serviceWorker.getRegistration()); if (reg) await reg.update().catch(() => {});
-    if (manual || !document.querySelector('.sheet.on,.menu,input:focus,textarea:focus')) { location.reload(); return true; }
+    let tried = ''; try { tried = sessionStorage.getItem('lifeos-upd') || ''; } catch (e) {}
+    if (manual || (tried !== v.build && !document.querySelector('.sheet.on,.menu,input:focus,textarea:focus'))) { try { sessionStorage.setItem('lifeos-upd', v.build); } catch (e) {} location.reload(); return true; }
     const bar = document.getElementById('upd') || h('button', { id: 'upd', class: 'upd', onclick: () => location.reload() }, 'A new version of Life OS is ready. ', h('b', {}, 'Reload'));
     document.body.append(bar); return true;
   } catch (e) { return false; }
 }
 document.addEventListener('visibilitychange', () => { if (document.hidden) hiddenAt = Date.now(); else if (Date.now() - hiddenAt > 20000) checkUpdate(false); });
+addEventListener('load', () => setTimeout(() => checkUpdate(false), 5000));
 if ('serviceWorker' in navigator && location.protocol !== 'file:') addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(e => console.warn('sw', e)));
 
 /* ---------- what the shared app code sees ---------- */

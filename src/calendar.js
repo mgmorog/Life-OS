@@ -151,7 +151,7 @@ function pickPeriod(anchor){
     const box=el('div',{});
     const pick=d=>{C.anchor=k(d);if(C.mode==='month')C.sel=isCurrentFor('month',d)?todayK():k(d);if(C.mode==='week'){C.sel=k(d);C.weekOpen=null;}inst.close();calCommit();};
     const draw=()=>{box.innerHTML='';
-      if(C.mode==='week'){const c=formCtx(()=>{});box.append(el('div',{class:'card'},c.calendar(C.anchor,dk=>{if(dk)pick(fromK(dk));})));return;}
+      if(C.mode==='week'){const c=formCtx(()=>{});box.append(el('div',{class:'card'},c.calendar(C.anchor,dk=>{if(dk)pick(fromK(dk));},{range:calRange(C)})));return;}
       box.append(el('div',{style:'display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;font-weight:600'},el('button',{class:'iconbtn green','aria-label':'Previous year',html:ic('chevl',20,2),onclick:()=>{vy--;draw();}}),String(vy),el('button',{class:'iconbtn green','aria-label':'Next year',html:ic('chevr',20,2),onclick:()=>{vy++;draw();}})));
       if(C.mode==='month')box.append(el('div',{class:'pick-grid'},MONL.map((n,i)=>el('button',{class:(vy===a.getFullYear()&&i===a.getMonth()?'on ':'')+(vy===t.getFullYear()&&i===t.getMonth()?'cur':''),onclick:()=>pick(new Date(vy,i,1))},n.slice(0,3)))));
       else box.append(el('div',{class:'pick-grid',style:'grid-template-columns:repeat(2,minmax(0,1fr))'},[0,1,2,3].map(i=>el('button',{class:(vy===a.getFullYear()&&i===quarterOf(a)?'on ':'')+(vy===t.getFullYear()&&i===quarterOf(t)?'cur':''),style:'height:68px',onclick:()=>pick(new Date(vy,i*3,1))},`Q${i+1}`,el('small',{},`${MON[i*3]} – ${MON[i*3+2]}`)))));};

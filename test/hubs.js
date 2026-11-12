@@ -16,7 +16,7 @@ const{chromium}=require('playwright');const fs=require('fs');
  await btn('+15s').click();await p.waitForTimeout(100);await btn('Skip').click();await p.waitForTimeout(100);ok(await p.locator('.restbar').count()===0,'rest skip');
  await btn('+ Add set').first().click();await p.waitForTimeout(100);ok((await text()).includes('of 6 sets'),'add set');
  await btn('Finish').click();await p.waitForTimeout(250);await p.locator('.sheet').last().getByRole('button',{name:'Save',exact:true}).click();await p.waitForTimeout(250);const wk=await get('Health','workouts');ok(wk.some(x=>x.what==='Upper body A'&&x.sets===1&&x.detail['Bench press']),'session saved');await shot('wk');
- await go('area',{name:'Health'});ok(/Compared with|Your numbers build up here/i.test(await text()),'health dashboard');await shot('hub-health');
+ await go('area',{name:'Health'});ok(/Compared with|Your health at a glance/i.test(await text()),'health dashboard');await shot('hub-health');
  await ent('Health','meals',{t:'recipe',what:'Salmon',min:35,serves:2,ing:'Salmon fillets\nPotatoes',how:'Roast it'});
  await go('tool',{hub:'Health',tool:'meals'});await btn('+ Plan dinner').first().click();await p.waitForTimeout(250);await p.locator('.sheet').last().getByRole('button',{name:'Salmon',exact:true}).click();await p.waitForTimeout(200);ok((await get('Health','meals')).some(x=>x.meal==='Dinner'&&x.what==='Salmon'),'plan dinner');
  await btn('Add this week’s ingredients').click();await p.waitForTimeout(200);ok((await text()).includes('Groceries · 2 left'),'groceries filled');await shot('meals');

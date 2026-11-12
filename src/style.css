@@ -1170,3 +1170,9 @@ html.a-motion .viewin-push,html.a-motion .viewin-pop,html.a-motion .viewin-swipe
 /* sliding pages never make the screen wider than the phone */
 html,body{overflow-x:clip}
 #view{overflow-x:clip}
+/* pull to refresh */
+#ptr{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 8px);z-index:60;width:40px;height:40px;border-radius:50%;background:var(--card,#fff);color:var(--accent);display:grid;place-items:center;box-shadow:0 4px 16px rgba(20,40,30,.14),0 0 0 1px rgba(20,40,30,.06);transform:translate(-50%,-56px);opacity:0;pointer-events:none;will-change:transform}
+#ptr svg{transition:transform .05s linear}
+#ptr.back{transition:transform .26s var(--ease,cubic-bezier(.2,.8,.2,1)),opacity .26s,background .15s,color .15s}
+#ptr.ready{background:var(--accent);color:#fff}
+#ptr.spin svg{animation:spin .8s linear infinite}

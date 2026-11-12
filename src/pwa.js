@@ -72,3 +72,24 @@ const PWA={
     }
   },
 };
+
+/* ---------- pull down from the top of any page to refresh ---------- */
+const PTR={max:96,at:64};
+function pullRefresh(){
+  let y0=0,x0=0,d=0,on=false,busy=false,dead=false,box=null;
+  const node=()=>box||(box=document.body.appendChild(el('div',{id:'ptr','aria-hidden':'true',html:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19.5 12a7.5 7.5 0 1 1-2.2-5.3"/><path d="M19.5 4.5v3.8h-3.8"/></svg>'})));
+  const paint=v=>{const b=node(),p=Math.min(1,v/PTR.at);b.style.transform=`translate(-50%,${Math.round(v*0.9)-56}px)`;b.style.opacity=String(Math.min(1,v/24));b.firstChild.style.transform=`rotate(${Math.round(p*270)}deg)`;b.classList.toggle('ready',v>=PTR.at);};
+  const reset=()=>{if(!box)return;box.classList.add('back');box.classList.remove('ready','spin');box.style.transform='translate(-50%,-56px)';box.style.opacity='0';setTimeout(()=>box&&box.classList.remove('back'),260);};
+  const blocked=t=>sheetStack.length||busy||!!document.querySelector('.menu,.ghost,.lift')||(t&&t.closest&&t.closest('input,textarea,select,[contenteditable],.grid,.weekstrip,.sbody,.wcol,.hscroll,.dock,.mscrim'));
+  document.addEventListener('touchstart',e=>{on=false;dead=true;if(e.touches.length!==1||(document.scrollingElement||document.documentElement).scrollTop>0||blocked(e.target))return;dead=false;y0=e.touches[0].clientY;x0=e.touches[0].clientX;d=0;},{passive:true});
+  document.addEventListener('touchmove',e=>{if(dead)return;const t=e.touches[0],dy=t.clientY-y0,dx=Math.abs(t.clientX-x0);
+    if(!on){if(dx>12&&dx>dy){dead=true;return;}if(dy<8)return;if((document.scrollingElement||document.documentElement).scrollTop>0||blocked()){dead=true;return;}on=true;node().classList.remove('back');}
+    d=Math.max(0,Math.min(PTR.max,(dy-8)*0.55));if(document.querySelector('.ghost,.lift')){dead=true;on=false;reset();return;}paint(d);},{passive:true});
+  const end=async()=>{if(!on){dead=true;return;}on=false;dead=true;if(d<PTR.at){reset();return;}
+    busy=true;const b=node();b.classList.add('back','spin');b.classList.remove('ready');b.style.transform='translate(-50%,10px)';b.style.opacity='1';
+    try{navigator.vibrate&&navigator.vibrate(8);}catch(e){}
+    const t0=Date.now();try{const a=window.lifeosPWA;if(a&&a.refresh)await a.refresh();}catch(e){}
+    App.refresh();await new Promise(r=>setTimeout(r,Math.max(0,700-(Date.now()-t0))));busy=false;reset();};
+  document.addEventListener('touchend',end,{passive:true});document.addEventListener('touchcancel',()=>{if(on){on=false;dead=true;reset();}},{passive:true});
+}
+pullRefresh();

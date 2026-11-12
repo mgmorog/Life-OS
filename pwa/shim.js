@@ -114,6 +114,7 @@ async function startAuth() {
 const token = async () => { const { data } = await sb.auth.getSession(); return data.session ? data.session.access_token : session && session.access_token; };
 
 /* ---------- db: the same small Firestore-like surface the app uses on claude.ai ---------- */
+const liveCols = new Set();
 function collection(path) {
   const uid = path.split('/').pop();
   let maxTs = 0, cb = null, errCb = null, loaded = false, chan = null, live = false, poll = null, busy = false;
@@ -160,6 +161,7 @@ function collection(path) {
     addEventListener('online', catchUp);
     document.addEventListener('visibilitychange', () => { if (!document.hidden) catchUp(); });
   }
+  liveCols.add(catchUp);
   return {
     doc(id) {
       return {
@@ -277,6 +279,8 @@ window.lifeosPWA = {
   email: () => (session && session.user && session.user.email) || ls.get('lifeos-email') || '',
   async signOut() { await push.disable(); await sb.auth.signOut().catch(() => {}); ls.set('lifeos-auth', null); },
   push, checkUpdate,
+  // pull to refresh: take a newer version if there is one, otherwise fetch what changed on other devices
+  async refresh() { if (await checkUpdate(true)) return; await Promise.all([...liveCols].map(f => f().catch(() => {}))); },
   async setReminders(items) { const { error } = await sb.rpc('set_reminders', { items }); if (error) throw mapErr(error); },
   async setCalFeed(tok, ics) { const { error } = await sb.from('cal_feeds').upsert({ token: tok, user_id: session.user.id, ics, updated_at: new Date().toISOString() }, { onConflict: 'token' }); if (error) throw mapErr(error); },
   async dropCalFeed(tok) { await sb.from('cal_feeds').delete().eq('token', tok); },

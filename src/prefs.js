@@ -20,8 +20,8 @@ const Gcal={events:[],status:'off',last:null,msg:'',mcp:null,_byDay:null,
   details(e){const ev=e.rec.ev||{},a=e.time!=null?fmtRange(e.time,e.time+e.dur):'All day';openSheet({title:'Calendar event',build:b=>{b.append(el('div',{class:'card'},el('h2',{style:'margin-top:0'},e.title),el('p',{class:'sub'},a),ev.location?el('p',{class:'sub'},ev.location):null),el('p',{class:'small muted'},'This comes from Google Calendar. Change it there and it updates here.'),/^https:\/\//.test(ev.htmlLink||'')?el('a',{class:'btn line block',href:ev.htmlLink,target:'_blank',rel:'noopener'},'Open in Google Calendar'):null);}});}
 };
 /* ---------- Settings ---------- */
-const APP_VER=72;
-const WHATS_NEW=['Life Areas icons now use the same green tiles as Organize.','Daily check-in: the day circles shrink to fit on smaller phones instead of running off the edge.'];
+const APP_VER=73;
+const WHATS_NEW=['Pull down from the top of any page to refresh. Life OS fetches anything that changed on your other devices, and picks up a new version if one is ready.'];
 function whatsNew(){setSettings({seenVer:APP_VER});const inst=openSheet({title:`What’s new in ${APP_VER}`,left:{label:'Close'},build:b=>b.append(el('div',{class:'list'},WHATS_NEW.map(t=>el('div',{class:'li',style:'min-height:52px;align-items:flex-start;padding-block:12px'},el('span',{style:'display:grid;color:var(--accent-text);margin-top:2px',html:ic('check',16,2.4)}),el('span',{class:'grow'},t)))))});return inst;}
 function applyPrefs(){const s=get.settings(),c=document.documentElement.classList;c.toggle('t-large',s.textSize==='large');c.toggle('t-larger',s.textSize==='larger');c.toggle('a-bold',!!s.bold);c.toggle('a-borders',!!s.borders);c.toggle('a-contrast',!!s.contrast);c.toggle('a-motion',!!s.reduceMotion);c.toggle('c-fade',s.completed==='fade');c.toggle('c-hide',s.completed==='hide');}
 function setRow(label,sub,val,on){return el('button',{class:'li',style:'min-height:56px',onclick:on},el('span',{class:'grow'},el('b',{style:'font-weight:500'},label),sub?el('small',{},sub):null),val?el('span',{class:'small muted'},val):null,el('span',{class:'chev',html:ic('chevr',16,2)}));}

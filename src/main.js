@@ -42,8 +42,10 @@ const App={
     const fav=(s.nav&&s.nav.length===3?s.nav:DEFAULT_SETTINGS.nav);
     const group={inbox:'inbox',tasks:'tasks',habits:'habits',habit:'habits',goals:'goals',projects:'projects',plan:null,routines:'routines',routine:'routines',player:'routines',lists:'lists',list:'lists',reviews:'reviews',review:'reviews',insights:'insights'};
     const cur=S.view;
-    const isAct=id=>id===cur||group[cur]===id;
-    const anyFav=fav.some(isAct);
+    const isAct=id=>id===cur||group[cur]===id||id===origin;
+    let origin=null;
+    if(!fav.some(id=>id===cur||group[cur]===id)&&!TOPS.includes(cur)){const st=S.stack||[];for(let i=st.length-1;i>=0;i--){const v=st[i].view;if(TOPS.includes(v)){if(fav.includes(v))origin=v;break;}}}
+    const anyFav=fav.some(isAct)||!!origin;
     const tab=(id,label,icon)=>el('button',{class:'tab'+((id==='more'?!anyFav:isAct(id))?' act':''),'aria-current':(id==='more'?!anyFav:isAct(id))?'page':null,onclick:()=>{if(id===cur)window.scrollTo({top:0,behavior:'smooth'});else{S.stack=[];App.go(id);}}},el('span',{class:'ic',html:icon}),label);
     const iconOf=id=>id==='more'?sv('<circle cx="5" cy="12" r="1.8" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.8" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.8" fill="currentColor" stroke="none"/>',22):ic(PLACES[id].i,22);
     const short=id=>({'tools':'Tools'})[id]||PLACES[id].n;

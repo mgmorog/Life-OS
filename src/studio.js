@@ -124,7 +124,7 @@ function viewStudio(root){
   document.body.classList.add('has-commit');
   $('#commitbar').hidden=false;
   const cb=$('#commitbar');cb.innerHTML='';
-  cb.append(el('div',{class:'in'},committed?el('span',{class:'grow'},el('b',{style:'display:block;font-weight:600'},P.doneL),el('span',{class:'small muted'},P.doneS)):el('span',{class:'small muted'},`${placedN} of ${total} placed`),
+  cb.append(el('div',{class:'in'},committed?el('span',{class:'grow'},el('b',{style:'display:block;font-weight:600'},P.doneL),el('span',{class:'small muted'},P.doneS)):el('span',{class:'small muted'},total?`${placedN} of ${total} placed`:'Nothing to place yet'),
     committed?el('button',{class:'btn quiet',onclick:()=>{planRec.committed=false;put(planRec);}},'Replan'):el('button',{class:'btn primary',onclick:()=>reviewSheet(P,st,cards)},P.commit)));
 }
 function cardEl(c,st,P){

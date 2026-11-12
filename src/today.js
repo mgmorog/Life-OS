@@ -144,7 +144,7 @@ function dayCard(dk){
   const{allDay,timed,anytime}=dayItems(dk);
   const nowM=nowMin(),all=[...timed,...anytime].filter(e=>e.kind!=='gcal'),open=all.filter(e=>!e.done),late=isToday&&get.settings().carryOver?carried():[],lateIn=late.filter(t=>!all.some(e=>e.id===t.id)),doneX=isToday?get.all('task').filter(t=>t.date&&t.date<tk&&(!t.repeat||t.repeat.type==='never')&&isDone(t,t.date)&&k(new Date(typeof t.doneDates[t.date]==='number'?t.doneDates[t.date]:0))===tk).length+get.all('habit').filter(h=>habitWeekly(h)&&!all.some(e=>e.id===h.id)&&habitDone(h,dk)).length:0,total=all.length+lateIn.length+doneX,left=open.length+lateIn.length;
   const next=isToday?timed.find(e=>!e.done&&e.time+(e.dur||30)>nowM):timed.find(e=>!e.done);
-  let eye=isToday?'Today':relDay(dk),head=isPast?'Nothing logged':(isToday?'A clear day':'Nothing planned yet'),sub=isPast?'':'Tap an hour, or add something below.';
+  let eye=isToday?'Today':relDay(dk),head=emptyDayHead(dk),sub=isPast?'':'Tap an hour, or add something below.';
   if(next){const during=isToday&&next.time<=nowM;eye=isToday?(during?'Happening now':'Up next'):eye;head=next.title;sub=next.kind==='task'?fmtT(next.time):fmtRange(next.time,next.time+(next.dur||30));
     if(isToday){const mins=during?next.time+(next.dur||30)-nowM:next.time-nowM;sub+=` · ${during?fmtDurS(mins)+' left':'in '+fmtDurS(mins)}`;}}
   else if(!open.length&&lateIn.length){const n=lateIn.length;head=`${n} carried over`;sub=all.length?'Today’s plan is done. Finish or move what’s left.':'Nothing else is planned. Finish or move it below.';}
@@ -283,6 +283,7 @@ function checkinCard(dk){return el('section',{class:'card'},el('div',{class:'eye
   el('div',{class:'btnrow'},el('button',{class:'btn primary',onclick:()=>App.go('review',{period:reviewPeriod(dk)})},'Start'),el('button',{class:'btn text',onclick:()=>{setSettings({checkinLater:dk});}},'Later')));}
 
 /* ---------- share a day as an image, a PDF or text ---------- */
+const emptyDayHead=dk=>{const tk=todayK();return dk<tk?'Nothing logged':dk===tk?'A clear day':'Nothing planned yet';};
 function dayCanvas(dk){
   const{allDay,timed,anytime}=dayItems(dk),d=fromK(dk);
   const W=1080,rows=[...timed.map(e=>[e.kind==='task'?fmtT(e.time):fmtRange(e.time,e.time+e.dur),e.title,e.color,e.done]),...anytime.map(e=>['Anytime',e.title,'#97A09B',e.done])];
@@ -295,13 +296,13 @@ function dayCanvas(dk){
   let y=280;
   if(allDay.length){let cx=72;x.font=f(30,'b',500);allDay.forEach(e=>{const w=x.measureText(e.title).width+44;x.fillStyle=e.color;rr(x,cx,y,w,58,14);x.fill();x.fillStyle='#fff';x.fillText(e.title,cx+22,y+40);cx+=w+14;});y+=90;}
   x.fillStyle='#fff';rr(x,48,y,W-96,Math.max(rows.length,1)*104+40,36);x.fill();y+=20;
-  if(!rows.length){x.fillStyle='#5B6560';x.font=f(38,'d',500);x.fillText('A clear day',96,y+66);}
+  if(!rows.length){x.fillStyle='#5B6560';x.font=f(38,'d',500);x.fillText(emptyDayHead(dk),96,y+66);}
   rows.forEach(([t,title,col,dn],i)=>{const ry=y+i*104;x.fillStyle=col;rr(x,88,ry+20,8,64,4);x.fill();x.fillStyle='#5B6560';x.font=f(26,'b',500);x.fillText(t,116,ry+44);x.fillStyle=dn?'#97A09B':'#1E2622';x.font=f(36,'b',500);let tt=title;while(x.measureText(tt).width>W-240&&tt.length>4)tt=tt.slice(0,-2);if(tt!==title)tt+='…';x.fillText(tt,116,ry+86);});
   x.fillStyle='#97A09B';x.font=f(24,'b',500);x.fillText('Life OS',72,H-34);
   return c;
 }
 function rr(x,a,b,w,h,r){x.beginPath();x.moveTo(a+r,b);x.arcTo(a+w,b,a+w,b+h,r);x.arcTo(a+w,b+h,a,b+h,r);x.arcTo(a,b+h,a,b,r);x.arcTo(a,b,a+w,b,r);x.closePath();}
-function dayText(dk){const{allDay,timed,anytime}=dayItems(dk);const L=[`${DOW[fromK(dk).getDay()]}, ${MONL[fromK(dk).getMonth()]} ${fromK(dk).getDate()}`];allDay.forEach(e=>L.push(`All day: ${e.title}`));timed.forEach(e=>L.push(`${fmtT(e.time)}  ${e.title}${e.done?' (done)':''}`));anytime.forEach(e=>L.push(`Anytime  ${e.title}${e.done?' (done)':''}`));if(L.length===1)L.push('A clear day');return L.join('\n');}
+function dayText(dk){const{allDay,timed,anytime}=dayItems(dk);const L=[`${DOW[fromK(dk).getDay()]}, ${MONL[fromK(dk).getMonth()]} ${fromK(dk).getDate()}`];allDay.forEach(e=>L.push(`All day: ${e.title}`));timed.forEach(e=>L.push(`${fmtT(e.time)}  ${e.title}${e.done?' (done)':''}`));anytime.forEach(e=>L.push(`Anytime  ${e.title}${e.done?' (done)':''}`));if(L.length===1)L.push(emptyDayHead(dk));return L.join('\n');}
 function pdfFromJpeg(bytes,w,h){const enc=new TextEncoder(),pw=612,ph=Math.round(612*h/w),parts=[],off=[];let len=0;const add=b=>{const u=typeof b==='string'?enc.encode(b):b;parts.push(u);len+=u.length;};const obj=(n,s)=>{off[n]=len;add(`${n} 0 obj\n${s}\nendobj\n`);};
   add('%PDF-1.4\n');obj(1,'<< /Type /Catalog /Pages 2 0 R >>');obj(2,'<< /Type /Pages /Kids [3 0 R] /Count 1 >>');obj(3,`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pw} ${ph}] /Resources << /XObject << /I 4 0 R >> >> /Contents 5 0 R >>`);
   off[4]=len;add(`4 0 obj\n<< /Type /XObject /Subtype /Image /Width ${w} /Height ${h} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${bytes.length} >>\nstream\n`);add(bytes);add('\nendstream\nendobj\n');

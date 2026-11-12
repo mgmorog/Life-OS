@@ -36,7 +36,7 @@ function viewCalendar(root){
   if(mode==='quarter')quarterBody(body,y,qM,C);else if(mode==='month')monthBody(body,a,C);else weekBody(body,wS,C);
   onSwipe(body,()=>calStep(1),()=>calStep(-1));
   page.append(body);root.append(page,compact);
-  const sync=()=>{const h=$('#cal-h'),c=$('#cal-compact');if(h&&c)c.classList.toggle('on',h.getBoundingClientRect().bottom<=0);};
+  const sync=()=>{const h=$('#cal-h'),c=$('#cal-compact');if(h&&c)c.classList.toggle('on',h.getBoundingClientRect().bottom<=(parseFloat(getComputedStyle(c).top)||0)+8);};
   removeEventListener('scroll',App._calS);App._calS=sync;addEventListener('scroll',sync,{passive:true});requestAnimationFrame(sync);
 }
 function isoWeek(d){const x=new Date(d);x.setHours(0,0,0,0);x.setDate(x.getDate()+3-((x.getDay()+6)%7));const w1=new Date(x.getFullYear(),0,4);return 1+Math.round(((x-w1)/864e5-3+((w1.getDay()+6)%7))/7);}
@@ -139,7 +139,7 @@ function dayPanel(dk){
   const{allDay,timed,anytime}=dayItems(dk,{filters:true}),items=[...timed,...anytime],tk=todayK(),past=dk<tk;
   const c=el('div',{class:'card',style:'padding:16px 18px'},
     el('div',{style:'display:flex;align-items:baseline;justify-content:space-between;gap:8px'},el('span',{class:'eyebrow',style:'font-size:11px'},shortDay(dk).toUpperCase()+(dk===tk?' · TODAY':'')),el('button',{class:'linkbtn small',onclick:()=>{App.state.sel=dk;App.state._fresh=true;App.go('today');}},'Open in Today ›')),
-    el('div',{class:'serif',style:'font-size:26px;line-height:1.2;margin-top:2px'},items.length||allDay.length?`${items.length+allDay.length} planned`:(past?'Nothing logged':dk===tk?'A clear day':'Nothing planned yet')));
+    el('div',{class:'serif',style:'font-size:26px;line-height:1.2;margin-top:2px'},items.length||allDay.length?`${items.length+allDay.length} planned`:emptyDayHead(dk)));
   if(allDay.length){const a=allDayChips(allDay,dk);a.style.marginTop='10px';c.append(a);}
   if(items.length){const lst=el('div',{style:'margin-top:10px'});items.slice(0,3).forEach(e=>lst.append(dayLine(e,dk)));if(items.length>3)lst.append(el('button',{class:'linkbtn small',onclick:()=>{App.state.sel=dk;App.state._fresh=true;App.go('today');}},`+${items.length-3} more`));c.append(lst);}
   const ch=addChips(dk);ch.style.marginTop='12px';c.append(ch);

@@ -74,22 +74,40 @@ const PWA={
 };
 
 /* ---------- pull down from the top of any page to refresh ---------- */
-const PTR={max:96,at:64};
+/* The page stretches down with the finger and a ring fills in the gap above it. Past the
+   threshold the ring turns solid; on release the page holds open while it syncs, the ring
+   becomes an "Up to date" check for a moment, then the page slides back up. */
+const PTR={max:96,at:64,hold:56,okMs:1000};
 function pullRefresh(){
-  let y0=0,x0=0,d=0,on=false,busy=false,dead=false,box=null;
-  const node=()=>box||(box=document.body.appendChild(el('div',{id:'ptr','aria-hidden':'true',html:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19.5 12a7.5 7.5 0 1 1-2.2-5.3"/><path d="M19.5 4.5v3.8h-3.8"/></svg>'})));
-  const paint=v=>{const b=node(),p=Math.min(1,v/PTR.at);b.style.transform=`translate(-50%,${Math.round(v*0.9)-56}px)`;b.style.opacity=String(Math.min(1,v/24));b.firstChild.style.transform=`rotate(${Math.round(p*270)}deg)`;b.classList.toggle('ready',v>=PTR.at);};
-  const reset=()=>{if(!box)return;box.classList.add('back');box.classList.remove('ready','spin');box.style.transform='translate(-50%,-56px)';box.style.opacity='0';setTimeout(()=>box&&box.classList.remove('back'),260);};
+  const C=2*Math.PI*10;
+  let y0=0,x0=0,d=0,on=false,busy=false,dead=false,box=null,raf=0;
+  const view=()=>$('#view');
+  const node=()=>box||(box=document.body.appendChild(el('div',{id:'ptr','aria-hidden':'true',html:`<div class="p-ring"><svg viewBox="0 0 28 28" width="28" height="28" fill="none"><circle cx="14" cy="14" r="10" stroke="var(--accent-soft)" stroke-width="3"/><circle class="p-arc" cx="14" cy="14" r="10" stroke="var(--h3)" stroke-width="3" stroke-linecap="round" stroke-dasharray="${C.toFixed(1)}" stroke-dashoffset="${C.toFixed(1)}"/></svg></div><div class="p-done"><span class="p-ck">${ic('check',13,3.2)}</span>Up to date</div>`})));
+  const place=(y,ease)=>{const v=view(),b=node(),r=b.firstChild;
+    if(v){v.classList.toggle('ptr-ease',!!ease);v.classList.add('ptr-move');v.style.transform=y>0?`translate3d(0,${y}px,0)`:'';}
+    b.classList.toggle('p-ease',!!ease);r.style.transform=`translateY(${Math.round(y/2-14)}px)`;};
+  const paint=v=>{const b=node(),p=Math.min(1,v/PTR.at),arc=b.querySelector('.p-arc');
+    place(v,false);b.firstChild.style.opacity=String(Math.min(1,v/24));
+    arc.style.strokeDashoffset=(C*(1-p)).toFixed(1);arc.style.stroke=v>=PTR.at?'var(--accent)':'var(--h3)';};
+  const close=()=>{const b=node();place(0,true);b.firstChild.style.opacity='0';
+    setTimeout(()=>{if(on||busy)return;b.classList.remove('p-ok','p-spin','p-ease');const v=view();if(v){v.classList.remove('ptr-ease','ptr-move');v.style.transform='';}},380);};
+  const reset=()=>{if(!box)return;close();};
   const blocked=t=>sheetStack.length||busy||!!document.querySelector('.menu,.ghost,.lift')||(t&&t.closest&&t.closest('input,textarea,select,[contenteditable],.grid,.weekstrip,.sbody,.wcol,.hscroll,.dock,.mscrim'));
-  document.addEventListener('touchstart',e=>{on=false;dead=true;if(e.touches.length!==1||(document.scrollingElement||document.documentElement).scrollTop>0||blocked(e.target))return;dead=false;y0=e.touches[0].clientY;x0=e.touches[0].clientX;d=0;},{passive:true});
+  const top=()=>(document.scrollingElement||document.documentElement).scrollTop;
+  document.addEventListener('touchstart',e=>{on=false;dead=true;if(e.touches.length!==1||top()>0||blocked(e.target))return;dead=false;y0=e.touches[0].clientY;x0=e.touches[0].clientX;d=0;},{passive:true});
   document.addEventListener('touchmove',e=>{if(dead)return;const t=e.touches[0],dy=t.clientY-y0,dx=Math.abs(t.clientX-x0);
-    if(!on){if(dx>12&&dx>dy){dead=true;return;}if(dy<8)return;if((document.scrollingElement||document.documentElement).scrollTop>0||blocked()){dead=true;return;}on=true;node().classList.remove('back');}
-    d=Math.max(0,Math.min(PTR.max,(dy-8)*0.55));if(document.querySelector('.ghost,.lift')){dead=true;on=false;reset();return;}paint(d);},{passive:true});
-  const end=async()=>{if(!on){dead=true;return;}on=false;dead=true;if(d<PTR.at){reset();return;}
-    busy=true;const b=node();b.classList.add('back','spin');b.classList.remove('ready');b.style.transform='translate(-50%,10px)';b.style.opacity='1';
+    if(!on){if(dx>12&&dx>dy){dead=true;return;}if(dy<8)return;if(top()>0||blocked()){dead=true;return;}on=true;node().classList.remove('p-ok','p-spin');}
+    d=Math.max(0,Math.min(PTR.max,(dy-8)*0.55));if(document.querySelector('.ghost,.lift')){dead=true;on=false;reset();return;}
+    cancelAnimationFrame(raf);raf=requestAnimationFrame(()=>paint(d));},{passive:true});
+  const end=async()=>{if(!on){dead=true;return;}on=false;dead=true;cancelAnimationFrame(raf);if(d<PTR.at){reset();return;}
+    busy=true;const b=node(),arc=b.querySelector('.p-arc');
+    arc.style.stroke='var(--accent)';arc.style.strokeDashoffset=(C*0.7).toFixed(1);b.firstChild.style.opacity='1';
+    b.classList.add('p-spin');place(PTR.hold,true);
     try{navigator.vibrate&&navigator.vibrate(8);}catch(e){}
     const t0=Date.now();try{const a=window.lifeosPWA;if(a&&a.refresh)await a.refresh();}catch(e){}
-    App.refresh();await new Promise(r=>setTimeout(r,Math.max(0,700-(Date.now()-t0))));busy=false;reset();};
+    App.refresh();await new Promise(r=>setTimeout(r,Math.max(0,700-(Date.now()-t0))));
+    b.classList.remove('p-spin');b.classList.add('p-ok');try{navigator.vibrate&&navigator.vibrate(6);}catch(e){}
+    await new Promise(r=>setTimeout(r,PTR.okMs));busy=false;close();};
   document.addEventListener('touchend',end,{passive:true});document.addEventListener('touchcancel',()=>{if(on){on=false;dead=true;reset();}},{passive:true});
 }
 pullRefresh();

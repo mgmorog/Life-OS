@@ -1170,9 +1170,19 @@ html.a-motion .viewin-push,html.a-motion .viewin-pop,html.a-motion .viewin-swipe
 /* sliding pages never make the screen wider than the phone */
 html,body{overflow-x:clip}
 #view{overflow-x:clip}
-/* pull to refresh */
-#ptr{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 8px);z-index:60;width:40px;height:40px;border-radius:50%;background:var(--card,#fff);color:var(--accent);display:grid;place-items:center;box-shadow:0 4px 16px rgba(20,40,30,.14),0 0 0 1px rgba(20,40,30,.06);transform:translate(-50%,-56px);opacity:0;pointer-events:none;will-change:transform}
-#ptr svg{transition:transform .05s linear}
-#ptr.back{transition:transform .26s var(--ease,cubic-bezier(.2,.8,.2,1)),opacity .26s,background .15s,color .15s}
-#ptr.ready{background:var(--accent);color:#fff}
-#ptr.spin svg{animation:spin .8s linear infinite}
+/* pull to refresh: the page stretches down, a ring fills in the gap, then "Up to date" */
+#view.ptr-move{will-change:transform}
+#view.ptr-ease{transition:transform .36s var(--ease,cubic-bezier(.2,.8,.2,1))}
+#ptr{position:fixed;left:0;right:0;top:env(safe-area-inset-top,0px);height:0;z-index:14;display:flex;justify-content:center;pointer-events:none}
+#ptr .p-ring{width:28px;height:28px;flex:none;color:var(--accent);opacity:0;transform:translateY(-28px)}
+#ptr .p-ring svg{display:block}
+#ptr .p-ring .p-arc{transform:rotate(-90deg);transform-origin:14px 14px;transition:stroke .15s}
+#ptr.p-ease .p-ring{transition:transform .36s var(--ease,cubic-bezier(.2,.8,.2,1)),opacity .3s}
+#ptr.p-spin .p-ring svg{animation:spin .8s linear infinite}
+#ptr .p-done{position:absolute;top:12px;height:32px;padding:0 14px 0 5px;border-radius:16px;background:var(--card,#fff);box-shadow:0 4px 14px rgba(20,40,30,.1),0 0 0 1px rgba(20,40,30,.06);display:none;align-items:center;gap:8px;font-size:14px;font-weight:600;color:var(--accent-deep);white-space:nowrap}
+#ptr .p-done .p-ck{position:relative;width:22px;height:22px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center;flex:none}
+#ptr .p-done .p-ck:after{content:"";position:absolute;inset:0;border-radius:50%;opacity:0}
+#ptr.p-ok .p-ring{display:none}
+#ptr.p-ok .p-done{display:flex;animation:fadeUp .24s var(--ease) both}
+#ptr.p-ok .p-done .p-ck{animation:tickPop .46s var(--spring)}
+#ptr.p-ok .p-done .p-ck:after{animation:flowRing .62s var(--ease)}

@@ -1342,3 +1342,7 @@ html.a-motion .syncst i::after{animation:none}
 .st-cap{font-size:20px;opacity:.9;max-width:22ch}
 .st-cap.solo{font-family:var(--display);font-size:32px;line-height:1.2;opacity:1}
 .st-tap{position:absolute;top:110px;bottom:0;width:40%;z-index:2}.st-tap.l{left:0}.st-tap.r{right:0}
+/* round 8 motion */
+.shead .r{transition:opacity .25s,color .25s}
+.nowjump{transition:transform .45s cubic-bezier(.3,1.35,.5,1),opacity .2s}
+.nowjump[hidden]{display:block!important;opacity:0;transform:translateY(-10px) scale(.8);pointer-events:none;transition:transform .3s var(--ease),opacity .18s}

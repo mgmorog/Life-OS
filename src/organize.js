@@ -96,7 +96,7 @@ function taskRow(t,dk,{late=false,date=false,doneOn=null,grouped=false}={}){
   if((t.photos||[]).length)meta.push(`${t.photos.length} photo${t.photos.length>1?'s':''}`);
   if(steps.length)meta.push(`${sd} of ${steps.length} steps`);
   const hold=(x,y)=>itemMenu({kind:'task',id:t.id,rec:t,title:t.title,time:t.time,dur:t.dur||30,area:t.area,done},t.date&&!(t.repeat&&t.repeat.type!=='never')?t.date:dk,x,y);
-  const r=el('div',{class:'li tick-host'+(done?' done':''),style:'min-height:60px'},
+  const r=el('div',{class:'li tick-host'+(done?' done':''),'data-k':'t:'+t.id+(doneOn?':d':''),style:'min-height:60px'},
     el('span',{class:'tick-hit'},tickBtn(done,on=>{r.classList.toggle('done',on);if(!on)hideToast();setTaskDone(t,dk,on);setTimeout(()=>App.refresh(),820);})),
     el('button',{class:'grow',style:'text-align:left',onclick:()=>openRec(t)},el('span',{class:'tt',style:'font-weight:500'},t.priority==='high'&&!done?el('span',{class:'oflag','aria-label':'High priority',html:ic('flag',13,2.4)}):null,t.title),meta.length?el('small',{class:'ometa'},joinMeta(meta)):null),!t.date&&t.deadline&&!done&&!doneOn?el('button',{class:'oturn','aria-label':`Do ${t.title} today`,onclick:()=>{t.date=todayK();put(t);toast('Added to today',()=>{t.date=null;put(t);});}},'Today'):null);
   if(doneOn)return withPress(r,hold);
@@ -173,7 +173,7 @@ function setHabitPaused(h,on){if(on){h.paused=true;h.pausedAt=Date.now();h.pause
     h.paused=false;h.pausedAt=null;h.pausedStreak=null;}put(h);}
 function habitRow(h,dk){
   const done=habitDone(h,dk),skip=h.skips&&h.skips[dk],open=()=>App.go('habit',{id:h.id}),s=habitStreak(h);
-  const row=el('div',{class:'li tick-host'+(done?' done':''),style:'min-height:60px'});
+  const row=el('div',{class:'li tick-host'+(done?' done':''),'data-k':'h:'+h.id,style:'min-height:60px'});
   const line=(()=>{if(skip)return el('small',{},'Skipped');
     if(!done&&dk===todayK()&&missedYesterday(h))return el('small',{class:'olate'},'Missed yesterday · Never miss twice');
     const parts=[];if(habitWeekly(h))parts.push(`${habitWeek(h,dk)} of ${h.target||1} this week`);

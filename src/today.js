@@ -314,7 +314,7 @@ function shareDaySheet(dk){
   Promise.resolve(document.fonts&&document.fonts.ready).then(()=>openSheet({title:'Share this day',build:body=>{
     const c=dayCanvas(dk),base=`Life-OS-${dk}`;
     const img=el('img',{alt:`Preview of ${shortDay(dk)}`,style:'width:100%;border-radius:16px;border:1px solid var(--line);display:block',src:c.toDataURL('image/png')});
-    const copy=el('button',{class:'btn quiet block',onclick:async()=>{const t=dayText(dk);try{await navigator.clipboard.writeText(t);toast('Copied');}catch(e){ta.hidden=false;ta.value=t;ta.select();toast('Select the text below to copy it');}}},'Copy as text');
+    const copy=el('button',{class:'btn quiet block',onclick:async e=>{const t=dayText(dk),btn=e.currentTarget;try{await navigator.clipboard.writeText(t);toast('Copied');doneMorph(btn);}catch(e){ta.hidden=false;ta.value=t;ta.select();toast('Select the text below to copy it');}}},'Copy as text');
     const ta=el('textarea',{id:'share-text',hidden:true,rows:6,style:'width:100%;border:1px solid var(--line);border-radius:12px;padding:10px;background:#fff'});
     body.append(img,el('button',{class:'btn primary block',onclick:()=>c.toBlob(b=>saveFile(base+'.png',b),'image/png')},'Save image'),
       el('button',{class:'btn line block',onclick:()=>{const flat=document.createElement('canvas');flat.width=c.width;flat.height=c.height;flat.getContext('2d').drawImage(c,0,0);flat.toBlob(async b=>{const buf=new Uint8Array(await b.arrayBuffer());saveFile(base+'.pdf',new Blob([pdfFromJpeg(buf,c.width,c.height)],{type:'application/pdf'}));},'image/jpeg',.92);}},'Save PDF'),copy,ta);

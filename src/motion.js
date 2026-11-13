@@ -388,3 +388,42 @@ function storyPlay(cards,title){
 function skeletonMelt(gs,root){if(!gs.length)return;if(!motionOK()){gs.forEach(g=>g.remove());return;}
   gs.forEach(g=>g.animate([{opacity:1},{opacity:0}],{duration:380,easing:EASE,fill:'forwards'}).onfinish=()=>g.remove());
   const pg=root.firstElementChild;pg&&[...pg.children].slice(0,6).forEach((c,i)=>c.animate([{opacity:0,filter:'blur(3px)'},{opacity:1,filter:'blur(0)'}],{duration:440,delay:i*50,easing:EASE,fill:'backwards'}));}
+
+/* ---------- round 9 ---------- */
+const CKSVG='<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+/* Tapping a greyed-out Add/Save: the empty title field shakes and says what's missing */
+document.addEventListener('click',e=>{const h=e.target.closest&&e.target.closest('.shead');if(!h)return;const r=h.querySelector('.r');if(!r||!(r.disabled||r.classList.contains('off')))return;const b=r.getBoundingClientRect();if(e.clientX<b.left-8||e.clientX>b.right+8||e.clientY<b.top-8||e.clientY>b.bottom+8)return;
+  const sh=h.closest('.sheet'),f=sh&&sh.querySelector('.field');if(!f)return;f.classList.add('err');const inp=f.querySelector('input,textarea');
+  let hint=sh.querySelector('.ehint');if(!hint){hint=el('div',{class:'ehint',role:'alert'},'Give it a title first.');f.after(hint);}requestAnimationFrame(()=>hint.classList.add('on'));
+  if(motionOK())f.animate([{transform:'none'},{transform:'translateX(-8px)'},{transform:'translateX(7px)'},{transform:'translateX(-5px)'},{transform:'translateX(3px)'},{transform:'none'}],{duration:420,easing:'ease-out'});
+  inp&&inp.focus();const clear=()=>{f.classList.remove('err');hint.classList.remove('on');inp&&inp.removeEventListener('input',clear);};inp&&inp.addEventListener('input',clear);},true);
+/* Offline banner: slides down when the connection drops; turns green and slides away when it's back */
+(function offlineBanner(){let b=null,t=null;const get=()=>b||(b=document.body.appendChild(el('div',{class:'netban',role:'status','aria-live':'polite'})));
+  addEventListener('offline',()=>{clearTimeout(t);const n=get();n.className='netban off';n.textContent='Offline · changes are saved on this phone';requestAnimationFrame(()=>n.classList.add('on'));});
+  addEventListener('online',()=>{const n=get();if(!n.classList.contains('on'))return;n.className='netban back on';n.textContent='Back online · syncing';motionOK()&&n.animate([{transform:'scale(1)'},{transform:'scale(1.04)',offset:.4},{transform:'none'}],{duration:400,easing:SPRING});t=setTimeout(()=>n.classList.remove('on'),1600);});
+  if(navigator.onLine===false)setTimeout(()=>dispatchEvent(new Event('offline')),300);})();
+/* First visit to a swipeable list: the top row peeks sideways once to show what's underneath */
+function swipeHint(){try{if(localStorage.getItem('lifeos-swipehint'))return;}catch(e){return;}const w=$('#view .swr');if(!w||!motionOK())return;const n=w.querySelector('.li');if(!n)return;try{localStorage.setItem('lifeos-swipehint','1');}catch(e){}
+  w.dataset.dir='l';n.animate([{transform:'none'},{transform:'translateX(-76px)',offset:.35},{transform:'translateX(-76px)',offset:.55},{transform:'none'}],{duration:1300,easing:EASE}).onfinish=()=>{w.dataset.dir='r';n.animate([{transform:'none'},{transform:'translateX(66px)',offset:.35},{transform:'translateX(66px)',offset:.55},{transform:'none'}],{duration:1200,easing:EASE}).onfinish=()=>{delete w.dataset.dir;};};}
+/* Pinned shortcuts in edit mode: they jiggle, drag one to reorder */
+function pinDrag(tile){tile.addEventListener('pointerdown',e=>{if(!App.state.pinEdit||e.target.closest('.pin-x'))return;const grid=tile.parentElement,cells=[...grid.children],i=cells.indexOf(tile),rs=cells.map(c=>c.getBoundingClientRect()),x0=e.clientX,y0=e.clientY;let to=i,moved=false;tile.setPointerCapture(e.pointerId);
+  const step=rs.length>1?rs[1].left-rs[0].left:0;
+  const mv=ev=>{const dx=ev.clientX-x0,dy=ev.clientY-y0;if(!moved&&Math.hypot(dx,dy)<6)return;moved=true;tile.classList.add('drag');tile.style.translate=`${dx}px ${dy}px`;const cx=rs[i].left+rs[i].width/2+dx;let best=i,bd=1e9;rs.forEach((r,j)=>{const d=Math.abs(r.left+r.width/2-cx);if(d<bd){bd=d;best=j;}});to=best;
+    cells.forEach((c,j)=>{if(j===i)return;let s=0;if(i<to&&j>i&&j<=to)s=-1;if(i>to&&j<i&&j>=to)s=1;c.style.transition='translate .25s '+EASE;c.style.translate=s?`${s*step}px 0`:'';});};
+  const up=()=>{tile.removeEventListener('pointermove',mv);tile.removeEventListener('pointerup',up);tile.removeEventListener('pointercancel',up);tile.classList.remove('drag');if(!moved)return;const ids=cells.map(c=>c.dataset.pin);const [m]=ids.splice(i,1);ids.splice(to,0,m);setSettings({pinned:ids});};
+  tile.addEventListener('pointermove',mv);tile.addEventListener('pointerup',up);tile.addEventListener('pointercancel',up);});return tile;}
+/* Chips: a newly chosen chip draws its check in */
+const CHIPS=new Set();
+function chipChecks(root){const now=new Set();root.querySelectorAll('.chip.on[data-ck]').forEach(c=>{const k=c.dataset.ck;now.add(k);if(!CHIPS.has(k)&&motionOK()){const p=c.querySelector('.chk path');p&&p.animate([{strokeDashoffset:24},{strokeDashoffset:0}],{duration:320,delay:60,easing:EASE,fill:'backwards'});const ck=c.querySelector('.chk');ck&&ck.animate([{width:'0px'},{width:'14px'}],{duration:240,easing:EASE});}});CHIPS.clear();now.forEach(k=>CHIPS.add(k));}
+/* Share/copy: the button you used turns into a check for a moment */
+let lastBtnRef=null;document.addEventListener('pointerdown',e=>{const b=e.target.closest&&e.target.closest('button');if(b)lastBtnRef={b,t:Date.now()};},{capture:true,passive:true});
+function lastBtn(){return lastBtnRef&&Date.now()-lastBtnRef.t<15000?lastBtnRef.b:null;}
+function doneMorph(btn){if(!btn||!btn.isConnected||btn._morph)return;btn._morph=true;const icon=btn.classList.contains('iconbtn')||!btn.textContent.trim();const old=btn.innerHTML;
+  btn.innerHTML=icon?CKSVG:CKSVG+'<span>'+(/copy/i.test(btn.textContent)?'Copied':'Done')+'</span>';btn.classList.add('morph-ok');
+  motionOK()&&btn.animate([{transform:'scale(.88)'},{transform:'scale(1.06)',offset:.6},{transform:'none'}],{duration:380,easing:SPRING});
+  setTimeout(()=>{if(!btn.isConnected)return;btn.innerHTML=old;btn.classList.remove('morph-ok');btn._morph=false;motionOK()&&btn.animate([{opacity:0},{opacity:1}],{duration:200});},1400);}
+/* Multi-step flows: the current step's dot stretches into a pill; pages slide between steps */
+const STEPS=new Map();
+function stepDots(n,cur,key){const prev=STEPS.has(key)?STEPS.get(key):cur;STEPS.set(key,cur);const box=el('div',{class:'stepdots','aria-hidden':'true'},Array.from({length:n},(_,j)=>el('i',{class:j===cur?'on':j<cur?'done':''})));
+  if(prev!==cur&&motionOK())requestAnimationFrame(()=>{const a=box.children[cur],b=box.children[prev];a&&a.animate([{width:'8px'},{width:'28px'}],{duration:420,easing:SOFT});b&&b.animate([{width:'28px'},{width:'8px'}],{duration:420,easing:SOFT});});return box;}
+function stepSwap(dir){daySwap(()=>{clearTimeout(App._r);App.render();scrollTo(0,0);},dir);}

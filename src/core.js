@@ -349,7 +349,7 @@ const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&g
 /* press: right-click opens the menu with a mouse, long-press opens it on touch */
 let lastPointer='mouse';
 addEventListener('pointerdown',e=>{lastPointer=e.pointerType||'mouse';},true);
-async function shareText(title,t,msg='Copied'){try{if(navigator.share&&isTouch()){await navigator.share({title,text:t});return;}}catch(e){if(e&&e.name==='AbortError')return;}try{await navigator.clipboard.writeText(t);toast(msg);}catch(e){toast('Copying isn’t available here.');}}
+async function shareText(title,t,msg='Copied'){const btn=typeof lastBtn!=='undefined'?lastBtn():null;try{if(navigator.share&&isTouch()){await navigator.share({title,text:t});doneMorph(btn);return;}}catch(e){if(e&&e.name==='AbortError')return;}try{await navigator.clipboard.writeText(t);toast(msg);doneMorph(btn);}catch(e){toast('Copying isn’t available here.');}}
 /* a clipped title expands on the first tap, then taps work as usual */
 addEventListener('click',e=>{const c=e.target.closest&&e.target.closest('.clip');if(!c||c.classList.contains('unclip')||c.scrollWidth<=c.clientWidth+1)return;c.classList.add('unclip');e.preventDefault();e.stopPropagation();},true);
 /* paste several lines into an add box: one item per line */

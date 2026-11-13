@@ -1346,3 +1346,29 @@ html.a-motion .syncst i::after{animation:none}
 .shead .r{transition:opacity .25s,color .25s}
 .nowjump{transition:transform .45s cubic-bezier(.3,1.35,.5,1),opacity .2s}
 .nowjump[hidden]{display:block!important;opacity:0;transform:translateY(-10px) scale(.8);pointer-events:none;transition:transform .3s var(--ease),opacity .18s}
+/* round 9 motion */
+.shead .r:disabled{pointer-events:none}
+.field.err{border-color:var(--now);box-shadow:0 0 0 4px rgba(162,78,54,.12)}
+.ehint{color:var(--now);font-size:13.5px;margin:-4px 6px 0;opacity:0;transform:translateY(-4px);transition:opacity .2s,transform .3s var(--ease)}
+.ehint.on{opacity:1;transform:none}
+.netban{position:fixed;left:12px;right:12px;top:calc(env(safe-area-inset-top,0px) + 8px);z-index:96;max-width:456px;margin:0 auto;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;padding:0 14px;font-size:14px;font-weight:600;transform:translateY(-80px);transition:transform .45s var(--soft),background .3s,color .3s;pointer-events:none;box-shadow:0 8px 20px rgba(20,30,25,.16)}
+.netban.on{transform:none}
+.netban.off{background:#3A3F3C;color:#F4F4EF}.netban.back{background:var(--accent);color:#fff}
+.swr[data-dir=r] .swr-a.r,.swr[data-dir=l] .swr-a.l{opacity:1}
+.pins.edit .ptile{animation:pinJig .32s ease-in-out infinite alternate}
+.pins.edit .ptile:nth-child(2n){animation-delay:-.16s}
+@keyframes pinJig{from{rotate:-1.4deg}to{rotate:1.4deg}}
+.ptile{position:relative}
+.pin-x{position:absolute;top:-7px;left:-7px;width:22px;height:22px;border-radius:50%;background:#8A938E;color:#fff;font-size:14px;line-height:22px;text-align:center;font-weight:700;animation:pinX .3s cubic-bezier(.3,1.35,.5,1)}
+@keyframes pinX{from{transform:scale(0)}}
+.ptile.drag{animation:none!important;z-index:5;box-shadow:0 12px 26px rgba(20,30,25,.2);scale:1.08}
+html.a-motion .pins.edit .ptile{animation:none}
+.chip .chk{display:inline-grid;overflow:hidden;width:14px;margin-right:6px}
+.chip .chk path{stroke-dasharray:24}
+.morph-ok{color:var(--accent-text)!important}
+.morph-ok svg{display:inline-block;vertical-align:-3px}
+.btn.morph-ok span{margin-left:6px}
+.stepdots{display:flex;gap:6px;align-items:center;justify-content:center;padding-top:2px}
+.stepdots i{height:8px;width:8px;border-radius:4px;background:var(--h1)}
+.stepdots i.done{background:var(--h2)}
+.stepdots i.on{width:28px;background:var(--accent)}

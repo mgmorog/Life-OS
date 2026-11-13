@@ -611,3 +611,31 @@ function wkAdd(btn,dk,quiet){const host=btn.closest('.wkitems');if(!host)return;
 /* repeat days: picking a preset fills (or clears) the day circles one after another */
 function wdFill(was,now){if(!motionOK())return;const bs=$$('.sheet.on .wdays button');if(bs.length!==7)return;let k=0;
   bs.forEach((b,i)=>{const a=was.includes(i),z=now.includes(i);if(a===z)return;b.classList.toggle('on',a);const d=k++*55;setTimeout(()=>{b.classList.toggle('on',z);if(z)b.animate([{transform:'scale(.8)'},{transform:'scale(1.12)',offset:.6},{transform:'none'}],{duration:340,easing:SPRING});},d);});}
+
+/* ---------- round 17 ---------- */
+/* habit history: a marked day fills from the middle out; unmarking drains it back */
+function hcFill(root){const F=App.state._hcFill;if(!F)return;App.state._hcFill=null;if(!motionOK())return;const b=root.querySelector(`.calgrid button[data-hd="${F.dk}"]`);if(!b)return;
+  b.style.background=`radial-gradient(circle,var(--accent) 49%,transparent 51%) center/${F.on?'0% 0%':'145% 145%'} no-repeat,${F.on?'var(--chip)':getComputedStyle(b).backgroundColor}`;if(F.on)b.style.color='var(--ink)';
+  b.animate([{backgroundSize:F.on?'0% 0%, auto':'145% 145%, auto'},{backgroundSize:F.on?'145% 145%, auto':'0% 0%, auto'}],{duration:F.on?380:280,easing:F.on?SOFT:EASE}).onfinish=()=>{b.style.background='';b.style.color='';};
+  if(F.on)setTimeout(()=>{b.style.color='';},150);}
+/* goal milestones: a line joins them and fills down to the next one */
+const MSL=new Map();
+function msLine(root){root.querySelectorAll('.list.mstl').forEach(box=>{const rows=[...box.querySelectorAll(':scope>.li')];if(rows.length<2)return;const bt=box.getBoundingClientRect();
+  const cs=rows.map(r=>{const t=r.querySelector('.tick');const q=(t||r).getBoundingClientRect();return{x:q.left+q.width/2-bt.left,y:q.top+q.height/2-bt.top,r:q.height/2};});
+  const nx=rows.findIndex(r=>!r.classList.contains('done')),to=nx<0?rows.length-1:nx,top=cs[0].y,h=cs[to].y-top,full=cs[cs.length-1].y-top;
+  const rail=el('span',{class:'msrail','aria-hidden':'true'}),fill=el('span',{class:'msfill','aria-hidden':'true'});[rail,fill].forEach(n=>{n.style.left=(cs[0].x-1)+'px';n.style.top=top+'px';});rail.style.height=full+'px';fill.style.height=Math.max(0,h)+'px';box.prepend(rail,fill);
+  const key=box.dataset.gid,prev=MSL.get(key);MSL.set(key,h);if(prev!=null&&prev!==h&&motionOK())fill.animate([{height:prev+'px'},{height:Math.max(0,h)+'px'}],{duration:560,easing:SOFT});});}
+/* time grid: when blocks share time they glide into side-by-side columns */
+function blkSnap(){const m=new Map();$$('#grid .blk[data-bid]').forEach(b=>m.set(b.dataset.bid,{l:b.offsetLeft,w:b.offsetWidth,t:b.offsetTop}));return m;}
+function blkFlip(before){if(!before||!before.size||!motionOK())return;$$('#grid .blk[data-bid]').forEach(b=>{const o=before.get(b.dataset.bid);if(!o||o.t!==b.offsetTop)return;const l=b.offsetLeft,w=b.offsetWidth;if(Math.abs(o.l-l)<2&&Math.abs(o.w-w)<2)return;
+  b.animate([{left:o.l+'px',width:o.w+'px'},{left:l+'px',width:w+'px'}],{duration:420,easing:SOFT});});}
+/* Today: tapping the date drops a small month calendar right under it */
+function dateDropEl(dk){const c=formCtx(()=>{});const close=go=>dateDrop(false,go);
+  return el('div',{class:'ddrop'},el('div',{class:'ddin'},c.calendar(dk,d=>{if(d)close(d);}),dk!==todayK()?el('button',{class:'linkbtn small',onclick:()=>close(todayK())},'Jump to today'):null));}
+function dateDrop(want,go){const S=App.state,open=want===undefined?!S.dateDrop:want;
+  if(open){S.dateDrop=true;S._ddIn=true;clearTimeout(App._r);App.render();return;}
+  const d=$('.ddrop'),fin=()=>{S.dateDrop=false;if(go&&go!==S.sel)goDay(go);else{clearTimeout(App._r);App.render();}};
+  if(!d||!motionOK()){fin();return;}const h=d.offsetHeight;$('.hd .date')&&$('.hd .date').classList.remove('open');d.animate([{height:h+'px',opacity:1},{height:'0px',opacity:0}],{duration:240,easing:EASE,fill:'forwards'}).onfinish=fin;}
+function dateDropIn(root){if(!App.state._ddIn)return;App.state._ddIn=false;const d=root.querySelector('.ddrop');if(!d||!motionOK())return;const h=d.offsetHeight;
+  d.animate([{height:'0px',opacity:0},{height:h+'px',opacity:1}],{duration:380,easing:SOFT});d.querySelectorAll('.ddin>*').forEach((n,i)=>n.animate([{opacity:0,transform:'translateY(-8px)'},{opacity:1,transform:'none'}],{duration:280,delay:60+i*50,easing:EASE,fill:'backwards'}));}
+document.addEventListener('pointerdown',e=>{if(!App.state.dateDrop||App.state.view!=='today')return;if(e.target.closest('.ddrop,.hd .date'))return;dateDrop(false);},true);

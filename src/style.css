@@ -1449,3 +1449,21 @@ html.a-motion .now .bar::after{animation:none;opacity:0}
 .wkaddf input{flex:1;min-width:0;height:40px;border-radius:11px;border:1px solid var(--line);background:var(--card);padding:0 12px;font:inherit;font-size:16px;outline:0}
 .wkaddf input:focus{border-color:var(--accent)}
 .wkaddf .chip.on{background:var(--accent);color:#fff}
+/* v94 · round 17 motion */
+.list.mstl{position:relative}
+.msrail,.msfill{position:absolute;width:2px;border-radius:1px;pointer-events:none;z-index:0}
+.msrail{background:var(--h0)}
+.msfill{background:var(--accent)}
+.list.mstl .tick{position:relative;z-index:1;background:var(--card)}
+.list.mstl .done .tick,.list.mstl .tick.on{background:var(--accent)}
+#st-dock .scard{transition:transform .3s cubic-bezier(.3,1.35,.5,1),box-shadow .3s var(--ease),opacity .3s var(--ease),filter .3s var(--ease)}
+#st-dock.has .scard:not(.sel){opacity:.5;filter:saturate(.6)}
+#st-dock.has .scard.sel{transform:translateY(-6px);box-shadow:0 0 0 2px var(--accent),0 10px 22px rgba(20,30,25,.14)}
+#st-dock{padding-block:10px 16px;margin-top:0}
+.hd .date svg{transition:transform .3s var(--ease)}
+.hd .date.open svg{transform:rotate(180deg)}
+.ddrop{overflow:hidden}
+.ddin{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:12px 14px;margin:6px 0 10px;display:grid;gap:6px;justify-items:center}
+.ddin>*:first-child{justify-self:stretch}
+@media (prefers-reduced-motion:reduce){#st-dock .scard{transition:none}}
+html.a-motion #st-dock .scard{transition:none}

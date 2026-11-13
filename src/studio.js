@@ -109,7 +109,7 @@ function viewStudio(root){
       st.ghosts.length?[el('button',{class:'chip sm',style:'height:32px',onclick:()=>{st.ghosts=[];App.refresh();}},'Clear'),el('button',{class:'chip on',style:'height:32px',onclick:()=>{const n=st.ghosts.length;const made=st.ghosts;made.forEach(g=>placeCard(g.card,g.slot,st));st.ghosts=[];App.refresh();toast(`${n} placed`,()=>{made.forEach(g=>unplaceCard(g.card,g.slot,st));App.refresh();});}},'Keep all')]:
       left&&get.settings().suggestOn?el('button',{class:'chip',style:'height:32px',onclick:()=>{arcMark();st.ghosts=suggest(cards,P,st);if(!st.ghosts.length)toast(`No open ${P.unit}s left to fill`);App.refresh();}},el('span',{style:'display:grid',html:ic('spark',15,2)}),'Suggest'):null,
       el('button',{class:'chip',style:'height:32px','aria-label':'New card',onclick:()=>newCardSheet(st,P)},'+ New')));
-  const dock=el('div',{class:'dock',id:'st-dock','data-rail':'1'});
+  const dock=el('div',{class:'dock'+(st.selCard?' has':''),id:'st-dock','data-rail':'1'});
   dockCards.forEach(c=>dock.append(cardEl(c,st,P)));
   if(!dockCards.length&&!st.ghosts.length)dock.append(el('div',{class:'muted small',style:'padding:10px 0'},cards.length?'Everything has a place.':st.mode==='w'?'Add habits, tasks, goals or projects and they will show up here.':'Add goal or project steps and they will show up here.'));
   const dockW=el('div',{class:'dockwrap'},dockHead,el('div',{class:'small muted',style:'margin-top:2px'},st.selCard?`Now tap the ${P.unit} for “${(cards.find(c=>c.id===st.selCard)||{}).t||''}”.`:P.hint),dock);

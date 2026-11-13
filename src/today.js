@@ -85,11 +85,11 @@ function viewToday(root){
   page.append(el('header',{},
     el('div',{class:'hd-eyebrow'},el('div',{class:'eyebrow',style:'font-size:13px'},DOW[sel.getDay()]+(sel.getFullYear()!==today().getFullYear()?` · ${sel.getFullYear()}`:'')),!isToday?el('button',{class:'pill-today',onclick:()=>goDay(tk)},'Today'):((n)=>n&&!get.settings().carryOver?el('button',{class:'pill-today',style:'color:var(--now)',onclick:()=>{App.state.taskTab='today';App.go('tasks');}},`${n} overdue ›`):null)(carried().length)),
     el('div',{class:'hd'},
-      el('button',{class:'date','aria-label':'Pick a date',onclick:()=>pickDay(),html:`<span>${MON[sel.getMonth()]} ${sel.getDate()}</span>`+ic('chevd',20,2)}),
+      el('button',{class:'date'+(S.dateDrop?' open':''),'aria-label':'Pick a date','aria-expanded':String(!!S.dateDrop),onclick:()=>dateDrop(),html:`<span>${MON[sel.getMonth()]} ${sel.getDate()}</span>`+ic('chevd',20,2)}),
       el('div',{class:'icons'},
         el('button',{class:'iconbtn','aria-label':`Inbox, ${inboxN} ideas`,html:ic('inbox',24)+(inboxN?`<span class="badge" data-roll="inbox">${inboxN}</span>`:''),onclick:()=>App.go('inbox')}),
         el('button',{class:'iconbtn','aria-label':'Share this day',html:ic('share',24),onclick:()=>shareDaySheet(dk)}))),
-    weekStrip(dk)));
+    S.dateDrop?dateDropEl(dk):null,weekStrip(dk)));
   if(S.loading&&!recs.size){page.append(el('section',{class:'card',style:'display:grid;gap:12px'},el('div',{class:'skel',style:'height:14px;width:30%'}),el('div',{class:'skel',style:'height:30px;width:70%'}),el('div',{class:'skel',style:'height:200px'})));root.append(page);return;}
   const s=get.settings();
   {const fc=focusRunChip();if(fc)page.append(fc);}

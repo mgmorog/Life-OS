@@ -30,7 +30,7 @@ const App={
     (views[S.view]||viewToday)(frag);if(!frag.querySelector('h1')){const nm={today:'Today',calendar:'Calendar',search:'Search',studio:'Studio'}[S.view]||String(S.view||'Today').replace(/^./,c=>c.toUpperCase());const pg=frag.querySelector('.page')||frag;pg.prepend(el('h1',{class:'sr-only'},nm));}
     const C0=S.cal||{},scope=`${S.view}|${S.sel}|${C0.mode}|${C0.anchor}|${JSON.stringify(P)}`;
     const opened=S.lastView!==S.view||!!S.entering;
-    const listBefore=S.lastView===S.view&&S._scope===scope&&!S.entering?listSnap(root):null;S._scope=scope;
+    const listBefore=S.lastView===S.view&&S._scope===scope&&!S.entering?listSnap(root):null;S._scope=scope;const blkBefore=listBefore?blkSnap():null;
     closeFabMenu(true);
     const skelG=root.querySelector('.skel')?$$('#view .page>*').filter(n=>n.querySelector('.skel')||n.classList.contains('skel')).map(ghostOf).filter(Boolean):[];
     const noDepth=S._noDepth;S._noDepth=false;const depthDir=!S._searchFrom&&!noDepth&&S.entering&&(S.dir==='push'||S.dir==='pop')&&S._painted?S.dir:null,depthGhost=depthDir&&motionOK()?ghostOf(root.firstElementChild):null;
@@ -38,7 +38,7 @@ const App={
     animateFills(root,S);
     listPlay(root,listBefore);
     rollCounts(root,`${S.view}|${S.sel}`);
-    swipeArrive();settleBlock();todayHeaderScroll();meterPops(root,`${S.view}|${S.sel}`);studioPop();if(opened){countUp(root);chartsIn(root);}milestones(root);skeletonMelt(skelG,root);chipChecks(root);segFill(root);studioCascade();arcPlay();weekBandGlide();commitSweep();streakRoll(root);emptyDraw(root);dotRun(root);ideaMorph(root);stepIn(root);panelIn(root);searchGrow(root);wkRefocus(root);
+    swipeArrive();settleBlock();todayHeaderScroll();meterPops(root,`${S.view}|${S.sel}`);studioPop();if(opened){countUp(root);chartsIn(root);}milestones(root);skeletonMelt(skelG,root);chipChecks(root);segFill(root);studioCascade();arcPlay();weekBandGlide();commitSweep();streakRoll(root);emptyDraw(root);dotRun(root);ideaMorph(root);stepIn(root);panelIn(root);searchGrow(root);wkRefocus(root);hcFill(root);msLine(root);blkFlip(blkBefore);dateDropIn(root);
     if(depthGhost){depthSlide(depthGhost,root.firstElementChild,depthDir);S.dir=null;S.entering=false;}
     if(S.entering){const pg=root.firstElementChild;if(pg&&S._painted&&(S.view!=='today'||S.dir==='pop'||S.dir==='swiped'))pg.classList.add(S.dir==='push'?'viewin-push':S.dir==='pop'?'viewin-pop':S.dir==='swiped'?'viewin-swiped':'viewin');S.dir=null;S.entering=false;}
     S.lastView=S.view;

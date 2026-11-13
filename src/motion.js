@@ -64,7 +64,7 @@ function listPlay(root,before){
   if(added.length>4||gone.length>4)return;/* a whole new list, not an edit */
   now.forEach((n,key)=>{
     const b=before.get(key),r=n.getBoundingClientRect();
-    if(!b){const h=r.height;n.style.overflow='hidden';n.animate([{height:'0px',opacity:0,transform:'translateY(-6px)'},{height:h+'px',opacity:1,transform:'none'}],{duration:360,easing:EASE}).onfinish=()=>{n.style.overflow='';};return;}
+    if(!b){const h=r.height;if(Date.now()-(App.state._restored||0)<1500)n.animate([{backgroundColor:'#E2EBE6'},{backgroundColor:getComputedStyle(n).backgroundColor||'transparent'}],{duration:1100,delay:300,easing:'ease-out'});n.style.overflow='hidden';n.animate([{height:'0px',opacity:0,transform:'translateY(-6px)'},{height:h+'px',opacity:1,transform:'none'}],{duration:360,easing:EASE}).onfinish=()=>{n.style.overflow='';};return;}
     const dy=b.r.top-r.top,dh=b.r.height-r.height;
     if(Math.abs(dh)>3){/* a row that opened or closed: ease its height, fade the details in */
       n.style.overflow='hidden';n.animate([{height:b.r.height+'px'},{height:r.height+'px'}],{duration:400,easing:EASE}).onfinish=()=>{n.style.overflow='';};
@@ -214,3 +214,34 @@ document.addEventListener('click',e=>{
 function studioPop(){const P=App.state._studioPop;if(!P)return;App.state._studioPop=null;if(!motionOK())return;const s=$(`[data-slot="${P.id}"]`);if(!s)return;
   s.animate([{transform:'scale(1.035)'},{transform:'scale(.99)',offset:.5},{transform:'none'}],{duration:460,easing:SPRING});
   if(P.title){const it=[...s.querySelectorAll('*')].filter(n=>n.children.length===0&&n.textContent.trim()===P.title).pop();const row=it&&(it.closest('button,.li,.sitem,div')||it);row&&row.animate([{transform:'scale(.6)',opacity:0},{transform:'scale(1.08)',opacity:1,offset:.6},{transform:'none',opacity:1}],{duration:480,easing:SPRING});}}
+
+/* ---------- round 4 ---------- */
+/* A sheet taking over from another grows or shrinks from the old one's height; title and fields settle in */
+function morphSheetIn(sheet,h0){
+  if(!motionOK())return;const h1=sheet.getBoundingClientRect().height;sheet.style.overflow='hidden';
+  sheet.animate([{height:h0+'px'},{height:h1+'px'}],{duration:440,easing:EASE}).onfinish=()=>{sheet.style.overflow='';};
+  const t=sheet.querySelector('.shead h2');t&&t.animate([{opacity:0,transform:'translateY(18px)'},{opacity:1,transform:'none'}],{duration:420,easing:SOFT});
+  [...(sheet.querySelector('.sbody')||sheet).children].slice(0,8).forEach((c,i)=>c.animate([{opacity:0,transform:'translateY(10px)'},{opacity:1,transform:'none'}],{duration:360,delay:60+i*40,easing:EASE,fill:'backwards'}));
+}
+/* Lists that just changed under a search box: rows settle in one after another */
+function settleIn(box){if(!motionOK()||!box)return;$$('.li,.lbl',box).slice(0,12).forEach((n,i)=>n.animate([{opacity:0,transform:'translateY(8px)'},{opacity:1,transform:'none'}],{duration:300,delay:i*35,easing:EASE,fill:'backwards'}));}
+/* Tomorrow card: the day grows out of the card you tapped */
+function zoomFrom(r,update){
+  if(!motionOK()||!r){update();return;}
+  /* a card-shaped panel grows from the card to the screen, then melts away over the new day */
+  const box=el('div',{class:'zoom-box','aria-hidden':'true'});Object.assign(box.style,{left:r.left+'px',top:r.top+'px',width:r.width+'px',height:r.height+'px'});document.body.append(box);
+  const W=innerWidth,H=innerHeight;
+  box.animate([{left:r.left+'px',top:r.top+'px',width:r.width+'px',height:r.height+'px',borderRadius:'22px'},{left:'0px',top:'0px',width:W+'px',height:H+'px',borderRadius:'0px'}],{duration:380,easing:SOFT,fill:'forwards'}).onfinish=()=>{
+    update();const pg=$('#view>.page');pg&&[...pg.children].slice(0,6).forEach((c,i)=>c.animate([{opacity:0,transform:'translateY(10px)'},{opacity:1,transform:'none'}],{duration:340,delay:i*40,easing:EASE,fill:'backwards'}));
+    box.animate([{opacity:1},{opacity:0}],{duration:260,easing:EASE,fill:'forwards'}).onfinish=()=>box.remove();};
+}
+/* "What should I do now?": spin through what's on your plate, land on the pick, then let the rest settle */
+function nowReveal(){
+  const card=$('.nowcard');if(!card||!motionOK())return;const first=card.querySelector('.list .li .tt');if(!first)return;
+  const pool=(typeof nowPool==='function'?nowPool():[]).map(t=>t.title).filter(t=>t&&t!==first.textContent);const real=first.textContent;if(!pool.length)return;
+  const seq=[];for(let i=0;i<8;i++)seq.push(pool[i%pool.length]);seq.push(real);
+  const h=first.getBoundingClientRect().height||22,win=el('span',{class:'spin-win',style:`height:${h}px`}),col=el('span',{class:'spin-col'},seq.map(s=>el('span',{style:`height:${h}px;line-height:${h}px`},s)));win.append(col);
+  first.replaceChildren(win);
+  col.animate([{transform:'translateY(0)'},{transform:`translateY(${-(seq.length-1)*h}px)`}],{duration:1000,easing:'cubic-bezier(.15,.75,.25,1.03)',fill:'forwards'}).onfinish=()=>{first.textContent=real;};
+  const rows=$$('.list .li',card);rows.forEach((r,i)=>{if(i===0){const m=r.querySelector('small');m&&m.animate([{opacity:0},{opacity:1}],{duration:300,delay:950,fill:'backwards'});return;}r.animate([{opacity:0,transform:'translateY(8px)'},{opacity:1,transform:'none'}],{duration:340,delay:1000+i*70,easing:EASE,fill:'backwards'});});
+}

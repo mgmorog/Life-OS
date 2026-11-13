@@ -258,7 +258,7 @@ function levelOf(v,full){if(v<=0)return 0;const r=v/Math.max(full,.5);return r>=
 /* ---------- small shared UI ---------- */
 let toastT,toastAt=0;
 function linkText(s){const out=[],re=/(https?:\/\/[^\s]+|www\.[^\s]+)/gi;let last=0,m;s=String(s||'');while((m=re.exec(s))){if(m.index>last)out.push(s.slice(last,m.index));const u=m[0].replace(/[).,;:!?]+$/,'');out.push(el('a',{href:/^www\./i.test(u)?'https://'+u:u,target:'_blank',rel:'noopener',style:'color:var(--accent-text);overflow-wrap:anywhere',onclick:e=>e.stopPropagation()},u));last=m.index+u.length;}if(last<s.length)out.push(s.slice(last));return out;}
-function toast(msg,undo,label='Undo'){toastAt=Date.now();const t=$('#toast');t.innerHTML='';t.append(el('span',{},msg));if(undo)t.append(el('button',{onclick:()=>{undo();t.classList.remove('on');}},label));const ms=undo?4500:2000;t.style.setProperty('--life',ms+'ms');t.append(el('i',{class:'life'}));t.classList.remove('on');void t.offsetWidth;t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),ms);}
+function toast(msg,undo,label='Undo'){toastAt=Date.now();const t=$('#toast');t.innerHTML='';t.append(el('span',{},msg));if(undo)t.append(el('button',{onclick:()=>{App.state._restored=Date.now();undo();t.classList.remove('on');}},label));const ms=undo?4500:2000;t.style.setProperty('--life',ms+'ms');t.append(el('i',{class:'life'}));t.classList.remove('on');void t.offsetWidth;t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),ms);}
 /* iPhone has no vibrate API; toggling a hidden switch control gives a light system tap (iOS 18+) */
 const IOS=/iP(hone|ad|od)/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
 const iosTap=(()=>{let l=null;return()=>{if(!l){const i=document.createElement('input');i.type='checkbox';i.setAttribute('switch','');i.id='hx-tap';i.tabIndex=-1;i.setAttribute('aria-hidden','true');i.style.display='none';l=document.createElement('label');l.htmlFor='hx-tap';l.style.display='none';l.setAttribute('aria-hidden','true');const stop=e=>e.stopPropagation();i.addEventListener('click',stop);l.addEventListener('click',stop);document.body.append(i,l);}l.click();};})();
@@ -294,7 +294,10 @@ function openSheet({title,full=false,left,right,build,onClose,tryClose,raw=false
   build&&build(body,inst);inst.place();
   body.addEventListener('scroll',()=>head&&head.classList.toggle('edge',body.scrollTop>0),{passive:true});
   void sheet.offsetWidth;
-  requestAnimationFrame(()=>{scrim.classList.add('on');sheet.classList.add('on');});
+  /* Opened from Quick capture's "Save as": reshape the sheet underneath instead of stacking a new one */
+  const under=App._morphNext&&sheetStack.length&&!pop&&motionOK()?sheetStack[sheetStack.length-1]:null;App._morphNext=false;
+  if(under){const h0=under.sheet.getBoundingClientRect().height;under.sheet.style.visibility='hidden';scrim.classList.add('clear','on');sheet.style.transition='none';sheet.classList.add('on');morphSheetIn(sheet,h0);requestAnimationFrame(()=>requestAnimationFrame(()=>{sheet.style.transition='';}));}
+  else requestAnimationFrame(()=>{scrim.classList.add('on');sheet.classList.add('on');});
   scrim.addEventListener('click',()=>requestClose());
   sheetStack.push(inst);lockScroll(true);
   // swipe down to close, from the grab bar or the header
@@ -304,7 +307,7 @@ function openSheet({title,full=false,left,right,build,onClose,tryClose,raw=false
     addEventListener('pointermove',mv);addEventListener('pointerup',up);addEventListener('pointercancel',up);};
   if(innerWidth<900){grab.addEventListener('pointerdown',dragZone);head&&head.addEventListener('pointerdown',dragZone);}
   function requestClose(){if(tryClose&&tryClose()===false)return;close();}
-  function close(){const i=sheetStack.indexOf(inst);if(i<0)return;sheetStack.splice(i,1);scrim.classList.remove('on');sheet.classList.remove('on');document.activeElement&&document.activeElement.blur&&document.activeElement.blur();setTimeout(()=>{scrim.remove();sheet.remove();},340);lockScroll(false);onClose&&onClose();App.refresh();setTimeout(()=>{if(opener&&opener.isConnected&&opener.focus&&!(isTouch()&&opener.matches('input,textarea')))opener.focus({preventScroll:true});},30);}
+  function close(){const i=sheetStack.indexOf(inst);if(i<0)return;sheetStack.splice(i,1);if(under){const h1=sheet.getBoundingClientRect().height;sheet.style.transition='none';sheet.style.opacity='0';setTimeout(()=>{if(sheetStack.includes(under)){under.sheet.style.visibility='';morphSheetIn(under.sheet,h1);}},30);}scrim.classList.remove('on');sheet.classList.remove('on');document.activeElement&&document.activeElement.blur&&document.activeElement.blur();setTimeout(()=>{scrim.remove();sheet.remove();},340);lockScroll(false);onClose&&onClose();App.refresh();setTimeout(()=>{if(opener&&opener.isConnected&&opener.focus&&!(isTouch()&&opener.matches('input,textarea')))opener.focus({preventScroll:true});},30);}
   return inst;
 }
 let savedY=0,lockN=0;
@@ -430,6 +433,7 @@ function animateFills(root,S){
     const set=v=>{if(ring)n.style.setProperty('--p',String(v));else n.style.width=`${v}%`;};
     n.style.transition='none';set(from);void n.offsetWidth;n.style.transition='';set(target);
     /* the glow marks real progress, so it only plays when a value you've already seen goes up */
+    if(target>=100&&from<100&&FILLS_SEEN.has(key)&&motionOK())setTimeout(()=>n.animate([{filter:'drop-shadow(0 0 0 rgba(70,107,90,0))',transform:'scale(1)'},{filter:'drop-shadow(0 0 8px rgba(70,107,90,.55))',transform:'scale(1.06)',offset:.4},{filter:'drop-shadow(0 0 0 rgba(70,107,90,0))',transform:'none'}],{duration:700,easing:'cubic-bezier(.3,1.35,.5,1)'}),650);
     if(FILLS_SEEN.has(key)&&target>from){n.classList.add('oglow');n.addEventListener('animationend',()=>n.classList.remove('oglow'),{once:true});}FILLS_SEEN.add(key);
   });
 }

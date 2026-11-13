@@ -99,7 +99,7 @@ function viewSearch(root){
   const S=App.state;S.q=S.q||'';S.qType=S.qType||'All';
   const page=el('div',{class:'page'});
   const results=el('div',{class:'page',style:'gap:8px'}),chips=el('div',{class:'fchips'});
-  const scoped=S.qType!=='All'?S.qType.toLowerCase():null;const input=el('input',{id:'q',placeholder:scoped?`Search ${scoped}`:'Search everything',value:S.q,autocomplete:'off',enterkeyhint:'search','aria-label':'Search everything',oninput:e=>{S.q=e.target.value;draw();}});
+  const scoped=S.qType!=='All'?S.qType.toLowerCase():null;const input=el('input',{id:'q',placeholder:scoped?`Search ${scoped}`:'Search everything',value:S.q,autocomplete:'off',enterkeyhint:'search','aria-label':'Search everything',oninput:e=>{S.q=e.target.value;draw();settleIn(results);}});
   const clr=el('button',{class:'iconbtn','aria-label':'Clear search',style:'width:32px;height:32px;margin-right:-6px;flex:none',hidden:!S.q,html:ic('x',16,2.2),onclick:()=>{S.q='';input.value='';clr.hidden=true;draw();input.focus();}});input.addEventListener('input',()=>{clr.hidden=!input.value;});
   page.append(el('div',{style:'display:flex;align-items:center;gap:10px'},el('label',{class:'searchbox',html:ic('search',20,2)},input,clr),el('button',{class:'linkbtn',onclick:()=>{S.q='';S.qType='All';App.back('more');}},'Cancel')),chips,results);
   const hl=(t,q)=>{const i=t.toLowerCase().indexOf(q);if(i<0)return esc(t);return esc(t.slice(0,i))+'<mark>'+esc(t.slice(i,i+q.length))+'</mark>'+esc(t.slice(i+q.length));};

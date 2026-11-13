@@ -112,6 +112,7 @@ function moreTurn(on,getP,done){return el('button',{class:'linkbtn small',style:
 function routeInto(kind,p,done){
   const notes=p.notes||'',raw=p.title&&p.title!=='Unnamed Idea'?p.title:'',base=p.createdAt?new Date(p.createdAt):new Date(),photos=p.photos||[];
   const after=()=>done&&done(),W=parseWhen(raw,base),t=W.title;
+  App._morphNext=true;setTimeout(()=>{App._morphNext=false;},0);
   switch(kind){
     case 'task':taskSheet(null,{title:t,notes,photos,date:W.date,time:W.time,deadline:W.deadline,reminder:W.time!=null?0:null,_after:after});break;
     case 'block':blockSheet(null,Object.assign({title:t,notes,photos,_after:after},W.date?{date:W.date}:{},W.time!=null?{start:W.time}:eventStart(raw)!=null?{start:eventStart(raw)}:{}));break;

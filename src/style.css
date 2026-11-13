@@ -1281,3 +1281,17 @@ html.a-motion .t3sheen{display:none}
 .slot{transition:border-color .15s,box-shadow .2s,background .15s,transform .32s cubic-bezier(.3,1.35,.5,1)}
 .slot.over{transform:scale(1.025);background:var(--accent-soft);box-shadow:0 0 0 3px var(--accent-soft),0 8px 18px rgba(20,30,25,.1)}
 html.a-motion .flyer{display:none}
+/* round 4 motion */
+.ring{transition:--p .8s cubic-bezier(.3,1.25,.5,1)}
+.hmeter>i,.progress>i{transition:width .8s cubic-bezier(.3,1.2,.5,1)}
+.spin-win{display:inline-block;overflow:hidden;vertical-align:top;max-width:100%}
+.spin-col{display:flex;flex-direction:column}
+.spin-col span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ozero.fresh .zc{stroke-dasharray:214;stroke-dashoffset:214;animation:zdraw .7s var(--ease) forwards}
+.ozero.fresh .zk{stroke-dasharray:50;stroke-dashoffset:50;animation:zdraw .45s var(--ease) .55s forwards}
+.ozero.fresh .ozi{color:var(--accent);animation:zfloat 3.2s ease-in-out 1.2s infinite}
+.ozero.fresh h2{animation:zrise .5s var(--ease) .6s both}.ozero.fresh p{animation:zrise .5s var(--ease) .72s both}
+@keyframes zdraw{to{stroke-dashoffset:0}}
+@keyframes zfloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+@keyframes zrise{from{opacity:0;transform:translateY(6px)}}
+.zoom-box{position:fixed;z-index:13;background:var(--bg);box-shadow:0 10px 30px rgba(20,30,25,.14);pointer-events:none}

@@ -110,7 +110,7 @@ function viewToday(root){
   {const wc=waitCard(dk);if(wc)page.append(wc);}
   if(isToday){const pc=pinnedListsToday();if(pc)page.append(pc);const pl=plateCard(dk);if(pl)page.append(pl);}
   const tm=addD(sel,1),tmk=k(tm),td=dayItems(tmk),tl=[...td.allDay,...td.timed,...td.anytime],firstT=td.timed[0];
-  page.append(el('section',{class:'card'+(first?' fade-up':''),style:first?'animation-delay:.12s':null},el('button',{class:'tmr',onclick:()=>{goDay(tmk);scrollTo({top:0,behavior:'smooth'});}},
+  page.append(el('section',{class:'card'+(first?' fade-up':''),style:first?'animation-delay:.12s':null},el('button',{class:'tmr',onclick:ev=>{const r=ev.currentTarget.closest('.card').getBoundingClientRect(),S2=App.state;zoomFrom(r,()=>{S2.sel=tmk;S2._fresh=true;S2._gridTop=null;S2._anim=null;scrollTo(0,0);clearTimeout(App._r);App.render();});}},
     el('div',{class:'tile'},el('small',{},DOW[tm.getDay()].slice(0,3).toUpperCase()),el('span',{},String(tm.getDate()))),
     el('div',{class:'grow'},el('h3',{},isToday?'Tomorrow':relDay(tmk)),el('p',{},tl.length?`${tl.length} planned${firstT?' · first at '+fmtT(firstT.time):''}`:'Nothing planned yet')),
     el('span',{class:'chev',html:ic('chevr',16,2.2)}))));

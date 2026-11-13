@@ -39,7 +39,7 @@ function stCards0(st,P){
 function copyLastWeek(P){const tk=todayK(),made=[],sess=[];P.slots.forEach(sl=>{const prev=addK(sl.id,-7);if(sl.id<tk)return;
   get.all('habit').forEach(h=>{if((h.sessions||{})[prev]&&!(h.sessions||{})[sl.id]){h.sessions[sl.id]=clone(h.sessions[prev]);sess.push([h,sl.id]);put(h,{silent:true});}});
   get.all('block').forEach(b=>{if(b.date===prev&&(!b.repeat||b.repeat.type==='never')&&!get.all('block').some(x=>x.date===sl.id&&x.title===b.title)){const c=create('block',Object.assign(clone(b),{id:undefined,date:sl.id,doneDates:{},createdAt:Date.now()}));made.push(c);}});});
-  const n=made.length+sess.length;if(!n){toast('Nothing from last week to copy');return;}App.refresh();toast(`Copied ${n} item${n>1?'s':''} from last week`,()=>{made.forEach(b=>remove(b.id,{hard:true,silent:true}));sess.forEach(([h,d])=>{delete h.sessions[d];put(h,{silent:true});});App.refresh();});}
+  const n=made.length+sess.length;if(!n){toast('Nothing from last week to copy');return;}studioMark();App.refresh();toast(`Copied ${n} item${n>1?'s':''} from last week`,()=>{made.forEach(b=>remove(b.id,{hard:true,silent:true}));sess.forEach(([h,d])=>{delete h.sessions[d];put(h,{silent:true});});App.refresh();});}
 function placeCard(card,slotId,st){
   if(card.type==='habit'){const h=card.rec;h.sessions=h.sessions||{};h.sessions[slotId]=h.sessions[slotId]||{time:null};put(h,{silent:true});}
   else if(card.type==='task'){const t=card.rec;if(st.mode==='w'){t.date=slotId;t.planWeek=null;}else if(st.mode==='m')t.planWeek=slotId;else t.planMonth=slotId;put(t,{silent:true});}
@@ -107,7 +107,7 @@ function viewStudio(root){
     el('span',{},el('b',{class:'serif',style:'font-size:22px'},'To plan'),el('span',{class:'muted small',style:'margin-left:8px'},left?`${left} left`:'')),
     el('span',{style:'display:flex;gap:6px'},
       st.ghosts.length?[el('button',{class:'chip sm',style:'height:32px',onclick:()=>{st.ghosts=[];App.refresh();}},'Clear'),el('button',{class:'chip on',style:'height:32px',onclick:()=>{const n=st.ghosts.length;const made=st.ghosts;made.forEach(g=>placeCard(g.card,g.slot,st));st.ghosts=[];App.refresh();toast(`${n} placed`,()=>{made.forEach(g=>unplaceCard(g.card,g.slot,st));App.refresh();});}},'Keep all')]:
-      left&&get.settings().suggestOn?el('button',{class:'chip',style:'height:32px',onclick:()=>{st.ghosts=suggest(cards,P,st);if(!st.ghosts.length)toast(`No open ${P.unit}s left to fill`);App.refresh();}},el('span',{style:'display:grid',html:ic('spark',15,2)}),'Suggest'):null,
+      left&&get.settings().suggestOn?el('button',{class:'chip',style:'height:32px',onclick:()=>{arcMark();st.ghosts=suggest(cards,P,st);if(!st.ghosts.length)toast(`No open ${P.unit}s left to fill`);App.refresh();}},el('span',{style:'display:grid',html:ic('spark',15,2)}),'Suggest'):null,
       el('button',{class:'chip',style:'height:32px','aria-label':'New card',onclick:()=>newCardSheet(st,P)},'+ New')));
   const dock=el('div',{class:'dock',id:'st-dock','data-rail':'1'});
   dockCards.forEach(c=>dock.append(cardEl(c,st,P)));
@@ -128,7 +128,7 @@ function viewStudio(root){
     committed?el('button',{class:'btn quiet',onclick:()=>{planRec.committed=false;put(planRec);}},'Replan'):el('button',{class:'btn primary',onclick:()=>reviewSheet(P,st,cards)},P.commit)));
 }
 function cardEl(c,st,P){
-  const n=el('div',{class:'scard'+(st.selCard===c.id?' sel':''),style:`--c:${c.c}`,role:'button',tabindex:0,'aria-label':`${c.t}. Select, then choose a ${P.unit}.`,onclick:()=>{st.selCard=st.selCard===c.id?null:c.id;App.refresh();},onkeydown:e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();st.selCard=st.selCard===c.id?null:c.id;App.refresh();}}},
+  const n=el('div',{class:'scard'+(st.selCard===c.id?' sel':''),'data-cid':c.id,style:`--c:${c.c}`,role:'button',tabindex:0,'aria-label':`${c.t}. Select, then choose a ${P.unit}.`,onclick:()=>{st.selCard=st.selCard===c.id?null:c.id;App.refresh();},onkeydown:e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();st.selCard=st.selCard===c.id?null:c.id;App.refresh();}}},
     el('span',{class:'k'},({habit:'HABIT',task:'TASK',step:'STEP'})[c.type]),el('span',{class:'n'},c.t),c.m||c.src||c.tag?el('span',{class:'m'},[c.tag,c.m,c.type==='habit'?c.src:''].filter(Boolean).join(' · ')):null,c.q>1?el('span',{class:'q'},`×${c.q}`):null);
   draggable(n,{label:c.t,pull:true,move:(x,y)=>hoverSlot(x,y),drop:(x,y)=>{const id=hoverSlot(x,y);clearHover();if(id&&id!=='rail'){const sl=P.slots.find(s=>s.id===id);doPlace(c,id,st,P,sl);}}});
   return n;
@@ -165,7 +165,7 @@ function slotEl(sl,st,P,cards){
     draggable(n,{label:c.t,move:(x,y)=>hoverSlot(x,y),drop:(x,y)=>{const id=hoverSlot(x,y);clearHover();if(!id||id===sl.id)return;if(id==='rail'){unplaceCard(c,sl.id,st);App.refresh();toast('Back in To plan',()=>{placeCard(c,sl.id,st);App.refresh();});return;}const to=P.slots.find(s=>s.id===id);if(to&&to.past){toast('That day has passed');return;}unplaceCard(c,sl.id,st);placeCard(c,id,st);App.refresh();toast(`Moved to ${to.label}`);}});
     items.append(n);
   });
-  st.ghosts.filter(g=>g.slot===sl.id).forEach(g=>items.append(el('button',{class:'pl ghosted',style:`--c:${g.card.c}`,title:g.why,onclick:()=>toast(g.why)},el('span',{class:'clip grow'},g.card.t),el('small',{},'Suggested'))));
+  st.ghosts.filter(g=>g.slot===sl.id).forEach(g=>items.append(el('button',{class:'pl ghosted','data-gid':g.card.id,style:`--c:${g.card.c}`,title:g.why,onclick:()=>toast(g.why)},el('span',{class:'clip grow'},g.card.t),el('small',{},'Suggested'))));
   if(!items.children.length)items.append(el('div',{class:'small',style:'color:var(--ink-3);padding:2px 0 4px'},sl.past?'Passed':'Open'));
   node.append(items);
   return node;
@@ -218,9 +218,9 @@ function checkinSheet(P,st,cards){
   const made=repeatLast(P,st,cards);const late=cards.filter(c=>c.tag==='Carried over');
   const inst=openSheet({title:'Sunday check-in',build:body=>{
     body.append(
-      el('div',{class:'cistep'},el('i',{},'1'),el('div',{},el('b',{},'Repeat last week’s rhythm'),el('p',{class:'small muted',style:'margin-top:2px'},made.length?made.map(m=>`${m.card.t} on ${m.slot&&DOW[fromK(m.slot).getDay()].slice(0,3)}`).join(', '):'No habit pattern from last week yet.'),made.length?el('button',{class:'btn line',style:'margin-top:8px',onclick:()=>{made.forEach(g=>placeCard(g.card,g.slot,st));App.refresh();toast(`${made.length} placed`);}},'Repeat it'):null)),
+      el('div',{class:'cistep'},el('i',{},'1'),el('div',{},el('b',{},'Repeat last week’s rhythm'),el('p',{class:'small muted',style:'margin-top:2px'},made.length?made.map(m=>`${m.card.t} on ${m.slot&&DOW[fromK(m.slot).getDay()].slice(0,3)}`).join(', '):'No habit pattern from last week yet.'),made.length?el('button',{class:'btn line',style:'margin-top:8px',onclick:()=>{inst.close();studioMark();made.forEach(g=>placeCard(g.card,g.slot,st));App.refresh();toast(`${made.length} placed`);}},'Repeat it'):null)),
       el('div',{class:'cistep'},el('i',{},'2'),el('div',{},el('b',{},'Check what carried over'),el('p',{class:'small muted',style:'margin-top:2px'},late.length?late.map(c=>c.t).join(', '):'Nothing carried over.'))),
-      el('div',{class:'cistep'},el('i',{},'3'),el('div',{},el('b',{},'Fill the rest'),el('p',{class:'small muted',style:'margin-top:2px'},'Suggest uses your usual days, spaces habits out, skips full days and lands things before they’re due.'),el('button',{class:'btn line',style:'margin-top:8px',onclick:()=>{const c2=stCards(st,P);st.ghosts=suggest(c2,P,st);inst.close();App.refresh();}},'Suggest the rest'))),
+      el('div',{class:'cistep'},el('i',{},'3'),el('div',{},el('b',{},'Fill the rest'),el('p',{class:'small muted',style:'margin-top:2px'},'Suggest uses your usual days, spaces habits out, skips full days and lands things before they’re due.'),el('button',{class:'btn line',style:'margin-top:8px',onclick:()=>{arcMark();const c2=stCards(st,P);st.ghosts=suggest(c2,P,st);inst.close();App.refresh();}},'Suggest the rest'))),
       el('button',{class:'btn primary block',onclick:()=>{setSettings({checkinDone:todayK()});inst.close();}},'Go to my week'));
   }});
 }

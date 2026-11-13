@@ -439,3 +439,36 @@ const SEGS=new Map();
 function segFill(root){root.querySelectorAll('.segs[data-seg]').forEach(b=>{const k=b.dataset.seg,on=b.querySelectorAll('i.on').length,prev=SEGS.get(k);SEGS.set(k,on);if(prev==null||on<=prev||!motionOK())return;[...b.querySelectorAll('i.on')].slice(prev).forEach((i,j)=>i.animate([{backgroundSize:'0% 100%'},{backgroundSize:'100% 100%'}],{duration:480,delay:j*80,easing:EASE,fill:'backwards'}));});}
 /* Text size: the page grows or shrinks in place instead of snapping */
 function textSizeGlide(a,b){if(!motionOK())return;const Z={default:1,large:1.1,larger:1.22},za=Z[a]||1,zb=Z[b]||1;if(za===zb)return;requestAnimationFrame(()=>{['#view','#layers'].forEach(sel=>{const n=$(sel);n&&n.animate([{transform:`scale(${za/zb})`,transformOrigin:'50% 0'},{transform:'none',transformOrigin:'50% 0'}],{duration:420,easing:EASE});});});}
+
+/* ---------- round 11 ---------- */
+/* Studio: items added in bulk drop into their days one day at a time */
+function studioMark(){const m=new Set();$$('.slot').forEach(s=>s.querySelectorAll('.slot-items>*').forEach(n=>m.add(s.dataset.slot+'|'+n.textContent)));App.state._cascade=m;}
+function studioCascade(){const m=App.state._cascade;if(!m)return;App.state._cascade=null;if(!motionOK())return;let k=0;
+  $$('.slot').forEach((s,i)=>{let j=0;s.querySelectorAll('.slot-items>*').forEach(n=>{if(m.has(s.dataset.slot+'|'+n.textContent)||k>24)return;k++;n.animate([{opacity:0,transform:'translateY(-14px) scale(.92)'},{opacity:1,transform:'none'}],{duration:420,delay:i*110+j*60,easing:SPRING,fill:'backwards'});j++;});});}
+/* Studio Suggest: each card lifts out of the dock and arcs into the day it chose */
+function arcMark(){const m=new Map(),sy=scrollY;$$('#st-dock .scard[data-cid]').forEach(c=>{const r=c.getBoundingClientRect();m.set(c.dataset.cid,{x:Math.min(Math.max(r.left,8),innerWidth-r.width-8),y:r.top+sy,w:r.width,h:r.height,n:c.cloneNode(true)});});App.state._arc=m;}
+function arcPlay(){const m=App.state._arc;if(!m)return;App.state._arc=null;if(!motionOK())return;
+  const gs=[...document.querySelectorAll('.pl.ghosted[data-gid]')].filter(g=>m.has(g.dataset.gid));if(!gs.length)return;
+  const sy=scrollY,first=gs[0].getBoundingClientRect().top+sy,dockY=Math.min(...[...m.values()].map(v=>v.y));
+  let to=sy;if(first+60>sy+innerHeight)to=Math.max(sy,Math.min(first-innerHeight*.62,dockY-90));if(to!==sy)scrollTo({top:to,behavior:'smooth'});
+  gs.filter(g=>g.getBoundingClientRect().top+sy<to+innerHeight+120).slice(0,8).forEach((g,i)=>{const src=m.get(g.dataset.gid),r=g.getBoundingClientRect(),bx=r.left,by=r.top+sy;
+    const f=src.n.cloneNode(true);f.classList.remove('sel');Object.assign(f.style,{position:'absolute',left:src.x+'px',top:src.y+'px',width:src.w+'px',height:src.h+'px',margin:0,zIndex:60,pointerEvents:'none',transformOrigin:'0 0',boxShadow:'0 10px 24px rgba(20,30,25,.14)'});f.className+=' arcfly';document.body.append(f);
+    const dx=bx-src.x,dy=by-src.y,sx=r.width/src.w,sc=r.height/src.h,lift=Math.min(110,40+Math.abs(dy)*.15);g.style.opacity='0';
+    f.animate([{transform:'none'},{transform:`translate(${dx*.5}px,${dy*.5-lift}px) scale(1.04)`,offset:.45},{transform:`translate(${dx}px,${dy}px) scale(${sx},${sc})`,opacity:.4}],{duration:680,delay:120+i*110,easing:'cubic-bezier(.45,0,.3,1)',fill:'both'}).onfinish=()=>{f.remove();g.style.opacity='';g.animate([{transform:'scale(.7)'},{transform:'scale(1.06)',offset:.6},{transform:'none'}],{duration:380,easing:SPRING});};});}
+/* a time block ticked done: a deeper tint sweeps across it */
+function blockSweep(b){if(!motionOK())return;const s=document.createElement('span');s.className='blk-sw';b.append(s);s.animate([{transform:'scaleX(0)',opacity:1},{transform:'scaleX(1)',opacity:1,offset:.6},{transform:'scaleX(1)',opacity:0}],{duration:800,easing:EASE}).onfinish=()=>s.remove();}
+/* a task with steps: a thin ring around its circle fills as the steps get done */
+const SRING=new Map();
+function stepRing(id,n,of){const C=2*Math.PI*15,p=of?n/of:0,prev=SRING.get(id);SRING.set(id,p);const s=document.createElement('span');s.className='sring';s.setAttribute('aria-hidden','true');
+  s.innerHTML=`<svg viewBox="0 0 34 34" width="34" height="34"><circle cx="17" cy="17" r="15" class="tr"/><circle cx="17" cy="17" r="15" class="fl" stroke-dasharray="${C}" stroke-dashoffset="${C*(1-p)}"/></svg>`;
+  if(prev!=null&&prev!==p&&motionOK())requestAnimationFrame(()=>{const c=s.querySelector('.fl');c&&c.animate([{strokeDashoffset:C*(1-prev)},{strokeDashoffset:C*(1-p)}],{duration:520,easing:SOFT});});
+  return s;}
+/* count habits: each +1 floats up from the button */
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('button');if(!b||!/^\+1\b/.test(b.textContent.trim())||!motionOK())return;const r=b.getBoundingClientRect();const f=document.createElement('span');f.className='plus1';f.textContent='+1';f.style.left=(r.left+r.width/2)+'px';f.style.top=(r.top-2)+'px';document.body.append(f);
+  f.animate([{transform:'translate(-50%,0) scale(.9)',opacity:0},{transform:'translate(-50%,-10px) scale(1)',opacity:1,offset:.25},{transform:'translate(-50%,-38px)',opacity:0}],{duration:760,easing:'cubic-bezier(.2,.7,.3,1)',fill:'forwards'}).onfinish=()=>f.remove();},true);
+/* Month: the band marking the selected week glides to its new row */
+let WKBAND=null;
+function weekBandGlide(){const g=$('#month-grid');if(!g){WKBAND=null;return;}const row=g.querySelector('.heat-row.selwk'),key=(g.querySelector('[data-slot]')||{}).dataset?.slot;if(!row){WKBAND={key,top:null};return;}
+  const top=row.offsetTop,prev=WKBAND;WKBAND={key,top};if(!prev||prev.key!==key||prev.top==null||prev.top===top||!motionOK())return;
+  const gh=document.createElement('div');gh.className='wkglide';Object.assign(gh.style,{top:top+'px',height:row.offsetHeight+'px'});g.prepend(gh);row.classList.add('gliding');
+  gh.animate([{transform:`translateY(${prev.top-top}px)`},{transform:'none'}],{duration:440,easing:SOFT}).onfinish=()=>{gh.remove();row.classList.remove('gliding');};}

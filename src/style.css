@@ -1379,3 +1379,16 @@ html.a-motion .pins.edit .ptile{animation:none}
 .segs i.on{background-size:100% 100%}
 .fring-mini{display:grid;color:var(--accent-text);flex:none}
 .fring-mini circle{transition:stroke-dashoffset 1s linear}
+/* v88 · round 11 motion */
+.blk-sw{position:absolute;inset:0;border-radius:inherit;background:linear-gradient(90deg,color-mix(in srgb,var(--c,var(--accent)) 38%,transparent),color-mix(in srgb,var(--c,var(--accent)) 16%,transparent));transform-origin:left;pointer-events:none;z-index:0}
+.tick-hit{position:relative}
+.sring{position:absolute;left:50%;top:50%;width:34px;height:34px;margin:-17px 0 0 -17px;pointer-events:none}
+.sring svg{display:block;transform:rotate(-90deg)}
+.sring .tr{fill:none;stroke:var(--accent-soft);stroke-width:2}
+.sring .fl{fill:none;stroke:var(--accent);stroke-width:2;stroke-linecap:round}
+.plus1{position:fixed;z-index:70;pointer-events:none;font-weight:800;font-size:15px;color:var(--accent-text);transform:translate(-50%,0)}
+#month-grid{position:relative}
+#month-grid>.heat-row{position:relative}
+#month-grid>.heat-row.selwk{box-shadow:0 0 0 3px var(--accent-soft);background:var(--accent-soft)}
+#month-grid>.heat-row.selwk.gliding{box-shadow:none;background:transparent}
+.wkglide{position:absolute;left:0;right:0;border-radius:12px;background:var(--accent-soft);box-shadow:0 0 0 3px var(--accent-soft);pointer-events:none}

@@ -191,7 +191,7 @@ function anyRow(e,dk,{late,target,addToday}={}){
   const S=App.state,steps=e.kind==='task'?(e.rec.steps||[]):[];S.expanded=S.expanded||{};
   const wrap=el('div',{class:'trow-wrap'});
   const row=el('div',{class:'trow tick-host'+(e.done?' done':''),'data-id':e.id},
-    el('span',{class:'tick-hit'},tickBtn(e.done,on=>{row.classList.toggle('done',on);toggleItem(e,dk);setTimeout(()=>App.refresh(),820);})),
+    el('span',{class:'tick-hit'},tickBtn(e.done,on=>{row.classList.toggle('done',on);toggleItem(e,dk);setTimeout(()=>App.refresh(),820);}),steps.filter(x=>x.t).length&&!e.done?stepRing(e.id,steps.filter(x=>x.t&&stepDone(e.rec,x,dk)).length,steps.filter(x=>x.t).length):null),
     el('button',{class:'t',onclick:()=>openItem(e,dk)},el('span',{class:'tt'},e.title),metaOf(e,late,dk)),
     e.kind==='habit'&&e.rec.track==='count'?el('button',{class:'chip',style:'height:36px','aria-label':`Add one to ${e.title}`,onclick:()=>{buzz(6);logHabit(e.rec,dk,1);}},'+1'):e.kind==='habit'&&e.rec.track==='time'?el('button',{class:'chip',style:'height:36px','aria-label':`Log time for ${e.title}`,onclick:()=>logTimeSheet(e.rec,dk)},'Log'):null,
     (late||addToday)?el('button',{class:'chip',style:'height:32px;font-size:14px',onclick:()=>{const before=e.rec.date;e.rec.date=target;e.rec.moves=(e.rec.moves||0)+1;put(e.rec);toast('Moved to today',()=>{e.rec.date=before;put(e.rec);});}},'Today'):null,
@@ -243,7 +243,7 @@ function timeGrid(dk,timed){
     const edk=e.contFrom||dk,label=e.cont?`Until ${fmtT(e.dur)}`:e.kind==='task'?fmtT(e.time):fmtRange(e.time,e.time+e.dur);
     const bm=hgt>40?el('span',{class:'bm'},label):null;
     const b=el('div',{class:'blk tick-host'+(e.done?' done':''),'data-bid':e.id,style:`--c:${e.color};top:${top}px;height:${hgt}px;`+(n>1?`left:calc(60px + (100% - 70px)/${n}*${c});right:auto;width:calc((100% - 70px)/${n} - 3px);`:'')},
-      e.kind==='gcal'?null:tickBtn(e.done,on=>{b.classList.toggle('done',on);toggleItem(e,edk);setTimeout(()=>App.refresh(),820);}),
+      e.kind==='gcal'?null:tickBtn(e.done,on=>{b.classList.toggle('done',on);if(on)blockSweep(b);toggleItem(e,edk);setTimeout(()=>App.refresh(),820);}),
       el('button',{class:'bt',onclick:()=>openItem(e,edk)},el('i',{html:(e.icon?glyph(e.icon,14):'')+`<span>${esc(e.title)}</span>`}),bm));
     if(e.kind==='block'&&!e.cont)b.append(el('span',{class:'rz','aria-hidden':'true'}));
     const menu=(x,y)=>itemMenu(e,edk,x,y);

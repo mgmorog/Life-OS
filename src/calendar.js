@@ -101,7 +101,7 @@ function quarterBody(body,y,months,C){
 }
 function monthBody(body,a,C){
   const tk=todayK(),y=a.getFullYear(),m=a.getMonth(),grid=el('div',{id:'month-grid',style:'display:grid;gap:6px'});
-  weeksOf(y,m).forEach(w=>{const row=el('div',{class:'heat-row'});w.forEach(d=>row.append(heatCell(d,{month:m,tk,C,bars:true,onTap:(dk,out)=>{if(out){C.anim=dk>C.anchor?'slide-l':'slide-r';C.anchor=dk;}C.sel=dk;App.refresh();}})));tripBand(row,w);grid.append(row);});
+  const selK=C.sel&&monthKey(fromK(C.sel))===monthKey(a)?C.sel:null;weeksOf(y,m).forEach(w=>{const row=el('div',{class:'heat-row'+(selK&&w.some(d=>k(d)===selK)?' selwk':'')});w.forEach(d=>row.append(heatCell(d,{month:m,tk,C,bars:true,onTap:(dk,out)=>{if(out){C.anim=dk>C.anchor?'slide-l':'slide-r';C.anchor=dk;}C.sel=dk;App.refresh();}})));tripBand(row,w);grid.append(row);});
   body.append(el('div',{class:'wd-row',style:'margin:0 0 -6px'},wdLabels().map(l=>el('span',{},l))),grid,heatKey(),dayPanel(C.sel&&monthKey(fromK(C.sel))===monthKey(a)?C.sel:k(new Date(y,m,1))));
 }
 function dayLine(e,dk){

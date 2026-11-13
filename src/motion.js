@@ -427,3 +427,15 @@ const STEPS=new Map();
 function stepDots(n,cur,key){const prev=STEPS.has(key)?STEPS.get(key):cur;STEPS.set(key,cur);const box=el('div',{class:'stepdots','aria-hidden':'true'},Array.from({length:n},(_,j)=>el('i',{class:j===cur?'on':j<cur?'done':''})));
   if(prev!==cur&&motionOK())requestAnimationFrame(()=>{const a=box.children[cur],b=box.children[prev];a&&a.animate([{width:'8px'},{width:'28px'}],{duration:420,easing:SOFT});b&&b.animate([{width:'28px'},{width:'8px'}],{duration:420,easing:SOFT});});return box;}
 function stepSwap(dir){daySwap(()=>{clearTimeout(App._r);App.render();scrollTo(0,0);},dir);}
+
+/* ---------- round 10 ---------- */
+/* A finished goal: the ring swells (core) and a few green petals drift up and fade */
+function petals(ring){if(!motionOK()||!ring||!ring.isConnected)return;const r=ring.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2,cols=['#466B5A','#8FB09E','#BCD0C4'];
+  for(let k=0;k<14;k++){const p=el('span',{class:'petal','aria-hidden':'true'});Object.assign(p.style,{left:cx-4+(Math.random()-.5)*30+'px',top:cy-6+'px',background:cols[k%3]});document.body.append(p);
+    const dx=(Math.random()-.5)*220,dy=-50-Math.random()*100,rot=(Math.random()-.5)*360;
+    p.animate([{transform:'translate(0,0) rotate(0)',opacity:0},{opacity:1,offset:.15},{transform:`translate(${dx}px,${dy}px) rotate(${rot}deg)`,opacity:0}],{duration:1300+Math.random()*500,delay:k*25,easing:'cubic-bezier(.2,.7,.3,1)',fill:'forwards'}).onfinish=()=>p.remove();}}
+/* Project segments: a newly finished step fills its segment from the left */
+const SEGS=new Map();
+function segFill(root){root.querySelectorAll('.segs[data-seg]').forEach(b=>{const k=b.dataset.seg,on=b.querySelectorAll('i.on').length,prev=SEGS.get(k);SEGS.set(k,on);if(prev==null||on<=prev||!motionOK())return;[...b.querySelectorAll('i.on')].slice(prev).forEach((i,j)=>i.animate([{backgroundSize:'0% 100%'},{backgroundSize:'100% 100%'}],{duration:480,delay:j*80,easing:EASE,fill:'backwards'}));});}
+/* Text size: the page grows or shrinks in place instead of snapping */
+function textSizeGlide(a,b){if(!motionOK())return;const Z={default:1,large:1.1,larger:1.22},za=Z[a]||1,zb=Z[b]||1;if(za===zb)return;requestAnimationFrame(()=>{['#view','#layers'].forEach(sel=>{const n=$(sel);n&&n.animate([{transform:`scale(${za/zb})`,transformOrigin:'50% 0'},{transform:'none',transformOrigin:'50% 0'}],{duration:420,easing:EASE});});});}

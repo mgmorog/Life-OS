@@ -434,6 +434,7 @@ function animateFills(root,S){
     const set=v=>{if(ring)n.style.setProperty('--p',String(v));else n.style.width=`${v}%`;};
     n.style.transition='none';set(from);void n.offsetWidth;n.style.transition='';set(target);
     /* the glow marks real progress, so it only plays when a value you've already seen goes up */
+    if(target>=100&&from<100&&FILLS_SEEN.has(key)&&motionOK()&&S.view==='plan'&&ring)setTimeout(()=>petals(n),600);
     if(target>=100&&from<100&&FILLS_SEEN.has(key)&&motionOK())setTimeout(()=>n.animate([{filter:'drop-shadow(0 0 0 rgba(70,107,90,0))',transform:'scale(1)'},{filter:'drop-shadow(0 0 8px rgba(70,107,90,.55))',transform:'scale(1.06)',offset:.4},{filter:'drop-shadow(0 0 0 rgba(70,107,90,0))',transform:'none'}],{duration:700,easing:'cubic-bezier(.3,1.35,.5,1)'}),650);
     if(FILLS_SEEN.has(key)&&target>from){n.classList.add('oglow');n.addEventListener('animationend',()=>n.classList.remove('oglow'),{once:true});}FILLS_SEEN.add(key);
   });

@@ -1372,3 +1372,10 @@ html.a-motion .pins.edit .ptile{animation:none}
 .stepdots i{height:8px;width:8px;border-radius:4px;background:var(--h1)}
 .stepdots i.done{background:var(--h2)}
 .stepdots i.on{width:28px;background:var(--accent)}
+/* round 10 motion */
+.petal{position:fixed;z-index:90;width:8px;height:12px;border-radius:50% 50% 50% 50% / 60% 60% 40% 40%;pointer-events:none}
+.segs{display:flex;gap:4px;margin:8px 0 2px}
+.segs i{flex:1;height:7px;border-radius:4px;background:var(--h0) linear-gradient(var(--accent),var(--accent)) no-repeat 0 0/0% 100%}
+.segs i.on{background-size:100% 100%}
+.fring-mini{display:grid;color:var(--accent-text);flex:none}
+.fring-mini circle{transition:stroke-dashoffset 1s linear}

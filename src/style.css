@@ -1273,3 +1273,11 @@ html.a-motion .tab-pill,html.a-motion .mo-ghost{display:none}
 .t3done.settle{animation:t3settle .6s cubic-bezier(.3,1.35,.5,1) .25s both}
 @keyframes t3settle{from{opacity:0;transform:translateY(8px)}}
 html.a-motion .t3sheen{display:none}
+/* round 3 motion */
+.flyer{position:fixed;z-index:90;pointer-events:none;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px 12px;font-size:14px;font-weight:600;box-shadow:0 10px 24px rgba(20,30,25,.18);white-space:nowrap}
+.sw::after{transition:transform .32s cubic-bezier(.3,1.35,.5,1),width .2s var(--ease)}
+.sw:active::after{width:32px}
+.sw.on:active::after{transform:translate(14px)}
+.slot{transition:border-color .15s,box-shadow .2s,background .15s,transform .32s cubic-bezier(.3,1.35,.5,1)}
+.slot.over{transform:scale(1.025);background:var(--accent-soft);box-shadow:0 0 0 3px var(--accent-soft),0 8px 18px rgba(20,30,25,.1)}
+html.a-motion .flyer{display:none}

@@ -135,6 +135,7 @@ function cardEl(c,st,P){
 }
 function doPlace(c,id,st,P,sl){
   if(sl&&sl.past){toast('That day has passed');return;}
+  App.state._studioPop={id,title:c&&(c.title||(c.rec&&c.rec.title))};
   if(c.placedIn.includes(id)&&c.type==='habit'){toast('Already placed there');return;}
   placeCard(c,id,st);st.selCard=null;st.ghosts=st.ghosts.filter(g=>g.card.id!==c.id||c.type==='habit'&&g.slot!==id);buzz(6);App.refresh();
   const late=c.due&&sl&&sl.from>c.due;

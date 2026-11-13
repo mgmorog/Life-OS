@@ -1440,3 +1440,12 @@ html.a-motion .now .bar::after{animation:none;opacity:0}
 .rd{display:inline-block;position:relative;overflow:hidden;vertical-align:top;height:1.2em;line-height:1.2em}
 .rd>span{display:block}
 .rd>.rdn{position:absolute;left:0;right:0;top:0}
+/* v93 · round 16 motion */
+.tiphost{position:relative}
+.dbar{transition:translate .25s var(--ease),filter .2s}
+.dbar.lift{translate:0 -3px;filter:brightness(.92)}
+.bartip{position:absolute;z-index:5;padding:5px 9px;border-radius:9px;background:var(--ink);color:#fff;font-size:12.5px;font-weight:700;white-space:nowrap;transform:translateX(-50%);pointer-events:none}
+.wkaddf{display:flex;gap:8px;align-items:center;overflow:hidden;margin-top:2px}
+.wkaddf input{flex:1;min-width:0;height:40px;border-radius:11px;border:1px solid var(--line);background:var(--card);padding:0 12px;font:inherit;font-size:16px;outline:0}
+.wkaddf input:focus{border-color:var(--accent)}
+.wkaddf .chip.on{background:var(--accent);color:#fff}

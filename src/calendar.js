@@ -101,7 +101,7 @@ function quarterBody(body,y,months,C){
 }
 function monthBody(body,a,C){
   const tk=todayK(),y=a.getFullYear(),m=a.getMonth(),grid=el('div',{id:'month-grid',style:'display:grid;gap:6px'});
-  const selK=C.sel&&monthKey(fromK(C.sel))===monthKey(a)?C.sel:null;weeksOf(y,m).forEach(w=>{const row=el('div',{class:'heat-row'+(selK&&w.some(d=>k(d)===selK)?' selwk':'')});w.forEach(d=>row.append(heatCell(d,{month:m,tk,C,bars:true,onTap:(dk,out)=>{if(out){C.anim=dk>C.anchor?'slide-l':'slide-r';C.anchor=dk;}C.sel=dk;App.refresh();}})));tripBand(row,w);grid.append(row);});
+  const selK=C.sel&&monthKey(fromK(C.sel))===monthKey(a)?C.sel:null;weeksOf(y,m).forEach(w=>{const row=el('div',{class:'heat-row'+(selK&&w.some(d=>k(d)===selK)?' selwk':'')});w.forEach(d=>row.append(heatCell(d,{month:m,tk,C,bars:true,onTap:(dk,out)=>{if(out){C.anim=dk>C.anchor?'slide-l':'slide-r';C.anchor=dk;}else if(C.sel&&dk!==C.sel)panelOut(dk>C.sel?1:-1);C.sel=dk;App.refresh();}})));tripBand(row,w);grid.append(row);});
   body.append(el('div',{class:'wd-row',style:'margin:0 0 -6px'},wdLabels().map(l=>el('span',{},l))),grid,heatKey(),dayPanel(C.sel&&monthKey(fromK(C.sel))===monthKey(a)?C.sel:k(new Date(y,m,1))));
 }
 function dayLine(e,dk){
@@ -109,7 +109,7 @@ function dayLine(e,dk){
   calGestures(row,e,dk);return row;
 }
 function allDayChips(allDay,dk){return el('div',{class:'allday-row',style:'margin-top:0'},allDay.map(e=>{const b=el('button',{class:'adchip',style:`--c:${e.color}`,html:(e.icon?glyph(e.icon,16,2):'')+`<span>${esc(e.title)}</span>`,onclick:()=>openItem(e,dk)});calGestures(b,e,dk);return b;}));}
-const addChips=dk=>el('div',{class:'chips'},el('button',{class:'chip',onclick:()=>taskSheet(null,{date:dk})},'+ Task'),el('button',{class:'chip',onclick:()=>blockSheet(null,{date:dk,start:9*60})},'+ Time block'),el('button',{class:'chip',onclick:()=>alldaySheet(null,{start:dk})},'+ All-day'));
+const addChips=(dk,inline)=>el('div',{class:'chips'},el('button',{class:'chip',onclick:e=>inline?wkAdd(e.currentTarget,dk):taskSheet(null,{date:dk})},'+ Task'),el('button',{class:'chip',onclick:()=>blockSheet(null,{date:dk,start:9*60})},'+ Time block'),el('button',{class:'chip',onclick:()=>alldaySheet(null,{start:dk})},'+ All-day'));
 function weekBody(body,start,C){
   const tk=todayK(),list=el('div',{});
   for(let i=0;i<7;i++){const d=addD(start,i),dk=k(d),{allDay,timed,anytime}=dayItems(dk,{filters:true}),L=dayLoad(dk),items=[...timed,...anytime],past=dk<tk,empty=!items.length&&!allDay.length,open=C.weekOpen===dk;
@@ -118,7 +118,7 @@ function weekBody(body,start,C){
     if(open){
       {const adS=allDay.filter(e=>!(e.rec&&e.rec.tripId));if(adS.length)main.append(allDayChips(adS,dk));}
       items.forEach(e=>main.append(dayLine(e,dk)));
-      main.append(addChips(dk),el('button',{class:'linkbtn small',style:'justify-self:start',onclick:()=>{App.state.sel=dk;App.state._fresh=true;App.go('today');}},'Open in Today ›'));
+      main.append(addChips(dk,true),el('button',{class:'linkbtn small',style:'justify-self:start',onclick:()=>{App.state.sel=dk;App.state._fresh=true;App.go('today');}},'Open in Today ›'));
     }else{
       {const adS=allDay.filter(e=>!(e.rec&&e.rec.tripId));if(adS.length)main.append(el('span',{style:'display:flex;gap:4px;flex-wrap:wrap'},adS.slice(0,3).map(e=>{const c=el('span',{class:'minichip',style:`--c:${e.color}`},e.title);calGestures(c,e,dk);return c;})));}
       items.slice(0,3).forEach(e=>{const r=el('span',{class:'it'},el('time',{},e.time!=null?fmtT(e.time):'Anytime'),el('span',{},e.title));calGestures(r,e,dk);main.append(r);});
@@ -137,7 +137,7 @@ function weekBody(body,start,C){
 }
 function dayPanel(dk){
   const{allDay,timed,anytime}=dayItems(dk,{filters:true}),items=[...timed,...anytime],tk=todayK(),past=dk<tk;
-  const c=el('div',{class:'card',style:'padding:16px 18px'},
+  const c=el('div',{class:'card dpanel',style:'padding:16px 18px'},
     el('div',{style:'display:flex;align-items:baseline;justify-content:space-between;gap:8px'},el('span',{class:'eyebrow',style:'font-size:11px'},shortDay(dk).toUpperCase()+(dk===tk?' · TODAY':'')),el('button',{class:'linkbtn small',onclick:()=>{App.state.sel=dk;App.state._fresh=true;App.go('today');}},'Open in Today ›')),
     el('div',{class:'serif',style:'font-size:26px;line-height:1.2;margin-top:2px'},items.length||allDay.length?`${items.length+allDay.length} planned`:emptyDayHead(dk)));
   if(allDay.length){const a=allDayChips(allDay,dk);a.style.marginTop='10px';c.append(a);}

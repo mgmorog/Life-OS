@@ -576,3 +576,38 @@ function rollText(n,str){if(!n)return;str=String(str);const cur=n._rt;if(cur===s
 /* sheets follow the keyboard: when it opens or closes, the sheet glides to its new spot instead of jumping */
 function sheetGlide(fn){const sh=document.querySelector('.sheet.on');if(!sh){fn();return;}const a=sh.getBoundingClientRect().top;fn();if(!motionOK())return;const b=sh.getBoundingClientRect().top,dy=a-b;if(Math.abs(dy)<24)return;
   sh.animate([{translate:`0 ${dy}px`},{translate:'0 0'}],{duration:340,easing:'cubic-bezier(.2,.8,.2,1)',composite:'add'});}
+
+/* ---------- round 16 ---------- */
+/* Month: the day card slides in from the side you're moving toward */
+function panelOut(dir){App.state._panelDir=dir;const p=$('.dpanel');const g=motionOK()&&ghostOf(p);if(!g)return;g.animate([{transform:'none',opacity:1},{transform:`translateX(${-36*dir}%)`,opacity:0}],{duration:300,easing:EASE,fill:'forwards'}).onfinish=()=>g.remove();}
+function panelIn(root){const d=App.state._panelDir;if(!d)return;App.state._panelDir=0;const p=root.querySelector('.dpanel');if(!p||!motionOK())return;p.animate([{transform:`translateX(${46*d}%)`,opacity:0},{transform:'none',opacity:1}],{duration:380,easing:SOFT});}
+/* charts: tap a bar and it lifts, with a small label for its value */
+let barTip=null;
+function closeBarTip(){if(!barTip)return;const{tip,bar}=barTip;barTip=null;bar.classList.remove('lift');if(motionOK())tip.animate([{opacity:1},{opacity:0}],{duration:150}).onfinish=()=>tip.remove();else tip.remove();}
+document.addEventListener('click',e=>{const svg=e.target.closest&&e.target.closest('svg.dchart');if(!svg){closeBarTip();return;}const bars=[...svg.querySelectorAll('.dbar[data-t]')];if(!bars.length)return;
+  let best=null,bd=1e9;bars.forEach(b=>{const r=b.getBoundingClientRect(),d=Math.abs(e.clientX-(r.left+r.width/2));if(d<bd){bd=d;best=b;}});const same=barTip&&barTip.bar===best;closeBarTip();if(same||!best)return;
+  const host=svg.closest('.dchartw')||svg.parentElement;host.classList.add('tiphost');const hr=host.getBoundingClientRect(),br=best.getBoundingClientRect();best.classList.add('lift');
+  const tip=el('span',{class:'bartip'},best.dataset.t);host.append(tip);tip.style.left=(br.left-hr.left+br.width/2)+'px';tip.style.top=(br.top-hr.top-34)+'px';barTip={tip,bar:best};buzz(4);
+  if(motionOK())tip.animate([{opacity:0,transform:'translate(-50%,8px) scale(.8)'},{opacity:1,transform:'translate(-50%,0) scale(1)'}],{duration:320,easing:SPRING});});
+/* search: the field grows out of the magnifier (or box) you tapped, and shrinks back into it on Cancel */
+function searchFrom(n){const r=n.getBoundingClientRect();App.state._searchFrom={l:r.left,t:r.top,w:r.width,h:r.height};App.state._searchBack=App.state._searchFrom;}
+function searchGrow(root){const F=App.state._searchFrom;if(!F)return;App.state._searchFrom=null;if(!motionOK())return;const box=root.querySelector('.searchbox');if(!box)return;const r=box.getBoundingClientRect();
+  const L=Math.max(0,F.l-r.left),R=Math.max(0,r.right-(F.l+F.w)),T=Math.max(0,F.t-r.top),B=Math.max(0,r.bottom-(F.t+F.h));
+  box.animate([{clipPath:`inset(${T}px ${R}px ${B}px ${L}px round ${Math.min(F.w,F.h)/2}px)`},{clipPath:'inset(0 0 0 0 round 14px)'}],{duration:380,easing:SOFT});
+  [...root.firstElementChild.children].forEach((c,i)=>{if(i)c.animate([{opacity:0,transform:'translateY(6px)'},{opacity:1,transform:'none'}],{duration:300,delay:140+i*40,easing:EASE,fill:'backwards'});});
+  const cx=box.nextElementSibling;cx&&cx.animate([{opacity:0},{opacity:1}],{duration:220,delay:180,fill:'backwards'});}
+function searchShrink(done){const F=App.state._searchBack,box=$('.searchbox');App.state._searchBack=null;if(!F||!box||!motionOK()){done();return;}const r=box.getBoundingClientRect();
+  const L=Math.max(0,F.l-r.left),R=Math.max(0,r.right-(F.l+F.w)),T=Math.max(0,F.t-r.top),B=Math.max(0,r.bottom-(F.t+F.h));const inp=box.querySelector('input');inp&&inp.blur();
+  box.animate([{clipPath:'inset(0 0 0 0 round 14px)'},{clipPath:`inset(${T}px ${R}px ${B}px ${L}px round ${Math.min(F.w,F.h)/2}px)`,opacity:.5}],{duration:240,easing:EASE,fill:'forwards'}).onfinish=()=>{App.state.dir=null;App.state._noDepth=true;done();};}
+/* Week view: "+ Task" grows a small add field inside the day instead of opening a sheet */
+function wkRefocus(root){const dk=App.state._wkRefocus;if(!dk)return;App.state._wkRefocus=null;const c=root.querySelector(`.wkrow[data-slot="${dk}"] .chips .chip`);if(c)wkAdd(c,dk,true);}
+function wkAdd(btn,dk,quiet){const host=btn.closest('.wkitems');if(!host)return;let f=host.querySelector('.wkaddf');if(f){f.querySelector('input').focus();return;}
+  const inp=el('input',{id:'li-new-wk',placeholder:`Add to ${relDay(dk)}`,enterkeyhint:'done',autocomplete:'off','aria-label':`Add a task to ${relDay(dk)}`});
+  const save=()=>{const raw=inp.value.trim();if(!raw)return false;const w=parseWhen(raw,fromK(dk));create('task',{notes:'',steps:[],repeat:{type:'never',end:null},remUnit:'minute',photos:[],title:w.title||raw,date:dk,time:w.time??null});inp.value='';return true;};
+  const close=()=>{if(!f.isConnected)return;if(!motionOK()){f.remove();return;}const h=f.offsetHeight;f.animate([{height:h+'px',opacity:1},{height:'0px',opacity:0}],{duration:200,easing:EASE,fill:'forwards'}).onfinish=()=>f.remove();};
+  f=el('div',{class:'wkaddf'},inp,el('button',{class:'chip on',onpointerdown:e=>e.preventDefault(),onclick:()=>{if(save()){App.state._wkRefocus=dk;App.refresh();}else close();}},'Add'));
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter'){if(save()){App.state._wkRefocus=dk;App.refresh();}else close();}if(e.key==='Escape')close();});inp.addEventListener('blur',()=>setTimeout(()=>{if(document.activeElement!==inp&&!inp.value.trim())close();},120));
+  btn.closest('.chips').after(f);if(!quiet&&motionOK()){const h=f.offsetHeight;f.animate([{height:'0px',opacity:0},{height:h+'px',opacity:1}],{duration:300,easing:SOFT});}inp.focus({preventScroll:true});}
+/* repeat days: picking a preset fills (or clears) the day circles one after another */
+function wdFill(was,now){if(!motionOK())return;const bs=$$('.sheet.on .wdays button');if(bs.length!==7)return;let k=0;
+  bs.forEach((b,i)=>{const a=was.includes(i),z=now.includes(i);if(a===z)return;b.classList.toggle('on',a);const d=k++*55;setTimeout(()=>{b.classList.toggle('on',z);if(z)b.animate([{transform:'scale(.8)'},{transform:'scale(1.12)',offset:.6},{transform:'none'}],{duration:340,easing:SPRING});},d);});}

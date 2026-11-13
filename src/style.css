@@ -1414,3 +1414,16 @@ html.a-motion .pins.edit .ptile{animation:none}
 .sh2.shstick.stuck{box-shadow:0 1px 0 var(--line),0 8px 12px -10px rgba(20,30,25,.3)}
 .qadd{height:36px;padding:0 14px;border-radius:11px;background:var(--accent);color:#fff;font-weight:700;font-size:14.5px;flex:none;overflow:hidden;white-space:nowrap}
 .qadd[hidden]{display:none}
+/* v91 · round 14 motion */
+.imorph{width:24px;height:24px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center;flex:none}
+.li.morphed .grow b{color:var(--ink-3)}
+.iroll{display:block;overflow:hidden;height:18px;line-height:18px}.iroll span{display:block;white-space:nowrap}
+.now .bar::after{content:"";position:absolute;left:-8px;top:-7px;width:16px;height:16px;border-radius:50%;background:rgba(162,78,54,.28);animation:nowBreathe 2.8s ease-in-out infinite;pointer-events:none}
+@keyframes nowBreathe{0%,100%{transform:scale(.5);opacity:0}50%{transform:scale(1);opacity:1}}
+html.a-motion .now .bar::after{animation:none;opacity:0}
+@media (prefers-reduced-motion:reduce){.now .bar::after{animation:none;opacity:0}}
+.tpeek{position:fixed;left:50%;width:min(448px,calc(100% - 32px));margin-left:max(-224px,calc(-50% + 16px));bottom:calc(var(--bar,64px) + env(safe-area-inset-bottom,0px) - 70px);z-index:60;background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:0 12px 30px rgba(20,30,25,.14);display:flex;align-items:center;gap:12px;padding:10px 14px;opacity:0;pointer-events:none}
+.tpeek .dt{width:42px;height:46px;border-radius:11px;background:var(--chip);display:grid;place-items:center;text-align:center;line-height:1;flex:none}
+.tpeek .dt small{font-size:9.5px;font-weight:700;letter-spacing:.1em;color:var(--ink-2)}.tpeek .dt b{font-family:var(--display);font-weight:500;font-size:21px}
+.tpeek .grow b{display:block;font-size:19px;font-weight:500}.tpeek .grow small{font-size:13px;color:var(--ink-2)}
+.tpeek .tr{fill:none;stroke:var(--accent-soft);stroke-width:2.5}.tpeek .fl{fill:none;stroke:var(--accent);stroke-width:2.5;stroke-linecap:round}

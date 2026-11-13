@@ -520,3 +520,30 @@ const DOTRUN=new Map();
 function dotRipple(dots,i){dots[i].animate([{transform:'scale(.3)'},{transform:'scale(1.5)',offset:.55},{transform:'none'}],{duration:460,easing:SPRING});
   let j=i-1,n=0;while(j>=0&&dots[j].classList.contains('on')){dots[j].animate([{transform:'none'},{transform:'scale(1.3)',offset:.5},{transform:'none'}],{duration:320,delay:180+n*70,easing:EASE});j--;n++;}}
 function dotRun(root){root.querySelectorAll('.odots[data-dk]').forEach(o=>{const dots=[...o.children],i=dots.findIndex(d=>d.classList.contains('td'));if(i<0)return;const on=dots[i].classList.contains('on'),prev=DOTRUN.get(o.dataset.dk);DOTRUN.set(o.dataset.dk,on);if(prev===false&&on&&motionOK())dotRipple(dots,i);});}
+
+/* ---------- round 14 ---------- */
+/* Inbox: an idea turned into something else morphs in its row (a circle checks in, the label rolls), then folds away */
+function ideaBecame(id,kind){App.state._ideaMorph={id,kind,at:Date.now(),played:false};setTimeout(()=>{remove(id);},motionOK()?950:0);}
+function ideaMorph(root){const M=App.state._ideaMorph;if(!M)return;if(Date.now()-M.at>1500){App.state._ideaMorph=null;return;}const row=root.querySelector(`[data-k="idea:${M.id}"]`);if(!row)return;
+  const li=row.querySelector('.li')||row,btn=li.querySelector('.grow'),turn=li.querySelector('.oturn');const anim=!M.played&&motionOK();M.played=true;
+  const c=el('span',{class:'imorph',html:ic('check',13,3)});btn&&btn.prepend(c);li.classList.add('morphed');
+  if(turn){turn.innerHTML='';const roll=el('span',{class:'iroll'},el('span',{},`${M.kind} added`));turn.append(roll);}
+  if(!anim)return;c.animate([{transform:'scale(.3) rotate(-30deg)',opacity:0},{transform:'scale(1.15)',opacity:1,offset:.6},{transform:'none',opacity:1}],{duration:460,easing:SPRING});
+  turn&&turn.firstChild.animate([{transform:'translateY(100%)',opacity:0},{transform:'none',opacity:1}],{duration:360,delay:120,easing:EASE,fill:'backwards'});}
+/* photos: new thumbnails drop in one after another; removing one closes the gap */
+function photoDrop(box,born){if(!motionOK())return;const now=performance.now();[...box.querySelectorAll('.photo')].forEach((p,i)=>{const t0=born[i];if(t0==null)return;const e=now-t0;if(e>=480)return;p.animate([{opacity:0,transform:'translateY(-16px) scale(.86) rotate(-4deg)'},{opacity:1,transform:'translateY(2px) scale(1.02)',offset:.65},{opacity:1,transform:'none'}],{duration:480,delay:-e,easing:SOFT,fill:'backwards'});});}
+function photoRects(box){return[...box.querySelectorAll('.photo,.addphoto')].map(n=>n.getBoundingClientRect());}
+function photoClose(box,before,gone){if(!motionOK())return;const now=[...box.querySelectorAll('.photo,.addphoto')];now.forEach((n,j)=>{const b=before[j>=gone?j+1:j];if(!b)return;const a=n.getBoundingClientRect(),dx=b.left-a.left,dy=b.top-a.top;if(dx||dy)n.animate([{transform:`translate(${dx}px,${dy}px)`},{transform:'none'}],{duration:360,easing:SOFT});});}
+/* Today: keep pulling up past the bottom and a Tomorrow card rises; let go once its ring is full to go to tomorrow */
+(function pullTomorrow(){let y0=null,d=0,card=null,full=false;const C=2*Math.PI*10;
+  const atBottom=()=>scrollY+innerHeight>=document.documentElement.scrollHeight-4;
+  const make=()=>{const t=addK(App.state.sel||todayK(),1),dt=fromK(t),n=dayItems?(()=>{try{const x=dayItems(t);return x.timed.length+x.anytime.length+x.allDay.length;}catch(e){return 0;}})():0;
+    card=el('div',{class:'tpeek','aria-hidden':'true'},el('span',{class:'dt'},el('small',{},DOW[dt.getDay()].slice(0,3).toUpperCase()),el('b',{},String(dt.getDate()))),el('span',{class:'grow'},el('b',{class:'serif'},App.state.sel===todayK()?'Tomorrow':DOW[dt.getDay()]),el('small',{class:'tpl'},n?`${n} planned · keep pulling`:'Keep pulling')));
+    card.insertAdjacentHTML('beforeend',`<svg class="tring" viewBox="0 0 26 26" width="26" height="26"><circle cx="13" cy="13" r="10" class="tr"/><circle cx="13" cy="13" r="10" class="fl" stroke-dasharray="${C}" stroke-dashoffset="${C}" transform="rotate(-90 13 13)"/></svg>`);document.body.append(card);};
+  const set=()=>{const p=Math.min(1,d/150);card.style.transform=`translateY(${-Math.min(d*.6,96)}px)`;card.style.opacity=Math.min(1,d/40);card.querySelector('.fl').setAttribute('stroke-dashoffset',C*(1-p));const wasFull=full;full=p>=1;if(full&&!wasFull){buzz(8);card.animate([{scale:'1'},{scale:'1.04'},{scale:'1'}],{duration:300,easing:SPRING});}if(full!==wasFull){const s=card.querySelector('.tpl');s.textContent=full?'Let go to open':s.textContent.replace('Let go to open','Keep pulling');}$('#view').style.transform=`translateY(${-Math.min(d,170)*.25}px)`;};
+  const end=go=>{const c=card,v=$('#view');card=null;y0=null;if(v){v.style.transition='transform .35s cubic-bezier(.2,.8,.2,1)';v.style.transform='';setTimeout(()=>{v.style.transition='';},380);}if(!c)return;
+    if(go){c.animate([{transform:c.style.transform,opacity:1},{transform:'translateY(-160px)',opacity:0}],{duration:320,easing:EASE,fill:'forwards'}).onfinish=()=>c.remove();goDay(addK(App.state.sel||todayK(),1));scrollTo(0,0);}
+    else c.animate([{transform:c.style.transform,opacity:c.style.opacity},{transform:'none',opacity:0}],{duration:260,easing:EASE,fill:'forwards'}).onfinish=()=>c.remove();};
+  addEventListener('touchstart',e=>{if(App.state.view!=='today'||e.touches.length>1||document.querySelector('.sheet.on,.confirm.on')||!atBottom()||!motionOK())return;y0=e.touches[0].clientY;d=0;full=false;},{passive:true});
+  addEventListener('touchmove',e=>{if(y0==null)return;const dy=y0-e.touches[0].clientY;if(dy<=0&&!card)return;if(!atBottom()&&!card){y0=null;return;}d=Math.max(0,dy-10);if(!card&&d>4)make();if(card)set();},{passive:true});
+  addEventListener('touchend',()=>{if(y0==null)return;if(card)end(full);else y0=null;},{passive:true});addEventListener('touchcancel',()=>{if(card)end(false);y0=null;},{passive:true});})();

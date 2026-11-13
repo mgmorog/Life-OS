@@ -269,7 +269,7 @@ function timeGrid(dk,timed){
   const syncJump=()=>{if(!jump)return;const y=nowMin()/60*HH+12;jump.hidden=y>g.scrollTop&&y<g.scrollTop+g.clientHeight;};
   requestAnimationFrame(()=>{
     if(S._gridTop!=null&&!S._fresh)g.scrollTop=S._gridTop;
-    else{g.scrollTop=isToday?nowTop():Math.max(0,Math.floor((timed[0]?timed[0].time:8*60)/60)*HH+12-16);S._fresh=false;}
+    else{const to=isToday?nowTop():Math.max(0,Math.floor((timed[0]?timed[0].time:8*60)/60)*HH+12-16);S._fresh=false;gridGlide(g,gw,to,isToday);}
     tickNow();syncJump();
   });
   g.addEventListener('scroll',()=>{S._gridTop=g.scrollTop;syncJump();},{passive:true});

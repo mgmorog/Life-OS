@@ -166,12 +166,14 @@ function collection(path) {
     doc(id) {
       return {
         async set(data) {
-          const { error, status } = await sb.from('records').upsert({ user_id: uid, id, data, deleted: false }, { onConflict: 'user_id,id' });
-          if (error) throw mapErr(error, status);
+          syncBump(1);
+          try { const { error, status } = await sb.from('records').upsert({ user_id: uid, id, data, deleted: false }, { onConflict: 'user_id,id' });
+            if (error) throw mapErr(error, status); } finally { syncBump(-1); }
         },
         async delete() {
-          const { error, status } = await sb.from('records').upsert({ user_id: uid, id, data: {}, deleted: true }, { onConflict: 'user_id,id' });
-          if (error) throw mapErr(error, status);
+          syncBump(1);
+          try { const { error, status } = await sb.from('records').upsert({ user_id: uid, id, data: {}, deleted: true }, { onConflict: 'user_id,id' });
+            if (error) throw mapErr(error, status); } finally { syncBump(-1); }
         },
       };
     },
@@ -211,6 +213,9 @@ const downloads = {
 
 /* ---------- Claude, through this app's own server (only when switched on in Vercel) ---------- */
 const blobToData = b => new Promise((ok, no) => { const r = new FileReader(); r.onload = () => ok(r.result); r.onerror = no; r.readAsDataURL(b); });
+/* tell the app how many saves are on their way to the server (drives the quiet sync dot) */
+let syncPend = 0;
+function syncBump(d) { syncPend = Math.max(0, syncPend + d); try { dispatchEvent(new CustomEvent('lifeos-sync', { detail: { pending: syncPend } })); } catch (e) {} }
 async function askClaude(prompt, opts = {}, json = false) {
   const images = opts.images ? await Promise.all(opts.images.slice(0, 3).map(blobToData)) : [];
   let res;

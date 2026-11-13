@@ -77,7 +77,7 @@ function heatCell(d,{month,tk,C,onTap,bars=false,showSel=true}){
   const unit=get.settings().capacity?.mode==='hours'?'hours':'items';
   const btn=el('button',{class:'heat '+(L.level?'l'+L.level+' ':'')+(past?'past ':'')+(dk===tk?'today ':'')+(isSel?'sel':''),'data-slot':dk,'aria-label':`${shortDay(dk)}, ${Math.round(L.value*10)/10} ${unit}`,'aria-current':dk===tk?'date':null,'aria-pressed':showSel?String(isSel):null,onclick:()=>onTap(dk,false)},el('span',{class:'hn'},String(d.getDate())));
   const adB=L.allDay.filter(e=>!(e.rec&&e.rec.tripId));if(bars&&adB.length)btn.append(el('span',{class:'adbars'},adB.slice(0,2).map(e=>el('i',{style:`--c:${e.color}`}))));
-  onPress(btn,(x,y)=>dayMenu(dk,x,y));
+  onPress(btn,(x,y)=>dayPeek(dk,btn));
   return btn;
 }
 function weeksOf(y,m){const first=new Date(y,m,1),last=new Date(y,m+1,0),start=weekStartOf(first),out=[];let d=start;while(d<=last){out.push(Array.from({length:7},(_,i)=>addD(d,i)));d=addD(d,7);}return out;}

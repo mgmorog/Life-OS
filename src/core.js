@@ -297,6 +297,7 @@ function openSheet({title,full=false,left,right,build,onClose,tryClose,raw=false
   /* Opened from Quick capture's "Save as": reshape the sheet underneath instead of stacking a new one */
   const under=App._morphNext&&sheetStack.length&&!pop&&motionOK()?sheetStack[sheetStack.length-1]:null;App._morphNext=false;
   if(under){const h0=under.sheet.getBoundingClientRect().height;under.sheet.style.visibility='hidden';scrim.classList.add('clear','on');sheet.style.transition='none';sheet.classList.add('on');morphSheetIn(sheet,h0);requestAnimationFrame(()=>requestAnimationFrame(()=>{sheet.style.transition='';}));}
+  else if(!pop&&sheetFromRow(sheet,scrim)){}
   else requestAnimationFrame(()=>{scrim.classList.add('on');sheet.classList.add('on');});
   scrim.addEventListener('click',()=>requestClose());
   sheetStack.push(inst);lockScroll(true);

@@ -144,7 +144,7 @@ function dayCard(dk){
   const{allDay,timed,anytime}=dayItems(dk);
   const nowM=nowMin(),all=[...timed,...anytime].filter(e=>e.kind!=='gcal'),open=all.filter(e=>!e.done),late=isToday&&get.settings().carryOver?carried():[],lateIn=late.filter(t=>!all.some(e=>e.id===t.id)),doneX=isToday?get.all('task').filter(t=>t.date&&t.date<tk&&(!t.repeat||t.repeat.type==='never')&&isDone(t,t.date)&&k(new Date(typeof t.doneDates[t.date]==='number'?t.doneDates[t.date]:0))===tk).length+get.all('habit').filter(h=>habitWeekly(h)&&!all.some(e=>e.id===h.id)&&habitDone(h,dk)).length:0,total=all.length+lateIn.length+doneX,left=open.length+lateIn.length;
   const next=isToday?timed.find(e=>!e.done&&e.time+(e.dur||30)>nowM):timed.find(e=>!e.done);
-  let eye=isToday?'Today':relDay(dk),head=emptyDayHead(dk),sub=isPast?'':'Tap an hour, or add something below.';
+  let eye=isToday?'Today':relDay(dk),head=emptyDayHead(dk),sub=isPast?'':'Tap an hour below, or add something.';
   if(next){const during=isToday&&next.time<=nowM;eye=isToday?(during?'Happening now':'Up next'):eye;head=next.title;sub=next.kind==='task'?fmtT(next.time):fmtRange(next.time,next.time+(next.dur||30));
     if(isToday){const mins=during?next.time+(next.dur||30)-nowM:next.time-nowM;sub+=` · ${during?fmtDurS(mins)+' left':'in '+fmtDurS(mins)}`;}}
   else if(!open.length&&lateIn.length){const n=lateIn.length;head=`${n} carried over`;sub=all.length?'Today’s plan is done. Finish or move what’s left.':'Nothing else is planned. Finish or move it below.';}
@@ -263,13 +263,13 @@ function timeGrid(dk,timed){
   });
   if(isToday)cv.append(el('div',{class:'now',id:'now'},el('span',{class:'npill',id:'nowpill'}),el('span',{class:'bar'})));
   g.append(cv);gw.append(g);
-  const nowTop=()=>Math.max(0,nowMin()/60*HH+12-g.clientHeight/4);
+  const nowTop=()=>{const t=nowMin()/60*HH+12-g.clientHeight/4,h=Math.max(0,Math.floor((t-12)/HH));return Math.max(0,h*HH+12-16);};
   let jump=null;
   if(isToday){jump=el('button',{class:'nowjump',hidden:true,onclick:()=>g.scrollTo({top:nowTop(),behavior:'smooth'})},'Now');gw.append(jump);}
   const syncJump=()=>{if(!jump)return;const y=nowMin()/60*HH+12;jump.hidden=y>g.scrollTop&&y<g.scrollTop+g.clientHeight;};
   requestAnimationFrame(()=>{
     if(S._gridTop!=null&&!S._fresh)g.scrollTop=S._gridTop;
-    else{g.scrollTop=isToday?nowTop():Math.max(0,(timed[0]?timed[0].time:8*60)/60*HH+12-40);S._fresh=false;}
+    else{g.scrollTop=isToday?nowTop():Math.max(0,Math.floor((timed[0]?timed[0].time:8*60)/60)*HH+12-16);S._fresh=false;}
     tickNow();syncJump();
   });
   g.addEventListener('scroll',()=>{S._gridTop=g.scrollTop;syncJump();},{passive:true});

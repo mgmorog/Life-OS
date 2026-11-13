@@ -20,10 +20,13 @@ function t3PickSheet(dk,slot){const cur=t3Get(dk),inst=openSheet({title:`Pick #$
   b.append(c.length?el('div',{class:'list'},c.map(({r,why})=>el('button',{class:'li',style:'width:100%;text-align:left;min-height:54px',onclick:()=>choose(r)},el('span',{class:'grow'},el('span',{class:'tt'},r.title),el('small',{},why))))):el('p',{class:'muted'},'Nothing planned yet. Type what matters most above.'));}});}
 function top3Card(dk){const s=get.settings();if(s.top3On===false)return null;const l=t3Get(dk),start=(s.startAt||{})[dk];
   const es=l.map(x=>t3Entry(x,dk)).filter(Boolean),n=es.filter(e=>e.done).length;
-  const slots=[0,1,2].map(i=>{const e=es[i];if(!e)return el('button',{class:'t3slot',onclick:()=>t3PickSheet(dk,i)},el('span',{class:'t3n'},String(i+1)),el('span',{class:'grow muted'},i===0&&!es.length?'Pick what matters most today':`Pick #${i+1}`),el('span',{html:ic('plus',16,2.2)}));
+  const slots=es.length?es.map((e,i)=>{
     const row=el('div',{class:'t3row tick-host'+(e.done?' done':'')},el('span',{class:'t3n'},String(i+1)),el('span',{class:'tick-hit'},tickBtn(e.done,on=>{row.classList.toggle('done',on);toggleItem(e,dk);if(on&&t3AllDone(dk)){buzz(14);toast('Top 3 done. That’s the day that mattered.');}setTimeout(()=>App.refresh(),700);},`${e.done?'Mark not done':'Mark done'}: ${e.title}`)),el('button',{class:'grow',style:'text-align:left',onclick:()=>openItem(e,dk)},el('span',{class:'tt'},e.title)));
-    return withPress(row,(x,y)=>openMenu(x,y,[{label:'Swap for something else',icon:'edit',onclick:()=>t3PickSheet(dk,i)},{label:'Remove from top 3',icon:'x',onclick:()=>t3Set(dk,t3Get(dk).filter(z=>z.id!==e.id))}]));});
-  return el('section',{class:'card t3'},el('div',{class:'bl'},el('span',{class:'lbl',style:'color:var(--accent-text)'},'Top 3'),el('span',{class:'small muted tnum'},es.length?(n===es.length&&es.length===3?'All done':`${n} of ${es.length}`):start!=null?`Start at ${fmtT(start)}`:'What would make today a good day?')),...slots);}
+    return withPress(row,(x,y)=>openMenu(x,y,[{label:'Swap for something else',icon:'edit',onclick:()=>t3PickSheet(dk,i)},{label:'Remove from top 3',icon:'x',onclick:()=>t3Set(dk,t3Get(dk).filter(z=>z.id!==e.id))}]));
+  }):[el('button',{class:'t3slot',onclick:()=>t3PickSheet(dk,0)},el('span',{class:'t3n'},'1'),el('span',{class:'grow muted'},'Pick what matters most today'),el('span',{style:'display:grid;color:var(--accent-text)',html:ic('plus',16,2.2)}))];
+  const add=es.length&&es.length<3?el('button',{class:'t3add',onclick:()=>t3PickSheet(dk,es.length)},el('span',{html:ic('plus',16,2.4),style:'display:grid'}),`Add a ${es.length===1?'second':'third'}`):null;
+  const meta=es.length?(n===es.length&&es.length===3?'All done':`${n} of ${es.length}`):start!=null?`Start at ${fmtT(start)}`:null;
+  return el('section',{class:'card t3'+(es.length?'':' t3-empty')},el('div',{class:'bl'},el('span',{class:'lbl',style:'color:var(--accent-text)'},'Top 3'),meta?el('span',{class:'small muted tnum'},meta):null),...slots,add);}
 /* weekly review line */
 function t3WeekLine(a,b){const t3=get.settings().top3||{};let days=0,hit=0;for(let d=a;d<=b;d=addK(d,1)){if((t3[d]||[]).length){days++;if(t3AllDone(d))hit++;}}return days?`Top 3: all done on ${hit} of ${days} day${days>1?'s':''} you set them`:null;}
 /* ---------- Evening: plan tomorrow ---------- */

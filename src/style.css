@@ -130,8 +130,8 @@ h1,h2,h3,p{margin:0}
 .wkpage .today:not(.sel) .dn{color:var(--accent-text);font-weight:700;box-shadow:inset 0 0 0 1.5px var(--accent)}
 
 /* Today cards */
-.mini{position:fixed;top:env(safe-area-inset-top,0px);left:0;right:0;z-index:12;height:48px;display:grid;place-items:center;background:var(--bg);font-weight:600;font-size:17px;visibility:hidden;color:transparent;pointer-events:none;transition:color .18s,visibility 0s .18s;border-bottom:1px solid var(--line)}
-.mini.on{visibility:visible;color:var(--ink);pointer-events:auto;transition:color .18s,visibility 0s}
+.mini{position:fixed;top:env(safe-area-inset-top,0px);left:0;right:0;z-index:12;height:52px;display:grid;place-items:center;background:var(--bg);font-weight:600;font-size:17px;visibility:hidden;color:transparent;pointer-events:none;transition:color .18s,visibility 0s .18s;border-bottom:1px solid var(--line)}
+.mini.on{box-shadow:0 6px 14px -10px rgba(20,30,25,.22);visibility:visible;color:var(--ink);pointer-events:auto;transition:color .18s,visibility 0s}
 .daycard .chips{margin-top:14px}
 .allday-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
 .adchip{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 11px;border-radius:9px;color:#fff;background:var(--c,var(--accent));font-size:14px;font-weight:500;max-width:100%;transition:transform .15s var(--ease)}
@@ -982,6 +982,13 @@ a.linkbtn{text-decoration:none}
 .t3 .bl+*{border-top:0}
 .t3n{flex:none;width:22px;font-family:var(--display);font-size:20px;color:var(--accent-text);text-align:center}
 .t3slot{color:var(--ink-2)}.t3slot:hover{color:var(--ink)}
+.card.t3{padding:16px 20px 6px}
+.t3 .bl{min-height:22px}
+.t3add{display:flex;align-items:center;gap:8px;min-height:46px;border-top:1px solid var(--line);width:100%;padding-left:32px;color:var(--accent-text);font-weight:600;font-size:15px;text-align:left}
+@media (hover:hover){.t3add:hover{color:var(--accent-deep)}}
+/* the time grid is the card's last thing: let its fade meet the card edge */
+.daycard:has(>.gridwrap:last-child){padding-bottom:6px}
+.daycard>.gridwrap:last-child::after{height:20px}
 .t3row.done .tt{color:var(--ink-3);text-decoration:line-through}
 .pe{display:flex;flex-direction:column}
 .hmonths{padding:14px 12px}

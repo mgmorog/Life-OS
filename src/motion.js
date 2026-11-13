@@ -140,3 +140,44 @@ function swipeArrive(){const dir=App.state._swipeIn;if(!dir)return;App.state._sw
   addEventListener('pointermove',e=>{if(y0==null)return;const n=t();dy=e.clientY-y0;n.style.transform=`translate(-50%,${dy>0?dy:dy*.2}px)`;n.style.opacity=String(1-Math.max(0,dy)/120);});
   const up=()=>{if(y0==null)return;y0=null;const n=t();n.classList.remove('drag');n.style.opacity='';n.style.transform='';if(dy>36)n.classList.remove('on');else toastT=setTimeout(()=>n.classList.remove('on'),1800);};
   addEventListener('pointerup',up);addEventListener('pointercancel',up);})();
+
+/* Today: the big date shrinks and fades as you scroll, while the small bar firms up under the status bar */
+function todayHeaderScroll(){
+  const m=$('#mini');if(!m)return;
+  if(App.state.view!=='today'||sheetStack.length){m.style.cssText='';return;}
+  const d=$('#view .hd .date'),eb=$('#view .hd-eyebrow'),p=Math.max(0,Math.min(1,scrollY/110));
+  if(d){d.style.transformOrigin='left center';d.style.transform=motionOK()?`scale(${1-.28*p})`:'';d.style.opacity=String(1-Math.max(0,(p-.55)/.45));}
+  if(eb)eb.style.opacity=String(1-Math.min(1,p*1.8));
+  Object.assign(m.style,{visibility:p>.02?'visible':'hidden',color:`rgba(30,38,34,${Math.max(0,(p-.6)/.4)})`,backgroundColor:`rgba(244,244,239,${p})`,borderBottomColor:`rgba(229,231,225,${p})`,pointerEvents:p>.9?'auto':'none',boxShadow:p>=1?'0 6px 14px -10px rgba(20,30,25,.22)':'none',transition:'none'});
+}
+addEventListener('scroll',todayHeaderScroll,{passive:true});
+
+/* Today: moving to another day slides the cards in from that side and rolls the date */
+function daySwap(update,dir){
+  if(!motionOK()){update();return;}
+  const vis=n=>{const r=n.getBoundingClientRect();return r.bottom>0&&r.top<innerHeight&&r.height>0;};
+  const body=()=>$$('#view>.page>*').filter(n=>n.tagName!=='HEADER'&&vis(n));
+  const gs=body().slice(0,6).map(ghostOf),gt=ghostOf($('#view .hd .date span')),ge=ghostOf($('#view .hd-eyebrow .eyebrow'));
+  update();
+  gs.forEach(g=>g&&g.animate([{opacity:1,transform:'none'},{opacity:0,transform:`translateX(${-dir*36}px)`}],{duration:200,easing:'cubic-bezier(.4,0,1,1)',fill:'forwards'}).finished.then(()=>g.remove()));
+  body().slice(0,6).forEach((n,i)=>n.animate([{opacity:0,transform:`translateX(${dir*54}px)`},{opacity:1,transform:'none'}],{duration:420,delay:40+i*30,easing:EASE,fill:'backwards'}));
+  [[gt,'#view .hd .date span'],[ge,'#view .hd-eyebrow .eyebrow']].forEach(([g,sel])=>{if(g)g.animate([{opacity:1,transform:'none'},{opacity:0,transform:`translateY(${-dir*22}px)`}],{duration:220,easing:EASE,fill:'forwards'}).finished.then(()=>g.remove());const n=$(sel);n&&n.animate([{opacity:0,transform:`translateY(${dir*26}px)`},{opacity:1,transform:'none'}],{duration:420,easing:SOFT,fill:'backwards'});});
+}
+
+/* Time grid: tapping an hour opens a placeholder block there first, then the sheet rises */
+function hourPlaceholder(cv,start,dur,open){
+  if(!motionOK()||!cv){open();return;}
+  $$('.ph-blk',cv).forEach(n=>n.remove());
+  const p=el('div',{class:'ph-blk','aria-hidden':'true'},fmtRange(start,start+dur));p.style.top=start/60*HH+12+'px';p.style.height=Math.max(dur/60*HH-2,26)+'px';cv.append(p);
+  p.animate([{transform:'scaleY(.2)',opacity:0},{transform:'none',opacity:1}],{duration:420,easing:SPRING});
+  setTimeout(open,190);
+}
+
+/* Drag on the time grid: the preview takes the block's look (lifted, tilted) and snaps between quarter hours */
+let dropCarry=null;
+function carryPreview(p,t){
+  if(!dropCarry){p.classList.remove('carry');return;}
+  if(!p.classList.contains('carry')){p.classList.add('carry');p.style.setProperty('--c',dropCarry.color||'var(--accent)');}
+  if(p._t!==t){p._t=t;if(motionOK()&&p.animate)p.animate([{transform:'rotate(-1.2deg) scale(1.05)'},{transform:'rotate(-1.2deg) scale(1.03)'}],{duration:160,easing:EASE});}
+}
+function settleBlock(){const id=App.state._settle;if(!id)return;App.state._settle=null;const b=$(`.blk[data-bid="${id}"]`);if(b&&motionOK())b.animate([{transform:'scale(1.03)'},{transform:'scale(.985)',offset:.5},{transform:'none'}],{duration:460,easing:SPRING});}

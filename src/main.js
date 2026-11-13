@@ -35,7 +35,7 @@ const App={
     animateFills(root,S);
     listPlay(root,listBefore);
     rollCounts(root,`${S.view}|${S.sel}`);
-    swipeArrive();
+    swipeArrive();settleBlock();todayHeaderScroll();
     if(S.entering){const pg=root.firstElementChild;if(pg&&S._painted&&(S.view!=='today'||S.dir==='pop'||S.dir==='swiped'))pg.classList.add(S.dir==='push'?'viewin-push':S.dir==='pop'?'viewin-pop':S.dir==='swiped'?'viewin-swiped':'viewin');S.dir=null;S.entering=false;}
     S.lastView=S.view;
     const d2=$('#st-dock');if(d2)d2.scrollLeft=dockL;
@@ -67,7 +67,7 @@ document.addEventListener('keydown',e=>{if(App.state.view!=='calendar'||sheetSta
   if(e.key==='ArrowLeft'){calStep(-1);e.preventDefault();}else if(e.key==='ArrowRight'){calStep(1);e.preventDefault();}else if(e.key==='t'){calNow();}});
 document.addEventListener('keydown',e=>{if(App.state.view!=='today'||sheetStack.length||$('.menu')||e.metaKey||e.ctrlKey||e.altKey)return;if(e.target.matches&&e.target.matches('input,textarea,select'))return;
   if(e.key==='ArrowLeft'){goDay(addK(App.state.sel,-1));e.preventDefault();}else if(e.key==='ArrowRight'){goDay(addK(App.state.sel,1));e.preventDefault();}else if(e.key==='t'){goDay(todayK());}else if(e.key==='n'){e.preventDefault();taskSheet(null,{date:App.state.sel});}});
-addEventListener('scroll',()=>{if(App.state.view==='today')$('#mini').classList.toggle('on',scrollY>120&&!sheetStack.length);},{passive:true});
+/* the small Today bar follows the scroll in motion.js (todayHeaderScroll) */
 addEventListener('hashchange',()=>{const v=location.hash.slice(1);if(v&&v!==App.state.view&&/^[a-z]+$/.test(v))App.go(v);});
 /* boot: paint the shell from the saved copy at once, then let the live data arrive quietly */
 const hadCache=loadCache();

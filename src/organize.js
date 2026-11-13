@@ -25,10 +25,21 @@ const span=ms=>{const d=Math.max(1,Math.round(ms/864e5));return d<14?`${d} day${
 const flameI=()=>el('span',{class:'oflame',html:ic('flame',13,2)});
 
 /* ---------- Inbox ---------- */
-function swipeAct(node,{left,right}){const wrap=el('div',{class:'swr'},el('div',{class:'swr-bg'},right?el('span',{style:`background:${right.color}`},right.label):el('span'),left?el('span',{style:`background:${left.color};text-align:right`},left.label):el('span')),node);let x0,y0,dx=0,on=false,lock=null;
+/* Swipe a row: right for the main action, left to delete. The action label grows once you've pulled
+   far enough; past three quarters the row resists; let go early and it springs back. */
+function swipeAct(node,{left,right}){
+  const lab=(o,side)=>o?el('span',{class:'swr-a '+side,style:`background:${o.color}`},el('b',{},o.label)):null;
+  const wrap=el('div',{class:'swr'},el('div',{class:'swr-bg'},lab(right,'r'),lab(left,'l')),node);let x0,y0,dx=0,on=false,lock=null;
+  const W=()=>wrap.offsetWidth||360,arm=()=>Math.max(90,W()*.35);
   node.addEventListener('touchstart',e=>{x0=e.touches[0].clientX;y0=e.touches[0].clientY;dx=0;on=true;lock=null;node.style.transition='none';},{passive:true});
-  node.addEventListener('touchmove',e=>{if(!on)return;const mx=e.touches[0].clientX-x0,my=e.touches[0].clientY-y0;if(lock===null&&Math.hypot(mx,my)>8)lock=Math.abs(mx)>Math.abs(my)*1.3?'x':'y';if(lock!=='x')return;dx=Math.max(left?-160:0,Math.min(right?160:0,mx));node.style.transform=`translateX(${dx}px)`;wrap.dataset.dir=dx<0?'l':'r';},{passive:true});
-  node.addEventListener('touchend',()=>{if(!on)return;on=false;node.style.transition='transform .2s ease';if(dx<-100&&left){node.style.transform='translateX(-110%)';markGs('swipe');setTimeout(left.run,180);}else if(dx>100&&right){markGs('swipe');node.style.transform='';right.run();}else node.style.transform='';if(Math.abs(dx)>8)node._pressed=Date.now();dx=0;});
+  node.addEventListener('touchmove',e=>{if(!on)return;const mx=e.touches[0].clientX-x0,my=e.touches[0].clientY-y0;if(lock===null&&Math.hypot(mx,my)>8)lock=Math.abs(mx)>Math.abs(my)*1.3?'x':'y';if(lock!=='x')return;
+    let d=mx;if((d<0&&!left)||(d>0&&!right))d*=.15;const lim=W()*.75;if(Math.abs(d)>lim)d=Math.sign(d)*(lim+(Math.abs(d)-lim)*.3);dx=d;
+    node.style.transform=`translateX(${d}px)`;wrap.dataset.dir=d<0?'l':'r';const was=wrap.classList.contains('armed'),now=Math.abs(d)>arm()&&((d<0&&left)||(d>0&&right));wrap.classList.toggle('armed',now);if(now&&!was)buzz&&buzz(6);},{passive:true});
+  node.addEventListener('touchend',()=>{if(!on)return;on=false;const go=wrap.classList.contains('armed');wrap.classList.remove('armed');
+    if(go&&dx<0&&left){node.style.transition='transform .22s cubic-bezier(.4,0,1,1)';node.style.transform='translateX(-105%)';markGs('swipe');setTimeout(left.run,200);}
+    else if(go&&dx>0&&right){markGs('swipe');node.style.transition='transform .5s var(--soft,cubic-bezier(.3,1.15,.5,1))';node.style.transform='';setTimeout(right.run,90);}
+    else{node.style.transition='transform .45s var(--soft,cubic-bezier(.3,1.15,.5,1))';node.style.transform='';}
+    if(Math.abs(dx)>8)node._pressed=Date.now();dx=0;});
   return wrap;}
 function ideaLabel(i){const t=(i.title||'').trim();
   if(!t||t==='Unnamed Idea')return (i.photos||[]).length?`Photo from ${shortDay(k(new Date(i.createdAt||Date.now())))}`:'Untitled idea';
@@ -58,9 +69,9 @@ function viewInbox(root){
     if(link)meta.push(el('span',{class:'omi',html:ic('share',13,2)+'Link'}));
     if(i.source)meta.push(`From ${i.source}`);const nl=(i.notes||'').trim().split('\n')[0];if(nl&&!URL_RE.test(nl))meta.push(nl.length>36?nl.slice(0,34).trim()+'…':nl);meta.push(timeAgo(i.createdAt));
     const g=suggestKind(i.title==='Unnamed Idea'?'':i.title,i.notes,new Date(i.createdAt));
-    return swipeAct(withPress(el('div',{class:'li',style:'min-height:64px'},
+    const sw=swipeAct(withPress(el('div',{class:'li',style:'min-height:64px'},
       el('button',{class:'grow',style:'display:flex;align-items:center;gap:12px;text-align:left;min-width:0',onclick:()=>captureSheet(i)},ph?el('span',{class:'photo thumb',style:`background-image:url("${i.photos[0].url}")`,'aria-hidden':'true'}):null,el('span',{style:'min-width:0;display:block'},el('b',{},ideaLabel(i)),el('small',{class:'ometa'},joinMeta(meta)))),
-      g?el('button',{class:'oturn','aria-label':`Turn ${i.title||'idea'} into a ${kindName(g.kind).toLowerCase()}`,onclick:()=>routeInto(g.kind,{title:i.title,notes:i.notes,photos:i.photos,createdAt:i.createdAt},()=>remove(i.id))},kindName(g.kind),el('span',{style:'display:grid',html:ic('arrow',13,2.2)})):null),(x,y)=>openMenu(x,y,[{label:'Edit',icon:'edit',onclick:()=>captureSheet(i)},{label:'Turn into…',icon:'arrow',onclick:()=>tidySheet([i])},{label:'Delete',icon:'trash',danger:true,onclick:()=>{const c=clone(i);remove(i.id);toast('Idea deleted',()=>put(c));}}])),{left:{label:'Delete',color:'var(--danger)',run:()=>{const c=clone(i);remove(i.id);toast('Idea deleted',()=>put(c));}},right:{label:'Task',color:'var(--accent)',run:()=>routeInto('task',{title:i.title==='Unnamed Idea'?'':i.title,notes:i.notes,photos:i.photos,createdAt:i.createdAt},()=>remove(i.id))}});
+      g?el('button',{class:'oturn','aria-label':`Turn ${i.title||'idea'} into a ${kindName(g.kind).toLowerCase()}`,onclick:()=>routeInto(g.kind,{title:i.title,notes:i.notes,photos:i.photos,createdAt:i.createdAt},()=>remove(i.id))},kindName(g.kind),el('span',{style:'display:grid',html:ic('arrow',13,2.2)})):null),(x,y)=>openMenu(x,y,[{label:'Edit',icon:'edit',onclick:()=>captureSheet(i)},{label:'Turn into…',icon:'arrow',onclick:()=>tidySheet([i])},{label:'Delete',icon:'trash',danger:true,onclick:()=>{const c=clone(i);remove(i.id);toast('Idea deleted',()=>put(c));}}])),{left:{label:'Delete',color:'var(--danger)',run:()=>{const c=clone(i);remove(i.id);toast('Idea deleted',()=>put(c));}},right:{label:'Task',color:'var(--accent)',run:()=>routeInto('task',{title:i.title==='Unnamed Idea'?'':i.title,notes:i.notes,photos:i.photos,createdAt:i.createdAt},()=>remove(i.id))}});sw.dataset.k='idea:'+i.id;return sw;
   })));
   root.append(page);
 }

@@ -54,7 +54,7 @@ function moveSheet(e,dk){
   let inst;const c=formCtx(()=>{});const u=snapItem(e);
   inst=openSheet({title:'Move to',build:b=>{b.append(el('p',{class:'muted'},e.title),el('div',{class:'card'},c.calendar(dk,d=>{if(!d||d===dk){inst.close();return;}moveItemDay(e,dk,d);inst.close();toast(`Moved to ${relDay(d)}`,u);})));}});
 }
-function goDay(dk){const S=App.state;if(dk===S.sel)return;S._anim=dk>S.sel?'slide-l':'slide-r';S.sel=dk;S._fresh=true;S._gridTop=null;App.refresh();}
+function goDay(dk){const S=App.state;if(dk===S.sel)return;const dir=dk>S.sel?1:-1;S._anim=null;S.sel=dk;S._fresh=true;S._gridTop=null;if(S.view!=='today'){App.refresh();return;}daySwap(()=>{clearTimeout(App._r);App.render();},dir);}
 /* reminders: an alert in the app, never fired twice, kept until dealt with */
 function inQuiet(d){const q=get.settings().quiet;if(!q||!q.on)return false;const m=d.getHours()*60+d.getMinutes();return q.from<q.to?(m>=q.from&&m<q.to):(m>=q.from||m<q.to);}
 const remState=()=>get.id('remstate')||{id:'remstate',kind:'remstate',map:{}};
@@ -219,15 +219,15 @@ function metaOf(e,late,dk){
   return bits;
 }
 function gridTimeAt(x,y,grab=0,dur=0){const g=$('#grid');if(!g)return null;const r=g.getBoundingClientRect();if(x<r.left||x>r.right||y<r.top||y>r.bottom)return null;const py=y-r.top+g.scrollTop-12,m=py/HH*60-grab;return Math.max(0,Math.min(1440-Math.max(dur,15),Math.round(m/15)*15));}
-function dropPreview(x,y,dur=30,grab=0,text){const t=gridTimeAt(x,y,grab,dur);let p=$('#drop-prev');const cv=$('.gcanvas');if(t==null||!cv){p&&p.remove();return null;}if(!p){p=el('div',{class:'droptime',id:'drop-prev'});cv.append(p);}p.style.top=t/60*HH+12+'px';p.style.height=Math.max(dur/60*HH-2,24)+'px';p.textContent=text||(dur>=30?fmtRange(t,t+dur):fmtT(t));return t;}
-function clearPreview(){const p=$('#drop-prev');p&&p.remove();}
+function dropPreview(x,y,dur=30,grab=0,text){const t=gridTimeAt(x,y,grab,dur);let p=$('#drop-prev');const cv=$('.gcanvas');if(t==null||!cv){p&&p.remove();return null;}if(!p){p=el('div',{class:'droptime',id:'drop-prev'});cv.append(p);}p.style.top=t/60*HH+12+'px';p.style.height=Math.max(dur/60*HH-2,24)+'px';p.textContent=(dropCarry&&dropCarry.title?dropCarry.title+' · ':'')+(text||(dur>=30?fmtRange(t,t+dur):fmtT(t)));carryPreview(p,t);return t;}
+function clearPreview(){const p=$('#drop-prev');p&&p.remove();if(!App.dragging)dropCarry=null;}
 function autoscrollGrid(x,y){const g=$('#grid');if(g){const r=g.getBoundingClientRect();if(x>=r.left&&x<=r.right){if(y<r.top+36&&y>r.top-20)g.scrollTop-=7;else if(y>r.bottom-36&&y<r.bottom+20)g.scrollTop+=7;}}if(y<70)scrollBy(0,-7);else if(y>innerHeight-(innerWidth<900?110:40))scrollBy(0,7);}
 function timeGrid(dk,timed){
   const S=App.state,isToday=dk===todayK();
   const gw=el('div',{class:'gridwrap'}),g=el('div',{class:'grid',id:'grid',tabindex:0,'aria-label':'Time grid'}),cv=el('div',{class:'gcanvas'});
   for(let h=0;h<=24;h++){const lbl=get.settings().clock===24?`${pad2(h%24)}:00`:h===24?'12 AM':`${h%12||12} ${h<12?'AM':'PM'}`;
     const row=el(h<24?'button':'div',{class:'hr',style:`top:${h*HH+12}px`,'data-h':h,'aria-label':h<24?`Add a time block at ${lbl}`:null},el('span',{class:'lbl2'},lbl),el('span',{class:'ln'}));
-    if(h<24)row.addEventListener('click',ev=>{const r=g.getBoundingClientRect(),y=ev.clientY-r.top+g.scrollTop-12,m=ev.detail&&ev.clientY?Math.floor(y/HH*2)/2*60:h*60;blockSheet(null,{date:dk,start:Math.max(0,Math.round(m))});});
+    if(h<24)row.addEventListener('click',ev=>{const r=g.getBoundingClientRect(),y=ev.clientY-r.top+g.scrollTop-12,m=ev.detail&&ev.clientY?Math.floor(y/HH*2)/2*60:h*60,st=Math.max(0,Math.round(m));hourPlaceholder(cv,st,60,()=>blockSheet(null,{date:dk,start:st}));});
     cv.append(row);}
   // press and drag on empty space to draw a block
   let a0=null,rng=null;
@@ -242,7 +242,7 @@ function timeGrid(dk,timed){
     const top=e.time/60*HH+12,hgt=Math.max(Math.min(dur,1440-e.time)/60*HH-2,26);
     const edk=e.contFrom||dk,label=e.cont?`Until ${fmtT(e.dur)}`:e.kind==='task'?fmtT(e.time):fmtRange(e.time,e.time+e.dur);
     const bm=hgt>40?el('span',{class:'bm'},label):null;
-    const b=el('div',{class:'blk tick-host'+(e.done?' done':''),style:`--c:${e.color};top:${top}px;height:${hgt}px;`+(n>1?`left:calc(60px + (100% - 70px)/${n}*${c});right:auto;width:calc((100% - 70px)/${n} - 3px);`:'')},
+    const b=el('div',{class:'blk tick-host'+(e.done?' done':''),'data-bid':e.id,style:`--c:${e.color};top:${top}px;height:${hgt}px;`+(n>1?`left:calc(60px + (100% - 70px)/${n}*${c});right:auto;width:calc((100% - 70px)/${n} - 3px);`:'')},
       e.kind==='gcal'?null:tickBtn(e.done,on=>{b.classList.toggle('done',on);toggleItem(e,edk);setTimeout(()=>App.refresh(),820);}),
       el('button',{class:'bt',onclick:()=>openItem(e,edk)},el('i',{html:(e.icon?glyph(e.icon,14):'')+`<span>${esc(e.title)}</span>`}),bm));
     if(e.kind==='block'&&!e.cont)b.append(el('span',{class:'rz','aria-hidden':'true'}));
@@ -251,9 +251,9 @@ function timeGrid(dk,timed){
     let grab=0;const span=e.kind==='task'?30:(e.dur||30);
     if(e.kind==='gcal'||e.kind==='routine'||e.cont)draggable(b,{ghost:false,hold:menu,start:()=>{},move:()=>{},drop:()=>{}});
     else draggable(b,{ghost:false,hold:menu,
-      start:(x,y)=>{const r=g.getBoundingClientRect();grab=Math.max(0,(y-r.top+g.scrollTop-12)/HH*60-e.time);},
+      start:(x,y)=>{const r=g.getBoundingClientRect();grab=Math.max(0,(y-r.top+g.scrollTop-12)/HH*60-e.time);dropCarry={color:e.color,title:e.title};},
       move:(x,y)=>{dropPreview(x,y,span,grab);autoscrollGrid(x,y);},
-      drop:(x,y)=>{const t=gridTimeAt(x,y,grab,span);clearPreview();if(t==null||t===e.time)return;const u=snapItem(e);setItemTime(e,dk,t);App.refresh();toast(`Moved to ${fmtT(t)}`,u);}});
+      drop:(x,y)=>{const t=gridTimeAt(x,y,grab,span);dropCarry=null;clearPreview();if(t==null||t===e.time){App.state._settle=e.id;settleBlock();return;}const u=snapItem(e);setItemTime(e,dk,t);App.state._settle=e.id;App.refresh();toast(`Moved to ${fmtT(t)}`,u);}});
     const rz=b.querySelector('.rz');
     if(rz)rz.addEventListener('pointerdown',ev=>{ev.stopPropagation();ev.preventDefault();const y0=ev.clientY,d0=e.dur;rz.setPointerCapture(ev.pointerId);App.dragging=true;let nd=d0;
       const mv=m=>{nd=Math.max(15,Math.min(1440,Math.round((d0+(m.clientY-y0)/HH*60)/15)*15));b.style.height=Math.max(Math.min(nd,1440-e.time)/60*HH-2,26)+'px';if(bm)bm.textContent=fmtRange(e.time,e.time+nd);};

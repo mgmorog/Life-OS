@@ -472,3 +472,26 @@ function weekBandGlide(){const g=$('#month-grid');if(!g){WKBAND=null;return;}con
   const top=row.offsetTop,prev=WKBAND;WKBAND={key,top};if(!prev||prev.key!==key||prev.top==null||prev.top===top||!motionOK())return;
   const gh=document.createElement('div');gh.className='wkglide';Object.assign(gh.style,{top:top+'px',height:row.offsetHeight+'px'});g.prepend(gh);row.classList.add('gliding');
   gh.animate([{transform:`translateY(${prev.top-top}px)`},{transform:'none'}],{duration:440,easing:SOFT}).onfinish=()=>{gh.remove();row.classList.remove('gliding');};}
+
+/* ---------- round 12 ---------- */
+/* switches: the knob stretches while pressed (touch too), then springs across */
+document.addEventListener('pointerdown',e=>{const s=e.target.closest&&e.target.closest('.sw[role="switch"],button.sw');if(!s)return;s.classList.add('press');const off=()=>{s.classList.remove('press');removeEventListener('pointerup',off);removeEventListener('pointercancel',off);};addEventListener('pointerup',off);addEventListener('pointercancel',off);},true);
+/* Studio commit: a soft fill rises through each day in turn and a check lands on it */
+function commitSweep(){if(!App.state._commitSweep)return;App.state._commitSweep=false;if(!motionOK())return;let i=0;
+  $$('.slot').forEach(s=>{const r=s.getBoundingClientRect();if(r.bottom<0||r.top>innerHeight+40)return;const d=i++*80;
+    const t=document.createElement('span');t.className='cm-tint';s.append(t);t.animate([{transform:'scaleY(0)',opacity:1},{transform:'scaleY(1)',opacity:1,offset:.45},{transform:'scaleY(1)',opacity:1,offset:.75},{transform:'scaleY(1)',opacity:0}],{duration:1500,delay:d,easing:EASE,fill:'both'}).onfinish=()=>t.remove();
+    const ok=document.createElement('span');ok.className='cm-ok';ok.innerHTML=ic('check',12,3);s.append(ok);ok.animate([{opacity:0,transform:'scale(.4)'},{opacity:1,transform:'scale(1.15)',offset:.15},{opacity:1,transform:'none',offset:.25},{opacity:1,transform:'none',offset:.8},{opacity:0,transform:'none'}],{duration:2000,delay:d+180,easing:'linear',fill:'both'}).onfinish=()=>ok.remove();});}
+/* habit streaks: the count rolls up when a check-in extends it */
+const STREAKS=new Map();
+function streakSeen(id,n){const p=STREAKS.get(id);STREAKS.set(id,n);return p!=null&&p!==n?p:null;}
+function streakRoll(root){root.querySelectorAll('[data-rollfrom]').forEach(n=>{const from=+n.dataset.rollfrom;n.removeAttribute('data-rollfrom');if(!motionOK())return;const up=+n.dataset.rollto>from;
+  n.animate([{transform:`translateY(${up?10:-10}px)`,opacity:0},{transform:'none',opacity:1}],{duration:420,delay:120,easing:SOFT,fill:'backwards'});if(up)n.animate([{transform:'none'},{transform:'scale(1.12)',offset:.5},{transform:'none'}],{duration:480,delay:520,easing:SPRING});});}
+/* empty states trace their little drawing in the first time they appear */
+const EMPTYSEEN=new Set();
+function emptyDraw(root){root.querySelectorAll('.empty .eart').forEach(s=>{const k=(s.parentElement.querySelector('b')||{}).textContent||'';if(EMPTYSEEN.has(k))return;EMPTYSEEN.add(k);if(!motionOK())return;
+  s.querySelectorAll('path,rect,circle').forEach((p,i)=>{const L=p.getTotalLength?p.getTotalLength():120;p.style.strokeDasharray=L;p.animate([{strokeDashoffset:L},{strokeDashoffset:0}],{duration:650,delay:i*130,easing:EASE,fill:'backwards'}).onfinish=()=>{p.style.strokeDasharray='';};});
+  [...s.parentElement.children].filter(c=>c!==s).forEach((c,i)=>c.animate([{opacity:0,transform:'translateY(6px)'},{opacity:1,transform:'none'}],{duration:420,delay:480+i*90,easing:EASE,fill:'backwards'}));});}
+/* focus finished: the ring closes, a ripple spreads once, and the time reads Done for a moment */
+let frDoneAt=0;
+function focusRipple(rg){frDoneAt=Date.now();if(!motionOK())return;[0,1].forEach(i=>{const r=document.createElement('span');r.className='frip';rg.append(r);r.animate([{opacity:.55,transform:'scale(.92)'},{opacity:0,transform:'scale(1.32)'}],{duration:1200,delay:i*240,easing:'cubic-bezier(.2,.7,.3,1)',fill:'both'}).onfinish=()=>r.remove();});
+  rg.animate([{transform:'none'},{transform:'scale(1.03)',offset:.4},{transform:'none'}],{duration:620,easing:SPRING});}

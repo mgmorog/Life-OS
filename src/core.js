@@ -394,7 +394,8 @@ function draggable(node,{label,start,move,drop,hold,filter,ghost:useGhost=true,c
   node.addEventListener('click',e=>{if(node._dragged&&Date.now()-node._dragged<300){e.stopPropagation();e.preventDefault();}},true);
 }
 const clearPreviewSafe=()=>{const p=document.getElementById('drop-prev');p&&p.remove();};
-function emptyState(title,text,action){return el('div',{class:'empty'},el('b',{},title),text?el('div',{},text):null,action||null);}
+const EMPTY_ART='<svg class="eart" width="72" height="56" viewBox="0 0 88 70" aria-hidden="true"><rect x="14" y="10" width="60" height="50" rx="10"/><path d="M26 28h36M26 40h24"/><circle cx="66" cy="50" r="12"/><path d="M60.5 50l4 4 7-8"/></svg>';
+function emptyState(title,text,action){const art=document.createElement('span');art.innerHTML=EMPTY_ART;return el('div',{class:'empty'},art.firstChild,el('b',{},title),text?el('div',{},text):null,action||null);}
 /* ---------- smooth transitions ----------
    vt(update,{dir}) runs a DOM update inside a View Transition when the browser has one
    (iOS 18+, Chrome), so the page cross-fades and named parts (the segmented thumb, the

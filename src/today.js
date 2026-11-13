@@ -255,9 +255,9 @@ function timeGrid(dk,timed){
       move:(x,y)=>{dropPreview(x,y,span,grab);autoscrollGrid(x,y);},
       drop:(x,y)=>{const t=gridTimeAt(x,y,grab,span);dropCarry=null;clearPreview();if(t==null||t===e.time){App.state._settle=e.id;settleBlock();return;}const u=snapItem(e);setItemTime(e,dk,t);App.state._settle=e.id;App.refresh();toast(`Moved to ${fmtT(t)}`,u);}});
     const rz=b.querySelector('.rz');
-    if(rz)rz.addEventListener('pointerdown',ev=>{ev.stopPropagation();ev.preventDefault();const y0=ev.clientY,d0=e.dur;rz.setPointerCapture(ev.pointerId);App.dragging=true;let nd=d0;
-      const mv=m=>{nd=Math.max(15,Math.min(1440,Math.round((d0+(m.clientY-y0)/HH*60)/15)*15));b.style.height=Math.max(Math.min(nd,1440-e.time)/60*HH-2,26)+'px';if(bm)bm.textContent=fmtRange(e.time,e.time+nd);};
-      const up=()=>{rz.removeEventListener('pointermove',mv);rz.removeEventListener('pointerup',up);rz.removeEventListener('pointercancel',up);App.dragging=false;App._dragEnd=Date.now();if(nd!==d0){const u=snapItem(e),r=detachIfRepeating(e.rec,dk);r.dur=nd;put(r);toast(`Now ${fmtDur(nd)}`,u);}else App.refresh();};
+    if(rz)rz.addEventListener('pointerdown',ev=>{ev.stopPropagation();ev.preventDefault();const y0=ev.clientY,d0=e.dur;rz.setPointerCapture(ev.pointerId);App.dragging=true;let nd=d0,lastN=d0;const bub=el('span',{class:'rzbub'});cv.append(bub);const showB=()=>{bub.textContent=`Ends ${fmtT((e.time+nd)%1440)} · ${fmtDur(nd)}`;bub.style.top=(b.offsetTop+b.offsetHeight+8)+'px';};showB();if(motionOK())bub.animate([{opacity:0,transform:'translateY(-4px)'},{opacity:1,transform:'none'}],{duration:180,easing:EASE});
+      const mv=m=>{nd=Math.max(15,Math.min(1440,Math.round((d0+(m.clientY-y0)/HH*60)/15)*15));b.style.height=Math.max(Math.min(nd,1440-e.time)/60*HH-2,26)+'px';if(bm)bm.textContent=fmtRange(e.time,e.time+nd);if(nd!==lastN){lastN=nd;buzz(4);}showB();};
+      const up=()=>{bub.remove();rz.removeEventListener('pointermove',mv);rz.removeEventListener('pointerup',up);rz.removeEventListener('pointercancel',up);App.dragging=false;App._dragEnd=Date.now();if(nd!==d0){const u=snapItem(e),r=detachIfRepeating(e.rec,dk);r.dur=nd;put(r);toast(`Now ${fmtDur(nd)}`,u);}else App.refresh();};
       rz.addEventListener('pointermove',mv);rz.addEventListener('pointerup',up);rz.addEventListener('pointercancel',up);});
     cv.append(b);
   });

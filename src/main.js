@@ -32,11 +32,13 @@ const App={
     const opened=S.lastView!==S.view||!!S.entering;
     const listBefore=S.lastView===S.view&&S._scope===scope&&!S.entering?listSnap(root):null;S._scope=scope;
     closeFabMenu(true);
+    const depthDir=S.entering&&(S.dir==='push'||S.dir==='pop')&&S._painted?S.dir:null,depthGhost=depthDir&&motionOK()?ghostOf(root.firstElementChild):null;
     root.replaceChildren(frag);
     animateFills(root,S);
     listPlay(root,listBefore);
     rollCounts(root,`${S.view}|${S.sel}`);
     swipeArrive();settleBlock();todayHeaderScroll();meterPops(root,`${S.view}|${S.sel}`);studioPop();if(opened){countUp(root);chartsIn(root);}milestones(root);
+    if(depthGhost){depthSlide(depthGhost,root.firstElementChild,depthDir);S.dir=null;S.entering=false;}
     if(S.entering){const pg=root.firstElementChild;if(pg&&S._painted&&(S.view!=='today'||S.dir==='pop'||S.dir==='swiped'))pg.classList.add(S.dir==='push'?'viewin-push':S.dir==='pop'?'viewin-pop':S.dir==='swiped'?'viewin-swiped':'viewin');S.dir=null;S.entering=false;}
     S.lastView=S.view;
     const d2=$('#st-dock');if(d2)d2.scrollLeft=dockL;

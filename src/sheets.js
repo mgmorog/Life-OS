@@ -143,7 +143,7 @@ function photoViewer(photos,start=0,{onRemove=null}={}){
   const apply=(anim)=>{img.style.transition=anim?'transform .2s ease':'none';img.style.transform=`translate(${tx}px,${ty}px) scale(${scale})`;};
   const show=()=>{img.src=list[i].url;img.alt=`Photo ${i+1} of ${list.length}`;count.textContent=list.length>1?`${i+1} of ${list.length}`:'';scale=1;tx=0;ty=0;apply();prev.hidden=next.hidden=list.length<2;};
   const go=d=>{if(list.length<2)return;i=(i+d+list.length)%list.length;show();};
-  const close=()=>{removeEventListener('keydown',key,true);box.classList.remove('on');setTimeout(()=>box.remove(),200);};
+  const srcEl=photoSrc(),close=()=>{removeEventListener('keydown',key,true);if(photoBack(img,srcEl,box))return;box.classList.remove('on');setTimeout(()=>box.remove(),200);};
   const key=e=>{if(e.key==='Escape'){e.preventDefault();e.stopPropagation();close();}else if(e.key==='ArrowLeft'){e.stopPropagation();go(-1);}else if(e.key==='ArrowRight'){e.stopPropagation();go(1);}};
   const prev=el('button',{class:'pv-nav l','aria-label':'Previous photo',html:ic('chevl',24,2),onclick:()=>go(-1)}),next=el('button',{class:'pv-nav r','aria-label':'Next photo',html:ic('chevr',24,2),onclick:()=>go(1)});
   const save=async()=>{try{const b=await (await fetch(list[i].url)).blob();await saveFile(`Life-OS-photo-${todayK()}-${i+1}.jpg`,b);}catch(e){toast('That photo could not be saved.');}};
@@ -163,7 +163,7 @@ function photoViewer(photos,start=0,{onRemove=null}={}){
     if(dy>90&&Math.abs(dy)>Math.abs(dx)){close();return;}
     ty=0;apply(true);if(Math.abs(dx)>60&&Math.abs(dx)>Math.abs(dy))go(dx<0?1:-1);};
   stage.addEventListener('pointerup',end);stage.addEventListener('pointercancel',end);
-  $('#layers').append(box);addEventListener('keydown',key,true);show();void box.offsetWidth;box.classList.add('on');box.querySelector('button').focus({preventScroll:true});
+  $('#layers').append(box);addEventListener('keydown',key,true);show();void box.offsetWidth;box.classList.add('on');photoOpen(img,srcEl);box.querySelector('button').focus({preventScroll:true});
 }
 function resizeImage(file,max=1400){return new Promise(res=>{const img=new Image();img.onload=()=>{const s=Math.min(1,max/Math.max(img.width,img.height)),c=document.createElement('canvas');c.width=img.width*s;c.height=img.height*s;c.getContext('2d').drawImage(img,0,0,c.width,c.height);c.toBlob(b=>res({blob:b,dataUrl:c.toDataURL('image/jpeg',.72)}),'image/jpeg',.82);URL.revokeObjectURL(img.src);};img.onerror=()=>res(null);img.src=URL.createObjectURL(file);});}
 async function savePhoto(file,D){

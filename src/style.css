@@ -1324,3 +1324,21 @@ html.a-motion .syncst i::after{animation:none}
 .dtag{position:absolute;top:14px;font-size:12px;font-weight:800;letter-spacing:.08em;padding:4px 9px;border-radius:8px;border:2px solid;opacity:0;pointer-events:none}
 .dtag.r{right:14px;color:var(--accent);border-color:var(--accent)}.dtag.l{left:14px;color:var(--now);border-color:var(--now)}
 .mstone{display:inline-flex;align-items:center;height:22px;padding:0 8px;margin-left:8px;border-radius:11px;background:var(--accent);color:#fff;font-size:11.5px;font-weight:700;vertical-align:middle;backface-visibility:hidden}
+/* round 7 motion */
+.cscrim{-webkit-backdrop-filter:blur(0);backdrop-filter:blur(0);transition:opacity .25s,backdrop-filter .3s,-webkit-backdrop-filter .3s}
+.cscrim.on{-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
+.confirm{transition:transform .3s var(--ease)}
+.confirm.on{transition:transform .52s var(--soft)}
+.confirm .box{transform-origin:center bottom}
+.story{position:fixed;inset:0;z-index:95;background:var(--accent-deep);color:#fff;display:flex;flex-direction:column;padding:calc(env(safe-area-inset-top,0px) + 12px) 22px calc(env(safe-area-inset-bottom,0px) + 24px);touch-action:none}
+.story .lbl{color:rgba(255,255,255,.75)}
+.st-bars{display:flex;gap:4px}
+.st-bars span{flex:1;height:3px;border-radius:2px;background:rgba(255,255,255,.3);overflow:hidden}
+.st-bars i{display:block;height:100%;width:0;background:#fff}
+.st-top{display:flex;align-items:center;justify-content:space-between;margin-top:12px;position:relative;z-index:3}
+.st-x{width:44px;height:44px;display:grid;place-items:center;color:#fff}
+.st-slide{position:absolute;left:22px;right:22px;top:30%;display:flex;flex-direction:column;gap:8px}
+.st-big{font-family:var(--display);font-size:88px;line-height:1;font-variant-numeric:tabular-nums}
+.st-cap{font-size:20px;opacity:.9;max-width:22ch}
+.st-cap.solo{font-family:var(--display);font-size:32px;line-height:1.2;opacity:1}
+.st-tap{position:absolute;top:110px;bottom:0;width:40%;z-index:2}.st-tap.l{left:0}.st-tap.r{right:0}

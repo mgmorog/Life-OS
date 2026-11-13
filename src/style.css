@@ -1193,3 +1193,23 @@ html,body{overflow-x:clip}
 #ptr.p-ok .p-done{display:flex;animation:fadeUp .24s var(--ease) both}
 #ptr.p-ok .p-done .p-ck{animation:tickPop .46s var(--spring)}
 #ptr.p-ok .p-done .p-ck:after{animation:flowRing .62s var(--ease)}
+
+/* Calendar refinements: numbers sit in the top-right corner, other months' days are blank */
+.heat{display:flex;align-items:flex-start;justify-content:flex-end;padding:5px 6px 0 0;font-size:12.5px}
+.heat .hn{min-width:20px;height:20px;margin:0}
+.heat.out{background:transparent;pointer-events:none}
+.m-go{display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--accent-soft);color:var(--accent-text)}
+.m-head .m-go svg{color:var(--accent-text)}
+.m-head:active .m-go{transform:scale(.92)}
+.cal-compact{border-bottom-color:transparent;box-shadow:0 1px 0 var(--line)}
+.cal-compact.on{box-shadow:0 1px 0 var(--line),0 8px 16px -12px rgba(20,30,25,.28)}
+.wkrow .dtile{gap:3px}
+.wkrow.slim .wkitems .ph{align-self:center}
+/* Month: all-day items are small dots in the item's color (sage by default); today is outlined like Quarter; the selected day gets a ring */
+.heat .adbars{left:6px;top:7px;right:auto;bottom:auto;display:flex;gap:3px}
+.heat .adbars i{width:7px;height:7px;border-radius:50%}
+.heat.l4 .adbars i{box-shadow:0 0 0 1.5px rgba(255,255,255,.85)}
+.heat.sel .hn,.heat.sel.l3 .hn,.heat.sel.l4 .hn{background:transparent;color:inherit}
+.heat.sel{box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--accent);z-index:1;font-weight:700}
+.heat.today{box-shadow:inset 0 0 0 2px var(--accent-deep)}
+.heat.today.sel{box-shadow:inset 0 0 0 2px var(--accent-deep),0 0 0 2px var(--bg),0 0 0 4px var(--accent)}

@@ -72,7 +72,7 @@ function calGestures(node,e,dk){
 function dayMenu(dk,x,y){openMenu(x,y,[{label:'Open in Today',icon:'sun',onclick:()=>{App.state.sel=dk;App.state._fresh=true;App.go('today');}},{label:'Add a task',icon:'task',onclick:()=>taskSheet(null,{date:dk})},{label:'Add a time block',icon:'hour',onclick:()=>blockSheet(null,{date:dk,start:9*60})},{label:'Add an all-day item',icon:'cal',onclick:()=>alldaySheet(null,{start:dk})}]);}
 function heatCell(d,{month,tk,C,onTap,bars=false,showSel=true}){
   const dk=k(d),out=month!=null&&d.getMonth()!==month,past=dk<tk;
-  if(out)return el('button',{class:'heat out tnum','aria-label':shortDay(dk),onclick:()=>onTap(dk,true)},el('span',{class:'hn'},String(d.getDate())));
+  if(out)return el('span',{class:'heat out','aria-hidden':'true'});
   const L=dayLoad(dk),isSel=showSel&&C.sel===dk;
   const unit=get.settings().capacity?.mode==='hours'?'hours':'items';
   const btn=el('button',{class:'heat '+(L.level?'l'+L.level+' ':'')+(past?'past ':'')+(dk===tk?'today ':'')+(isSel?'sel':''),'data-slot':dk,'aria-label':`${shortDay(dk)}, ${Math.round(L.value*10)/10} ${unit}`,'aria-current':dk===tk?'date':null,'aria-pressed':showSel?String(isSel):null,onclick:()=>onTap(dk,false)},el('span',{class:'hn'},String(d.getDate())));
@@ -91,7 +91,7 @@ function quarterBody(body,y,months,C){
     let weeks=weeksOf(y,m);
     if(inQ&&!C.showEarlier)weeks=weeks.filter(w=>k(w[0])>=curW);
     if(!weeks.length)return;
-    const sec=el('section',{},el('button',{class:'m-head',onclick:()=>{C.mode='month';C.anchor=k(new Date(y,m,1));const t=today();C.sel=(t.getFullYear()===y&&t.getMonth()===m)?tk:k(new Date(y,m,1));calCommit();}},MONL[m],el('span',{html:ic('chevr',16,2),style:'display:grid'})));
+    const sec=el('section',{},el('button',{class:'m-head',onclick:()=>{C.mode='month';C.anchor=k(new Date(y,m,1));const t=today();C.sel=(t.getFullYear()===y&&t.getMonth()===m)?tk:k(new Date(y,m,1));calCommit();}},MONL[m],el('span',{class:'m-go',html:ic('chevr',14,2.4)})));
     if(firstShown){sec.append(el('div',{class:'wd-row',style:'margin:0 0 8px'},wdLabels().map(l=>el('span',{},l))));firstShown=false;}
     const grid=el('div',{style:'display:grid;gap:6px'});
     weeks.forEach(w=>{const row=el('div',{class:'heat-row'+(k(w[0])===curW?' curwk':'')});w.forEach(d=>row.append(heatCell(d,{month:m,tk,C,showSel:false,onTap:()=>{C.mode='week';C.anchor=k(d);C.sel=k(d);C.weekOpen=k(d);calCommit();}})));tripBand(row,w);grid.append(row);});
@@ -123,10 +123,10 @@ function weekBody(body,start,C){
       {const adS=allDay.filter(e=>!(e.rec&&e.rec.tripId));if(adS.length)main.append(el('span',{style:'display:flex;gap:4px;flex-wrap:wrap'},adS.slice(0,3).map(e=>{const c=el('span',{class:'minichip',style:`--c:${e.color}`},e.title);calGestures(c,e,dk);return c;})));}
       items.slice(0,3).forEach(e=>{const r=el('span',{class:'it'},el('time',{},e.time!=null?fmtT(e.time):'Anytime'),el('span',{},e.title));calGestures(r,e,dk);main.append(r);});
       if(items.length>3)main.append(el('span',{class:'ph'},`+${items.length-3} more`));
-      if(empty&&!trW)main.append(el('span',{class:'ph'+(dk===tk?' plan':'')},dk===tk?'Tap to plan':''));
+      if(empty&&!trW)main.append(el('span',{class:'ph'+(dk===tk?' plan':'')},dk===tk?'Tap to plan':past?'':'Nothing planned'));
     }
     const r=el('div',{class:'wkrow'+(empty&&!open&&!trW?' slim':'')+(open?' sel open':'')+(trW?' wkaway':''),'data-slot':dk,onclick:ev=>{if(ev.target.closest('button,.dayline,.adchip'))return;toggle();}},
-      el('button',{class:'dtile '+(L.level?'l'+L.level+' ':'')+(past?'past ':'')+(dk===tk?'today':''),'aria-label':shortDay(dk),'aria-expanded':String(open),'aria-current':dk===tk?'date':null,onclick:toggle},el('b',{},String(d.getDate())),el('small',{},DOW[d.getDay()].slice(0,3).toUpperCase())),
+      el('button',{class:'dtile '+(L.level?'l'+L.level+' ':'')+(past?'past ':'')+(dk===tk?'today':''),'aria-label':shortDay(dk),'aria-expanded':String(open),'aria-current':dk===tk?'date':null,onclick:toggle},el('small',{},DOW[d.getDay()].slice(0,3).toUpperCase()),el('b',{},String(d.getDate()))),
       main,el('button',{class:'chev'+(open?' open':''),style:'align-self:center;min-width:32px;min-height:44px;place-items:center',tabindex:-1,'aria-hidden':'true',html:ic('chevr',16,2),onclick:toggle}));
     onPress(r,(x,y)=>dayMenu(dk,x,y),'.it,.minichip,.dayline,.adchip,.chip,.linkbtn');
     list.append(r);

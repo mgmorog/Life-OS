@@ -291,3 +291,40 @@ function focusBloom(rg){if(!motionOK())return;const b=rg.querySelector('.fbloom'
     if(p>0){clearTimeout(t2);if(!busy){busy=true;clearTimeout(t1);t1=setTimeout(()=>{if(!busy)return;const n=node();if(!n)return;n.className='syncst busy';n.querySelector('.sl').textContent='';shownAt=Date.now();},400);}}
     else{busy=false;clearTimeout(t1);const n=$('.syncst.busy');if(!n)return;n.className='syncst ok';n.querySelector('.sl').textContent='Up to date';t2=setTimeout(()=>{n.className='syncst';n.querySelector('.sl').textContent='';},1600);}
   });})();
+
+/* ---------- round 6 ---------- */
+/* Big numbers count up the first time a page opens */
+function countUp(root){
+  if(!motionOK())return;
+  root.querySelectorAll('.dstat .val,.bign .n,[data-count]').forEach((n,idx)=>{
+    const tn=[...n.childNodes].find(c=>c.nodeType===3&&/\d/.test(c.nodeValue));if(!tn)return;const raw=tn.nodeValue,m=raw.match(/-?[\d,]*\.?\d+/);if(!m)return;
+    const target=parseFloat(m[0].replace(/,/g,'')),dec=(m[0].split('.')[1]||'').length,comma=m[0].includes(','),pre=raw.slice(0,m.index),post=raw.slice(m.index+m[0].length);if(!isFinite(target)||target===0)return;
+    const fmt=v=>{let s=v.toFixed(dec);if(comma)s=Number(s).toLocaleString(undefined,{minimumFractionDigits:dec,maximumFractionDigits:dec});return pre+s+post;};
+    const t0=performance.now()+idx*70,d=850;tn.nodeValue=fmt(0);
+    const step=t=>{const k=Math.max(0,Math.min(1,(t-t0)/d)),e=1-Math.pow(1-k,3);tn.nodeValue=k>=1?raw:fmt(target*e);if(k<1&&tn.isConnected)requestAnimationFrame(step);};requestAnimationFrame(step);
+  });
+}
+/* Bars rise one after another when a chart first appears (trend lines already draw in) */
+function chartsIn(root){if(!motionOK())return;
+  root.querySelectorAll('svg').forEach(sv=>{const bars=[...sv.querySelectorAll('.dbar')];bars.forEach((b,i)=>{b.style.transformBox='fill-box';b.style.transformOrigin='bottom';b.animate([{transform:'scaleY(0)'},{transform:'scaleY(1.05)',offset:.8},{transform:'none'}],{duration:600,delay:i*45,easing:EASE,fill:'backwards'});});});
+  root.querySelectorAll('.hmb i,.hmb .b').forEach((b,i)=>{b.style.transformOrigin='bottom';b.animate([{transform:'scaleY(0)'},{transform:'none'}],{duration:520,delay:i*40,easing:EASE,fill:'backwards'});});
+}
+/* Streak milestones flip in once per milestone */
+function milestones(root){let seen;try{seen=new Set(JSON.parse(localStorage.getItem('lifeos-ms')||'[]'));}catch(e){seen=new Set();}let ch=false;
+  root.querySelectorAll('.mstone[data-ms]').forEach(n=>{const k=n.dataset.ms;if(seen.has(k))return;seen.add(k);ch=true;if(motionOK())n.animate([{transform:'perspective(400px) rotateY(90deg) scale(.8)',opacity:0},{transform:'perspective(400px) rotateY(-12deg) scale(1.08)',opacity:1,offset:.65},{transform:'none',opacity:1}],{duration:700,delay:200,easing:EASE,fill:'backwards'});});
+  if(ch)try{localStorage.setItem('lifeos-ms',JSON.stringify([...seen].slice(-200)));}catch(e){}}
+/* Quarter -> Month: the small month grows into the big one */
+function zoomGrid(r0){if(!r0||!motionOK())return;const g=$('#month-grid');if(!g)return;const r1=g.getBoundingClientRect();if(!r1.width)return;
+  g.animate([{transformOrigin:'0 0',transform:`translate(${r0.left-r1.left}px,${r0.top-r1.top}px) scale(${r0.width/r1.width},${r0.height/r1.height})`},{transformOrigin:'0 0',transform:'none'}],{duration:520,easing:SOFT});
+  const b=$('#cal-body');b&&[...b.children].filter(n=>!n.contains(g)).forEach((n,i)=>n.animate([{opacity:0},{opacity:1}],{duration:320,delay:160+i*40,fill:'backwards'}));}
+/* Tidy up: drag the idea right to keep it for later, left to let it go; it tilts and flies off, the next one rises */
+function deckSwipe(card,{right,left}){
+  let x0=null,y0=0,dx=0,lock=null;const tagR=el('span',{class:'dtag r'},'LATER'),tagL=el('span',{class:'dtag l'},'DELETE');card.append(tagR,tagL);card.style.touchAction='pan-y';
+  if(motionOK())card.animate([{transform:'translateY(12px) scale(.96)',opacity:.6},{transform:'none',opacity:1}],{duration:380,easing:SOFT});
+  card.addEventListener('pointerdown',e=>{if(e.target.closest('a,button,.photo'))return;x0=e.clientX;y0=e.clientY;dx=0;lock=null;});
+  card.addEventListener('pointermove',e=>{if(x0==null)return;const a=e.clientX-x0,b=e.clientY-y0;if(!lock){if(Math.abs(a)>8&&Math.abs(a)>Math.abs(b)){lock='x';card.setPointerCapture(e.pointerId);}else if(Math.abs(b)>8)lock='y';}if(lock!=='x')return;dx=a;card.style.transition='none';card.style.transform=`translateX(${dx}px) rotate(${dx/18}deg)`;tagR.style.opacity=Math.max(0,dx/90);tagL.style.opacity=Math.max(0,-dx/90);});
+  const up=()=>{if(x0==null)return;x0=null;if(lock!=='x')return;
+    if(Math.abs(dx)>90){const dir=dx>0?1:-1;card.style.transition='transform .34s cubic-bezier(.4,0,1,1),opacity .34s';card.style.transform=`translateX(${dir*innerWidth}px) rotate(${dir*20}deg)`;card.style.opacity='0';setTimeout(()=>dir>0?right():left(),260);}
+    else{card.style.transition='transform .45s '+SOFT;card.style.transform='';tagR.style.opacity=0;tagL.style.opacity=0;}};
+  card.addEventListener('pointerup',up);card.addEventListener('pointercancel',up);return card;
+}

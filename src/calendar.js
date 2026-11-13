@@ -91,16 +91,16 @@ function quarterBody(body,y,months,C){
     let weeks=weeksOf(y,m);
     if(inQ&&!C.showEarlier)weeks=weeks.filter(w=>k(w[0])>=curW);
     if(!weeks.length)return;
-    const sec=el('section',{},el('button',{class:'m-head',onclick:()=>{C.mode='month';C.anchor=k(new Date(y,m,1));const t=today();C.sel=(t.getFullYear()===y&&t.getMonth()===m)?tk:k(new Date(y,m,1));calCommit();}},MONL[m],el('span',{class:'m-go',html:ic('chevr',14,2.4)})));
+    const sec=el('section',{},el('button',{class:'m-head',onclick:()=>{const gr=sec.querySelector('.qgrid'),r0=gr&&gr.getBoundingClientRect();C.mode='month';C.anchor=k(new Date(y,m,1));const t=today();C.sel=(t.getFullYear()===y&&t.getMonth()===m)?tk:k(new Date(y,m,1));calCommit();zoomGrid(r0);}},MONL[m],el('span',{class:'m-go',html:ic('chevr',14,2.4)})));
     if(firstShown){sec.append(el('div',{class:'wd-row',style:'margin:0 0 8px'},wdLabels().map(l=>el('span',{},l))));firstShown=false;}
-    const grid=el('div',{style:'display:grid;gap:6px'});
+    const grid=el('div',{class:'qgrid',style:'display:grid;gap:6px'});
     weeks.forEach(w=>{const row=el('div',{class:'heat-row'+(k(w[0])===curW?' curwk':'')});w.forEach(d=>row.append(heatCell(d,{month:m,tk,C,showSel:false,onTap:()=>{C.mode='week';C.anchor=k(d);C.sel=k(d);C.weekOpen=k(d);calCommit();}})));tripBand(row,w);grid.append(row);});
     sec.append(grid);body.append(sec);
   });
   body.append(heatKey());
 }
 function monthBody(body,a,C){
-  const tk=todayK(),y=a.getFullYear(),m=a.getMonth(),grid=el('div',{style:'display:grid;gap:6px'});
+  const tk=todayK(),y=a.getFullYear(),m=a.getMonth(),grid=el('div',{id:'month-grid',style:'display:grid;gap:6px'});
   weeksOf(y,m).forEach(w=>{const row=el('div',{class:'heat-row'});w.forEach(d=>row.append(heatCell(d,{month:m,tk,C,bars:true,onTap:(dk,out)=>{if(out){C.anim=dk>C.anchor?'slide-l':'slide-r';C.anchor=dk;}C.sel=dk;App.refresh();}})));tripBand(row,w);grid.append(row);});
   body.append(el('div',{class:'wd-row',style:'margin:0 0 -6px'},wdLabels().map(l=>el('span',{},l))),grid,heatKey(),dayPanel(C.sel&&monthKey(fromK(C.sel))===monthKey(a)?C.sel:k(new Date(y,m,1))));
 }

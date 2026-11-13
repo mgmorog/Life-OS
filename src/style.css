@@ -1319,3 +1319,8 @@ html.a-motion .flyer{display:none}
 .syncst.ok{background:var(--accent-soft)}
 .syncst.ok i{background:var(--accent)}
 html.a-motion .syncst i::after{animation:none}
+/* round 6 motion */
+.deck{position:relative;overflow:hidden;will-change:transform}
+.dtag{position:absolute;top:14px;font-size:12px;font-weight:800;letter-spacing:.08em;padding:4px 9px;border-radius:8px;border:2px solid;opacity:0;pointer-events:none}
+.dtag.r{right:14px;color:var(--accent);border-color:var(--accent)}.dtag.l{left:14px;color:var(--now);border-color:var(--now)}
+.mstone{display:inline-flex;align-items:center;height:22px;padding:0 8px;margin-left:8px;border-radius:11px;background:var(--accent);color:#fff;font-size:11.5px;font-weight:700;vertical-align:middle;backface-visibility:hidden}

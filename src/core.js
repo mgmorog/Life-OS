@@ -330,13 +330,13 @@ document.addEventListener('touchmove',e=>{const p=e.touches[0];if(Math.hypot(p.c
 document.addEventListener('touchend',e=>{const t=e.target;if(tapMoved||!t.matches||!t.matches('input:not([type=color]):not([type=file]):not([type=date]),textarea')||document.activeElement===t)return;const sh=t.closest('.sheet.full');if(!sh||innerWidth>=900)return;const b=sh.querySelector('.sbody');if(!b)return;const tr=t.getBoundingClientRect(),rel=tr.top-b.getBoundingClientRect().top;if(rel<=12)return;e.preventDefault();sh.classList.add('typing');b.scrollTop+=rel-6;t.focus({preventScroll:true});},{capture:true,passive:false});
 document.addEventListener('focusout',e=>{const sh=e.target.closest&&e.target.closest('.sheet');if(!sh||!sh.classList.contains('typing'))return;setTimeout(()=>{const a=document.activeElement;if(!(a&&sh.contains(a)&&a.matches('input,textarea'))&&!sh.querySelector('.drag'))sh.classList.remove('typing');},140);});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){const m=$('.menu');if(m){closeMenu();return;}const c=$('.confirm.on');if(c){c._no&&c._no();return;}const s=sheetStack[sheetStack.length-1];if(s)s.requestClose();}});
-function askConfirm({title,body,yes='Discard',no='Keep editing',danger=true,alt,alts,onYes}){
+function askConfirm({title,body,yes='Discard',no='Keep editing',danger=true,alt,alts,onYes,hold=false}){
   const others=[alt,...(alts||[])].filter(Boolean);
   $('#toast').classList.remove('on');
   const cs=el('div',{class:'cscrim'}),box=el('div',{class:'confirm',role:'alertdialog','aria-label':title});
   const off=()=>{cs.classList.remove('on');box.classList.remove('on');setTimeout(()=>{cs.remove();box.remove();},280);};
   box._no=off;cs.onclick=off;
-  box.append(el('div',{class:'box'},el('h3',{},title),body?el('p',{},body):null,el('button',{class:'btn '+(danger?'danger':'primary'),onclick:()=>{off();onYes();}},yes),others.map(a=>el('button',{class:'btn quiet',onclick:()=>{off();a.onclick();}},a.label)),el('button',{class:'btn quiet',onclick:off},no)));
+  box.append(el('div',{class:'box'},el('h3',{},title),body?el('p',{},body):null,hold?holdBtn(`Hold to ${yes.toLowerCase()}`,()=>{off();onYes();}):el('button',{class:'btn '+(danger?'danger':'primary'),onclick:()=>{off();onYes();}},yes),others.map(a=>el('button',{class:'btn quiet',onclick:()=>{off();a.onclick();}},a.label)),el('button',{class:'btn quiet',onclick:off},no)));
   $('#layers').append(cs,box);void box.offsetWidth;requestAnimationFrame(()=>{cs.classList.add('on');box.classList.add('on');});
 }
 function closeMenu(){const m=$('.menu'),s=$('.mscrim');m&&m.remove();s&&s.remove();}

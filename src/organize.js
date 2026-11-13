@@ -136,8 +136,8 @@ function viewTasks(root){
   const note=areaNote('task');if(note)page.append(note);
   let cpId=null;if(S.taskTab==='today'){const cp=carriedPrompt(tasks);if(cp){page.append(cp);cpId=cp._tid;}}
   const sec=(label,list,row0,cls)=>{if(!list.length)return;const row=S.taskSel?(t=>selRow(t)):row0;
-    if(S.taskGroup){if(label)page.append(el('div',{class:'sh2'},el('span',{class:'lbl '+(cls||'')},`${label} · ${list.length}`)));byArea(list).forEach(([a,g])=>page.append(el('div',{class:'ogroup'},a),el('div',{class:'list'},g.map(t=>row(t,true)))));return;}
-    if(label)page.append(el('div',{class:'sh2'},el('span',{class:'lbl '+(cls||'')},`${label} · ${list.length}`)));page.append(el('div',{class:'list'},list.map(t=>row(t,false))));};
+    if(S.taskGroup){if(label)page.append(el('div',{class:'sh2 shstick'},el('span',{class:'lbl '+(cls||'')},`${label} · ${list.length}`)));byArea(list).forEach(([a,g])=>page.append(el('div',{class:'ogroup'},a),el('div',{class:'list'},g.map(t=>row(t,true)))));return;}
+    if(label)page.append(el('div',{class:'sh2 shstick'},el('span',{class:'lbl '+(cls||'')},`${label} · ${list.length}`)));page.append(el('div',{class:'list'},list.map(t=>row(t,false))));};
   if(S.taskTab==='today'){
     sec('Overdue',late.filter(t=>t.id!==cpId),(t,g)=>taskRow(t,t.date&&t.date<tk?t.date:tk,{late:!!(t.date&&t.date<tk),grouped:g}),'olate');
     sec(late.length?'Today':'',todayOpen,(t,g)=>taskRow(t,tk,{grouped:g}));
@@ -145,14 +145,14 @@ function viewTasks(root){
     if(!late.length&&!todayOpen.length&&todayDone.length)page.append(emptyOf('All done today','Nothing left. Enjoy it.'));
   }else if(S.taskTab==='upcoming'){
     if(!upcoming.length)page.append(emptyOf('Nothing coming up','Tasks with a future date show here.'));
-    const days=[...new Set(upcoming.map(x=>x[1]))];days.forEach(d=>{const g=upcoming.filter(x=>x[1]===d);page.append(el('div',{class:'sh2'},el('span',{class:'lbl'},relDay(d)),el('span',{class:'small muted'},String(g.length))),el('div',{class:'list'},g.map(([t])=>S.taskSel?selRow(t):taskRow(t,d))));});
+    const days=[...new Set(upcoming.map(x=>x[1]))];days.forEach(d=>{const g=upcoming.filter(x=>x[1]===d);page.append(el('div',{class:'sh2 shstick'},el('span',{class:'lbl'},relDay(d)),el('span',{class:'small muted'},String(g.length))),el('div',{class:'list'},g.map(([t])=>S.taskSel?selRow(t):taskRow(t,d))));});
   }else if(S.taskTab==='waiting'){waitTab(page);
   }else if(S.taskTab==='anytime'){
     if(!anytime.length)page.append(emptyOf('Nothing waiting','Tasks without a date wait here for Studio.'));
     sec('',anytime,(t,g)=>taskRow(t,todayK(),{grouped:g}));
   }else{
     if(!doneAll.length)page.append(emptyOf('Nothing finished yet','Ticked tasks collect here. You can untick one any time.'));
-    else{const tk2=todayK(),y=addK(tk2,-1),wk=k(weekStartOf(new Date())),bucket=x=>{const d=k(new Date(x.ts));return d===tk2?'Today':d===y?'Yesterday':d>=wk?'Earlier this week':'Before that';};['Today','Yesterday','Earlier this week','Before that'].forEach(b=>{const g=doneAll.slice(0,60).filter(x=>bucket(x)===b);if(g.length)page.append(el('div',{class:'sh2'},el('span',{class:'lbl'},b),el('span',{class:'small muted'},String(g.length))),el('div',{class:'list nodim'},g.map(x=>taskRow(x.t,x.d,{doneOn:k(new Date(x.ts))}))));});}
+    else{const tk2=todayK(),y=addK(tk2,-1),wk=k(weekStartOf(new Date())),bucket=x=>{const d=k(new Date(x.ts));return d===tk2?'Today':d===y?'Yesterday':d>=wk?'Earlier this week':'Before that';};['Today','Yesterday','Earlier this week','Before that'].forEach(b=>{const g=doneAll.slice(0,60).filter(x=>bucket(x)===b);if(g.length)page.append(el('div',{class:'sh2 shstick'},el('span',{class:'lbl'},b),el('span',{class:'small muted'},String(g.length))),el('div',{class:'list nodim'},g.map(x=>taskRow(x.t,x.d,{doneOn:k(new Date(x.ts))}))));});}
   }
   if(S.taskTab==='today'&&todayDone.length){const openD=S.taskDoneOpen!==false;page.append(el('button',{class:'donebar','aria-expanded':String(openD),onclick:()=>{S.taskDoneOpen=!openD;App.refresh();}},el('span',{},`Done today · ${todayDone.length}`),el('span',{style:'display:grid',html:ic(openD?'chevu':'chevd',16,2.2)})));if(openD)page.append(el('div',{class:'list'},todayDone.map(x=>taskRow(x.t,x.d))));}
   if(held)page.append(el('p',{class:'small muted',style:'padding:4px 6px'},`${held} task${held>1?'s':''} in projects on hold ${held>1?'aren’t':'isn’t'} shown here.`));root.append(page);
@@ -215,7 +215,7 @@ function viewHabits(root){
     if(dk!==tk)page.append(el('div',{class:'small muted',style:'padding-inline:4px'},`Filling in ${relDay(dk)==='Yesterday'?'yesterday':relDay(dk)}`));
     if(!dueNow.length)page.append(emptyOf('Nothing due','No habits are set for this day.'));
     const dayly=dueNow.filter(h=>!habitWeekly(h)),weekly=dueNow.filter(habitWeekly);
-    const sect=(n,g0,right)=>{const g=g0.slice().sort((a,b)=>habitDone(a,dk)-habitDone(b,dk));if(g.length)page.append(el('div',{class:'sh2'},el('span',{class:'lbl'},n),el('span',{class:'small muted'},right)),el('div',{class:'list'},g.map(h=>{const r=habitRow(h,dk);if(dk!==tk||!habitWeekly(h)||habitDone(h,dk)||shared)return r;const nt=habitLeftNote(h);return nt?el('div',{},r,nt):r;})));};
+    const sect=(n,g0,right)=>{const g=g0.slice().sort((a,b)=>habitDone(a,dk)-habitDone(b,dk));if(g.length)page.append(el('div',{class:'sh2 shstick'},el('span',{class:'lbl'},n),el('span',{class:'small muted'},right)),el('div',{class:'list'},g.map(h=>{const r=habitRow(h,dk);if(dk!==tk||!habitWeekly(h)||habitDone(h,dk)||shared)return r;const nt=habitLeftNote(h);return nt?el('div',{},r,nt):r;})));};
     const needy=dk===tk?weekly.filter(h=>!habitDone(h,dk)&&habitLeftNote(h)):[],shared=needy.length>1;
     [['morning','Morning'],['afternoon','Afternoon'],['evening','Evening'],['set','At a set time'],['anytime','Anytime']].forEach(([v,n])=>{const g=dayly.filter(h=>(h.tod||'anytime')===v);sect(n,g,`${g.filter(h=>habitDone(h,dk)).length} of ${g.length}`);});
     sect('This week',weekly,`${weekly.filter(h=>habitWeek(h,dk)>=(h.target||1)).length} of ${weekly.length} met`);
@@ -223,7 +223,7 @@ function viewHabits(root){
   }else if(S.habTab==='all'){
     if(!active.length)page.append(emptyOf('No active habits','Add one, or resume one from Paused.'));
     else{const rw=[...Array(7)].map((_,i)=>addK(tk,i-6));
-      page.append(el('div',{class:'list'},active.map(h=>{const s=habitStreak(h);return el('button',{class:'li ohab',onclick:()=>App.go('habit',{id:h.id})},el('span',{class:'grow'},el('span',{class:'ohn'},el('b',{},h.title),habitRate(h)==null?el('span',{class:'ohr'},'New'):el('span',{class:'ohr','aria-label':`${Math.round(habitRate(h)*100)} percent in the last 30 days`},`${Math.round(habitRate(h)*100)}%`)),el('small',{},[h.track==='count'?`${h.goalN} ${h.unit||'times'}`:h.track==='time'?`${h.goalN} min`:null,habitSched(h),h.area].filter(Boolean).join(' · ')),el('span',{class:'odots','aria-hidden':'true'},rw.map(d=>el('i',{class:habitDotState(h,d)+(d===tk?' td':'')})))),s.n?el('span',{class:'ohs'},flameI(),String(s.n)):null);})),
+      page.append(el('div',{class:'list'},active.map(h=>{const s=habitStreak(h);return el('button',{class:'li ohab',onclick:()=>App.go('habit',{id:h.id})},el('span',{class:'grow'},el('span',{class:'ohn'},el('b',{},h.title),habitRate(h)==null?el('span',{class:'ohr'},'New'):el('span',{class:'ohr','aria-label':`${Math.round(habitRate(h)*100)} percent in the last 30 days`},`${Math.round(habitRate(h)*100)}%`)),el('small',{},[h.track==='count'?`${h.goalN} ${h.unit||'times'}`:h.track==='time'?`${h.goalN} min`:null,habitSched(h),h.area].filter(Boolean).join(' · ')),el('span',{class:'odots','aria-hidden':'true','data-dk':h.id},rw.map(d=>el('i',{class:habitDotState(h,d)+(d===tk?' td':'')})))),s.n?el('span',{class:'ohs'},flameI(),String(s.n)):null);})),
         el('div',{class:'olegend'},[['on','Done'],['miss','Missed'],['skip','Skipped'],['off','Not due']].map(([c,t])=>el('span',{},el('span',{class:'odots'},el('i',{class:c})),t))),el('p',{class:'small muted',style:'padding-inline:4px'},'Percent is the last 30 days. The flame is your current streak.'));}
   }else{
     if(paused.length){page.append(el('p',{class:'small muted',style:'padding-inline:4px'},'Paused habits stay off Today. Their history is kept, and a daily streak picks up where it stopped.'));

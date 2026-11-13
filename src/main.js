@@ -38,7 +38,7 @@ const App={
     animateFills(root,S);
     listPlay(root,listBefore);
     rollCounts(root,`${S.view}|${S.sel}`);
-    swipeArrive();settleBlock();todayHeaderScroll();meterPops(root,`${S.view}|${S.sel}`);studioPop();if(opened){countUp(root);chartsIn(root);}milestones(root);skeletonMelt(skelG,root);chipChecks(root);segFill(root);studioCascade();arcPlay();weekBandGlide();commitSweep();streakRoll(root);emptyDraw(root);
+    swipeArrive();settleBlock();todayHeaderScroll();meterPops(root,`${S.view}|${S.sel}`);studioPop();if(opened){countUp(root);chartsIn(root);}milestones(root);skeletonMelt(skelG,root);chipChecks(root);segFill(root);studioCascade();arcPlay();weekBandGlide();commitSweep();streakRoll(root);emptyDraw(root);dotRun(root);
     if(depthGhost){depthSlide(depthGhost,root.firstElementChild,depthDir);S.dir=null;S.entering=false;}
     if(S.entering){const pg=root.firstElementChild;if(pg&&S._painted&&(S.view!=='today'||S.dir==='pop'||S.dir==='swiped'))pg.classList.add(S.dir==='push'?'viewin-push':S.dir==='pop'?'viewin-pop':S.dir==='swiped'?'viewin-swiped':'viewin');S.dir=null;S.entering=false;}
     S.lastView=S.view;
@@ -54,7 +54,7 @@ const App={
     let origin=null;
     if(!fav.some(id=>id===cur||group[cur]===id)&&!TOPS.includes(cur)){const st=S.stack||[];for(let i=st.length-1;i>=0;i--){const v=st[i].view;if(TOPS.includes(v)){if(fav.includes(v))origin=v;break;}}}
     const anyFav=fav.some(isAct)||!!origin;
-    const tab=(id,label,icon)=>el('button',{class:'tab'+((id==='more'?!anyFav:isAct(id))?' act':''),'aria-current':(id==='more'?!anyFav:isAct(id))?'page':null,onclick:()=>{if(id===cur)window.scrollTo({top:0,behavior:'smooth'});else{S.stack=[];const ic0=$('.nav .tab.act .ic'),r0=ic0&&ic0.getBoundingClientRect();App.go(id);tabGlide(r0);}}},el('span',{class:'ic',html:icon}),label);
+    const tab=(id,label,icon)=>el('button',{class:'tab'+((id==='more'?!anyFav:isAct(id))?' act':''),'aria-current':(id==='more'?!anyFav:isAct(id))?'page':null,onclick:()=>{if(id===cur){tabTop();return;}else{S.stack=[];const ic0=$('.nav .tab.act .ic'),r0=ic0&&ic0.getBoundingClientRect();App.go(id);tabGlide(r0);}}},el('span',{class:'ic',html:icon}),label);
     const iconOf=id=>id==='more'?sv('<circle cx="5" cy="12" r="1.8" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.8" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.8" fill="currentColor" stroke="none"/>',22):ic(PLACES[id].i,22);
     const short=id=>({'tools':'Tools'})[id]||PLACES[id].n;
     nav.append(el('div',{class:'rail-brand'},'Life OS'),tab(fav[0],short(fav[0]),iconOf(fav[0])),tab(fav[1],short(fav[1]),iconOf(fav[1])),el('button',{class:'fab',id:'fab','aria-label':'Add','aria-haspopup':'menu','aria-expanded':'false',html:sv(P.plus,26,2.2),onclick:()=>fabMenu()}),tab(fav[2],short(fav[2]),iconOf(fav[2])),tab('more','More',iconOf('more')));

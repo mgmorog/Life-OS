@@ -200,7 +200,7 @@ function flyToInbox(text){
 const METERS=new Map();
 function meterPops(root,scope){
   root.querySelectorAll('.meter[data-k]').forEach(m=>{const key=scope+':'+m.dataset.k,n=m.querySelectorAll('i.on').length,prev=METERS.get(key);METERS.set(key,n);
-    if(prev==null||n<=prev||!motionOK())return;[...m.querySelectorAll('i.on')].slice(prev).forEach((d,i)=>d.animate([{transform:'scale(.5)'},{transform:'scale(1.55)',offset:.55},{transform:'none'}],{duration:500,delay:i*60,easing:SPRING}));});
+    if(prev==null||n<=prev||!motionOK())return;const ons=[...m.querySelectorAll('i.on')];ons.slice(prev).forEach((d,i)=>d.animate([{transform:'scale(.5)'},{transform:'scale(1.55)',offset:.55},{transform:'none'}],{duration:500,delay:i*60,easing:SPRING}));ons.slice(0,prev).reverse().forEach((d,i)=>d.animate([{transform:'none'},{transform:'scale(1.3)',offset:.5},{transform:'none'}],{duration:320,delay:180+i*70,easing:EASE}));});
 }
 
 /* Steppers slide their numbers; swatches spring their ring open */
@@ -495,3 +495,28 @@ function emptyDraw(root){root.querySelectorAll('.empty .eart').forEach(s=>{const
 let frDoneAt=0;
 function focusRipple(rg){frDoneAt=Date.now();if(!motionOK())return;[0,1].forEach(i=>{const r=document.createElement('span');r.className='frip';rg.append(r);r.animate([{opacity:.55,transform:'scale(.92)'},{opacity:0,transform:'scale(1.32)'}],{duration:1200,delay:i*240,easing:'cubic-bezier(.2,.7,.3,1)',fill:'both'}).onfinish=()=>r.remove();});
   rg.animate([{transform:'none'},{transform:'scale(1.03)',offset:.4},{transform:'none'}],{duration:620,easing:SPRING});}
+
+/* ---------- round 13 ---------- */
+/* hold to confirm: for deletes that can't be undone, the button fills while held; let go early and it drains */
+const hScale=n=>{const t=getComputedStyle(n).transform;return t&&t!=='none'?new DOMMatrix(t).a:0;};
+function holdBtn(label,onDone){const f=el('span',{class:'hfill'}),b=el('button',{class:'btn danger holdb'},f,el('span',{class:'hl'},label));let a=null,done=false;
+  const fire=()=>{done=true;buzz(14);b.classList.add('go');setTimeout(onDone,motionOK()?160:0);};
+  const start=e=>{if(done||e.button>0)return;e.preventDefault();const sx=hScale(f);a&&a.cancel();a=f.animate([{transform:`scaleX(${sx})`},{transform:'scaleX(1)'}],{duration:1000*(1-sx)+1,easing:'linear',fill:'forwards'});a.onfinish=fire;};
+  const stop=()=>{if(!a||done)return;const sx=hScale(f);a.onfinish=null;a.cancel();a=f.animate([{transform:`scaleX(${sx})`},{transform:'scaleX(0)'}],{duration:300,easing:EASE,fill:'forwards'});};
+  b.addEventListener('pointerdown',start);['pointerup','pointerleave','pointercancel'].forEach(t=>b.addEventListener(t,stop));b.addEventListener('contextmenu',e=>e.preventDefault());
+  b.addEventListener('click',e=>{if(e.detail===0&&!done)fire();});return b;}
+/* tap the tab you're on: the page glides to the top and the icon gives a small nod */
+function tabTop(){const i=$('.nav .tab.act .ic');if(i&&motionOK())i.animate([{transform:'none'},{transform:'translateY(-3px) scale(1.08)',offset:.4},{transform:'none'}],{duration:420,easing:SPRING});
+  const y0=scrollY;if(!y0)return;if(!motionOK()){scrollTo(0,0);return;}const t0=performance.now(),D=Math.min(720,300+y0*.25);const step=t=>{const p=Math.min(1,(t-t0)/D),e=1-Math.pow(1-p,3);scrollTo(0,y0*(1-e));if(p<1)requestAnimationFrame(step);};requestAnimationFrame(step);}
+/* section labels in long lists stick at the top and pick up a hairline while rows pass under */
+(function stickyLines(){let raf=0;const run=()=>{raf=0;$$('.sh2.shstick').forEach(h=>{const top=parseFloat(getComputedStyle(h).top)||0,r=h.getBoundingClientRect(),nx=h.nextElementSibling;h.classList.toggle('stuck',scrollY>0&&Math.abs(r.top-top)<2&&!!nx&&nx.getBoundingClientRect().top<r.bottom-1);});};
+  addEventListener('scroll',()=>{if(!raf)raf=requestAnimationFrame(run);},{passive:true});})();
+/* quick add: the Add button grows out of the field once there's text */
+function growBtn(b,show){if(!b)return;const cur=b._show!=null?b._show:!b.hidden;if(show===cur)return;b._show=show;b.getAnimations().forEach(x=>x.cancel());if(!motionOK()){b.hidden=!show;return;}
+  if(show){b.hidden=false;const w=b.offsetWidth;b.animate([{width:'0px',opacity:0,paddingInline:'0px'},{width:w+'px',opacity:1}],{duration:320,easing:SOFT});}
+  else{const w=b.offsetWidth;b.animate([{width:w+'px',opacity:1},{width:'0px',opacity:0,paddingInline:'0px'}],{duration:200,easing:EASE}).onfinish=()=>{if(!b._show)b.hidden=true;};}}
+/* habit week dots: today's dot pops when it fills, and the run before it ripples once */
+const DOTRUN=new Map();
+function dotRipple(dots,i){dots[i].animate([{transform:'scale(.3)'},{transform:'scale(1.5)',offset:.55},{transform:'none'}],{duration:460,easing:SPRING});
+  let j=i-1,n=0;while(j>=0&&dots[j].classList.contains('on')){dots[j].animate([{transform:'none'},{transform:'scale(1.3)',offset:.5},{transform:'none'}],{duration:320,delay:180+n*70,easing:EASE});j--;n++;}}
+function dotRun(root){root.querySelectorAll('.odots[data-dk]').forEach(o=>{const dots=[...o.children],i=dots.findIndex(d=>d.classList.contains('td'));if(i<0)return;const on=dots[i].classList.contains('on'),prev=DOTRUN.get(o.dataset.dk);DOTRUN.set(o.dataset.dk,on);if(prev===false&&on&&motionOK())dotRipple(dots,i);});}

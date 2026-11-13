@@ -1404,3 +1404,13 @@ html.a-motion .pins.edit .ptile{animation:none}
 .empty .eart{display:block;margin-bottom:-2px}
 .empty .eart path,.empty .eart rect,.empty .eart circle{fill:none;stroke:var(--accent);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .fring .frip{position:absolute;inset:4px;border-radius:50%;border:2px solid var(--accent);pointer-events:none}
+/* v90 · round 13 motion */
+.btn.holdb{position:relative;overflow:hidden;background:#F6E7E1;color:var(--now);touch-action:none;-webkit-user-select:none;user-select:none}
+.holdb .hfill{position:absolute;inset:0;background:rgba(162,78,54,.26);transform:scaleX(0);transform-origin:left;pointer-events:none}
+.holdb .hl{position:relative}
+.btn.holdb.go{background:var(--now);color:#fff}
+.holdb.go .hfill{opacity:0}
+.sh2.shstick{position:sticky;top:env(safe-area-inset-top,0px);z-index:4;background:var(--bg);margin-inline:-16px;padding:6px 16px;margin-block:0;transition:box-shadow .25s var(--ease)}
+.sh2.shstick.stuck{box-shadow:0 1px 0 var(--line),0 8px 12px -10px rgba(20,30,25,.3)}
+.qadd{height:36px;padding:0 14px;border-radius:11px;background:var(--accent);color:#fff;font-weight:700;font-size:14.5px;flex:none;overflow:hidden;white-space:nowrap}
+.qadd[hidden]{display:none}

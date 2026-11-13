@@ -391,7 +391,39 @@ function draggable(node,{label,start,move,drop,hold,filter,ghost:useGhost=true,c
 }
 const clearPreviewSafe=()=>{const p=document.getElementById('drop-prev');p&&p.remove();};
 function emptyState(title,text,action){return el('div',{class:'empty'},el('b',{},title),text?el('div',{},text):null,action||null);}
-function seg(opts,val,on){return el('div',{class:'seg',role:'group',onclick:e=>e.stopPropagation()},opts.map(([v,l])=>el('button',{class:val===v?'on':'','aria-pressed':String(val===v),onclick:e=>{e.stopPropagation();on(v);}},l)));}
+/* ---------- smooth transitions ----------
+   vt(update,{dir}) runs a DOM update inside a View Transition when the browser has one
+   (iOS 18+, Chrome), so the page cross-fades and named parts (the segmented thumb, the
+   calendar body) glide instead of jumping. Without support, or with Reduce motion on, it
+   just runs the update. */
+const motionOK=()=>!document.documentElement.classList.contains('a-motion')&&!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches);
+let vtBusy=null;
+function vt(update,{dir='',named=null}={}){
+  const d=document,root=d.documentElement;
+  if(!d.startViewTransition||!motionOK()||vtBusy){update();return null;}
+  root.dataset.vtdir=dir;
+  const t=d.startViewTransition(()=>{update();if(named)named();});vtBusy=t;
+  t.finished.finally(()=>{vtBusy=null;delete root.dataset.vtdir;$$('[data-vtn]').forEach(n=>{n.style.viewTransitionName='';n.removeAttribute('data-vtn');});});
+  return t;
+}
+/* the white thumb is its own element so it can slide between options */
+function segThumb(){return el('span',{class:'seg-thumb','aria-hidden':'true'});}
+function seg(opts,val,on){
+  const root=el('div',{class:'seg',role:'group',onclick:e=>e.stopPropagation()});
+  const btns=opts.map(([v,l])=>el('button',{class:val===v?'on':'','aria-pressed':String(val===v),'data-v':String(v),onclick:e=>{e.stopPropagation();
+    const from=btns.findIndex(b=>b.classList.contains('on')),to=btns.indexOf(e.currentTarget);if(from===to)return;
+    const all=$$('.seg'),idx=all.indexOf(root),old=root.querySelector('.seg-thumb'),r0=old&&old.getBoundingClientRect();
+    const tag=(n,nm)=>{if(n){n.style.viewTransitionName=nm;n.setAttribute('data-vtn','');}};
+    /* name the thumb and, above it, each label, so the text stays readable while the thumb glides under it */
+    const mark=sg=>{if(!sg)return;tag(sg.querySelector('.seg-thumb'),'seg-thumb');$$('.seg-l',sg).forEach((l,i)=>tag(l,'seg-l'+i));};
+    const local=()=>{if(!root.isConnected)return;btns.forEach((b,i)=>{b.classList.toggle('on',i===to);b.setAttribute('aria-pressed',String(i===to));});const th=root.querySelector('.seg-thumb')||segThumb();btns[to].prepend(th);return th;};
+    if(document.startViewTransition&&motionOK()&&!vtBusy){mark(root);vt(()=>{on(v);local();},{dir:to>from?'fwd':'back',named:()=>{mark(root.isConnected?root:$$('.seg')[idx]);}});return;}
+    on(v);const th=local();
+    /* fallback: slide the thumb from where it was (FLIP) */
+    if(th&&r0&&motionOK()){const r1=th.getBoundingClientRect();th.animate([{transform:`translateX(${r0.left-r1.left}px)`,width:r0.width+'px'},{transform:'none',width:r1.width+'px'}],{duration:280,easing:'cubic-bezier(.3,1.2,.5,1)'});}
+  }},val===v?segThumb():null,el('span',{class:'seg-l'},l)));
+  root.append(...btns);return root;
+}
 /* on a phone nothing ever opens with the keyboard up: it comes up when you tap a field */
 function focusTitle(input){focusIfKeyboard(input);}
 /* was a field in use when this tap began? then the keyboard is already up, and the next field can keep it */

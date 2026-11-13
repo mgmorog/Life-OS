@@ -46,7 +46,7 @@ const App={
     let origin=null;
     if(!fav.some(id=>id===cur||group[cur]===id)&&!TOPS.includes(cur)){const st=S.stack||[];for(let i=st.length-1;i>=0;i--){const v=st[i].view;if(TOPS.includes(v)){if(fav.includes(v))origin=v;break;}}}
     const anyFav=fav.some(isAct)||!!origin;
-    const tab=(id,label,icon)=>el('button',{class:'tab'+((id==='more'?!anyFav:isAct(id))?' act':''),'aria-current':(id==='more'?!anyFav:isAct(id))?'page':null,onclick:()=>{if(id===cur)window.scrollTo({top:0,behavior:'smooth'});else{S.stack=[];App.go(id);}}},el('span',{class:'ic',html:icon}),label);
+    const tab=(id,label,icon)=>el('button',{class:'tab'+((id==='more'?!anyFav:isAct(id))?' act':''),'aria-current':(id==='more'?!anyFav:isAct(id))?'page':null,onclick:()=>{if(id===cur)window.scrollTo({top:0,behavior:'smooth'});else{S.stack=[];vt(()=>App.go(id));}}},el('span',{class:'ic',html:icon}),label);
     const iconOf=id=>id==='more'?sv('<circle cx="5" cy="12" r="1.8" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.8" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.8" fill="currentColor" stroke="none"/>',22):ic(PLACES[id].i,22);
     const short=id=>({'tools':'Tools'})[id]||PLACES[id].n;
     nav.append(el('div',{class:'rail-brand'},'Life OS'),tab(fav[0],short(fav[0]),iconOf(fav[0])),tab(fav[1],short(fav[1]),iconOf(fav[1])),el('button',{class:'fab',id:'fab','aria-label':'Quick capture',html:sv(P.plus,26,2.2),onclick:()=>captureSheet(null)}),tab(fav[2],short(fav[2]),iconOf(fav[2])),tab('more','More',iconOf('more')));

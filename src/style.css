@@ -1213,3 +1213,30 @@ html,body{overflow-x:clip}
 .heat.sel{box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--accent);z-index:1;font-weight:700}
 .heat.today{box-shadow:inset 0 0 0 2px var(--accent-deep)}
 .heat.today.sel{box-shadow:inset 0 0 0 2px var(--accent-deep),0 0 0 2px var(--bg),0 0 0 4px var(--accent)}
+/* ---------- smoother motion: sliding segmented thumb + view transitions ---------- */
+.seg button{position:relative;isolation:isolate}
+.seg button.on{background:transparent;box-shadow:none}
+.seg .seg-thumb{position:absolute;inset:0;border-radius:inherit;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.08),0 1px 6px rgba(20,30,25,.06);z-index:-1;pointer-events:none}
+.seg .seg-l{position:relative}
+#cal-body{view-transition-name:cal-body}
+::view-transition-group(seg-thumb){animation-duration:.34s;animation-timing-function:cubic-bezier(.3,1.15,.5,1)}
+::view-transition-old(seg-thumb),::view-transition-new(seg-thumb){animation:none;mix-blend-mode:normal;height:100%}
+::view-transition-group(seg-l0),::view-transition-group(seg-l1),::view-transition-group(seg-l2),::view-transition-group(seg-l3),::view-transition-group(seg-l4){animation-duration:.26s}
+::view-transition-old(root){animation:vtFadeOut .16s var(--ease) both}
+::view-transition-new(root){animation:vtFadeIn .26s var(--ease) both}
+::view-transition-group(cal-body){animation-duration:.3s;animation-timing-function:var(--ease)}
+::view-transition-old(cal-body){animation:vtFadeOut .14s var(--ease) both}
+::view-transition-new(cal-body){animation:vtFadeIn .3s var(--ease) both}
+html[data-vtdir=fwd]::view-transition-old(cal-body){animation:vtOutL .2s var(--ease) both}
+html[data-vtdir=fwd]::view-transition-new(cal-body){animation:vtInR .32s var(--ease) both}
+html[data-vtdir=back]::view-transition-old(cal-body){animation:vtOutR .2s var(--ease) both}
+html[data-vtdir=back]::view-transition-new(cal-body){animation:vtInL .32s var(--ease) both}
+@keyframes vtFadeOut{to{opacity:0}}
+@keyframes vtFadeIn{from{opacity:0}}
+@keyframes vtOutL{to{opacity:0;transform:translateX(-24px)}}
+@keyframes vtOutR{to{opacity:0;transform:translateX(24px)}}
+@keyframes vtInR{from{opacity:0;transform:translateX(32px)}}
+@keyframes vtInL{from{opacity:0;transform:translateX(-32px)}}
+/* the bar, header chrome and FAB stay put while the page changes */
+.nav{view-transition-name:tabbar}
+::view-transition-old(tabbar),::view-transition-new(tabbar){animation:none}

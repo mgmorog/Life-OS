@@ -315,13 +315,13 @@ let savedY=0,lockN=0;
 function lockScroll(on){lockN+=on?1:-1;document.documentElement.classList.toggle('sheet-up',lockN>0);if(on&&lockN===1){savedY=scrollY;document.body.style.cssText=`position:fixed;top:-${savedY}px;left:0;right:0;overflow:hidden`;}else if(!on&&lockN===0){document.body.style.cssText='';scrollTo(0,savedY);}}
 document.addEventListener('keydown',e=>{if(e.key==='Tab'&&sheetStack.length&&!$('.confirm.on')){const box=sheetStack[sheetStack.length-1].sheet,f=[...box.querySelectorAll('button,input,textarea,select,[tabindex="0"]')].filter(n=>!n.disabled&&n.offsetParent!==null);if(f.length){const a=document.activeElement,i=f.indexOf(a);if(e.shiftKey&&i<=0){e.preventDefault();f[f.length-1].focus();}else if(!e.shiftKey&&(i<0||i===f.length-1)){e.preventDefault();f[0].focus();}}}});
 /* keep sheets above the on-screen keyboard */
-function syncViewport(){const v=window.visualViewport,root=document.documentElement;const h=v?v.height:innerHeight;root.style.setProperty('--vvh',h+'px');const kb=Math.max(0,innerHeight-h-(v?v.offsetTop:0));root.style.setProperty('--kb',kb+'px');root.classList.toggle('kb-up',kb>120);}
+function syncViewport(){const v=window.visualViewport,root=document.documentElement;const h=v?v.height:innerHeight;const kb=Math.max(0,innerHeight-h-(v?v.offsetTop:0));sheetGlide(()=>{root.style.setProperty('--vvh',h+'px');root.style.setProperty('--kb',kb+'px');root.classList.toggle('kb-up',kb>120);});}
 if(window.visualViewport){visualViewport.addEventListener('resize',syncViewport);visualViewport.addEventListener('scroll',syncViewport);}addEventListener('resize',syncViewport);syncViewport();
 /* Inside the app the keyboard covers the page without resizing it, and the phone then pushes the whole sheet up to reveal a low field, taking Cancel and Add with it.
    So when typing starts: give the sheet more height, and bring the field up under the header before the phone needs to move anything. */
 document.addEventListener('focusin',e=>{const t=e.target;if(!t.matches||!t.matches('input:not([type=color]):not([type=file]):not([type=date]),textarea'))return;const sh=t.closest('.sheet');if(!sh)return;
   if(!isTouch()){setTimeout(()=>t.scrollIntoView({block:'nearest',behavior:'smooth'}),300);return;}
-  sh.classList.add('typing');const b=sh.querySelector('.sbody');if(!b||!sh.classList.contains('full'))return;
+  sheetGlide(()=>sh.classList.add('typing'));const b=sh.querySelector('.sbody');if(!b||!sh.classList.contains('full'))return;
   const tr=t.getBoundingClientRect(),rel=tr.top-b.getBoundingClientRect().top;if(rel>12)b.scrollTop+=rel-6;});
 /* The phone leaves a field alone only when it sits as high as the Title field; anywhere lower and it shifts the whole page, taking Cancel and Add with it. So any field moves up to that spot first, and only then takes focus. */
 let tapMoved=false,tapX=0,tapY=0;

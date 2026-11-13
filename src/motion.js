@@ -547,3 +547,32 @@ function photoClose(box,before,gone){if(!motionOK())return;const now=[...box.que
   addEventListener('touchstart',e=>{if(App.state.view!=='today'||e.touches.length>1||document.querySelector('.sheet.on,.confirm.on')||!atBottom()||!motionOK())return;y0=e.touches[0].clientY;d=0;full=false;},{passive:true});
   addEventListener('touchmove',e=>{if(y0==null)return;const dy=y0-e.touches[0].clientY;if(dy<=0&&!card)return;if(!atBottom()&&!card){y0=null;return;}d=Math.max(0,dy-10);if(!card&&d>4)make();if(card)set();},{passive:true});
   addEventListener('touchend',()=>{if(y0==null)return;if(card)end(full);else y0=null;},{passive:true});addEventListener('touchcancel',()=>{if(card)end(false);y0=null;},{passive:true});})();
+
+/* ---------- round 15 ---------- */
+/* mood: five circles that grow under your finger like a dock as you slide across */
+function moodPicker(val,onPick){const order=MOODS.slice().reverse(),CL={Rough:'#B4683F',Low:'#C9A27A',Okay:'#AEB9B1',Good:'#8FB09E',Great:'#466B5A'};let cur=val,pick=null,down=false;
+  const lab=el('div',{class:'mlab'},cur||'Slide across or tap');
+  const bs=order.map(m=>el('button',{type:'button',class:'mood'+(cur===m?' on':''),style:`--mc:${CL[m]}`,'aria-label':m,'aria-pressed':String(cur===m),onclick:e=>{if(e.detail===0)choose(m);}}));
+  const row=el('div',{class:'moods'},bs);
+  const choose=m=>{cur=m;bs.forEach((b,i)=>{const on=order[i]===m;b.classList.toggle('on',on);b.setAttribute('aria-pressed',String(on));});lab.textContent=m;onPick(m);};
+  const near=x=>{let best=0,bd=1e9;bs.forEach((b,i)=>{const r=b.getBoundingClientRect(),d=Math.abs(x-(r.left+r.width/2));if(d<bd){bd=d;best=i;}});return best;};
+  const mag=x=>{if(motionOK())bs.forEach(b=>{const r=b.getBoundingClientRect(),d=Math.abs(x-(r.left+r.width/2));b.style.transform=`scale(${1+Math.max(0,.5-d/120)})`;});const i=near(x);if(i!==pick){pick=i;lab.textContent=order[i];buzz(3);}};
+  const rel=()=>{if(!down)return;down=false;bs.forEach(b=>{b.style.transition='transform .35s cubic-bezier(.3,1.35,.5,1)';b.style.transform='';setTimeout(()=>{b.style.transition='';},360);});if(pick!=null)choose(order[pick]);pick=null;};
+  row.addEventListener('pointerdown',e=>{down=true;row.setPointerCapture(e.pointerId);bs.forEach(b=>b.style.transition='');mag(e.clientX);});
+  row.addEventListener('pointermove',e=>{if(down)mag(e.clientX);});row.addEventListener('pointerup',rel);row.addEventListener('pointercancel',rel);
+  return el('div',{class:'moodpick'},row,lab);}
+/* routine player: the step you leave lifts away and the next one slides up */
+function stepOut(dir){const c=$('.card.player');if(!c||!motionOK())return;const h=c.querySelector('h2'),t=c.querySelector('.timer');[h,t].forEach(n=>{const g=ghostOf(n);if(!g)return;g.animate([{transform:'none',opacity:1},{transform:`translateY(${-28*dir}px)`,opacity:0}],{duration:300,easing:EASE,fill:'forwards'}).onfinish=()=>g.remove();});App.state._stepIn=dir;}
+function stepIn(root){const d=App.state._stepIn;if(!d)return;App.state._stepIn=0;if(!motionOK())return;const c=root.querySelector('.card.player,.card.celebrate');if(!c)return;
+  [...c.children].filter(n=>!n.classList.contains('rbars')).forEach((n,i)=>n.animate([{transform:`translateY(${36*d}px)`,opacity:0},{transform:'none',opacity:1}],{duration:440,delay:110+i*40,easing:SOFT,fill:'backwards'}));}
+/* numbers that roll: each changed digit slides in from above */
+function rollText(n,str){if(!n)return;str=String(str);const cur=n._rt;if(cur===str)return;const kids=n.children;
+  if(!motionOK()||cur==null||cur.length!==str.length||kids.length!==str.length){n.textContent='';[...str].forEach(ch=>n.append(el('span',{class:'rd'},el('span',{},ch))));n._rt=str;n.setAttribute('aria-label',str);return;}
+  [...str].forEach((ch,i)=>{if(cur[i]===ch)return;const box=kids[i],old=box.lastElementChild;const nw=el('span',{class:'rdn'},ch);box.append(nw);
+    if(!/\d/.test(ch)||!/\d/.test(cur[i])){old&&old.remove();nw.className='';return;}
+    nw.animate([{transform:'translateY(-100%)'},{transform:'none'}],{duration:380,easing:SOFT}).onfinish=()=>{nw.className='';};
+    if(old)old.animate([{transform:'none',opacity:1},{transform:'translateY(60%)',opacity:0}],{duration:320,easing:EASE,fill:'forwards'}).onfinish=()=>old.remove();});
+  n._rt=str;n.setAttribute('aria-label',str);}
+/* sheets follow the keyboard: when it opens or closes, the sheet glides to its new spot instead of jumping */
+function sheetGlide(fn){const sh=document.querySelector('.sheet.on');if(!sh){fn();return;}const a=sh.getBoundingClientRect().top;fn();if(!motionOK())return;const b=sh.getBoundingClientRect().top,dy=a-b;if(Math.abs(dy)<24)return;
+  sh.animate([{translate:`0 ${dy}px`},{translate:'0 0'}],{duration:340,easing:'cubic-bezier(.2,.8,.2,1)',composite:'add'});}

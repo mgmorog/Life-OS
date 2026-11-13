@@ -1427,3 +1427,16 @@ html.a-motion .now .bar::after{animation:none;opacity:0}
 .tpeek .dt small{font-size:9.5px;font-weight:700;letter-spacing:.1em;color:var(--ink-2)}.tpeek .dt b{font-family:var(--display);font-weight:500;font-size:21px}
 .tpeek .grow b{display:block;font-size:19px;font-weight:500}.tpeek .grow small{font-size:13px;color:var(--ink-2)}
 .tpeek .tr{fill:none;stroke:var(--accent-soft);stroke-width:2.5}.tpeek .fl{fill:none;stroke:var(--accent);stroke-width:2.5;stroke-linecap:round}
+/* v92 · round 15 motion */
+.t3row.done .tt{text-decoration:none}
+.blk .bt span{background:linear-gradient(currentColor,currentColor) 0 56%/0 1.5px no-repeat;transition:background-size .36s var(--ease)}
+.blk.done .bt span{text-decoration:none;background-size:100% 1.5px}
+.rbars{margin:0 0 12px}
+.moodpick{display:grid;gap:6px}
+.moods{display:flex;justify-content:space-between;align-items:flex-end;height:76px;padding:0 4px;touch-action:none;-webkit-user-select:none;user-select:none}
+.mood{width:44px;height:44px;border-radius:50%;background:color-mix(in srgb,var(--mc) 28%,#fff);transform-origin:50% 100%;flex:none;transition:background .2s}
+.mood.on{background:var(--mc);box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--mc)}
+.mlab{text-align:center;font-weight:600;font-size:15px;min-height:20px}
+.rd{display:inline-block;position:relative;overflow:hidden;vertical-align:top;height:1.2em;line-height:1.2em}
+.rd>span{display:block}
+.rd>.rdn{position:absolute;left:0;right:0;top:0}

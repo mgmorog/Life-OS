@@ -168,6 +168,7 @@ const optsOf=f=>typeof f.opts==='function'?f.opts():f.opts;
 function renderFields(body,fields,D,update){
   let firstInput=null;
   fields.forEach(f=>{const id=`f-x-${f.id}`;let input;
+    if(f.type==='select'&&f.id==='mood'&&optsOf(f).join()===MOODS.join()){body.append(el('div',{class:'field'},el('span',{class:'eyebrow'},f.label),moodPicker(D[f.id],v=>{D[f.id]=v;update();})));return;}
     if(f.type==='select'){const o=optsOf(f);input=el('select',{id,onchange:e=>{D[f.id]=e.target.value;update();}},o.map(x=>{const op=el('option',{value:x},x);if(D[f.id]===x)op.selected=true;return op;}));}
     else if(f.type==='area'){body.append(fieldNotes(id,f.label,f.ph||'',D[f.id]||'',v=>{D[f.id]=v;update();}));return;}
     else{input=el('input',{id,type:f.type==='number'?'number':f.type==='date'?'date':f.type==='time'?'time':'text',inputmode:f.type==='number'?'decimal':null,value:D[f.id]??'',autocomplete:'off',oninput:e=>{D[f.id]=f.type==='number'?(e.target.value===''?'':+e.target.value):e.target.value;update();}});if(!firstInput&&f.type==='text')firstInput=input;}

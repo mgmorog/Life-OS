@@ -1213,30 +1213,49 @@ html,body{overflow-x:clip}
 .heat.sel{box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--accent);z-index:1;font-weight:700}
 .heat.today{box-shadow:inset 0 0 0 2px var(--accent-deep)}
 .heat.today.sel{box-shadow:inset 0 0 0 2px var(--accent-deep),0 0 0 2px var(--bg),0 0 0 4px var(--accent)}
-/* ---------- smoother motion: sliding segmented thumb + view transitions ---------- */
-.seg button{position:relative;isolation:isolate}
+/* ---------- motion (see motion.js) ---------- */
+:root{--soft:cubic-bezier(.3,1.15,.5,1)}
+/* segmented: the thumb is its own grid item behind the labels */
+.seg{position:relative}
+.seg .seg-thumb{grid-row:1;align-self:stretch;border-radius:9px;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.08),0 1px 6px rgba(20,30,25,.06);pointer-events:none;z-index:0}
+.seg button{position:relative;z-index:1}
 .seg button.on{background:transparent;box-shadow:none}
-.seg .seg-thumb{position:absolute;inset:0;border-radius:inherit;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.08),0 1px 6px rgba(20,30,25,.06);z-index:-1;pointer-events:none}
-.seg .seg-l{position:relative}
-#cal-body{view-transition-name:cal-body}
-::view-transition-group(seg-thumb){animation-duration:.34s;animation-timing-function:cubic-bezier(.3,1.15,.5,1)}
-::view-transition-old(seg-thumb),::view-transition-new(seg-thumb){animation:none;mix-blend-mode:normal;height:100%}
-::view-transition-group(seg-l0),::view-transition-group(seg-l1),::view-transition-group(seg-l2),::view-transition-group(seg-l3),::view-transition-group(seg-l4){animation-duration:.26s}
-::view-transition-old(root){animation:vtFadeOut .16s var(--ease) both}
-::view-transition-new(root){animation:vtFadeIn .26s var(--ease) both}
-::view-transition-group(cal-body){animation-duration:.3s;animation-timing-function:var(--ease)}
-::view-transition-old(cal-body){animation:vtFadeOut .14s var(--ease) both}
-::view-transition-new(cal-body){animation:vtFadeIn .3s var(--ease) both}
-html[data-vtdir=fwd]::view-transition-old(cal-body){animation:vtOutL .2s var(--ease) both}
-html[data-vtdir=fwd]::view-transition-new(cal-body){animation:vtInR .32s var(--ease) both}
-html[data-vtdir=back]::view-transition-old(cal-body){animation:vtOutR .2s var(--ease) both}
-html[data-vtdir=back]::view-transition-new(cal-body){animation:vtInL .32s var(--ease) both}
-@keyframes vtFadeOut{to{opacity:0}}
-@keyframes vtFadeIn{from{opacity:0}}
-@keyframes vtOutL{to{opacity:0;transform:translateX(-24px)}}
-@keyframes vtOutR{to{opacity:0;transform:translateX(24px)}}
-@keyframes vtInR{from{opacity:0;transform:translateX(32px)}}
-@keyframes vtInL{from{opacity:0;transform:translateX(-32px)}}
-/* the bar, header chrome and FAB stay put while the page changes */
-.nav{view-transition-name:tabbar}
-::view-transition-old(tabbar),::view-transition-new(tabbar){animation:none}
+.cal-compact .seg .seg-thumb{border-radius:9px}
+/* soft press */
+.btn,.chip,.li,.focus-chip,.tl,.tmr,.heat,.dtile,.t3slot,.t3add,.iconbtn,.adchip,.mitem,.linkbtn{transition-property:transform,background,color,box-shadow,opacity,border-color;transition-duration:.45s,.18s,.18s,.18s,.18s,.18s;transition-timing-function:cubic-bezier(.3,1.6,.5,1),ease,ease,ease,ease,ease}
+.pressing{transform:scale(.965)!important;transition-duration:.12s!important;transition-timing-function:var(--ease)!important}
+.li.pressing,.tmr.pressing,.heat.pressing{transform:scale(.985)!important}
+/* bottom bar pill while it glides */
+.tab-pill{position:fixed;z-index:16;border-radius:15px;background:var(--accent-soft);pointer-events:none}
+.nav .tab .ic{position:relative;z-index:1}
+.nav .tab.act .ic.pill-wait{background:transparent}
+.nav .tab .ic svg{position:relative;z-index:2}
+/* springy sheets (phone) */
+@media (max-width:899px){.sheet{transition:transform .52s var(--soft)}.sheet:not(.on){transition-duration:.34s;transition-timing-function:var(--ease)}}
+/* plus menu */
+#fab svg{transition:transform .42s cubic-bezier(.3,1.35,.5,1)}
+#fab.open svg{transform:rotate(135deg)}
+#fab.open{z-index:31;position:relative}
+.fab-scrim{position:fixed;inset:0;z-index:29;background:var(--scrim);opacity:0;transition:opacity .26s var(--ease)}
+.fab-scrim.on{opacity:1}
+.fab-menu{position:fixed;z-index:30;display:flex;flex-direction:column;align-items:center;gap:10px;transform:translateX(-50%);pointer-events:none}
+.fab-menu.side{transform:none;align-items:flex-start}
+.fab-menu.on{pointer-events:auto}
+.fab-menu .mitem{display:flex;align-items:center;gap:10px;height:46px;padding:0 18px 0 12px;border-radius:23px;background:var(--card);box-shadow:0 8px 24px rgba(20,30,25,.16),0 0 0 1px rgba(20,30,25,.04);font-weight:600;font-size:15.5px;white-space:nowrap;opacity:0;transform:translateY(16px) scale(.9);transition:opacity .18s var(--ease),transform .25s var(--ease)}
+.fab-menu .mitem .d{width:28px;height:28px;border-radius:50%;background:var(--accent-soft);color:var(--accent-text);display:grid;place-items:center}
+.fab-menu.on .mitem{opacity:1;transform:none;transition:opacity .24s var(--ease),transform .46s cubic-bezier(.3,1.35,.5,1)}
+/* toast: spring + timer line */
+.toast{transition:opacity .22s,transform .5s var(--soft);overflow:hidden;touch-action:none}
+.toast.drag{transition:none}
+.toast .life{position:absolute;left:0;right:0;bottom:0;height:2px;background:#8FB09E;transform-origin:left;transform:scaleX(0)}
+.toast.on .life{animation:toastLife var(--life,2000ms) linear forwards}
+@keyframes toastLife{from{transform:scaleX(1)}to{transform:scaleX(0)}}
+/* rolling numbers */
+[data-roll]{display:inline-block;line-height:1.3}
+.roll-win{display:inline-block;height:1.3em;line-height:1.3;overflow:hidden;vertical-align:top}
+.roll-col{display:flex;flex-direction:column}
+.roll-col span{height:1.3em;line-height:1.3}
+/* Top 3 progress */
+.t3bar{height:3px;margin:6px 0 4px;background:var(--line-2)}
+.t3bar>i{display:block;height:100%;background:var(--accent);border-radius:2px}
+html.a-motion .tab-pill,html.a-motion .mo-ghost{display:none}

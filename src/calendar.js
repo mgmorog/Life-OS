@@ -20,7 +20,7 @@ function viewCalendar(root){
   const miniTitle=mode==='quarter'?`Q${q+1} ${y}`:mode==='month'?`${MONL[a.getMonth()]} ${y}`:`${rangeD}, ${wE.getFullYear()}`;
   const f=get.settings().filters||{},filtered=(f.areas&&f.areas.length)||Object.values(f.types||{}).some(v=>v===false);
   const arrows=()=>el('div',{class:'arrows'},el('button',{class:'iconbtn green','aria-label':`Previous ${mode}`,html:ic('chevl',20,2),onclick:()=>calStep(-1)}),el('button',{class:'iconbtn green','aria-label':`Next ${mode}`,html:ic('chevr',20,2),onclick:()=>calStep(1)}),el('button',{class:'iconbtn green','aria-label':'Filters',html:ic('filter',20,2)+(filtered?'<span class="dot"></span>':''),onclick:e=>filterSheet({anchor:e.currentTarget.getBoundingClientRect()})}));
-  const modeSeg=()=>seg([['quarter','Quarter'],['month','Month'],['week','Week']],mode,v=>{const[s,e]=calRange(C);if(C.sel&&C.sel>=s&&C.sel<=e)C.anchor=C.sel;C.mode=v;C.weekOpen=null;calCommit();});
+  const ORDERM=['quarter','month','week'];const modeSeg=()=>seg([['quarter','Quarter'],['month','Month'],['week','Week']],mode,v=>{const[s,e]=calRange(C);if(C.sel&&C.sel>=s&&C.sel<=e)C.anchor=C.sel;const dir=ORDERM.indexOf(v)>ORDERM.indexOf(C.mode)?1:-1;C.mode=v;C.weekOpen=null;glideSwap(()=>calCommit(),[['#cal-body','x'],['#cal-h .tbtn span','y'],['#cal-h .cal-eyebrow','y']],dir);});
   const pill=()=>!current?el('button',{class:'pill-today',onclick:calNow},'Today'):null;
   const page=el('div',{class:'page'});
   page.append(el('header',{class:'cal-h',id:'cal-h'},
@@ -34,7 +34,7 @@ function viewCalendar(root){
   const fk=mode==='quarter'?`q-${y}-${q}`:mode==='month'?`m-${monthKey(a)}`:`w-${weekKey(a)}`;
   body.append(focusChip(fk,mode==='quarter'?`Q${q+1} FOCUS`:mode==='month'?`${MONL[a.getMonth()].toUpperCase()} FOCUS`:'WEEK FOCUS',mode,calRange(C)));
   if(mode==='quarter')quarterBody(body,y,qM,C);else if(mode==='month')monthBody(body,a,C);else weekBody(body,wS,C);
-  onSwipe(body,()=>calStep(1),()=>calStep(-1));
+  dragSwipe(body,()=>calStep(1),()=>calStep(-1));
   page.append(body);root.append(page,compact);
   const sync=()=>{const h=$('#cal-h'),c=$('#cal-compact');if(h&&c)c.classList.toggle('on',h.getBoundingClientRect().bottom<=(parseFloat(getComputedStyle(c).top)||0)+8);};
   removeEventListener('scroll',App._calS);App._calS=sync;addEventListener('scroll',sync,{passive:true});requestAnimationFrame(sync);

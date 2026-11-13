@@ -153,7 +153,7 @@ function dayCard(dk){
   else if(left){head=`${left} ${left===1?'thing':'things'} to do`;sub=isPast?'Left open on this day.':'Nothing else is scheduled. Tap an hour to block time.';}
   const first=!S._painted;
   const day=el('section',{class:'card daycard'+(first?' fade-up ':' ')+(S._anim||'')},
-    el('div',{style:'display:flex;justify-content:space-between;gap:8px;align-items:baseline'},el('div',{class:'eyebrow'},eye),total?el('button',{class:'small muted tnum',style:'min-height:28px','aria-pressed':String(!!S.hideDone),'aria-label':S.hideDone?'Show finished items':'Hide finished items',onclick:()=>{S.hideDone=!S.hideDone;App.refresh();}},`${total-left} of ${total} done`,total-left?el('span',{style:'margin-left:6px;color:var(--accent-text);font-weight:600'},S.hideDone?'Show':'Hide'):null):null),
+    el('div',{style:'display:flex;justify-content:space-between;gap:8px;align-items:baseline'},el('div',{class:'eyebrow'},eye),total?el('button',{class:'small muted tnum',style:'min-height:28px','aria-pressed':String(!!S.hideDone),'aria-label':S.hideDone?'Show finished items':'Hide finished items',onclick:()=>{S.hideDone=!S.hideDone;App.refresh();}},el('span',{'data-roll':'done'},`${total-left} of ${total} done`),total-left?el('span',{style:'margin-left:6px;color:var(--accent-text);font-weight:600'},S.hideDone?'Show':'Hide'):null):null),
     next?el('button',{style:'display:block;width:100%;text-align:left',onclick:()=>openItem(next,dk)},el('h2',{},head)):el('h2',{},head),sub?el('p',{class:'sub'},sub):null,
     el('div',{class:'chips'},
       el('button',{class:'chip',onclick:()=>taskSheet(null,{date:dk})},'+ Task'),

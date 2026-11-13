@@ -1,0 +1,142 @@
+/* ---------- motion: small, calm movements that make changes easy to follow ----------
+   Everything here runs on plain transforms and opacity (Web Animations), so it behaves the
+   same on every iPhone. All of it switches off with Reduce motion. */
+const EASE='cubic-bezier(.2,.8,.2,1)',SOFT='cubic-bezier(.3,1.15,.5,1)',SPRING='cubic-bezier(.3,1.35,.5,1)';
+
+/* A copy of an element pinned where it is on screen, so the real one can be replaced underneath it */
+function ghostOf(n){
+  if(!n||!n.isConnected)return null;const r=n.getBoundingClientRect();if(!r.width||!r.height)return null;
+  const g=n.cloneNode(true);g.removeAttribute('id');$$('[id]',g).forEach(x=>x.removeAttribute('id'));
+  const cs=getComputedStyle(n);
+  Object.assign(g.style,{position:'fixed',left:r.left+'px',top:r.top+'px',width:r.width+'px',height:r.height+'px',margin:'0',zIndex:'9',pointerEvents:'none',boxSizing:'border-box',font:cs.font,color:cs.color});
+  g.setAttribute('aria-hidden','true');g.classList.add('mo-ghost');document.body.append(g);return g;
+}
+
+/* Swap parts of the page with a glide: the old copy leaves toward where you came from, the new one
+   arrives from where you're going. parts: [[selector,'x'|'y'],...]; dir: 1 forward, -1 back */
+function glideSwap(update,parts,dir=1){
+  if(!motionOK()){update();return;}
+  const ghosts=parts.map(([s,ax])=>[ghostOf($(s)),s,ax]);
+  update();
+  ghosts.forEach(([g,s,ax])=>{
+    const n=$(s),off=ax==='y'?24:28,out=ax==='y'?`translateY(${-dir*off*.8}px)`:`translateX(${-dir*off*.8}px)`,inn=ax==='y'?`translateY(${dir*off}px)`:`translateX(${dir*off}px)`;
+    if(g)g.animate([{opacity:1,transform:'none'},{opacity:0,transform:out}],{duration:190,easing:'cubic-bezier(.4,0,1,1)',fill:'forwards'}).onfinish=()=>g.remove();
+    if(n)n.animate([{opacity:0,transform:inn},{opacity:1,transform:'none'}],{duration:380,delay:50,easing:EASE,fill:'backwards'});
+  });
+}
+
+/* Slide the white thumb of a segmented control from where it was to the new choice */
+function segGlide(r0,seg){
+  if(!r0||!seg||!motionOK())return;const th=seg.querySelector('.seg-thumb');if(!th)return;
+  const r1=th.getBoundingClientRect();if(!r1.width)return;
+  th.animate([{transform:`translateX(${r0.left-r1.left}px) scaleX(${r0.width/r1.width})`,transformOrigin:'left center'},{transform:'none',transformOrigin:'left center'}],{duration:420,easing:SOFT});
+}
+
+/* Bottom bar: the green pill slides between tabs and the new icon gives a small bounce */
+function tabGlide(r0){
+  if(!motionOK())return;const ic=$('.nav .tab.act .ic');if(!ic)return;
+  ic.querySelector('svg')&&ic.querySelector('svg').animate([{transform:'scale(.82)'},{transform:'scale(1.14)',offset:.55},{transform:'none'}],{duration:450,easing:SPRING});
+  if(!r0)return;const r1=ic.getBoundingClientRect();if(Math.abs(r0.left-r1.left)<2)return;
+  const pill=el('span',{class:'tab-pill'});Object.assign(pill.style,{left:r0.left+'px',top:r1.top+'px',width:r1.width+'px',height:r1.height+'px'});document.body.append(pill);
+  ic.classList.add('pill-wait');
+  const a=pill.animate([{transform:'none'},{transform:`translateX(${r1.left-r0.left}px)`}],{duration:440,easing:SOFT,fill:'forwards'});
+  a.onfinish=()=>{ic.classList.remove('pill-wait');pill.remove();};
+}
+
+/* Soft press: whatever you press sinks a little and springs back */
+const PRESS='.btn,.chip,.li,.focus-chip,.tl,.tmr,.heat:not(.out),.dtile,.t3slot,.t3add,.iconbtn,.adchip,.mitem,.linkbtn,.saveas .tl';
+document.addEventListener('pointerdown',e=>{
+  if(!motionOK()||e.button>0)return;const n=e.target.closest&&e.target.closest(PRESS);if(!n||n.disabled||n.closest('.grid,.weekstrip,.dock,.blk'))return;
+  const x0=e.clientX,y0=e.clientY;n.classList.add('pressing');
+  const off=()=>{n.classList.remove('pressing');removeEventListener('pointerup',off,true);removeEventListener('pointercancel',off,true);removeEventListener('pointermove',mv,true);};
+  const mv=ev=>{if(Math.abs(ev.clientX-x0)>10||Math.abs(ev.clientY-y0)>10)off();};
+  addEventListener('pointerup',off,true);addEventListener('pointercancel',off,true);addEventListener('pointermove',mv,true);
+},{passive:true});
+
+/* Lists: rows that are new grow in, rows that left fold away, the rest glide to their new places.
+   Keyed by data-id (task rows), data-slot (week rows) or data-k. */
+const KEYED='.trow[data-id],.wkrow[data-slot],[data-k]';
+const keyOf=n=>n.dataset.k||n.dataset.slot||n.dataset.id;
+function listSnap(root){const m=new Map();root.querySelectorAll(KEYED).forEach(n=>{const r=n.getBoundingClientRect();if(r.height)m.set(keyOf(n),{r,n,open:n.classList.contains('open')});});return m;}
+function listPlay(root,before){
+  if(!before||!motionOK())return;const now=new Map();root.querySelectorAll(KEYED).forEach(n=>now.set(keyOf(n),n));
+  const added=[...now.keys()].filter(k=>!before.has(k)),gone=[...before.keys()].filter(k=>!now.has(k));
+  if(added.length>4||gone.length>4)return;/* a whole new list, not an edit */
+  now.forEach((n,key)=>{
+    const b=before.get(key),r=n.getBoundingClientRect();
+    if(!b){const h=r.height;n.style.overflow='hidden';n.animate([{height:'0px',opacity:0,transform:'translateY(-6px)'},{height:h+'px',opacity:1,transform:'none'}],{duration:360,easing:EASE}).onfinish=()=>{n.style.overflow='';};return;}
+    const dy=b.r.top-r.top,dh=b.r.height-r.height;
+    if(Math.abs(dh)>3){/* a row that opened or closed: ease its height, fade the details in */
+      n.style.overflow='hidden';n.animate([{height:b.r.height+'px'},{height:r.height+'px'}],{duration:400,easing:EASE}).onfinish=()=>{n.style.overflow='';};
+      const ch=n.querySelector('.chev');if(ch&&b.open!==n.classList.contains('open'))ch.animate([{transform:`rotate(${b.open?90:0}deg)`},{transform:`rotate(${b.open?0:90}deg)`}],{duration:380,easing:SOFT});
+      if(!b.open&&n.classList.contains('open')){const it=n.querySelector('.wkitems');it&&it.animate([{opacity:0,transform:'translateY(-4px)'},{opacity:1,transform:'none'}],{duration:300,delay:80,easing:EASE,fill:'backwards'});}
+    }
+    if(Math.abs(dy)>1)n.animate([{transform:`translateY(${dy}px)`},{transform:'none'}],{duration:360,easing:EASE});
+  });
+  gone.forEach(k=>{const b=before.get(k);const g=document.createElement('div');g.className='mo-ghost';g.append(b.n);Object.assign(g.style,{position:'fixed',left:b.r.left+'px',top:b.r.top+'px',width:b.r.width+'px',height:b.r.height+'px',overflow:'hidden',pointerEvents:'none',zIndex:'9'});document.body.append(g);
+    g.animate([{opacity:1,transform:'none',height:b.r.height+'px'},{opacity:0,transform:'translateX(28px)',height:'0px'}],{duration:320,easing:EASE,fill:'forwards'}).onfinish=()=>g.remove();});
+}
+
+/* Counts like "1 of 3" roll like an odometer when the first number changes (data-roll spans hold only text) */
+const ROLLS=new Map();
+function rollCounts(root,scope){
+  root.querySelectorAll('[data-roll]').forEach(n=>{
+    const key=scope+':'+n.dataset.roll,txt=n.textContent,m=txt.match(/\d+/),prev=ROLLS.get(key);ROLLS.set(key,txt);
+    if(!m||!prev||!motionOK())return;const pm=prev.match(/\d+/);if(!pm||pm[0]===m[0]||prev.replace(/\d+/,'#')!==txt.replace(/\d+/,'#'))return;
+    const up=+m[0]>+pm[0],i=m.index,after=txt.slice(i+m[0].length);
+    const col=el('span',{class:'roll-col'},el('span',{},up?pm[0]:m[0]),el('span',{},up?m[0]:pm[0]));
+    n.replaceChildren(txt.slice(0,i),el('span',{class:'roll-win'},col),after);
+    col.animate([{transform:`translateY(${up?0:-50}%)`},{transform:`translateY(${up?-50:0}%)`}],{duration:520,easing:SOFT,fill:'forwards'}).onfinish=()=>{if(n.isConnected)n.textContent=txt;};
+  });
+}
+
+/* The + opens a small menu: the + turns into an ×, the page dims, the options float up one by one */
+function fabMenu(){
+  const fab=$('#fab');if(!fab)return;if($('.fab-menu')){closeFabMenu();return;}
+  const dk=App.state.view==='today'&&App.state.sel?App.state.sel:todayK();
+  const go=fn=>()=>{closeFabMenu(true);setTimeout(fn,motionOK()?120:0);};
+  const items=[['Quick capture','inbox',()=>captureSheet(null)],['All-day','sun',()=>alldaySheet(null,{start:dk})],['Time block','time',()=>blockSheet(null,{date:dk,start:dk===todayK()?nextQuarter():9*60})],['Task','task',()=>taskSheet(null,{date:dk})]];
+  const r=fab.getBoundingClientRect();
+  const scrim=el('div',{class:'fab-scrim',onclick:()=>closeFabMenu()});
+  const menu=el('div',{class:'fab-menu',role:'menu'},items.map(([l,i,fn])=>el('button',{class:'mitem',role:'menuitem',onclick:go(fn)},el('span',{class:'d',html:ic(i,16,2)}),l)));
+  const wide=innerWidth>=900;
+  Object.assign(menu.style,wide?{left:(r.right+12)+'px',top:r.top+'px'}:{left:(r.left+r.width/2)+'px',bottom:(innerHeight-r.top+14)+'px'});
+  if(wide)menu.classList.add('side');
+  document.body.append(scrim,menu);fab.classList.add('open');fab.setAttribute('aria-expanded','true');
+  requestAnimationFrame(()=>{scrim.classList.add('on');[...menu.children].reverse().forEach((b,j)=>{b.style.transitionDelay=(j*45)+'ms';});menu.classList.add('on');});
+  const esc=e=>{if(e.key==='Escape')closeFabMenu();};addEventListener('keydown',esc);menu._esc=esc;
+  setTimeout(()=>{const f=menu.querySelector('.mitem:last-child');f&&f.focus({preventScroll:true});},60);
+}
+function closeFabMenu(fast){
+  const m=$('.fab-menu'),s=$('.fab-scrim'),fab=$('#fab');if(fab){fab.classList.remove('open');fab.setAttribute('aria-expanded','false');}
+  if(m){removeEventListener('keydown',m._esc);[...m.children].forEach(b=>b.style.transitionDelay='0ms');m.classList.remove('on');setTimeout(()=>m.remove(),fast?120:260);}
+  if(s){s.classList.remove('on');setTimeout(()=>s.remove(),260);}
+}
+
+/* Calendar: the page follows your finger sideways, then settles on the next period or springs back */
+function dragSwipe(node,next,prev){
+  let x0,y0,dx=0,lock=null,on=false;
+  node.addEventListener('touchstart',e=>{if(e.touches.length!==1||App.dragging||sheetStack.length||e.target.closest('.weekstrip,.dock,input,textarea,.wkrow.open')){on=false;return;}x0=e.touches[0].clientX;y0=e.touches[0].clientY;dx=0;lock=null;on=true;},{passive:true});
+  node.addEventListener('touchmove',e=>{if(!on)return;const t=e.touches[0],ddx=t.clientX-x0,ddy=t.clientY-y0;
+    if(lock==null){if(Math.abs(ddx)>10&&Math.abs(ddx)>Math.abs(ddy)*1.3)lock='x';else if(Math.abs(ddy)>10)lock='y';}
+    if(lock!=='x'||App.dragging)return;dx=ddx;if(!motionOK())return;node.style.transition='none';node.style.transform=`translate3d(${dx*.92}px,0,0)`;node.style.opacity=String(1-Math.min(.35,Math.abs(dx)/innerWidth*.6));},{passive:true});
+  const end=()=>{if(!on)return;on=false;if(lock!=='x'){return;}const w=node.offsetWidth||innerWidth;
+    if(App.dragging||Date.now()-(App._dragEnd||0)<400){node.style.transform='';node.style.opacity='';return;}
+    if(Math.abs(dx)>Math.min(90,w*.22)){const dir=dx<0?1:-1;markGs&&markGs('swipe');
+      if(!motionOK()){dir>0?next():prev();return;}
+      const a=node.animate([{transform:`translate3d(${dx*.92}px,0,0)`,opacity:node.style.opacity||1},{transform:`translate3d(${-dir*w*.55}px,0,0)`,opacity:0}],{duration:170,easing:'cubic-bezier(.4,0,1,1)',fill:'forwards'});
+      a.onfinish=()=>{App.state._swipeIn=dir;dir>0?next():prev();};
+    }else{node.style.transition='transform .45s '+SOFT+',opacity .3s';node.style.transform='';node.style.opacity='';setTimeout(()=>{node.style.transition='';},460);}
+  };
+  node.addEventListener('touchend',end,{passive:true});node.addEventListener('touchcancel',end,{passive:true});
+}
+/* after a swipe re-renders the calendar, bring the new period in from the side you swiped toward */
+function swipeArrive(){const dir=App.state._swipeIn;if(!dir)return;App.state._swipeIn=0;const b=$('#cal-body');if(!b)return;b.classList.remove('slide-l','slide-r');
+  b.animate([{transform:`translate3d(${dir*innerWidth*.45}px,0,0)`,opacity:0},{transform:'none',opacity:1}],{duration:440,easing:SOFT});}
+
+/* Toast: springs up with a thin timer line; flick it down to dismiss */
+(function toastSwipe(){const t=()=>$('#toast');let y0=null,dy=0;
+  document.addEventListener('pointerdown',e=>{const n=t();if(!n||!n.contains(e.target)||e.target.closest('button'))return;y0=e.clientY;dy=0;n.classList.add('drag');clearTimeout(toastT);});
+  addEventListener('pointermove',e=>{if(y0==null)return;const n=t();dy=e.clientY-y0;n.style.transform=`translate(-50%,${dy>0?dy:dy*.2}px)`;n.style.opacity=String(1-Math.max(0,dy)/120);});
+  const up=()=>{if(y0==null)return;y0=null;const n=t();n.classList.remove('drag');n.style.opacity='';n.style.transform='';if(dy>36)n.classList.remove('on');else toastT=setTimeout(()=>n.classList.remove('on'),1800);};
+  addEventListener('pointerup',up);addEventListener('pointercancel',up);})();

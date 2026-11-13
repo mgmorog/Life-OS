@@ -8,7 +8,7 @@ import { transform, build } from 'esbuild';
 const root = new URL('.', import.meta.url).pathname;
 const target = (process.argv.find(a => a.startsWith('--target=')) || '').split('=')[1] || process.argv[process.argv.indexOf('--target') + 1] || 'artifact';
 const minify = process.env.NOMIN !== '1';
-export const ORDER = ['core', 'sheets', 'capture', 'today', 'calendar', 'studio', 'more', 'modules', 'organize', 'assist', 'hubs', 'tools', 'tools2', 'prep', 'onboard', 'focus', 'plan', 'mods', 'mods2', 'mods3', 'pwa', 'dash', 'travel', 'prefs', 'main'];
+export const ORDER = ['core', 'sheets', 'capture', 'today', 'calendar', 'studio', 'more', 'modules', 'organize', 'assist', 'hubs', 'tools', 'tools2', 'prep', 'onboard', 'focus', 'plan', 'mods', 'mods2', 'mods3', 'pwa', 'dash', 'travel', 'prefs', 'motion', 'main'];
 
 const read = p => readFileSync(root + p, 'utf8');
 const css0 = read('src/style.css');

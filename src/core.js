@@ -258,7 +258,7 @@ function levelOf(v,full){if(v<=0)return 0;const r=v/Math.max(full,.5);return r>=
 /* ---------- small shared UI ---------- */
 let toastT,toastAt=0;
 function linkText(s){const out=[],re=/(https?:\/\/[^\s]+|www\.[^\s]+)/gi;let last=0,m;s=String(s||'');while((m=re.exec(s))){if(m.index>last)out.push(s.slice(last,m.index));const u=m[0].replace(/[).,;:!?]+$/,'');out.push(el('a',{href:/^www\./i.test(u)?'https://'+u:u,target:'_blank',rel:'noopener',style:'color:var(--accent-text);overflow-wrap:anywhere',onclick:e=>e.stopPropagation()},u));last=m.index+u.length;}if(last<s.length)out.push(s.slice(last));return out;}
-function toast(msg,undo,label='Undo'){toastAt=Date.now();const t=$('#toast');t.innerHTML='';t.append(el('span',{},msg));if(undo)t.append(el('button',{onclick:()=>{undo();t.classList.remove('on');}},label));t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),undo?4500:2000);}
+function toast(msg,undo,label='Undo'){toastAt=Date.now();const t=$('#toast');t.innerHTML='';t.append(el('span',{},msg));if(undo)t.append(el('button',{onclick:()=>{undo();t.classList.remove('on');}},label));const ms=undo?4500:2000;t.style.setProperty('--life',ms+'ms');t.append(el('i',{class:'life'}));t.classList.remove('on');void t.offsetWidth;t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),ms);}
 /* iPhone has no vibrate API; toggling a hidden switch control gives a light system tap (iOS 18+) */
 const IOS=/iP(hone|ad|od)/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
 const iosTap=(()=>{let l=null;return()=>{if(!l){const i=document.createElement('input');i.type='checkbox';i.setAttribute('switch','');i.id='hx-tap';i.tabIndex=-1;i.setAttribute('aria-hidden','true');i.style.display='none';l=document.createElement('label');l.htmlFor='hx-tap';l.style.display='none';l.setAttribute('aria-hidden','true');const stop=e=>e.stopPropagation();i.addEventListener('click',stop);l.addEventListener('click',stop);document.body.append(i,l);}l.click();};})();
@@ -299,8 +299,8 @@ function openSheet({title,full=false,left,right,build,onClose,tryClose,raw=false
   sheetStack.push(inst);lockScroll(true);
   // swipe down to close, from the grab bar or the header
   const dragZone=e=>{if(e.button!=null&&e.button!==0)return;if(e.target.closest('button'))return;const y0=e.clientY;let dy=0,mv,up;sheet.classList.add('nodrag');
-    mv=ev=>{dy=Math.max(0,ev.clientY-y0);sheet.style.transform=`translate3d(0,${dy}px,0)`;};
-    up=()=>{removeEventListener('pointermove',mv);removeEventListener('pointerup',up);removeEventListener('pointercancel',up);sheet.classList.remove('nodrag');sheet.style.transform='';if(dy>110)requestClose();};
+    scrim.style.transition='none';mv=ev=>{const raw=ev.clientY-y0;dy=Math.max(0,raw);const d=raw>0?raw:raw*.15;sheet.style.transform=`translate3d(0,${d}px,0)`;scrim.style.opacity=String(Math.max(0,1-dy/(sheet.offsetHeight||400)));};
+    up=()=>{removeEventListener('pointermove',mv);removeEventListener('pointerup',up);removeEventListener('pointercancel',up);sheet.classList.remove('nodrag');sheet.style.transform='';scrim.style.transition='';scrim.style.opacity='';if(dy>110)requestClose();};
     addEventListener('pointermove',mv);addEventListener('pointerup',up);addEventListener('pointercancel',up);};
   if(innerWidth<900){grab.addEventListener('pointerdown',dragZone);head&&head.addEventListener('pointerdown',dragZone);}
   function requestClose(){if(tryClose&&tryClose()===false)return;close();}
@@ -397,32 +397,20 @@ function emptyState(title,text,action){return el('div',{class:'empty'},el('b',{}
    calendar body) glide instead of jumping. Without support, or with Reduce motion on, it
    just runs the update. */
 const motionOK=()=>!document.documentElement.classList.contains('a-motion')&&!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches);
-let vtBusy=null;
-function vt(update,{dir='',named=null}={}){
-  const d=document,root=d.documentElement;
-  if(!d.startViewTransition||!motionOK()||vtBusy){update();return null;}
-  root.dataset.vtdir=dir;
-  const t=d.startViewTransition(()=>{update();if(named)named();});vtBusy=t;
-  t.finished.finally(()=>{vtBusy=null;delete root.dataset.vtdir;$$('[data-vtn]').forEach(n=>{n.style.viewTransitionName='';n.removeAttribute('data-vtn');});});
-  return t;
-}
-/* the white thumb is its own element so it can slide between options */
-function segThumb(){return el('span',{class:'seg-thumb','aria-hidden':'true'});}
+/* kept for callers: page changes now animate with plain transforms (motion.js), not View Transitions */
+function vt(update){update();return null;}
 function seg(opts,val,on){
+  const idx=Math.max(0,opts.findIndex(([v])=>v===val));
   const root=el('div',{class:'seg',role:'group',onclick:e=>e.stopPropagation()});
-  const btns=opts.map(([v,l])=>el('button',{class:val===v?'on':'','aria-pressed':String(val===v),'data-v':String(v),onclick:e=>{e.stopPropagation();
-    const from=btns.findIndex(b=>b.classList.contains('on')),to=btns.indexOf(e.currentTarget);if(from===to)return;
-    const all=$$('.seg'),idx=all.indexOf(root),old=root.querySelector('.seg-thumb'),r0=old&&old.getBoundingClientRect();
-    const tag=(n,nm)=>{if(n){n.style.viewTransitionName=nm;n.setAttribute('data-vtn','');}};
-    /* name the thumb and, above it, each label, so the text stays readable while the thumb glides under it */
-    const mark=sg=>{if(!sg)return;tag(sg.querySelector('.seg-thumb'),'seg-thumb');$$('.seg-l',sg).forEach((l,i)=>tag(l,'seg-l'+i));};
-    const local=()=>{if(!root.isConnected)return;btns.forEach((b,i)=>{b.classList.toggle('on',i===to);b.setAttribute('aria-pressed',String(i===to));});const th=root.querySelector('.seg-thumb')||segThumb();btns[to].prepend(th);return th;};
-    if(document.startViewTransition&&motionOK()&&!vtBusy){mark(root);vt(()=>{on(v);local();},{dir:to>from?'fwd':'back',named:()=>{mark(root.isConnected?root:$$('.seg')[idx]);}});return;}
-    on(v);const th=local();
-    /* fallback: slide the thumb from where it was (FLIP) */
-    if(th&&r0&&motionOK()){const r1=th.getBoundingClientRect();th.animate([{transform:`translateX(${r0.left-r1.left}px)`,width:r0.width+'px'},{transform:'none',width:r1.width+'px'}],{duration:280,easing:'cubic-bezier(.3,1.2,.5,1)'});}
-  }},val===v?segThumb():null,el('span',{class:'seg-l'},l)));
-  root.append(...btns);return root;
+  const th=el('span',{class:'seg-thumb','aria-hidden':'true',style:`grid-column:${idx+1}`});
+  const btns=opts.map(([v,l],i)=>el('button',{class:val===v?'on':'','aria-pressed':String(val===v),style:`grid-column:${i+1};grid-row:1`,onclick:e=>{e.stopPropagation();
+    const from=btns.findIndex(b=>b.classList.contains('on'));if(from===i)return;
+    const all=$$('.seg'),at=all.indexOf(root),r0=root.querySelector('.seg-thumb').getBoundingClientRect();
+    on(v);
+    let sg=root;if(root.isConnected){btns.forEach((b,j)=>{b.classList.toggle('on',j===i);b.setAttribute('aria-pressed',String(j===i));});th.style.gridColumn=String(i+1);}else sg=$$('.seg')[at];
+    segGlide(r0,sg);
+  }},el('span',{class:'seg-l'},l)));
+  root.append(th,...btns);return root;
 }
 /* on a phone nothing ever opens with the keyboard up: it comes up when you tap a field */
 function focusTitle(input){focusIfKeyboard(input);}

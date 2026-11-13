@@ -28,10 +28,14 @@ const App={
     const views={welcome:viewWelcome,trip:r=>viewTrip(r,P.id),today:viewToday,studio:viewStudio,calendar:viewCalendar,more:viewMore,habit:r=>viewHabit(r,P.id),player:r=>viewPlayer(r,P.id),tool:r=>viewTool(r,P.hub,P.tool),setpage:r=>viewSetPage(r,P.id),search:viewSearch,planweek:r=>viewPlanWeek(r,P.anchor),organize:viewOrganize,reflect:viewReflect,inbox:viewInbox,tasks:viewTasks,habits:viewHabits,goals:r=>viewPlans(r,'goal'),projects:r=>viewPlans(r,'project'),plan:r=>viewPlan(r,P.id),routines:viewRoutines,routine:r=>viewRoutine(r,P.id),lists:viewLists,list:r=>viewList(r,P.id),areas:viewAreas,area:r=>viewArea(r,P.name),reviews:viewReviews,review:viewReview,insights:viewInsights,discover:viewDiscover,tools:viewTools,archive:viewArchive,trash:viewTrash,photos:viewPhotos,prefs:viewPrefs,foundation:viewFoundation,timer:viewTimer,modules:viewModules};
     document.body.classList.toggle('onboarding',S.view==='welcome');
     (views[S.view]||viewToday)(frag);if(!frag.querySelector('h1')){const nm={today:'Today',calendar:'Calendar',search:'Search',studio:'Studio'}[S.view]||String(S.view||'Today').replace(/^./,c=>c.toUpperCase());const pg=frag.querySelector('.page')||frag;pg.prepend(el('h1',{class:'sr-only'},nm));}
-    const flipBefore=S.lastView===S.view&&Date.now()<(S._flipUntil||0)?flipSnapshot(root):null;
+    const C0=S.cal||{},scope=`${S.view}|${S.sel}|${C0.mode}|${C0.anchor}|${JSON.stringify(P)}`;
+    const listBefore=S.lastView===S.view&&S._scope===scope&&!S.entering?listSnap(root):null;S._scope=scope;
+    closeFabMenu(true);
     root.replaceChildren(frag);
     animateFills(root,S);
-    if(flipBefore)flipPlay(root,flipBefore);
+    listPlay(root,listBefore);
+    rollCounts(root,`${S.view}|${S.sel}`);
+    swipeArrive();
     if(S.entering){const pg=root.firstElementChild;if(pg&&S._painted&&(S.view!=='today'||S.dir==='pop'||S.dir==='swiped'))pg.classList.add(S.dir==='push'?'viewin-push':S.dir==='pop'?'viewin-pop':S.dir==='swiped'?'viewin-swiped':'viewin');S.dir=null;S.entering=false;}
     S.lastView=S.view;
     const d2=$('#st-dock');if(d2)d2.scrollLeft=dockL;
@@ -46,10 +50,10 @@ const App={
     let origin=null;
     if(!fav.some(id=>id===cur||group[cur]===id)&&!TOPS.includes(cur)){const st=S.stack||[];for(let i=st.length-1;i>=0;i--){const v=st[i].view;if(TOPS.includes(v)){if(fav.includes(v))origin=v;break;}}}
     const anyFav=fav.some(isAct)||!!origin;
-    const tab=(id,label,icon)=>el('button',{class:'tab'+((id==='more'?!anyFav:isAct(id))?' act':''),'aria-current':(id==='more'?!anyFav:isAct(id))?'page':null,onclick:()=>{if(id===cur)window.scrollTo({top:0,behavior:'smooth'});else{S.stack=[];vt(()=>App.go(id));}}},el('span',{class:'ic',html:icon}),label);
+    const tab=(id,label,icon)=>el('button',{class:'tab'+((id==='more'?!anyFav:isAct(id))?' act':''),'aria-current':(id==='more'?!anyFav:isAct(id))?'page':null,onclick:()=>{if(id===cur)window.scrollTo({top:0,behavior:'smooth'});else{S.stack=[];const ic0=$('.nav .tab.act .ic'),r0=ic0&&ic0.getBoundingClientRect();App.go(id);tabGlide(r0);}}},el('span',{class:'ic',html:icon}),label);
     const iconOf=id=>id==='more'?sv('<circle cx="5" cy="12" r="1.8" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.8" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.8" fill="currentColor" stroke="none"/>',22):ic(PLACES[id].i,22);
     const short=id=>({'tools':'Tools'})[id]||PLACES[id].n;
-    nav.append(el('div',{class:'rail-brand'},'Life OS'),tab(fav[0],short(fav[0]),iconOf(fav[0])),tab(fav[1],short(fav[1]),iconOf(fav[1])),el('button',{class:'fab',id:'fab','aria-label':'Quick capture',html:sv(P.plus,26,2.2),onclick:()=>captureSheet(null)}),tab(fav[2],short(fav[2]),iconOf(fav[2])),tab('more','More',iconOf('more')));
+    nav.append(el('div',{class:'rail-brand'},'Life OS'),tab(fav[0],short(fav[0]),iconOf(fav[0])),tab(fav[1],short(fav[1]),iconOf(fav[1])),el('button',{class:'fab',id:'fab','aria-label':'Add','aria-haspopup':'menu','aria-expanded':'false',html:sv(P.plus,26,2.2),onclick:()=>fabMenu()}),tab(fav[2],short(fav[2]),iconOf(fav[2])),tab('more','More',iconOf('more')));
   },
 };
 /* minute tick and day rollover */

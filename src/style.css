@@ -593,8 +593,7 @@ mark{background:#D6E4DC;color:inherit;border-radius:3px;padding:0 1px}
 .saveas.compact{grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
 .saveas.compact .tl{min-height:66px;padding:10px 4px 8px;border-radius:14px;align-items:center;justify-content:center;gap:5px;text-align:center}
 .saveas.compact .tl b{font-size:12.5px;line-height:1.15}
-.tl.sug{background:var(--accent-soft);border-color:var(--accent)}
-.saveas:not(.compact) .tl.sug::after{content:"Suggested";position:absolute;top:12px;right:12px;font-size:11px;font-weight:600;color:var(--accent-deep)}
+/* no tile is ever pre-selected: the "Looks like a …" hint above carries the suggestion, the tiles are plain options */
 .caphint-b{display:flex;align-items:center;gap:8px;width:100%;min-height:44px;padding:8px 12px;border-radius:14px;background:var(--accent-soft);color:var(--accent-deep);font-size:14.5px;text-align:left}
 .caphint-b b{font-weight:600}.caphint-b .k{display:grid;flex:none}
 .photos.compact .photo{width:60px;height:60px}

@@ -258,6 +258,10 @@ function levelOf(v,full){if(v<=0)return 0;const r=v/Math.max(full,.5);return r>=
 /* ---------- small shared UI ---------- */
 let toastT,toastAt=0;
 function linkText(s){const out=[],re=/(https?:\/\/[^\s]+|www\.[^\s]+)/gi;let last=0,m;s=String(s||'');while((m=re.exec(s))){if(m.index>last)out.push(s.slice(last,m.index));const u=m[0].replace(/[).,;:!?]+$/,'');out.push(el('a',{href:/^www\./i.test(u)?'https://'+u:u,target:'_blank',rel:'noopener',style:'color:var(--accent-text);overflow-wrap:anywhere',onclick:e=>e.stopPropagation()},u));last=m.index+u.length;}if(last<s.length)out.push(s.slice(last));return out;}
+/* Where a toast should take you. null when you're already there, so the toast shows no › */
+const dest=(v,p={})=>{const S=App.state;if(S.view===v&&JSON.stringify(S.params||{})===JSON.stringify(p))return null;return()=>App.go(v,p);};
+const dayDest=d=>()=>{if(d)App.state.sel=d;App.state._fresh=true;App.go('today');};
+const taskDest=r=>r&&r.date?dayDest(r.date):dest('tasks');
 /* toast(msg, undo, label, {open}) — with open, tapping the toast takes you to where the thing went */
 function toast(msg,undo,label='Undo',{open=null}={}){toastAt=Date.now();const t=$('#toast');t.innerHTML='';t.classList.toggle('go',!!open);t.onclick=open?e=>{if(e.target.closest('button'))return;t.classList.remove('on');clearTimeout(toastT);while(sheetStack.length)sheetStack[sheetStack.length-1].close();open();}:null;t.setAttribute('role',open?'button':'status');t.append(el('span',{},msg));if(open)t.append(el('span',{class:'tgo','aria-hidden':'true',html:ic('chevr',14,2.4)}));if(undo)t.append(el('button',{onclick:()=>{App.state._restored=Date.now();undo();t.classList.remove('on');}},label));const ms=undo?4500:2000;t.style.setProperty('--life',ms+'ms');t.append(el('i',{class:'life'}));t.classList.remove('on');void t.offsetWidth;t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),ms);}
 /* iPhone has no vibrate API; toggling a hidden switch control gives a light system tap (iOS 18+) */
@@ -293,6 +297,8 @@ function openSheet({title,full=false,left,right,build,onClose,tryClose,raw=false
   inst.place=()=>{if(!pop)return;const w=380,h=sheet.offsetHeight;sheet.style.left=Math.max(12,Math.min(anchor.left,innerWidth-w-12))+'px';sheet.style.top=Math.max(12,Math.min(anchor.bottom+6,innerHeight-h-12))+'px';};
   if(pop){sheet.classList.add('pop');scrim.classList.add('clear');}
   build&&build(body,inst);inst.place();
+  /* any sheet you type in opens at full height on phones and stays put while the keyboard slides over it */
+  if(!pop&&innerWidth<900&&!sheet.classList.contains('full')&&body.querySelector('textarea,input:not([type]),input[type=text],input[type=search],input[type=url],input[type=email],input[type=tel],input[type=number]'))sheet.classList.add('full');
   body.addEventListener('scroll',()=>head&&head.classList.toggle('edge',body.scrollTop>0),{passive:true});
   void sheet.offsetWidth;
   /* Opened from Quick capture's "Save as": reshape the sheet underneath instead of stacking a new one */

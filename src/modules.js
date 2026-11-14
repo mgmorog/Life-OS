@@ -47,7 +47,7 @@ function habitSheet(rec,seed={}){
     if((D.photos||[]).length)body.append(el('div',{class:'sect'},'Attached'),photosEditor(D));
     if(isEdit)body.append(el('button',{class:'delete',onclick:()=>archiveFlow(rec,i)},'Archive habit'));else focusIfKeyboard(T.input);
   }});
-  function commit(){D.title=D.title.trim();if(D.howOften==='days')D.target=D.days.length;if(D.track==='time')D.dur=D.goalN;if(isEdit){Object.assign(rec,D);put(rec);toast('Saved');}else{const r=create('habit',D);toast('Habit added',null,'Undo',{open:()=>App.go('habits')});after&&after(r);}}
+  function commit(){D.title=D.title.trim();if(D.howOften==='days')D.target=D.days.length;if(D.track==='time')D.dur=D.goalN;if(isEdit){Object.assign(rec,D);put(rec);toast('Saved');}else{const r=create('habit',D);toast('Habit added',null,'Undo',{open:dest('habits')});after&&after(r);}}
   return inst;
 }
 function logHabit(h,dk,delta,{set}={}){h.logs=h.logs||{};const cur=typeof h.logs[dk]==='number'?h.logs[dk]:h.logs[dk]?h.goalN:0;const v=set!=null?set:Math.max(0,cur+delta);if(v)h.logs[dk]=v;else delete h.logs[dk];if(h.skips)delete h.skips[dk];put(h,{silent:true});syncHabitGoals(h);celebrateStreak(h,dk);App.refresh();}
@@ -96,7 +96,7 @@ function goalSheet(rec,opts={}){
     render();
     if((D.photos||[]).length)body.append(el('div',{class:'sect'},'Attached'),photosEditor(D));
     if(isEdit)body.append(el('button',{class:'delete',onclick:()=>archiveFlow(rec,i)},'Archive goal'));else focusIfKeyboard(T.input);}});
-  function commit(){D.title=D.title.trim();D.steps=(D.steps||[]).filter(s=>s.t.trim());if(isEdit){Object.assign(rec,D);put(rec);toast('Saved');}else{const r=create('goal',D);toast('Goal added',null,'Undo',{open:()=>App.go('plan',{id:r.id})});opts.after&&opts.after(r);}}
+  function commit(){D.title=D.title.trim();D.steps=(D.steps||[]).filter(s=>s.t.trim());if(isEdit){Object.assign(rec,D);put(rec);toast('Saved');}else{const r=create('goal',D);toast('Goal added',null,'Undo',{open:dest('plan',{id:r.id})});opts.after&&opts.after(r);}}
   return inst;
 }
 function projectSheet(rec,opts={}){
@@ -113,7 +113,7 @@ function projectSheet(rec,opts={}){
     render();
     if((D.photos||[]).length)body.append(el('div',{class:'sect'},'Attached'),photosEditor(D));
     if(isEdit)body.append(el('button',{class:'delete',onclick:()=>archiveFlow(rec,i)},'Archive project'));else focusIfKeyboard(T.input);}});
-  function commit(){D.title=D.title.trim();const st=(D.steps||[]).filter(s=>s.t.trim());D.steps=[];if(isEdit){Object.assign(rec,D);put(rec);toast('Saved');}else{const r=create('project',D);st.forEach((s,n)=>put({id:uid('t'),kind:'task',title:s.t,notes:'',steps:[],date:null,time:null,repeat:{type:'never',end:null},reminder:null,deadline:null,priority:'normal',part:r.id,area:r.area,order:n},{silent:true}));App.refresh();toast('Project added',null,'Undo',{open:()=>App.go('plan',{id:r.id})});opts.after&&opts.after(r);}}
+  function commit(){D.title=D.title.trim();const st=(D.steps||[]).filter(s=>s.t.trim());D.steps=[];if(isEdit){Object.assign(rec,D);put(rec);toast('Saved');}else{const r=create('project',D);st.forEach((s,n)=>put({id:uid('t'),kind:'task',title:s.t,notes:'',steps:[],date:null,time:null,repeat:{type:'never',end:null},reminder:null,deadline:null,priority:'normal',part:r.id,area:r.area,order:n},{silent:true}));App.refresh();toast('Project added',null,'Undo',{open:dest('plan',{id:r.id})});opts.after&&opts.after(r);}}
   return inst;
 }
 function goalRecap(g){const L=linkedOf(g),st=(g.steps||[]).filter(x=>x.d).length,td=L.tasks.filter(taskDone).length,pj=L.projects.filter(p=>p.finished).length,bits=[g.createdAt?`${span(Date.now()-g.createdAt)} in the making`:'',st?`${st} milestone${st>1?'s':''}`:'',td?`${td} task${td>1?'s':''} done`:'',pj?`${pj} project${pj>1?'s':''} finished`:'',g.track==='number'&&(g.numLog||[]).length?`${g.numLog.length} check-in${g.numLog.length>1?'s':''}`:''].filter(Boolean);return bits.length?bits.join(' · '):'';}

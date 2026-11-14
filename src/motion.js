@@ -163,9 +163,9 @@ function daySwap(update,dir){
   const body=()=>$$('#view>.page>*').filter(n=>n.tagName!=='HEADER'&&vis(n));
   const gs=body().slice(0,6).map(ghostOf),gt=ghostOf($('#view .hd .date span')),ge=ghostOf($('#view .hd-eyebrow .eyebrow'));
   update();
-  gs.forEach(g=>g&&g.animate([{opacity:1,transform:'none'},{opacity:0,transform:`translateX(${-dir*36}px)`}],{duration:200,easing:'cubic-bezier(.4,0,1,1)',fill:'forwards'}).finished.then(()=>g.remove()));
-  body().slice(0,6).forEach((n,i)=>n.animate([{opacity:0,transform:`translateX(${dir*54}px)`},{opacity:1,transform:'none'}],{duration:420,delay:40+i*30,easing:EASE,fill:'backwards'}));
-  [[gt,'#view .hd .date span'],[ge,'#view .hd-eyebrow .eyebrow']].forEach(([g,sel])=>{if(g)g.animate([{opacity:1,transform:'none'},{opacity:0,transform:`translateY(${-dir*22}px)`}],{duration:220,easing:EASE,fill:'forwards'}).finished.then(()=>g.remove());const n=$(sel);n&&n.animate([{opacity:0,transform:`translateY(${dir*26}px)`},{opacity:1,transform:'none'}],{duration:420,easing:SOFT,fill:'backwards'});});
+  gs.forEach(g=>g&&g.animate([{opacity:1,transform:'none'},{opacity:0,transform:`translateX(${-dir*36}px)`}],{duration:140,easing:'cubic-bezier(.4,0,1,1)',fill:'forwards'}).finished.then(()=>g.remove()));
+  body().slice(0,6).forEach((n,i)=>n.animate([{opacity:0,transform:`translateX(${dir*54}px)`},{opacity:1,transform:'none'}],{duration:280,delay:20+i*18,easing:EASE,fill:'backwards'}));
+  [[gt,'#view .hd .date span'],[ge,'#view .hd-eyebrow .eyebrow']].forEach(([g,sel])=>{if(g)g.animate([{opacity:1,transform:'none'},{opacity:0,transform:`translateY(${-dir*22}px)`}],{duration:150,easing:EASE,fill:'forwards'}).finished.then(()=>g.remove());const n=$(sel);n&&n.animate([{opacity:0,transform:`translateY(${dir*26}px)`},{opacity:1,transform:'none'}],{duration:280,easing:SOFT,fill:'backwards'});});
 }
 
 /* Time grid: tapping an hour opens a placeholder block there first, then the sheet rises */
@@ -235,9 +235,9 @@ function zoomFrom(r,update){
   /* a card-shaped panel grows from the card to the screen, then melts away over the new day */
   const box=el('div',{class:'zoom-box','aria-hidden':'true'});Object.assign(box.style,{left:r.left+'px',top:r.top+'px',width:r.width+'px',height:r.height+'px'});document.body.append(box);
   const W=innerWidth,H=innerHeight;
-  box.animate([{left:r.left+'px',top:r.top+'px',width:r.width+'px',height:r.height+'px',borderRadius:'22px'},{left:'0px',top:'0px',width:W+'px',height:H+'px',borderRadius:'0px'}],{duration:380,easing:SOFT,fill:'forwards'}).onfinish=()=>{
-    update();const pg=$('#view>.page');pg&&[...pg.children].slice(0,6).forEach((c,i)=>c.animate([{opacity:0,transform:'translateY(10px)'},{opacity:1,transform:'none'}],{duration:340,delay:i*40,easing:EASE,fill:'backwards'}));
-    box.animate([{opacity:1},{opacity:0}],{duration:260,easing:EASE,fill:'forwards'}).onfinish=()=>box.remove();};
+  box.animate([{left:r.left+'px',top:r.top+'px',width:r.width+'px',height:r.height+'px',borderRadius:'22px'},{left:'0px',top:'0px',width:W+'px',height:H+'px',borderRadius:'0px'}],{duration:230,easing:SOFT,fill:'forwards'}).onfinish=()=>{
+    update();const pg=$('#view>.page');pg&&[...pg.children].slice(0,6).forEach((c,i)=>c.animate([{opacity:0,transform:'translateY(8px)'},{opacity:1,transform:'none'}],{duration:220,delay:i*18,easing:EASE,fill:'backwards'}));
+    box.animate([{opacity:1},{opacity:0}],{duration:150,easing:EASE,fill:'forwards'}).onfinish=()=>box.remove();};
 }
 /* "What should I do now?": spin through what's on your plate, land on the pick, then let the rest settle */
 function nowReveal(){
@@ -254,9 +254,9 @@ function nowReveal(){
 /* Time grid: ease down to the current hour on open; the now line draws in */
 function gridGlide(g,gw,to,isToday){
   if(!motionOK()||!g.animate){g.scrollTop=to;return;}
-  const from=Math.max(0,to-3*HH);g.scrollTop=from;const t0=performance.now(),d=650;
+  const from=Math.max(0,to-1.5*HH);g.scrollTop=from;const t0=performance.now(),d=360;
   const step=t=>{const k=Math.min(1,(t-t0)/d),e=1-Math.pow(1-k,3);g.scrollTop=from+(to-from)*e;if(k<1)requestAnimationFrame(step);};requestAnimationFrame(step);
-  if(isToday){const b=gw.querySelector('.now .bar');b&&b.animate([{transform:'scaleX(0)'},{transform:'none'}],{duration:600,delay:420,easing:EASE,fill:'backwards'});}
+  if(isToday){const b=gw.querySelector('.now .bar');b&&b.animate([{transform:'scaleX(0)'},{transform:'none'}],{duration:360,delay:180,easing:EASE,fill:'backwards'});}
 }
 /* Sheets that open from a row you just tapped unfold from that row */
 let lastTap=null;
@@ -540,12 +540,12 @@ function photoClose(box,before,gone){if(!motionOK())return;const now=[...box.que
   const make=()=>{const t=addK(App.state.sel||todayK(),1),dt=fromK(t),n=dayItems?(()=>{try{const x=dayItems(t);return x.timed.length+x.anytime.length+x.allDay.length;}catch(e){return 0;}})():0;
     card=el('div',{class:'tpeek','aria-hidden':'true'},el('span',{class:'dt'},el('small',{},DOW[dt.getDay()].slice(0,3).toUpperCase()),el('b',{},String(dt.getDate()))),el('span',{class:'grow'},el('b',{class:'serif'},App.state.sel===todayK()?'Tomorrow':DOW[dt.getDay()]),el('small',{class:'tpl'},n?`${n} planned · keep pulling`:'Keep pulling')));
     card.insertAdjacentHTML('beforeend',`<svg class="tring" viewBox="0 0 26 26" width="26" height="26"><circle cx="13" cy="13" r="10" class="tr"/><circle cx="13" cy="13" r="10" class="fl" stroke-dasharray="${C}" stroke-dashoffset="${C}" transform="rotate(-90 13 13)"/></svg>`);document.body.append(card);};
-  const set=()=>{const p=Math.min(1,d/150);card.style.transform=`translateY(${-Math.min(d*.6,96)}px)`;card.style.opacity=Math.min(1,d/40);card.querySelector('.fl').setAttribute('stroke-dashoffset',C*(1-p));const wasFull=full;full=p>=1;if(full&&!wasFull){buzz(8);card.animate([{scale:'1'},{scale:'1.04'},{scale:'1'}],{duration:300,easing:SPRING});}if(full!==wasFull){const s=card.querySelector('.tpl');s.textContent=full?'Let go to open':s.textContent.replace('Let go to open','Keep pulling');}$('#view').style.transform=`translateY(${-Math.min(d,170)*.25}px)`;};
+  const set=()=>{const p=Math.min(1,d/90);card.style.transform=`translateY(${-Math.min(d*.9,96)}px)`;card.style.opacity=Math.min(1,d/24);card.querySelector('.fl').setAttribute('stroke-dashoffset',C*(1-p));const wasFull=full;full=p>=1;if(full&&!wasFull){buzz(8);card.animate([{scale:'1'},{scale:'1.04'},{scale:'1'}],{duration:300,easing:SPRING});}if(full!==wasFull){const s=card.querySelector('.tpl');s.textContent=full?'Let go to open':s.textContent.replace('Let go to open','Keep pulling');}$('#view').style.transform=`translateY(${-Math.min(d,170)*.25}px)`;};
   const end=go=>{const c=card,v=$('#view');card=null;y0=null;if(v){v.style.transition='transform .35s cubic-bezier(.2,.8,.2,1)';v.style.transform='';setTimeout(()=>{v.style.transition='';},380);}if(!c)return;
-    if(go){c.animate([{transform:c.style.transform,opacity:1},{transform:'translateY(-160px)',opacity:0}],{duration:320,easing:EASE,fill:'forwards'}).onfinish=()=>c.remove();goDay(addK(App.state.sel||todayK(),1));scrollTo(0,0);}
+    if(go){c.animate([{transform:c.style.transform,opacity:1},{transform:'translateY(-160px)',opacity:0}],{duration:200,easing:EASE,fill:'forwards'}).onfinish=()=>c.remove();goDay(addK(App.state.sel||todayK(),1));scrollTo(0,0);}
     else c.animate([{transform:c.style.transform,opacity:c.style.opacity},{transform:'none',opacity:0}],{duration:260,easing:EASE,fill:'forwards'}).onfinish=()=>c.remove();};
   addEventListener('touchstart',e=>{if(App.state.view!=='today'||e.touches.length>1||document.querySelector('.sheet.on,.confirm.on')||!atBottom()||!motionOK())return;y0=e.touches[0].clientY;d=0;full=false;},{passive:true});
-  addEventListener('touchmove',e=>{if(y0==null)return;const dy=y0-e.touches[0].clientY;if(dy<=0&&!card)return;if(!atBottom()&&!card){y0=null;return;}d=Math.max(0,dy-10);if(!card&&d>4)make();if(card)set();},{passive:true});
+  addEventListener('touchmove',e=>{if(y0==null)return;const dy=y0-e.touches[0].clientY;if(dy<=0&&!card)return;if(!atBottom()&&!card){y0=null;return;}d=Math.max(0,dy-6);if(!card&&d>4)make();if(card)set();},{passive:true});
   addEventListener('touchend',()=>{if(y0==null)return;if(card)end(full);else y0=null;},{passive:true});addEventListener('touchcancel',()=>{if(card)end(false);y0=null;},{passive:true});})();
 
 /* ---------- round 15 ---------- */

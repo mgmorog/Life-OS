@@ -32,16 +32,39 @@ function segGlide(r0,seg){
   th.animate([{transform:`translateX(${r0.left-r1.left}px) scaleX(${r0.width/r1.width})`,transformOrigin:'left center'},{transform:'none',transformOrigin:'left center'}],{duration:420,easing:SOFT});
 }
 
-/* Bottom bar: the green pill slides between tabs and the new icon gives a small bounce */
-function tabGlide(r0){
-  if(!motionOK())return;const ic=$('.nav .tab.act .ic');if(!ic)return;
-  ic.querySelector('svg')&&ic.querySelector('svg').animate([{transform:'scale(.82)'},{transform:'scale(1.14)',offset:.55},{transform:'none'}],{duration:450,easing:SPRING});
-  if(!r0)return;const r1=ic.getBoundingClientRect();if(Math.abs(r0.left-r1.left)<2)return;
-  const nav=ic.closest('.nav'),nr=nav.getBoundingClientRect();const pill=el('span',{class:'tab-pill'});Object.assign(pill.style,{left:(r0.left-nr.left)+'px',top:(r1.top-nr.top)+'px',width:r1.width+'px',height:r1.height+'px'});nav.prepend(pill);
-  ic.classList.add('pill-wait');
-  const a=pill.animate([{transform:'none'},{transform:`translateX(${r1.left-r0.left}px)`}],{duration:440,easing:SOFT,fill:'forwards'});
-  a.onfinish=()=>{ic.classList.remove('pill-wait');pill.remove();};
+/* Bottom bar: one highlight that lives in the bar and springs between tabs (iOS-style).
+   Interruptible: a second tap mid-glide redirects it from wherever it is. */
+const TAB_SPRING=(()=>{try{if(!CSS.supports('animation-timing-function','linear(0, 1)'))return null;
+  /* damped spring, ~3% overshoot */
+  const k=170,c=22,m=1,N=60,T=.6,pts=[];let x=0,v=0;const dt=T/(N*20);
+  for(let i=0;i<=N;i++){pts.push(+(x).toFixed(4));for(let j=0;j<20;j++){const a=(-k*(x-1)-c*v)/m;v+=a*dt;x+=v*dt;}}
+  pts[N]=1;return 'linear('+pts.join(',')+')';}catch(e){return null;}})();
+function tabInd(nav,id,force){
+  const ind=nav&&nav.querySelector('.tab-ind');if(!ind)return;
+  const btn=id&&nav.querySelector(`.tab[data-tab="${id}"]`),icn=btn&&btn.querySelector('.ic');
+  if(!icn||innerWidth>=900){ind.style.opacity='0';ind._x=null;return;}
+  const nr=nav.getBoundingClientRect(),r=icn.getBoundingClientRect();if(!r.width)return;
+  const x=Math.round(r.left-nr.left),y=Math.round(r.top-nr.top);
+  if(!force&&ind._x===x&&ind._y===y&&ind._w===r.width)return; /* already there: never restart */
+  /* where it is right now, even mid-flight */
+  let from=ind._x;
+  if(ind._a&&ind._a.playState==='running'){const m=new DOMMatrix(getComputedStyle(ind).transform);from=m.m41;ind._a.cancel();}
+  const inner=ind.firstElementChild;if(ind._s){ind._s.cancel();ind._s=null;}
+  Object.assign(ind.style,{width:r.width+'px',height:r.height+'px',top:y+'px',opacity:'1',transform:`translateX(${x}px)`});
+  ind._x=x;ind._y=y;ind._w=r.width;
+  if(from==null||force||!motionOK()||Math.abs(from-x)<1)return;
+  const d=Math.abs(x-from);
+  ind._a=ind.animate([{transform:`translateX(${from}px)`},{transform:`translateX(${x}px)`}],{duration:TAB_SPRING?560:440,easing:TAB_SPRING||SOFT});
+  /* a little stretch while it travels, settling back as it lands */
+  ind._s=inner.animate([{transform:'scaleX(1)'},{transform:`scaleX(${(1+Math.min(.22,d/500)).toFixed(3)}) scaleY(.94)`,offset:.3},{transform:'scaleX(1)'}],{duration:420,easing:'cubic-bezier(.3,.7,.4,1)'});
 }
+function tabPick(nav,id){
+  nav.querySelectorAll('.tab').forEach(b=>{const on=b.dataset.tab===id;b.classList.toggle('act',on);if(on)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');});
+  tabInd(nav,id);
+  const svg=motionOK()&&nav.querySelector(`.tab[data-tab="${id}"] .ic svg`);
+  if(svg)svg.animate([{transform:'scale(.9)'},{transform:'scale(1.07)',offset:.5},{transform:'none'}],{duration:380,easing:SPRING});
+}
+addEventListener('resize',()=>{const nav=$('#nav-in'),a=nav&&nav.querySelector('.tab.act');tabInd(nav,a&&a.dataset.tab,true);});
 
 /* Soft press: whatever you press sinks a little and springs back */
 const PRESS='.btn,.chip,.li,.focus-chip,.tl,.tmr,.heat:not(.out),.dtile,.t3slot,.t3add,.iconbtn,.adchip,.mitem,.linkbtn,.saveas .tl';

@@ -46,7 +46,7 @@ const App={
     this.navbar();
   },
   navbar(){
-    const S=this.state,s=get.settings(),nav=$('#nav-in');nav.innerHTML='';
+    const S=this.state,s=get.settings(),nav=$('#nav-in');
     const fav=(s.nav&&s.nav.length===3?s.nav:DEFAULT_SETTINGS.nav);
     const group={inbox:'inbox',tasks:'tasks',habits:'habits',habit:'habits',goals:'goals',projects:'projects',plan:null,routines:'routines',routine:'routines',player:'routines',lists:'lists',list:'lists',reviews:'reviews',review:'reviews',insights:'insights'};
     const cur=S.view;
@@ -54,10 +54,26 @@ const App={
     let origin=null;
     if(!fav.some(id=>id===cur||group[cur]===id)&&!TOPS.includes(cur)){const st=S.stack||[];for(let i=st.length-1;i>=0;i--){const v=st[i].view;if(TOPS.includes(v)){if(fav.includes(v))origin=v;break;}}}
     const anyFav=fav.some(isAct)||!!origin;
-    const tab=(id,label,icon)=>el('button',{class:'tab'+((id==='more'?!anyFav:isAct(id))?' act':''),'aria-current':(id==='more'?!anyFav:isAct(id))?'page':null,onclick:()=>{if(id===cur){tabTop();return;}else{S.stack=[];const ic0=$('.nav .tab.act .ic'),r0=ic0&&ic0.getBoundingClientRect();App.go(id);tabGlide(r0);}}},el('span',{class:'ic',html:icon}),label);
-    const iconOf=id=>id==='more'?sv('<circle cx="5" cy="12" r="1.8" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.8" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.8" fill="currentColor" stroke="none"/>',22):ic(PLACES[id].i,22);
-    const short=id=>({'tools':'Tools'})[id]||PLACES[id].n;
-    nav.append(el('div',{class:'rail-brand'},'Life OS'),tab(fav[0],short(fav[0]),iconOf(fav[0])),tab(fav[1],short(fav[1]),iconOf(fav[1])),el('button',{class:'fab',id:'fab','aria-label':'Quick capture',html:sv(P.plus,26,2.2),onclick:()=>captureSheet(null)}),tab(fav[2],short(fav[2]),iconOf(fav[2])),tab('more','More',iconOf('more')));
+    /* The bar is built once and kept, so the sliding highlight is never torn out mid-glide.
+       It is only rebuilt when the chosen favorites change. */
+    const sig=fav.join('|');
+    if(nav._sig!==sig){
+      nav.innerHTML='';nav._sig=sig;
+      const tab=(id,label,icon)=>{const b=el('button',{class:'tab','data-tab':id,onclick:()=>{
+        if(id===App.state.view){tabTop();return;}
+        if(nav._pending===id)return;nav._pending=id;
+        App.state.stack=[];tabPick(nav,id);
+        /* let the highlight start moving first, then draw the page */
+        requestAnimationFrame(()=>setTimeout(()=>{nav._pending=null;App.go(id);},0));
+      }},el('span',{class:'ic',html:icon}),el('span',{class:'tl-lbl'},label));return b;};
+      const iconOf=id=>id==='more'?sv('<circle cx="5" cy="12" r="1.8" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.8" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.8" fill="currentColor" stroke="none"/>',22):ic(PLACES[id].i,22);
+      const short=id=>({'tools':'Tools'})[id]||PLACES[id].n;
+      nav.append(el('span',{class:'tab-ind','aria-hidden':'true'},el('i')),el('div',{class:'rail-brand'},'Life OS'),tab(fav[0],short(fav[0]),iconOf(fav[0])),tab(fav[1],short(fav[1]),iconOf(fav[1])),el('button',{class:'fab',id:'fab','aria-label':'Quick capture',html:sv(P.plus,26,2.2),onclick:()=>captureSheet(null)}),tab(fav[2],short(fav[2]),iconOf(fav[2])),tab('more','More',iconOf('more')));
+    }
+    if(nav._pending)return;
+    let actId=null;
+    nav.querySelectorAll('.tab').forEach(b=>{const id=b.dataset.tab,on=id==='more'?!anyFav:isAct(id);b.classList.toggle('act',on);if(on){b.setAttribute('aria-current','page');actId=id;}else b.removeAttribute('aria-current');});
+    tabInd(nav,actId);
   },
 };
 /* minute tick and day rollover */

@@ -1226,9 +1226,13 @@ html,body{overflow-x:clip}
 .pressing{transform:scale(.965)!important;transition-duration:.12s!important;transition-timing-function:var(--ease)!important}
 .li.pressing,.tmr.pressing,.heat.pressing{transform:scale(.985)!important}
 /* bottom bar pill while it glides */
-.tab-pill{position:absolute;z-index:0;border-radius:15px;background:var(--accent-soft);pointer-events:none}
+.nav .in{position:relative}
+.tab-ind{position:absolute;left:0;top:0;z-index:0;pointer-events:none;opacity:0;will-change:transform}
+.tab-ind i{display:block;width:100%;height:100%;border-radius:15px;background:var(--accent-soft);will-change:transform}
+.nav .tab{transition:color .28s ease;font-weight:500;-webkit-tap-highlight-color:transparent}
 .nav .tab .ic{position:relative;z-index:1}
-.nav .tab.act .ic.pill-wait{background:transparent}
+@media (max-width:899px){.nav .tab.act{font-weight:500}.nav .tab.act .ic{background:transparent}}
+@media (min-width:900px){.tab-ind{display:none}}
 .nav .tab .ic svg{position:relative;z-index:2}
 .nav .fab{position:relative;z-index:3}
 /* springy sheets (phone) */
@@ -1259,7 +1263,7 @@ html,body{overflow-x:clip}
 /* Top 3 progress */
 .t3bar{height:3px;margin:6px 0 4px;background:var(--line-2)}
 .t3bar>i{display:block;height:100%;background:var(--accent);border-radius:2px}
-html.a-motion .tab-pill,html.a-motion .mo-ghost{display:none}
+html.a-motion .mo-ghost{display:none}
 /* round 2 motion */
 .ghost{animation:ghostLift .32s cubic-bezier(.3,1.35,.5,1)}
 @keyframes ghostLift{from{transform:rotate(0) scale(.96);box-shadow:var(--shadow-1)}}

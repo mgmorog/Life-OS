@@ -50,6 +50,19 @@ function timeSheet(e,dk){
   const c=formCtx(()=>{});const u=snapItem(e);
   inst=openSheet({title:e.time!=null?'Change the time':'Set a time',left:{label:'Cancel'},right:{label:'Done',onclick:()=>{setItemTime(e,dk,val);inst.close();toast(`Set for ${fmtT(val)}`,u);}},build:b=>{b.append(el('p',{class:'muted'},e.title),el('div',{class:'card'},c.wheel(()=>val,v=>{val=v;})));}});
 }
+/* Habit sessions: put a habit on a day (and optionally a time), move a planned session, or take it off */
+function planHabitDay(h,d,time=null){h.sessions=h.sessions||{};const was=clone(h.sessions);h.sessions[d]=Object.assign({},h.sessions[d],{time});put(h);App.refresh();toast(`Planned for ${relDay(d)}`,()=>{h.sessions=was;put(h);App.refresh();},'Undo',{open:App.state.view==='today'&&App.state.sel===d?null:dayDest(d)});}
+function habitPlanSheet(h){
+  let inst;const c=formCtx(()=>{});const tk=todayK();
+  inst=openSheet({title:'Plan a session',left:{label:'Close'},build:b=>{
+    const draw=()=>{b.innerHTML='';const up=Object.keys(h.sessions||{}).filter(d=>d>=tk).sort();
+      b.append(el('p',{class:'muted'},`${h.title}${h.target?` · ${h.target} times a week`:''}. Pick a day and it shows up on Today then. Press and hold it there to set a time.`));
+      if(up.length)b.append(el('div',{class:'sect'},'Planned'),el('div',{class:'list'},up.map(d=>{const se=h.sessions[d]||{};return el('div',{class:'li',style:'min-height:52px'},el('span',{class:'grow'},el('b',{style:'font-weight:500'},relDay(d)),se.time!=null?el('small',{},fmtT(se.time)):el('small',{},'Any time')),
+        el('button',{class:'chip',onclick:()=>{const mv=openSheet({title:'Move to',build:bb=>bb.append(el('div',{class:'card'},c.calendar(d,nd=>{if(nd&&nd!==d){const x=h.sessions[d];delete h.sessions[d];h.sessions[nd]=x||{time:null};put(h);toast(`Moved to ${relDay(nd)}`);}mv.close();draw();App.refresh();})))});}},'Move'),
+        el('button',{class:'chip',onclick:()=>{const x=h.sessions[d];delete h.sessions[d];put(h);draw();App.refresh();toast('Session removed',()=>{h.sessions[d]=x;put(h);draw();App.refresh();});}},'Remove'));})));
+      b.append(el('div',{class:'sect'},up.length?'Add another':'Pick a day'),el('div',{class:'card'},c.calendar(null,d=>{if(!d)return;if(d<tk){toast('That day has passed');return;}planHabitDay(h,d);draw();},{minK:tk})));};
+    draw();}});
+}
 function moveSheet(e,dk){
   let inst;const c=formCtx(()=>{});const u=snapItem(e);
   inst=openSheet({title:'Move to',build:b=>{b.append(el('p',{class:'muted'},e.title),el('div',{class:'card'},c.calendar(dk,d=>{if(!d||d===dk){inst.close();return;}moveItemDay(e,dk,d);inst.close();toast(`Moved to ${relDay(d)}`,u);})));}});
@@ -176,7 +189,7 @@ function dayCard(dk){
   }
   const loose=isToday?get.all('habit').filter(h=>(h.target||0)>habitWeek(h,dk)-(habitDone(h,dk)?1:0)&&!(h.sessions||{})[dk]&&!occursHabit(h,dk)&&!(h.days&&h.days.length)):[];
   if(loose.length){day.append(el('div',{class:'sect-h'},el('span',{class:'lbl'},'This week'),el('button',{class:'linkbtn small',onclick:()=>App.go('habits')},'Habits')));
-    const w=el('div',{});loose.slice(0,4).sort((a,b)=>habitDone(a,dk)-habitDone(b,dk)).forEach(h=>{const n=habitWeek(h,dk),on=habitDone(h,dk);const row=el('div',{class:'habit-mini tick-host'+(on?' done':'')},el('span',{class:'tick-hit'},tickBtn(on,()=>{toggleItem({kind:'habit',rec:h},dk);setTimeout(()=>App.refresh(),820);},'Log for today')),el('button',{class:'grow',style:'text-align:left;padding:10px 0',onclick:()=>App.go('habit',{id:h.id})},el('span',{class:'tt'},h.title)),el('span',{class:'meter','data-k':'hab:'+h.id,role:'img','aria-label':`${n} of ${h.target} this week`},Array.from({length:Math.min(h.target,7)},(_,i)=>el('i',{class:i<n?'on':''}))));w.append(row);});day.append(w);}
+    const w=el('div',{});loose.slice(0,4).sort((a,b)=>habitDone(a,dk)-habitDone(b,dk)).forEach(h=>{const n=habitWeek(h,dk),on=habitDone(h,dk);const row=el('div',{class:'habit-mini tick-host'+(on?' done':'')},el('span',{class:'tick-hit'},tickBtn(on,()=>{toggleItem({kind:'habit',rec:h},dk);setTimeout(()=>App.refresh(),820);},'Log for today')),el('button',{class:'grow',style:'text-align:left;padding:10px 0',onclick:()=>App.go('habit',{id:h.id})},el('span',{class:'tt'},h.title)),el('span',{class:'meter','data-k':'hab:'+h.id,role:'img','aria-label':`${n} of ${h.target} this week`},Array.from({length:Math.min(h.target,7)},(_,i)=>el('i',{class:i<n?'on':''}))));w.append(withPress(row,(x,y)=>openMenu(x,y,[{label:'Do it today',icon:'sun',onclick:()=>planHabitDay(h,dk)},{label:'Do it today at a time…',icon:'time',onclick:()=>{h.sessions=h.sessions||{};h.sessions[dk]={time:null};put(h,{silent:true});timeSheet({kind:'habit',id:h.id,rec:h,title:h.title,time:null},dk);}},{label:'Plan another day…',icon:'cal',onclick:()=>habitPlanSheet(h)},{label:'Open habit',icon:'habit',onclick:()=>App.go('habit',{id:h.id})}])));});day.append(w);}
   day.append(timeGrid(dk,timed));
   return day;
 }

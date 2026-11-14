@@ -1226,7 +1226,7 @@ html,body{overflow-x:clip}
 .pressing{transform:scale(.965)!important;transition-duration:.12s!important;transition-timing-function:var(--ease)!important}
 .li.pressing,.tmr.pressing,.heat.pressing{transform:scale(.985)!important}
 /* bottom bar pill while it glides */
-.tab-pill{position:fixed;z-index:16;border-radius:15px;background:var(--accent-soft);pointer-events:none}
+.tab-pill{position:absolute;z-index:0;border-radius:15px;background:var(--accent-soft);pointer-events:none}
 .nav .tab .ic{position:relative;z-index:1}
 .nav .tab.act .ic.pill-wait{background:transparent}
 .nav .tab .ic svg{position:relative;z-index:2}

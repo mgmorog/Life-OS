@@ -90,7 +90,9 @@ function pullRefresh(){
     place(v,false);b.firstChild.style.opacity=String(Math.min(1,v/24));
     arc.style.strokeDashoffset=(C*(1-p)).toFixed(1);arc.style.stroke=v>=PTR.at?'var(--accent)':'var(--h3)';};
   const close=()=>{const b=node();place(0,true);b.firstChild.style.opacity='0';
-    setTimeout(()=>{if(on||busy)return;b.classList.remove('p-ok','p-spin','p-ease');const v=view();if(v){v.classList.remove('ptr-ease','ptr-move');v.style.transform='';}},380);};
+    /* the "Up to date" pill rides up with the page instead of sitting over the date */
+    let fly=null;if(b.classList.contains('p-ok')){const pd=b.querySelector('.p-done');fly=pd.animate([{transform:'none',opacity:1},{transform:`translateY(${-PTR.hold}px)`,opacity:1,offset:.6},{transform:`translateY(${-PTR.hold-12}px)`,opacity:0}],{duration:360,easing:'cubic-bezier(.2,.8,.2,1)',fill:'forwards'});}
+    setTimeout(()=>{if(fly)fly.cancel();if(on||busy)return;b.classList.remove('p-ok','p-spin','p-ease');const v=view();if(v){v.classList.remove('ptr-ease','ptr-move');v.style.transform='';}},380);};
   const reset=()=>{if(!box)return;close();};
   const blocked=t=>sheetStack.length||busy||!!document.querySelector('.menu,.ghost,.lift')||(t&&t.closest&&t.closest('input,textarea,select,[contenteditable],.grid,.weekstrip,.sbody,.wcol,.hscroll,.dock,.mscrim'));
   const top=()=>(document.scrollingElement||document.documentElement).scrollTop;

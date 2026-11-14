@@ -37,7 +37,7 @@ function tabGlide(r0){
   if(!motionOK())return;const ic=$('.nav .tab.act .ic');if(!ic)return;
   ic.querySelector('svg')&&ic.querySelector('svg').animate([{transform:'scale(.82)'},{transform:'scale(1.14)',offset:.55},{transform:'none'}],{duration:450,easing:SPRING});
   if(!r0)return;const r1=ic.getBoundingClientRect();if(Math.abs(r0.left-r1.left)<2)return;
-  const pill=el('span',{class:'tab-pill'});Object.assign(pill.style,{left:r0.left+'px',top:r1.top+'px',width:r1.width+'px',height:r1.height+'px'});document.body.append(pill);
+  const nav=ic.closest('.nav'),nr=nav.getBoundingClientRect();const pill=el('span',{class:'tab-pill'});Object.assign(pill.style,{left:(r0.left-nr.left)+'px',top:(r1.top-nr.top)+'px',width:r1.width+'px',height:r1.height+'px'});nav.prepend(pill);
   ic.classList.add('pill-wait');
   const a=pill.animate([{transform:'none'},{transform:`translateX(${r1.left-r0.left}px)`}],{duration:440,easing:SOFT,fill:'forwards'});
   a.onfinish=()=>{ic.classList.remove('pill-wait');pill.remove();};

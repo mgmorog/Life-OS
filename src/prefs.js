@@ -20,8 +20,8 @@ const Gcal={events:[],status:'off',last:null,msg:'',mcp:null,_byDay:null,
   details(e){const ev=e.rec.ev||{},a=e.time!=null?fmtRange(e.time,e.time+e.dur):'All day';openSheet({title:'Calendar event',build:b=>{b.append(el('div',{class:'card'},el('h2',{style:'margin-top:0'},e.title),el('p',{class:'sub'},a),ev.location?el('p',{class:'sub'},ev.location):null),el('p',{class:'small muted'},'This comes from Google Calendar. Change it there and it updates here.'),/^https:\/\//.test(ev.htmlLink||'')?el('a',{class:'btn line block',href:ev.htmlLink,target:'_blank',rel:'noopener'},'Open in Google Calendar'):null);}});}
 };
 /* ---------- Settings ---------- */
-const APP_VER=96;
-const WHATS_NEW=['Moving to another day is quicker: the Tomorrow card opens faster, the time grid settles sooner, and a shorter pull at the bottom of Today takes you to the next day.'];
+const APP_VER=97;
+const WHATS_NEW=['The + button goes straight to Quick capture, with no menu in between.','Moving to another day is quicker: the Tomorrow card opens faster, the time grid settles sooner, and a shorter pull at the bottom of Today takes you to the next day.'];
 function whatsNew(){setSettings({seenVer:APP_VER});const inst=openSheet({title:`What’s new in ${APP_VER}`,left:{label:'Close'},build:b=>b.append(el('div',{class:'list'},WHATS_NEW.map(t=>el('div',{class:'li',style:'min-height:52px;align-items:flex-start;padding-block:12px'},el('span',{style:'display:grid;color:var(--accent-text);margin-top:2px',html:ic('check',16,2.4)}),el('span',{class:'grow'},t)))))});return inst;}
 let lastTS=null;
 function applyPrefs(){const s=get.settings(),c=document.documentElement.classList;const ts=s.textSize||'default';if(lastTS&&lastTS!==ts&&typeof textSizeGlide==='function')textSizeGlide(lastTS,ts);lastTS=ts;c.toggle('t-large',s.textSize==='large');c.toggle('t-larger',s.textSize==='larger');c.toggle('a-bold',!!s.bold);c.toggle('a-borders',!!s.borders);c.toggle('a-contrast',!!s.contrast);c.toggle('a-motion',!!s.reduceMotion);c.toggle('c-fade',s.completed==='fade');c.toggle('c-hide',s.completed==='hide');}

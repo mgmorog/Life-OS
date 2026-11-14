@@ -57,7 +57,7 @@ const App={
     const tab=(id,label,icon)=>el('button',{class:'tab'+((id==='more'?!anyFav:isAct(id))?' act':''),'aria-current':(id==='more'?!anyFav:isAct(id))?'page':null,onclick:()=>{if(id===cur){tabTop();return;}else{S.stack=[];const ic0=$('.nav .tab.act .ic'),r0=ic0&&ic0.getBoundingClientRect();App.go(id);tabGlide(r0);}}},el('span',{class:'ic',html:icon}),label);
     const iconOf=id=>id==='more'?sv('<circle cx="5" cy="12" r="1.8" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.8" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.8" fill="currentColor" stroke="none"/>',22):ic(PLACES[id].i,22);
     const short=id=>({'tools':'Tools'})[id]||PLACES[id].n;
-    nav.append(el('div',{class:'rail-brand'},'Life OS'),tab(fav[0],short(fav[0]),iconOf(fav[0])),tab(fav[1],short(fav[1]),iconOf(fav[1])),el('button',{class:'fab',id:'fab','aria-label':'Add','aria-haspopup':'menu','aria-expanded':'false',html:sv(P.plus,26,2.2),onclick:()=>fabMenu()}),tab(fav[2],short(fav[2]),iconOf(fav[2])),tab('more','More',iconOf('more')));
+    nav.append(el('div',{class:'rail-brand'},'Life OS'),tab(fav[0],short(fav[0]),iconOf(fav[0])),tab(fav[1],short(fav[1]),iconOf(fav[1])),el('button',{class:'fab',id:'fab','aria-label':'Quick capture',html:sv(P.plus,26,2.2),onclick:()=>captureSheet(null)}),tab(fav[2],short(fav[2]),iconOf(fav[2])),tab('more','More',iconOf('more')));
   },
 };
 /* minute tick and day rollover */

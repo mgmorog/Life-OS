@@ -594,7 +594,8 @@ mark{background:#D6E4DC;color:inherit;border-radius:3px;padding:0 1px}
 .saveas.compact .tl{min-height:66px;padding:10px 4px 8px;border-radius:14px;align-items:center;justify-content:center;gap:5px;text-align:center}
 .saveas.compact .tl b{font-size:12.5px;line-height:1.15}
 /* no tile is ever pre-selected: the "Looks like a …" hint above carries the suggestion, the tiles are plain options */
-.caphint-b{display:flex;align-items:center;gap:8px;width:100%;min-height:44px;padding:8px 12px;border-radius:14px;background:var(--accent-soft);color:var(--accent-deep);font-size:14.5px;text-align:left}
+.caphint-b{display:flex;align-items:center;gap:8px;width:100%;min-height:44px;padding:8px 12px;border-radius:14px;background:var(--accent);color:#fff;font-size:15px;font-weight:600;text-align:left;box-shadow:0 1px 2px rgba(31,61,48,.18)}
+.caphint-b .why{font-weight:400;opacity:.8}.caphint-b .chev{color:#fff;opacity:.85}
 .caphint-b b{font-weight:600}.caphint-b .k{display:grid;flex:none}
 .photos.compact .photo{width:60px;height:60px}
 .photos.compact .addphoto{width:auto;height:44px;display:inline-flex;gap:8px;padding:0 14px;border-radius:22px;font-size:14px;border-style:solid;border-width:1px;border-color:var(--line);background:var(--card)}
@@ -1516,3 +1517,13 @@ html.a-motion #st-dock .scard{transition:none}
 /* module icon beside page titles: same icon as in the lists, so the two are learned together */
 .tirow{display:flex;align-items:flex-start;gap:12px;margin-top:4px}.tirow>.pgtitle,.tirow>.otitle{flex:1;min-width:0;margin-top:0!important}
 .tic{width:40px;height:40px;border-radius:12px;background:var(--accent-soft);color:var(--accent-text);display:grid;place-items:center;flex:none;margin-top:4px}
+
+/* a toast you can tap goes to where the thing landed */
+.toast.go{cursor:pointer;padding-right:12px}.toast .tgo{display:grid;opacity:.7;padding:0;margin-left:-2px}
+
+/* Quick capture: while the keyboard is up, a row of types rides just above it */
+.kbturn{display:none;gap:6px;overflow-x:auto;scrollbar-width:none;padding:8px 12px calc(8px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line);background:var(--bg);flex:none}
+.kbturn::-webkit-scrollbar{display:none}
+.kb-up .kbturn{display:flex}
+.kbturn button{flex:none;display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 12px;border-radius:18px;background:#fff;border:1px solid var(--line);color:var(--ink);font-size:14px;font-weight:500}
+.kbturn button span{display:grid;color:var(--accent-text)}

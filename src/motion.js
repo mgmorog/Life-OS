@@ -289,7 +289,7 @@ function sheetFromRow(sheet,scrim){
   sheet.style.transition='none';scrim.classList.add('on');sheet.classList.add('on');
   const s=sheet.getBoundingClientRect(),dy=L.r.top-s.top,cut=Math.max(0,s.height-L.r.height);
   sheet.animate([{transform:`translateY(${dy}px)`,clipPath:`inset(0 0 ${cut}px 0 round 14px)`},{transform:'none',clipPath:'inset(0 0 0 0 round 24px 24px 0 0)'}],{duration:460,easing:SOFT});
-  [...sheet.children].forEach((c,i)=>c.animate([{opacity:0},{opacity:1}],{duration:260,delay:110+i*35,fill:'backwards'}));
+  [...sheet.children].forEach((c,i)=>c.animate([{opacity:.35},{opacity:1}],{duration:200,delay:i*12,easing:'ease-out',fill:'backwards'}));
   requestAnimationFrame(()=>requestAnimationFrame(()=>{sheet.style.transition='';}));return true;
 }
 /* Calendar: press and hold a day to peek at it; the card grows out of the square */

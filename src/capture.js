@@ -58,6 +58,8 @@ function suggestKind(title,notes,base){
   return null;
 }
 const kindName=id=>(TURN.find(x=>x[0]===id)||[])[2]||'';
+/* the capture hint reads as an action: "Make it a task" */
+const makeIt=k=>{const n=k==='allday'?'all-day item':kindName(k).toLowerCase();return `Make it ${/^[aeiou]/.test(n)?'an':'a'} ${n}`;};
 const DRAFT='lifeos-capture-draft';
 const readDraft=()=>{try{return JSON.parse(localStorage.getItem(DRAFT)||'null');}catch(e){return null;}};
 const writeDraft=d=>{try{if(d&&(d.title.trim()||d.notes.trim()||(d.photos||[]).length))localStorage.setItem(DRAFT,JSON.stringify({title:d.title,notes:d.notes,photos:d.photos||[]}));else localStorage.removeItem(DRAFT);}catch(e){}};
@@ -69,7 +71,7 @@ function saveCapture(D,from){
   if(!D.title.trim()&&!(D.photos||[]).length){const ls=D.notes.split('\n').map(x=>x.trim()).filter(Boolean),bul=ls.every(x=>/^([-•*]|\d+[.)])\s+/.test(x));if(ls.length>=2&&(bul||(ls.length>=3&&ls.every(x=>x.length<=60)))){const made=ls.map(x=>create('idea',{title:x.replace(/^([-•*]|\d+[.)])\s+/,'').slice(0,120),notes:'',photos:[],source:from||null}));toast(`${made.length} ideas saved`,()=>made.forEach(r=>remove(r.id,{silent:true})));return made[0];}}
   tidyIdea(D);
   if(s.captureTo==='today'&&!from){const w=parseWhen(D.title==='Unnamed Idea'?'':D.title);const r=create('task',{title:w.title||D.title,notes:D.notes,photos:D.photos,steps:[],date:w.date||(w.deadline?null:todayK()),time:w.time,repeat:{type:'never',end:null},reminder:w.time!=null?0:null,remUnit:'minute',deadline:w.deadline,priority:'normal',part:null,area:null});if(s.captureToast)toast(w.date&&w.date!==todayK()?`Added to ${relDay(w.date)}`:'Added to Today',()=>remove(r.id));return r;}
-  const r=create('idea',{title:D.title,notes:D.notes,photos:D.photos||[],source:from||null});flyToInbox(D.title==='Unnamed Idea'?((D.notes||'').split('\n')[0]||'Idea'):D.title);if(s.captureToast)toast('Saved to Inbox',()=>remove(r.id));return r;
+  const r=create('idea',{title:D.title,notes:D.notes,photos:D.photos||[],source:from||null});flyToInbox(D.title==='Unnamed Idea'?((D.notes||'').split('\n')[0]||'Idea'):D.title);if(s.captureToast)toast('Saved to Inbox',()=>remove(r.id),'Undo',{open:()=>App.go('inbox')});return r;
 }
 function captureSheet(rec,{from=null,photo=false}={}){
   const isEdit=!!rec;
@@ -79,7 +81,7 @@ function captureSheet(rec,{from=null,photo=false}={}){
   const can=()=>!busy()&&!!(D.title.trim()||D.notes.trim()||D.photos.length);
   const base=isEdit&&rec.createdAt?new Date(rec.createdAt):new Date();
   const commit=()=>{if(isEdit){tidyIdea(D);Object.assign(rec,D);put(rec);toast('Saved');}else{saveCapture(D,from);writeDraft(null);}};
-  const refreshHint=()=>{const q=!isEdit&&!D.notes.trim()&&!(D.photos||[]).length?quickLog(D.title):null;if(q){hint.innerHTML='';hint.hidden=false;hint.append(el('button',{class:'caphint-b ql',onclick:()=>{q.run();writeDraft(null);inst.close();}},el('span',{class:'k',html:ic('check',16,2.2)}),el('span',{class:'grow'},q.label),el('span',{class:'qlgo'},'Log it')));if(grid)$$('.tl',grid).forEach(b=>b.classList.remove('sug'));return;}const g=suggestKind(D.title,D.notes,base);hint.innerHTML='';hint.hidden=!g;if(g)hint.append(el('button',{class:'caphint-b',onclick:()=>go(g.kind)},el('span',{class:'k',html:ic((TURN.find(x=>x[0]===g.kind)||[])[1],16,2)}),el('span',{class:'grow'},`Looks like a ${kindName(g.kind).toLowerCase()}`,g.why?el('b',{},` · ${g.why}`):null),el('span',{class:'chev',html:ic('chevr',14,2.2)})));if(grid)$$('.tl',grid).forEach(b=>b.classList.toggle('sug',!!g&&b.dataset.k===g.kind));};
+  const refreshHint=()=>{const q=!isEdit&&!D.notes.trim()&&!(D.photos||[]).length?quickLog(D.title):null;if(q){hint.innerHTML='';hint.hidden=false;hint.append(el('button',{class:'caphint-b ql',onclick:()=>{q.run();writeDraft(null);inst.close();}},el('span',{class:'k',html:ic('check',16,2.2)}),el('span',{class:'grow'},q.label),el('span',{class:'qlgo'},'Log it')));if(grid)$$('.tl',grid).forEach(b=>b.classList.remove('sug'));return;}const g=suggestKind(D.title,D.notes,base);hint.innerHTML='';hint.hidden=!g;if(g)hint.append(el('button',{class:'caphint-b',onclick:()=>go(g.kind)},el('span',{class:'k',html:ic((TURN.find(x=>x[0]===g.kind)||[])[1],16,2)}),el('span',{class:'grow'},makeIt(g.kind),g.why?el('span',{class:'why'},` · ${g.why}`):null),el('span',{class:'chev',html:ic('chevr',14,2.2)})));if(grid)$$('.tl',grid).forEach(b=>b.classList.toggle('sug',!!g&&b.dataset.k===g.kind));};
   const go=kind=>{if(busy()){toast('Your photo is still uploading.');return;}const payload={title:D.title.trim(),notes:D.notes,photos:D.photos,createdAt:isEdit?rec.createdAt:Date.now()};routeInto(kind,payload,()=>{if(isEdit)remove(rec.id);else writeDraft(null);inst.close();});};
   const touched=()=>{writeDraft(isEdit?null:D);inst&&inst.rightBtn&&update_();refreshHint();};
   let update_=()=>{};
@@ -94,6 +96,7 @@ function captureSheet(rec,{from=null,photo=false}={}){
       grid=turnGrid(go,{compact:true});
       const smart=smartButton(D,()=>ph&&ph._files?ph._files():[],made=>{if(isEdit)remove(rec.id,{silent:true});else writeDraft(null);inst.close();App.refresh();toast(`${made.length} added`,()=>{made.forEach(r=>remove(r.id,{silent:true,hard:true}));if(isEdit)put(rec);App.refresh();});});
       body.append(T.wrap,hint,notesBox,ph,smart,another,el('div',{class:'sect'},isEdit?'Or turn into':'Or save as'),grid,moreTurn(go,()=>({title:D.title.trim(),notes:D.notes,photos:D.photos}),()=>{if(isEdit)remove(rec.id);else writeDraft(null);inst.close();}));
+      body.closest('.sheet').append(el('div',{class:'kbturn',role:'group','aria-label':'Save as'},TURN.map(([id,icon,n])=>el('button',{onpointerdown:e=>e.preventDefault(),onclick:()=>go(id)},el('span',{html:ic(icon,16,2)}),n))));
       if(draft)body.prepend(el('div',{class:'note good',role:'status',html:ic('undo',16,2)+'<span>Picked up where you left off.</span>'}));
       if(isEdit){const u=(`${D.title} ${D.notes}`.match(URL_RE)||[])[0];if(u)body.insertBefore(el('a',{class:'btn line block',href:/^www\./i.test(u)?'https://'+u:u,target:'_blank',rel:'noopener'},'Open link'),grid.previousSibling);
         body.append(el('button',{class:'delete',onclick:()=>{const c=clone(rec);remove(rec.id);inst.close();toast('Idea deleted',()=>put(c));}},'Delete idea'));}

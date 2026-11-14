@@ -252,7 +252,7 @@ function taskSheet(rec,seed={}){
       if(isEdit)body.append(el('button',{class:'delete',onclick:()=>deleteFlow(rec,occ||null,inst)},'Delete task'));
       if(!isEdit)focusIfKeyboard(T.input);
     }});
-  function commit(){D.title=D.title.trim();D.steps=(D.steps||[]).filter(s=>s.t.trim());const moved=!occ&&firstOccurrence(D,'date');if(isEdit){if(occ)return saveOcc(rec,D,occ,'date','task',()=>inst.close());saveEdit(rec,D);}else{const r=create('task',D);toast(moved?`Starts ${relDay(D.date)}`:D.date?(D.date===App.state.sel?'Task added':`Added to ${relDay(D.date)}`):'Task added');seed._after&&seed._after(r);if(!seed._after&&D.date&&App.state.view==='today'&&D.date!==App.state.sel){App.state.sel=D.date;App.refresh();}}}
+  function commit(){D.title=D.title.trim();D.steps=(D.steps||[]).filter(s=>s.t.trim());const moved=!occ&&firstOccurrence(D,'date');if(isEdit){if(occ)return saveOcc(rec,D,occ,'date','task',()=>inst.close());saveEdit(rec,D);}else{const r=create('task',D);toast(moved?`Starts ${relDay(D.date)}`:D.date?(D.date===App.state.sel?'Task added':`Added to ${relDay(D.date)}`):'Task added',null,'Undo',{open:D.date?()=>{App.state.sel=D.date;App.state._fresh=true;App.go('today');}:()=>App.go('tasks')});seed._after&&seed._after(r);if(!seed._after&&D.date&&App.state.view==='today'&&D.date!==App.state.sel){App.state.sel=D.date;App.refresh();}}}
   return inst;
 }
 function deleteFlow(rec,occ,inst){

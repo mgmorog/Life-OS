@@ -171,10 +171,26 @@ function renderFields(body,fields,D,update){
     if(f.type==='select'&&f.id==='mood'&&optsOf(f).join()===MOODS.join()){body.append(el('div',{class:'field'},el('span',{class:'eyebrow'},f.label),moodPicker(D[f.id],v=>{D[f.id]=v;update();})));return;}
     if(f.type==='select'){const o=optsOf(f);input=el('select',{id,onchange:e=>{D[f.id]=e.target.value;update();}},o.map(x=>{const op=el('option',{value:x},x);if(D[f.id]===x)op.selected=true;return op;}));}
     else if(f.type==='area'){body.append(fieldNotes(id,f.label,f.ph||'',D[f.id]||'',v=>{D[f.id]=v;update();}));return;}
-    else{input=el('input',{id,type:f.type==='number'?'number':f.type==='date'?'date':f.type==='time'?'time':'text',inputmode:f.type==='number'?'decimal':null,value:D[f.id]??'',autocomplete:'off',oninput:e=>{D[f.id]=f.type==='number'?(e.target.value===''?'':+e.target.value):e.target.value;update();}});if(!firstInput&&f.type==='text')firstInput=input;}
+    else{const kb=fieldKeyboard(f);input=el('input',{id,type:kb.type,inputmode:kb.mode,autocapitalize:kb.cap,autocorrect:kb.cap?'off':null,spellcheck:kb.cap?'false':null,value:D[f.id]??'',autocomplete:'off',oninput:e=>{D[f.id]=f.type==='number'?numIn(e.target.value):e.target.value;update();}});if(!firstInput&&f.type==='text')firstInput=input;}
     body.append(el('label',{class:'field'},el('span',{class:'eyebrow'},f.label),input));});
+  chainEnter(body);
   return firstInput;
 }
+// Keyboard per field: whole numbers get the 0–9 pad, amounts/measures the decimal pad, phones the phone pad, links the URL keyboard, IDs no autocorrect.
+const WHOLE_IDS=new Set(['every','day','min','servings','left','supply','water','level','mods','done','cneed','cgot','pages','page','lessons','serves','atMiles']);
+const ID_IDS=new Set(['member','group','conf']);
+function fieldKeyboard(f){
+  if(f.type==='number')return {type:'text',mode:WHOLE_IDS.has(f.id)||/days|minutes|level|portions|glasses/i.test(f.label)?'numeric':'decimal'};
+  if(f.type==='date'||f.type==='time')return {type:f.type,mode:null};
+  if(f.id==='phone'||/phone/i.test(f.label))return {type:'tel',mode:'tel'};
+  if(f.id==='url'||/^link$/i.test(f.label))return {type:'url',mode:'url'};
+  if(ID_IDS.has(f.id))return {type:'text',mode:null,cap:'characters'};
+  return {type:'text',mode:null};
+}
+// Number fields are text inputs (no desktop spinners or scroll-wheel changes); tolerate pasted "$1,250.75".
+function numIn(v){const t=String(v).replace(/[\s$,]/g,'');if(t==='')return '';const n=+t;return isNaN(n)?'':n;}
+// Return key: "Next" moves to the next field, the last one says "Done" and closes the keyboard.
+function chainEnter(body){const ins=[...body.querySelectorAll('input:not([type=date]):not([type=time]):not([type=checkbox])')];ins.forEach((inp,i)=>{const nx=ins[i+1];inp.setAttribute('enterkeyhint',nx?'next':'done');inp.addEventListener('keydown',e=>{if(e.key!=='Enter'||e.isComposing)return;e.preventDefault();if(nx)nx.focus();else inp.blur();});});}
 function fieldDefaults(fields,D){fields.forEach(f=>{if(D[f.id]!==undefined)return;if(f.def!=null)D[f.id]=f.def;else if(f.type==='select')D[f.id]=optsOf(f)[0];else if(f.type==='date'&&f.id!=='last'&&!f.blank)D[f.id]=todayK();});return D;}
 function askFields({title,fields,D={},save,addLabel='Save',word='change',isEdit=true,req=true}){fieldDefaults(fields,D);const titleF=fields.find(f=>f.type==='text'||f.type==='area');const can=()=>!req||!titleF||!!String(D[titleF.id]??'').trim();
   return formSheet({title,addLabel,D,word,isEdit,canAdd:can,commit:()=>save(D),build:(body,update)=>{renderFields(body,fields,D,update);}});}

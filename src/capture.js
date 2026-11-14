@@ -96,6 +96,8 @@ function captureSheet(rec,{from=null,photo=false}={}){
       grid=turnGrid(go,{compact:true});
       const smart=smartButton(D,()=>ph&&ph._files?ph._files():[],made=>{if(isEdit)remove(rec.id,{silent:true});else writeDraft(null);inst.close();App.refresh();toast(`${made.length} added`,()=>{made.forEach(r=>remove(r.id,{silent:true,hard:true}));if(isEdit)put(rec);App.refresh();});});
       body.append(T.wrap,hint,notesBox,ph,smart,another,el('div',{class:'sect'},isEdit?'Or turn into':'Or save as'),grid,moreTurn(go,()=>({title:D.title.trim(),notes:D.notes,photos:D.photos}),()=>{if(isEdit)remove(rec.id);else writeDraft(null);inst.close();}));
+      /* Quick capture opens at full height, like Apple's compose sheets, so the keyboard slides up over a sheet that never moves */
+      if(!isEdit)body.closest('.sheet').classList.add('pinned');
       body.closest('.sheet').append(el('div',{class:'kbturn',role:'group','aria-label':'Save as'},TURN.map(([id,icon,n])=>el('button',{onpointerdown:e=>e.preventDefault(),onclick:()=>go(id)},el('span',{html:ic(icon,16,2)}),n))));
       if(draft)body.prepend(el('div',{class:'note good',role:'status',html:ic('undo',16,2)+'<span>Picked up where you left off.</span>'}));
       if(isEdit){const u=(`${D.title} ${D.notes}`.match(URL_RE)||[])[0];if(u)body.insertBefore(el('a',{class:'btn line block',href:/^www\./i.test(u)?'https://'+u:u,target:'_blank',rel:'noopener'},'Open link'),grid.previousSibling);

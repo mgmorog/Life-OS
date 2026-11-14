@@ -6,7 +6,7 @@ const App={
     const y=scrollY;S.scrolls=S.scrolls||{};S.scrolls[S.view]=y;
     if(view==='today')S._fresh=S._fresh||S.view!=='today';
     (S.stack=S.stack||[]).push({view:S.view,params:S.params,y});if(S.stack.length>30)S.stack.shift();
-    S.view=view;S.params=params;S.entering=true;S.dir=TOPS.includes(view)?'tab':'push';
+    if(view==='tasks')S.taskTab=params.tab||'all';S.view=view;S.params=params;S.entering=true;S.dir=TOPS.includes(view)?'tab':'push';
     try{if(/^[a-z-]+$/.test(view))history.replaceState(null,'','#'+(view==='settings'?'prefs':view));}catch(e){}
     this.render();window.scrollTo(0,0);
   },

@@ -117,7 +117,7 @@ function weekPlanCard(hs){const tk=todayK(),ws=weekStartOf(today()),days=[];for(
     el('div',{class:'wkgrid',style:`grid-template-columns:minmax(0,1fr) repeat(${days.length},36px)`},el('span'),...days.map(d=>el('span',{class:'small muted',style:'text-align:center;font-weight:600'},nm(d))),
       ...hs.flatMap(h=>{const left=Math.max(0,(h.target||1)-habitWeek(h,tk)),pl=days.filter(d=>(h.sessions||{})[d]).length;return[el('span',{class:'wkname'},el('b',{},h.title),el('small',{class:pl>=left?'':'late'},pl>=left?'All planned':`${left-pl} to plan`)),...days.map(d=>{const on=!!(h.sessions||{})[d];return el('button',{class:'wkcell'+(on?' on':''),'aria-pressed':String(on),'aria-label':`${on?'Unplan':'Plan'} ${h.title} on ${DOW[fromK(d).getDay()]}`,onclick:()=>{h.sessions=h.sessions||{};if(on)delete h.sessions[d];else h.sessions[d]={time:h.setTime??null};put(h);}},on?el('span',{html:ic('check',13,3)}):null);})];})));}
 function viewTasks(root){
-  const S=App.state;if(!['today','upcoming','anytime','waiting','done'].includes(S.taskTab))S.taskTab='today';
+  const S=App.state;if(!['all','today','upcoming','anytime','waiting','done'].includes(S.taskTab))S.taskTab='all';
   const tk=todayK(),all=get.all('task').filter(t=>!onHold(t)),tasks=areaOnly(all,'task'),page=el('div',{class:'page'}),held=get.all('task').filter(t=>isOpenTask(t)&&onHold(t)).length;
   const occToday=t=>t.date&&occursOn(t.date,t.repeat,tk,t.skip);
   const late0=carried().filter(t=>tasks.includes(t));
@@ -132,13 +132,21 @@ function viewTasks(root){
   page.append(orgHead('Tasks',left?`${left} left today`:todayDone.length?'All done today':all.filter(isOpenTask).length?`${all.filter(isOpenTask).length} open`:'',{type:'Tasks',menu:()=>[{label:'Waiting on someone',icon:'time',onclick:()=>{S.taskTab='waiting';App.refresh();}},{label:'Select tasks',icon:'check',onclick:()=>{S.taskSel=new Set();App.refresh();}},{label:S.taskGroup?'Stop grouping':'Group by life area',icon:'grid',onclick:()=>{S.taskGroup=!S.taskGroup;App.refresh();}},{label:'Archive',icon:'archive',onclick:()=>App.go('archive')}]}));
   if(S.taskSel)page.append(selBar());
   if(S.taskTab!=='waiting')taskQuickAdd(page,S.taskTab==='today'||S.taskTab==='done'?tk:S.taskTab==='upcoming'?addK(tk,1):null);
-  page.append(viewsRow([['today','Today',left],['upcoming','Upcoming',S.taskTab==='upcoming'?upcoming.length:0],['anytime','Anytime',S.taskTab==='anytime'?anytime.length:0],...(get.all('wait').length||S.taskTab==='waiting'?[['waiting','Waiting',waitOpen().filter(w=>w.follow&&w.follow<=tk).length]]:[]),['done','Done',0]],S.taskTab,v=>{S.taskTab=v;App.refresh();},'task',all));
+  page.append(viewsRow([['all','All',0],['today','Today',left],['upcoming','Upcoming',S.taskTab==='upcoming'?upcoming.length:0],['anytime','Anytime',S.taskTab==='anytime'?anytime.length:0],...(get.all('wait').length||S.taskTab==='waiting'?[['waiting','Waiting',waitOpen().filter(w=>w.follow&&w.follow<=tk).length]]:[]),['done','Done',0]],S.taskTab,v=>{S.taskTab=v;App.refresh();},'task',all));
   const note=areaNote('task');if(note)page.append(note);
   let cpId=null;if(S.taskTab==='today'){const cp=carriedPrompt(tasks);if(cp){page.append(cp);cpId=cp._tid;}}
   const sec=(label,list,row0,cls)=>{if(!list.length)return;const row=S.taskSel?(t=>selRow(t)):row0;
     if(S.taskGroup){if(label)page.append(el('div',{class:'sh2 shstick'},el('span',{class:'lbl '+(cls||'')},`${label} · ${list.length}`)));byArea(list).forEach(([a,g])=>page.append(el('div',{class:'ogroup'},a),el('div',{class:'list'},g.map(t=>row(t,true)))));return;}
     if(label)page.append(el('div',{class:'sh2 shstick'},el('span',{class:'lbl '+(cls||'')},`${label} · ${list.length}`)));page.append(el('div',{class:'list'},list.map(t=>row(t,false))));};
-  if(S.taskTab==='today'){
+  if(S.taskTab==='all'){
+    /* All open tasks: Anytime on top, then by date (overdue first) */
+    const dated=[...late.map(t=>[t,t.date&&t.date<tk?t.date:(t.deadline||tk)]),...todayOpen.filter(t=>!late.includes(t)).map(t=>[t,tk]),...upcoming];
+    if(!anytime.length&&!dated.length)page.append(emptyOf('No open tasks','Add one above, or capture an idea and make it a task.'));
+    sec(dated.length?'Anytime':'',anytime,(t,g)=>taskRow(t,tk,{grouped:g}));
+    sec('Overdue',late,(t,g)=>taskRow(t,t.date&&t.date<tk?t.date:tk,{late:!!(t.date&&t.date<tk),grouped:g}),'olate');
+    const rest=dated.filter(([t])=>!late.includes(t)),days=[...new Set(rest.map(x=>x[1]))].sort();
+    days.forEach(d=>{const g=rest.filter(x=>x[1]===d);page.append(el('div',{class:'sh2 shstick'},el('span',{class:'lbl'},relDay(d)),el('span',{class:'small muted'},String(g.length))),el('div',{class:'list'},g.map(([t])=>S.taskSel?selRow(t):taskRow(t,d))));});
+  }else if(S.taskTab==='today'){
     sec('Overdue',late.filter(t=>t.id!==cpId),(t,g)=>taskRow(t,t.date&&t.date<tk?t.date:tk,{late:!!(t.date&&t.date<tk),grouped:g}),'olate');
     sec(late.length?'Today':'',todayOpen,(t,g)=>taskRow(t,tk,{grouped:g}));
     if(!late.length&&!todayOpen.length&&!todayDone.length)page.append(emptyOf('Nothing for today','Add a task, or pick one up from Anytime.'));

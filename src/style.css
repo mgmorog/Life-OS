@@ -1532,6 +1532,6 @@ html.a-motion #st-dock .scard{transition:none}
 
 /* Quick capture on phones: full height from the start, pinned in place. The keyboard covers the bottom; nothing jumps or leaves a gap. */
 @media(max-width:899px){
-  .sheet.pinned,.sheet.pinned.typing:not(.full){top:44px;bottom:0;height:auto;max-height:none}
-  .sheet.pinned .sbody,.sheet.pinned.typing .sbody{padding-bottom:calc(var(--kb,0px) + 72px)}
+  .sheet.pinned,.sheet.pinned.typing:not(.full),.sheet.full,.sheet.full.typing{top:44px;bottom:0;height:auto;max-height:none}
+  .sheet.pinned .sbody,.sheet.pinned.typing .sbody,.sheet.full .sbody,.sheet.full.typing .sbody{padding-bottom:calc(var(--kb,0px) + 72px)}
 }

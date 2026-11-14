@@ -1467,3 +1467,18 @@ html.a-motion .now .bar::after{animation:none;opacity:0}
 .ddin>*:first-child{justify-self:stretch}
 @media (prefers-reduced-motion:reduce){#st-dock .scard{transition:none}}
 html.a-motion #st-dock .scard{transition:none}
+/* v95 · round 18 motion */
+.li.xbusy{position:relative;overflow:hidden}
+.xfill{position:absolute;inset:0;background:var(--accent-soft);transform:scaleX(0);transform-origin:left;pointer-events:none;z-index:0}
+.li.xbusy>*:not(.xfill){position:relative;z-index:1}
+.xok{color:var(--accent-text)!important;display:inline-flex;align-items:center;gap:4px;font-weight:600}
+.page.held .ring,.page.held .hstats,.page.held .segs,.page.held .progress,.page.held .calgrid,.page.held .oring,.page.held .meter,.page.held .dstat{filter:grayscale(.85) opacity(.6)}
+.t3grip{margin-left:auto;width:36px;height:40px;display:grid;place-items:center;color:var(--ink-3);touch-action:none;cursor:grab;flex:none}
+.t3row.t3lift{position:relative;z-index:3;background:var(--card);border-radius:12px;box-shadow:0 10px 24px rgba(20,30,25,.16)}
+.t3n.t3roll{position:relative;overflow:hidden}
+.t3old{position:absolute;left:0;right:0;top:0;text-align:inherit}
+.opin{position:relative}
+.opinic{position:absolute;top:10px;right:10px;color:var(--accent-text);display:grid}
+.fring{position:relative}
+.p5f{position:absolute;left:50%;top:38%;font-weight:800;color:var(--accent-text);font-size:15px;pointer-events:none;white-space:nowrap;z-index:2}
+.t3new{display:block}

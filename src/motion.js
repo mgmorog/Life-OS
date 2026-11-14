@@ -639,3 +639,33 @@ function dateDrop(want,go){const S=App.state,open=want===undefined?!S.dateDrop:w
 function dateDropIn(root){if(!App.state._ddIn)return;App.state._ddIn=false;const d=root.querySelector('.ddrop');if(!d||!motionOK())return;const h=d.offsetHeight;
   d.animate([{height:'0px',opacity:0},{height:h+'px',opacity:1}],{duration:380,easing:SOFT});d.querySelectorAll('.ddin>*').forEach((n,i)=>n.animate([{opacity:0,transform:'translateY(-8px)'},{opacity:1,transform:'none'}],{duration:280,delay:60+i*50,easing:EASE,fill:'backwards'}));}
 document.addEventListener('pointerdown',e=>{if(!App.state.dateDrop||App.state.view!=='today')return;if(e.target.closest('.ddrop,.hd .date'))return;dateDrop(false);},true);
+
+/* ---------- round 18 ---------- */
+/* export: the row fills like a progress bar while the file is made, then shows a check */
+async function exportFill(row,run){if(row._busy)return;row._busy=true;const sub=row.querySelector('small'),was=sub?sub.textContent:'';const bar=el('span',{class:'xfill','aria-hidden':'true'});row.classList.add('xbusy');row.prepend(bar);if(sub)sub.textContent='Preparing…';
+  const a=motionOK()?bar.animate([{transform:'scaleX(0)'},{transform:'scaleX(.6)',offset:.4},{transform:'scaleX(.85)'}],{duration:1400,easing:'cubic-bezier(.3,.1,.3,1)',fill:'forwards'}):null;const t0=Date.now();
+  try{await run();}catch(e){}await new Promise(r=>setTimeout(r,Math.max(0,600-(Date.now()-t0))));
+  const cur=a?getComputedStyle(bar).transform:'none';a&&a.cancel();if(motionOK())await bar.animate([{transform:cur==='none'?'scaleX(.85)':cur},{transform:'scaleX(1)'}],{duration:220,easing:EASE,fill:'forwards'}).finished.catch(()=>{});
+  if(sub){sub.innerHTML=ic('check',13,3)+' Saved to your files';sub.classList.add('xok');if(motionOK())sub.animate([{opacity:0,transform:'translateY(4px)'},{opacity:1,transform:'none'}],{duration:280,easing:EASE});}
+  setTimeout(()=>{bar.remove();row.classList.remove('xbusy');if(sub){sub.textContent=was;sub.classList.remove('xok');}row._busy=false;},2400);}
+/* pausing: the page softens to grey and an "On hold"/"Paused" badge slides in; resuming brings the color back */
+function heldPlay(root){const d=App.state._held;if(!d)return;App.state._held=0;if(!motionOK())return;const pg=root.querySelector('.page');if(!pg)return;
+  const tg=pg.querySelectorAll('.ring,.hstats,.segs,.progress,.calgrid,.oring,.meter,.dstat');const from=d>0?'none':'grayscale(.85) opacity(.6)',to=d>0?'grayscale(.85) opacity(.6)':'none';
+  tg.forEach(n=>n.animate([{filter:from},{filter:to}],{duration:480,easing:EASE}));const b=pg.querySelector('[data-hb]');if(b&&d>0)b.animate([{opacity:0,transform:'translateX(-10px)'},{opacity:1,transform:'none'}],{duration:340,delay:120,easing:SOFT,fill:'backwards'});}
+/* Top 3: drag a priority by its handle; the others make room and the numbers roll to the new order */
+function t3Move(dk,from,to){const l=t3Get(dk).slice();const prev={};l.forEach((x,i)=>prev[x.id]=i);const[x]=l.splice(from,1);l.splice(to,0,x);App.state._t3prev=prev;t3Set(dk,l);}
+function t3Grip(dk,i){const g=el('span',{class:'t3grip',role:'button','aria-label':'Drag to reorder',html:'<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="9" cy="6" r="1.7"/><circle cx="15" cy="6" r="1.7"/><circle cx="9" cy="12" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="9" cy="18" r="1.7"/><circle cx="15" cy="18" r="1.7"/></svg>'});
+  g.addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();const row=g.closest('.t3row'),card=row.parentElement,rows=[...card.querySelectorAll(':scope>.t3row')],H=row.offsetHeight,i0=rows.indexOf(row),y0=e.clientY;let to=i0;App.dragging=true;row.classList.add('t3lift');buzz(6);
+    const mv=ev=>{const dy=Math.max(-H*i0-8,Math.min(H*(rows.length-1-i0)+8,ev.clientY-y0));row.style.transform=`translateY(${dy}px) scale(1.02)`;const t=Math.max(0,Math.min(rows.length-1,i0+Math.round(dy/H)));if(t!==to){to=t;buzz(4);}
+      rows.forEach((o,j)=>{if(o===row)return;let s=0;if(i0<to&&j>i0&&j<=to)s=-H;if(i0>to&&j<i0&&j>=to)s=H;o.style.transition='transform .25s cubic-bezier(.2,.8,.2,1)';o.style.transform=s?`translateY(${s}px)`:'';});};
+    const up=()=>{removeEventListener('pointermove',mv);removeEventListener('pointerup',up);removeEventListener('pointercancel',up);App.dragging=false;
+      if(to===i0){row.classList.remove('t3lift');row.style.transition='transform .3s cubic-bezier(.3,1.15,.5,1)';row.style.transform='';return;}t3Move(dk,i0,to);};
+    addEventListener('pointermove',mv);addEventListener('pointerup',up);addEventListener('pointercancel',up);});return g;}
+function t3Roll(root){const prev=App.state._t3prev;if(!prev)return;App.state._t3prev=null;if(!motionOK())return;root.querySelectorAll('.t3row[data-k]').forEach((r,i)=>{const id=r.dataset.k.slice(3),p=prev[id];if(p==null||p===i)return;const n=r.querySelector('.t3n');if(!n)return;
+  const d=i<p?1:-1;n.classList.add('t3roll');const nw=el('span',{class:'t3new'},n.textContent);n.textContent='';const old=el('span',{class:'t3old'},String(p+1));n.append(nw,old);nw.animate([{transform:`translateY(${90*d}%)`,opacity:0},{transform:'none',opacity:1}],{duration:380,easing:SOFT});
+  old.animate([{transform:'none',opacity:1},{transform:`translateY(${-90*d}%)`,opacity:0}],{duration:320,easing:EASE,fill:'forwards'}).onfinish=()=>{old.remove();n.classList.remove('t3roll');};});}
+/* pinned lists: the pin drops in with a little bounce as the list glides up into Pinned */
+function pinDropIn(root){const id=App.state._pinDrop;if(!id)return;App.state._pinDrop=null;if(!motionOK())return;const p=root.querySelector(`.opin[data-k="lst:${id}"] .opinic`);if(p)p.animate([{transform:'translateY(-12px) rotate(-25deg)',opacity:0},{transform:'translateY(2px) rotate(0)',opacity:1,offset:.7},{transform:'none',opacity:1}],{duration:440,delay:260,easing:SOFT,fill:'backwards'});}
+/* focus: +5 min floats up from the ring, and the ring eases back to make room */
+function plusFive(){const r=$('.fring');if(!r||!motionOK())return;const a=$('#fr-arc');if(a){a.style.transition='stroke-dashoffset .6s cubic-bezier(.3,1.15,.5,1)';setTimeout(()=>{a.style.transition='';},1700);}
+  const f=el('span',{class:'p5f'},'+5 min');r.append(f);f.animate([{transform:'translate(-50%,0)',opacity:0},{transform:'translate(-50%,-14px)',opacity:1,offset:.25},{transform:'translate(-50%,-48px)',opacity:0}],{duration:950,easing:'cubic-bezier(.2,.7,.3,1)',fill:'forwards'}).onfinish=()=>f.remove();}

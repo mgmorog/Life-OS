@@ -1293,10 +1293,12 @@ html.a-motion .flyer{display:none}
 .spin-win{display:inline-block;overflow:hidden;vertical-align:top;max-width:100%}
 .spin-col{display:flex;flex-direction:column}
 .spin-col span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ozero.fresh .zc{stroke-dasharray:214;stroke-dashoffset:214;animation:zdraw .7s var(--ease) forwards}
-.ozero.fresh .zk{stroke-dasharray:50;stroke-dashoffset:50;animation:zdraw .45s var(--ease) .55s forwards}
-.ozero.fresh .ozi{color:var(--accent);animation:zfloat 3.2s ease-in-out 1.2s infinite}
-.ozero.fresh h2{animation:zrise .5s var(--ease) .6s both}.ozero.fresh p{animation:zrise .5s var(--ease) .72s both}
+.ozero.fresh .ozi{animation:zpop .42s cubic-bezier(.34,1.4,.64,1) .18s both}
+.ozero.fresh .zc{stroke-dasharray:214;stroke-dashoffset:214;animation:zdraw .38s var(--ease) .2s forwards}
+.ozero.fresh .zk{stroke-dasharray:50;stroke-dashoffset:50;animation:zdraw .3s var(--ease) .32s forwards}
+@keyframes zpop{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:none}}
+.ozero.fresh .ozi{color:var(--accent);animation:zpop .42s cubic-bezier(.34,1.4,.64,1) .18s both,zfloat 3.2s ease-in-out 1.2s infinite}
+.ozero.fresh h2{animation:zrise .45s var(--ease) .4s both}.ozero.fresh p{animation:zrise .45s var(--ease) .5s both}
 @keyframes zdraw{to{stroke-dashoffset:0}}
 @keyframes zfloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
 @keyframes zrise{from{opacity:0;transform:translateY(6px)}}

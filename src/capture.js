@@ -115,11 +115,12 @@ const TURN=[['task','task','Task','One action to finish'],['block','hour','Time 
    part of the screen (visualViewport), because on iPhone the keyboard's height can't be read reliably from the page. */
 function kbTurnRow(sheet,go){
   const row=el('div',{class:'kbturn',role:'group','aria-label':'Save as'},TURN.map(([id,icon,n])=>el('button',{onpointerdown:e=>e.preventDefault(),onclick:()=>go(id)},el('span',{html:ic(icon,16,2)}),n)));
-  const v=window.visualViewport;if(!v||!isTouch())return;let maxH=Math.max(innerHeight,v.height);
+  const v=window.visualViewport;if(!v||!isTouch())return;let maxH=Math.max(innerHeight,v.height),lastSig='',movedAt=0;
   row.style.zIndex=String((parseInt(sheet.style.zIndex)||41)+1);$('#layers').append(row);
   const place=()=>{if(!sheet.isConnected||!sheet.classList.contains('on')&&sheet._wasOn){stop();return;}if(sheet.classList.contains('on'))sheet._wasOn=true;
     maxH=Math.max(maxH,innerHeight,v.height);const kb=maxH-v.height>140,f=document.activeElement,typing=f&&sheet.contains(f)&&f.matches('input,textarea');
-    const show=kb&&typing;row.classList.toggle('on',show);if(show)row.style.top=(v.offsetTop+v.height-row.offsetHeight)+'px';};
+    const show=kb&&typing,sig=Math.round(v.height)+':'+Math.round(v.offsetTop),now=Date.now();if(sig!==lastSig){lastSig=sig;movedAt=now;}const settled=now-movedAt>140;
+    if(!show){row.classList.remove('on');return;}if(!settled){if(!row.classList.contains('on'))setTimeout(place,160);else row.style.top=(v.offsetTop+v.height-row.offsetHeight)+'px';return;}row.style.top=(v.offsetTop+v.height-row.offsetHeight)+'px';row.classList.add('on');};
   const stop=()=>{v.removeEventListener('resize',place);v.removeEventListener('scroll',place);clearInterval(tk);document.removeEventListener('focusin',place);document.removeEventListener('focusout',later);row.remove();};
   const later=()=>setTimeout(place,60);
   v.addEventListener('resize',place);v.addEventListener('scroll',place);document.addEventListener('focusin',place);document.addEventListener('focusout',later);

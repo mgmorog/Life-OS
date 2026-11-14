@@ -98,7 +98,7 @@ function captureSheet(rec,{from=null,photo=false}={}){
       body.append(T.wrap,hint,notesBox,ph,smart,another,el('div',{class:'sect'},isEdit?'Or turn into':'Or save as'),grid,moreTurn(go,()=>({title:D.title.trim(),notes:D.notes,photos:D.photos}),()=>{if(isEdit)remove(rec.id);else writeDraft(null);inst.close();}));
       /* Quick capture opens at full height, like Apple's compose sheets, so the keyboard slides up over a sheet that never moves */
       if(!isEdit)body.closest('.sheet').classList.add('pinned');
-      body.closest('.sheet').append(el('div',{class:'kbturn',role:'group','aria-label':'Save as'},TURN.map(([id,icon,n])=>el('button',{onpointerdown:e=>e.preventDefault(),onclick:()=>go(id)},el('span',{html:ic(icon,16,2)}),n))));
+      kbTurnRow(body.closest('.sheet'),go);
       if(draft)body.prepend(el('div',{class:'note good',role:'status',html:ic('undo',16,2)+'<span>Picked up where you left off.</span>'}));
       if(isEdit){const u=(`${D.title} ${D.notes}`.match(URL_RE)||[])[0];if(u)body.insertBefore(el('a',{class:'btn line block',href:/^www\./i.test(u)?'https://'+u:u,target:'_blank',rel:'noopener'},'Open link'),grid.previousSibling);
         body.append(el('button',{class:'delete',onclick:()=>{const c=clone(rec);remove(rec.id);inst.close();toast('Idea deleted',()=>put(c));}},'Delete idea'));}
@@ -111,6 +111,20 @@ function captureSheet(rec,{from=null,photo=false}={}){
   return inst;
 }
 const TURN=[['task','task','Task','One action to finish'],['block','hour','Time block','Set aside the time'],['allday','cal','All-day','A date to remember'],['habit','habit','Habit','Something you repeat'],['goal','target','Goal','An outcome to work toward'],['project','project','Project','A bigger effort with steps'],['list','list','List item','Add to a list'],['resource','books','Resource','Keep it for reference']];
+/* A row of types that rides on top of the keyboard. It lives outside the sheet and is placed from the visible
+   part of the screen (visualViewport), because on iPhone the keyboard's height can't be read reliably from the page. */
+function kbTurnRow(sheet,go){
+  const row=el('div',{class:'kbturn',role:'group','aria-label':'Save as'},TURN.map(([id,icon,n])=>el('button',{onpointerdown:e=>e.preventDefault(),onclick:()=>go(id)},el('span',{html:ic(icon,16,2)}),n)));
+  const v=window.visualViewport;if(!v||!isTouch())return;let maxH=Math.max(innerHeight,v.height);
+  row.style.zIndex=String((parseInt(sheet.style.zIndex)||41)+1);$('#layers').append(row);
+  const place=()=>{if(!sheet.isConnected||!sheet.classList.contains('on')&&sheet._wasOn){stop();return;}if(sheet.classList.contains('on'))sheet._wasOn=true;
+    maxH=Math.max(maxH,innerHeight,v.height);const kb=maxH-v.height>140,f=document.activeElement,typing=f&&sheet.contains(f)&&f.matches('input,textarea');
+    const show=kb&&typing;row.classList.toggle('on',show);if(show)row.style.top=(v.offsetTop+v.height-row.offsetHeight)+'px';};
+  const stop=()=>{v.removeEventListener('resize',place);v.removeEventListener('scroll',place);clearInterval(tk);document.removeEventListener('focusin',place);document.removeEventListener('focusout',later);row.remove();};
+  const later=()=>setTimeout(place,60);
+  v.addEventListener('resize',place);v.addEventListener('scroll',place);document.addEventListener('focusin',place);document.addEventListener('focusout',later);
+  const tk=setInterval(place,250);place();
+}
 function turnGrid(on,{compact=false,suggest=null}={}){return el('div',{class:'saveas'+(compact?' compact':'')},TURN.map(([id,icon,n,s])=>el('button',{class:'tl'+(suggest===id?' sug':''),'data-k':id,html:ic(icon,compact?20:22,1.75)+`<b>${n}</b>`+(compact?'':`<small>${s}</small>`),onclick:()=>on(id)})));}
 /* the same idea can land in any life area tool */
 function moreTurn(on,getP,done){return el('button',{class:'linkbtn small',style:'justify-self:start;min-height:36px',onclick:()=>{const inst=openSheet({title:'Save it somewhere else',build:b=>{(get.settings().areas||AREAS).forEach(hub=>{const ts=toolsOf(hub).filter(t=>!t.wheel&&t.id!=='checkin'&&toolOn(hub,t.id));if(!ts.length)return;b.append(el('div',{class:'sect'},hub),el('div',{class:'chips'},ts.map(t=>el('button',{class:'chip',onclick:()=>{inst.close();entrySheet(hub,t,null,{seed:getP(),after:done});}},t.word[0].toUpperCase()+t.word.slice(1)))));});}});}},'More… career win, trip, book and others');}

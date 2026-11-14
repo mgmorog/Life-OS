@@ -1166,11 +1166,11 @@ p,.sub,small,.li small{text-wrap:pretty}
 .heat.sel{box-shadow:none}
 .heat.today.sel{box-shadow:none}
 /* v66 · pages slide like an iPhone app: deeper pages come in from the right, going back comes from the left */
-.viewin-push{animation:vPush .34s cubic-bezier(.2,.8,.2,1) both}
-.viewin-pop{animation:vPop .3s cubic-bezier(.2,.8,.2,1) both}
+.viewin-push{animation:vPush .32s cubic-bezier(.22,.9,.3,1) both}
+.viewin-pop{animation:vPop .28s cubic-bezier(.22,.9,.3,1) both}
 .viewin-swiped{animation:vSwiped .22s var(--ease) both}
-@keyframes vPush{from{opacity:0;transform:translateX(36px)}to{opacity:1;transform:none}}
-@keyframes vPop{from{opacity:0;transform:translateX(-28px)}to{opacity:1;transform:none}}
+@keyframes vPush{from{opacity:.3;transform:translate3d(28px,0,0)}to{opacity:1;transform:none}}
+@keyframes vPop{from{opacity:.3;transform:translate3d(-22px,0,0)}to{opacity:1;transform:none}}
 @keyframes vSwiped{from{opacity:.4;transform:translateX(-14px)}to{opacity:1;transform:none}}
 html.a-motion .viewin-push,html.a-motion .viewin-pop,html.a-motion .viewin-swiped{animation:viewIn .2s linear both}
 @media (prefers-reduced-motion:reduce){.viewin-push,.viewin-pop,.viewin-swiped{animation:viewIn .2s linear both}}

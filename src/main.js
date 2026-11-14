@@ -33,7 +33,7 @@ const App={
     const listBefore=S.lastView===S.view&&S._scope===scope&&!S.entering?listSnap(root):null;S._scope=scope;const blkBefore=listBefore?blkSnap():null;
     closeFabMenu(true);
     const skelG=root.querySelector('.skel')?$$('#view .page>*').filter(n=>n.querySelector('.skel')||n.classList.contains('skel')).map(ghostOf).filter(Boolean):[];
-    const noDepth=S._noDepth;S._noDepth=false;const depthDir=!S._searchFrom&&!noDepth&&S.entering&&(S.dir==='push'||S.dir==='pop')&&S._painted?S.dir:null,depthGhost=depthDir&&motionOK()?ghostOf(root.firstElementChild):null;
+    const noDepth=S._noDepth;S._noDepth=false;const depthDir=!S._searchFrom&&!noDepth&&S.entering&&(S.dir==='push'||S.dir==='pop')&&S._painted?S.dir:null,depthGhost=null; /* v103: no two-page slide; the light CSS slide below runs smoothly on iPhone */
     root.replaceChildren(frag);
     animateFills(root,S);
     listPlay(root,listBefore);

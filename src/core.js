@@ -394,7 +394,7 @@ function draggable(node,{label,start,move,drop,hold,filter,ghost:useGhost=true,c
   node.addEventListener('click',e=>{if(node._dragged&&Date.now()-node._dragged<300){e.stopPropagation();e.preventDefault();}},true);
 }
 const clearPreviewSafe=()=>{const p=document.getElementById('drop-prev');p&&p.remove();};
-const EMPTY_ART='<svg class="eart" width="72" height="56" viewBox="0 0 88 70" aria-hidden="true"><rect x="14" y="10" width="60" height="50" rx="10"/><path d="M26 28h36M26 40h24"/><circle cx="66" cy="50" r="12"/><path d="M60.5 50l4 4 7-8"/></svg>';
+const EMPTY_ART='<svg class="eart" width="72" height="56" viewBox="0 0 88 70" aria-hidden="true"><path d="M53 60H24a10 10 0 0 1-10-10V20a10 10 0 0 1 10-10h40a10 10 0 0 1 10 10v19"/><path d="M26 28h36M26 40h22"/><circle cx="66" cy="52" r="11"/><path d="M61.2 52.2l3.3 3.3 6.3-6.8"/></svg>';
 function emptyState(title,text,action){const art=document.createElement('span');art.innerHTML=EMPTY_ART;return el('div',{class:'empty'},art.firstChild,el('b',{},title),text?el('div',{},text):null,action||null);}
 /* ---------- smooth transitions ----------
    vt(update,{dir}) runs a DOM update inside a View Transition when the browser has one

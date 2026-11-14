@@ -359,15 +359,33 @@ function deckSwipe(card,{right,left}){
 
 /* ---------- round 7 ---------- */
 /* Drill-in pages: the new page slides over from the right while the old one eases back and dims; back reverses it */
+/* Push / back between pages, iOS-style: only transform and opacity move (both run off the main thread),
+   no overshoot, no filters or animated shadows, and the incoming page keeps its real layout the whole way. */
+const NAV_EASE=(()=>{try{if(!CSS.supports('animation-timing-function','linear(0, 1)'))return null;
+  const k=210,c=29,N=50,T=.5,pts=[];let x=0,v=0;const dt=T/(N*20); /* critically damped: no bounce */
+  for(let i=0;i<=N;i++){pts.push(+x.toFixed(4));for(let j=0;j<20;j++){const ac=-k*(x-1)-c*v;v+=ac*dt;x+=v*dt;}}
+  pts[N]=1;return 'linear('+pts.join(',')+')';}catch(e){return null;}})();
 function depthSlide(g,pg,dir){
-  if(!g||!pg){g&&g.remove();return;}const W=innerWidth;g.style.zIndex=dir==='push'?'1':'9';pg.style.position='relative';pg.style.zIndex='2';if(dir==='push'){pg.style.background='var(--bg)';pg.style.minHeight=innerHeight+'px';}
-  if(dir==='push'){
-    g.animate([{transform:'none',filter:'brightness(1)'},{transform:`translateX(${-W*.28}px) scale(.97)`,filter:'brightness(.94)'}],{duration:440,easing:SOFT,fill:'forwards'}).onfinish=()=>g.remove();
-    pg.animate([{transform:`translateX(${W}px)`,boxShadow:'-12px 0 30px rgba(20,30,25,.12)'},{transform:'none',boxShadow:'-12px 0 30px rgba(20,30,25,0)'}],{duration:440,easing:SOFT}).onfinish=()=>{pg.style.zIndex='';pg.style.position='';pg.style.background='';pg.style.minHeight='';};
+  if(!g||!pg){g&&g.remove();return;}const W=innerWidth,push=dir==='push';
+  const ease=NAV_EASE||'cubic-bezier(.2,.85,.25,1)',dur=push?460:380;
+  /* dim layer between the two pages */
+  const dim=el('div',{class:'nav-dim','aria-hidden':'true'});
+  Object.assign(pg.style,{position:'relative',zIndex:'2',willChange:'transform'});
+  Object.assign(g.style,{willChange:'transform',zIndex:push?'1':'9'});
+  dim.style.zIndex=push?'1':'3';
+  if(push){
+    /* cover what is underneath without stretching the page's own layout */
+    Object.assign(pg.style,{background:'var(--bg)',minHeight:innerHeight+'px',alignContent:'start',boxShadow:'-10px 0 28px rgba(20,30,25,.10)'});
+    g.after(dim);
+    g.animate([{transform:'none'},{transform:`translateX(${-W*.3}px)`}],{duration:dur,easing:ease,fill:'forwards'}).onfinish=()=>g.remove();
+    dim.animate([{opacity:0},{opacity:1}],{duration:dur,easing:ease,fill:'forwards'}).onfinish=()=>dim.remove();
+    pg.animate([{transform:`translateX(${W}px)`},{transform:'none'}],{duration:dur,easing:ease}).onfinish=()=>{Object.assign(pg.style,{zIndex:'',position:'',background:'',minHeight:'',alignContent:'',boxShadow:'',willChange:''});};
   }else{
-    g.style.background='var(--bg)';g.style.boxShadow='-12px 0 30px rgba(20,30,25,.12)';
-    g.animate([{transform:'none'},{transform:`translateX(${W}px)`}],{duration:340,easing:EASE,fill:'forwards'}).onfinish=()=>g.remove();
-    pg.animate([{transform:`translateX(${-W*.28}px) scale(.97)`,filter:'brightness(.94)'},{transform:'none',filter:'brightness(1)'}],{duration:340,easing:EASE}).onfinish=()=>{pg.style.zIndex='';pg.style.position='';};
+    Object.assign(g.style,{background:'var(--bg)',boxShadow:'-10px 0 28px rgba(20,30,25,.10)'});
+    document.body.append(dim);
+    g.animate([{transform:'none'},{transform:`translateX(${W}px)`}],{duration:dur,easing:ease,fill:'forwards'}).onfinish=()=>g.remove();
+    dim.animate([{opacity:1},{opacity:0}],{duration:dur,easing:ease,fill:'forwards'}).onfinish=()=>dim.remove();
+    pg.animate([{transform:`translateX(${-W*.3}px)`},{transform:'none'}],{duration:dur,easing:ease}).onfinish=()=>{Object.assign(pg.style,{zIndex:'',position:'',willChange:''});};
   }
 }
 /* Photos: grow from the thumbnail you tapped; closing shrinks back into it */

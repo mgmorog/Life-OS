@@ -1227,6 +1227,7 @@ html,body{overflow-x:clip}
 .li.pressing,.tmr.pressing,.heat.pressing{transform:scale(.985)!important}
 /* bottom bar pill while it glides */
 .nav .in{position:relative}
+.nav-dim{position:fixed;inset:0;background:rgba(20,30,25,.07);pointer-events:none}
 .tab-ind{position:absolute;left:0;top:0;z-index:0;pointer-events:none;opacity:0;will-change:transform}
 .tab-ind i{display:block;width:100%;height:100%;border-radius:15px;background:var(--accent-soft);will-change:transform}
 .nav .tab{transition:color .28s ease;font-weight:500;-webkit-tap-highlight-color:transparent}

@@ -89,7 +89,7 @@ function viewToday(root){
       el('div',{class:'icons'},
         el('button',{class:'iconbtn','aria-label':`Inbox, ${inboxN} ideas`,html:ic('inbox',24)+(inboxN?`<span class="badge" data-roll="inbox">${inboxN}</span>`:''),onclick:()=>App.go('inbox')}),
         el('button',{class:'iconbtn','aria-label':'Share this day',html:ic('share',24),onclick:()=>shareDaySheet(dk)}))),
-    S.dateDrop?dateDropEl(dk):null,weekStrip(dk)));
+    S.dateDrop?dateDropEl(dk):null,S.dateDrop?null:weekStrip(dk)));
   if(S.loading&&!recs.size){page.append(el('section',{class:'card',style:'display:grid;gap:12px'},el('div',{class:'skel',style:'height:14px;width:30%'}),el('div',{class:'skel',style:'height:30px;width:70%'}),el('div',{class:'skel',style:'height:200px'})));root.append(page);return;}
   const s=get.settings();
   {const fc=focusRunChip();if(fc)page.append(fc);}

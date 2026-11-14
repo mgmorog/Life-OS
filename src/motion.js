@@ -671,8 +671,39 @@ function blkSnap(){const m=new Map();$$('#grid .blk[data-bid]').forEach(b=>m.set
 function blkFlip(before){if(!before||!before.size||!motionOK())return;$$('#grid .blk[data-bid]').forEach(b=>{const o=before.get(b.dataset.bid);if(!o||o.t!==b.offsetTop)return;const l=b.offsetLeft,w=b.offsetWidth;if(Math.abs(o.l-l)<2&&Math.abs(o.w-w)<2)return;
   b.animate([{left:o.l+'px',width:o.w+'px'},{left:l+'px',width:w+'px'}],{duration:420,easing:SOFT});});}
 /* Today: tapping the date drops a small month calendar right under it */
-function dateDropEl(dk){const c=formCtx(()=>{});const close=go=>dateDrop(false,go);
-  return el('div',{class:'ddrop'},el('div',{class:'ddin'},c.calendar(dk,d=>{if(d)close(d);}),dk!==todayK()?el('button',{class:'linkbtn small',onclick:()=>close(todayK())},'Jump to today'):null));}
+function dateDropEl(dk){
+  /* Month chips + big day circles + quick jumps (v104). Paging months redraws only this box. */
+  const close=go=>dateDrop(false,go),tK=todayK(),sel=fromK(dk);
+  let ym={y:sel.getFullYear(),m:sel.getMonth()};const dots=new Map();
+  const has=key=>{if(!dots.has(key)){let v=false;try{const d=dayItems(key);v=!!(d.allDay.length||d.timed.length||d.anytime.length);}catch(e){}dots.set(key,v);}return dots.get(key);};
+  const yr=el('div',{class:'dp-yr'}),chips=el('div',{class:'dp-chips',role:'tablist','aria-label':'Months'}),grid=el('div',{class:'dp-grid'});
+  const t0=today(),base={y:t0.getFullYear(),m:t0.getMonth()};
+  const list=[];for(let i=-6;i<=18;i++){const d=new Date(base.y,base.m+i,1);list.push({y:d.getFullYear(),m:d.getMonth()});}
+  if(!list.some(x=>x.y===ym.y&&x.m===ym.m)){list.length=0;for(let i=-6;i<=18;i++){const d=new Date(ym.y,ym.m+i,1);list.push({y:d.getFullYear(),m:d.getMonth()});}}
+  const draw=(dir,scroll)=>{
+    yr.textContent=String(ym.y);
+    chips.replaceChildren(...list.map(x=>{const on=x.y===ym.y&&x.m===ym.m;const b=el('button',{class:'dp-chip'+(on?' on':''),role:'tab','aria-selected':on?'true':'false',onclick:()=>{const d=(x.y-ym.y)*12+(x.m-ym.m);if(!d)return;ym={y:x.y,m:x.m};draw(d>0?1:-1,true);}},(x.m===0&&x.y!==ym.y?MON[x.m]+' ’'+String(x.y).slice(2):MON[x.m]));return b;}));
+    const first=new Date(ym.y,ym.m,1),start=addD(first,-monIdx(first)),cells=[];
+    const weeks=Math.ceil((monIdx(first)+new Date(ym.y,ym.m+1,0).getDate())/7);
+    for(let i=0;i<weeks*7;i++){const d=addD(start,i),key=k(d),inM=d.getMonth()===ym.m;
+      cells.push(el('button',{class:'dp-d'+(inM?'':' out')+(key===dk?' sel':'')+(key===tK?' today':''),'aria-label':`${DOW[d.getDay()]}, ${MONL[d.getMonth()]} ${d.getDate()}`,'aria-current':key===dk?'date':null,onclick:()=>close(key)},String(d.getDate()),inM&&has(key)?el('i',{'aria-hidden':'true'}):null));}
+    const body=el('div',{class:'dp-days'},...cells);
+    grid.replaceChildren(el('div',{class:'dp-wd','aria-hidden':'true'},...WD.map(w=>el('span',{},w))),body);
+    if(dir&&motionOK())body.animate([{opacity:0,transform:`translateX(${dir*24}px)`},{opacity:1,transform:'none'}],{duration:300,easing:EASE});
+    const on=chips.querySelector('.on');if(on)requestAnimationFrame(()=>{const L=on.offsetLeft-(chips.clientWidth-on.offsetWidth)/2;if(scroll&&motionOK())chips.scrollTo({left:L,behavior:'smooth'});else chips.scrollLeft=L;});
+  };
+  const step=n=>{const d=new Date(ym.y,ym.m+n,1),nx={y:d.getFullYear(),m:d.getMonth()};if(!list.some(x=>x.y===nx.y&&x.m===nx.m)){if(n>0)list.push(nx);else list.unshift(nx);}ym=nx;draw(n,true);};
+  /* swipe the days sideways to change month */
+  let sx=null,sy=0;grid.addEventListener('touchstart',e=>{if(e.touches.length===1){sx=e.touches[0].clientX;sy=e.touches[0].clientY;}},{passive:true});
+  grid.addEventListener('touchend',e=>{if(sx==null)return;const t=e.changedTouches[0],dx=t.clientX-sx,dy=t.clientY-sy;sx=null;if(Math.abs(dx)>50&&Math.abs(dx)>Math.abs(dy)*1.4)step(dx<0?1:-1);},{passive:true});
+  const nextMon=(()=>{const d=today();const n=((7-monIdx(d))%7)||7;return addK(tK,n);})();
+  const quick=[['Today',tK],['Tomorrow',addK(tK,1)],['Next Mon',nextMon],['+1 week',addK(dk,7)]];
+  draw(0,false);
+  return el('div',{class:'ddrop'},el('div',{class:'ddin dp'},
+    el('div',{class:'dp-top'},yr,el('div',{class:'dp-nav'},el('button',{class:'dp-arw','aria-label':'Previous month',onclick:()=>step(-1),html:ic('chevl',18,2.2)}),el('button',{class:'dp-arw','aria-label':'Next month',onclick:()=>step(1),html:ic('chevr',18,2.2)}))),
+    chips,grid,
+    el('div',{class:'dp-quick'},...quick.map(([l,key])=>el('button',{class:'dp-q'+(key===dk?' on':''),onclick:()=>close(key)},l)))));
+}
 function dateDrop(want,go){const S=App.state,open=want===undefined?!S.dateDrop:want;
   if(open){S.dateDrop=true;S._ddIn=true;clearTimeout(App._r);App.render();return;}
   const d=$('.ddrop'),fin=()=>{S.dateDrop=false;if(go&&go!==S.sel)goDay(go);else{clearTimeout(App._r);App.render();}};

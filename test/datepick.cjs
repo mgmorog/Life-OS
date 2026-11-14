@@ -1,0 +1,17 @@
+const {chromium}=require('playwright');
+let pass=0;const fails=[];const ok=(c,m)=>{if(c)pass++;else fails.push(m);};
+(async()=>{const b=await chromium.launch();const c=await b.newContext({viewport:{width:393,height:852},hasTouch:true,isMobile:true,deviceScaleFactor:2});const p=await c.newPage();const errs=[];p.on('pageerror',e=>errs.push(e.message));
+await p.goto('file://'+process.cwd()+'/test/page.html');await p.waitForTimeout(600);
+const R=(f,a)=>p.evaluate(f,a);
+await R(()=>{const L=window.__lifeos;L.create('task',{title:'Dentist',date:L.todayK(),time:null,steps:[],repeat:{type:'never',end:null},reminder:null,deadline:null});});await p.waitForTimeout(200);
+await p.locator('.hd .date').first().click();await p.waitForTimeout(600);
+ok(await p.locator('.dp').count()===1,'picker opens');ok(await p.locator('#week-strip').count()===0,'week strip hidden while open');
+const sz=await p.locator('.dp-d').first().boundingBox();ok(sz.width>=44&&sz.height>=44,'day target >=44 '+JSON.stringify(sz));
+ok(await p.locator('.dp-d.sel').count()===1,'selected shown');ok(await p.locator('.dp-d i').count()>=1,'dot on day with item');
+await p.screenshot({path:'test/datepick.png'});
+const y0=await p.locator('.dp-chip.on').innerText();await p.getByRole('button',{name:'Next month'}).click();await p.waitForTimeout(400);const y1=await p.locator('.dp-chip.on').innerText();ok(y0!==y1,'next month '+y0+'>'+y1);
+await p.locator('.dp-chip').nth(10).click();await p.waitForTimeout(400);ok((await p.locator('.dp-chip').nth(10).getAttribute('class')).includes('on'),'chip jumps');
+await p.locator('.dp-q',{hasText:'Tomorrow'}).click();await p.waitForTimeout(600);
+const st=await R(()=>({sel:window.__lifeos.App.state.sel,t:window.__lifeos.todayK(),dd:window.__lifeos.App.state.dateDrop}));ok(!st.dd&&st.sel!==st.t,'tomorrow picks and closes '+JSON.stringify(st));
+await p.locator('.hd .date').first().click();await p.waitForTimeout(500);await p.locator('.dp-d:not(.out)').nth(14).click();await p.waitForTimeout(600);ok(await p.locator('.dp').count()===0&&await p.locator('#week-strip').count()===1,'tapping a day closes');
+ok(!errs.length,'no errors '+errs);console.log(pass+' passed',fails.length?'\nFAIL:\n'+fails.join('\n'):'');await b.close();})();

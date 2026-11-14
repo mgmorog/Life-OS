@@ -1488,3 +1488,28 @@ html.a-motion #st-dock .scard{transition:none}
 .fring{position:relative}
 .p5f{position:absolute;left:50%;top:38%;font-weight:800;color:var(--accent-text);font-size:15px;pointer-events:none;white-space:nowrap;z-index:2}
 .t3new{display:block}
+
+/* v104 · Today date picker: month chips, big day circles, quick jumps */
+.ddin.dp{display:block;padding:14px 0 14px;border-radius:22px;justify-items:stretch}
+.dp-top{display:flex;align-items:center;justify-content:space-between;padding:0 10px 8px 18px}
+.dp-yr{font-family:var(--display);font-size:24px;font-weight:500;color:var(--ink)}
+.dp-nav{display:flex;gap:4px}
+.dp-arw{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;color:var(--ink-2)}
+.dp-chips{display:flex;gap:8px;overflow-x:auto;padding:2px 16px 12px;scrollbar-width:none;-webkit-overflow-scrolling:touch;scroll-snap-type:x proximity}
+.dp-chips::-webkit-scrollbar{display:none}
+.dp-chip{flex:none;height:40px;min-width:58px;padding:0 14px;border-radius:20px;background:var(--chip);color:var(--ink);font-weight:600;font-size:14px;scroll-snap-align:center;transition:background .2s,color .2s}
+.dp-chip.on{background:var(--accent);color:var(--on-accent)}
+.dp-grid{padding:0 10px;overflow:hidden}
+.dp-wd,.dp-days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr))}
+.dp-wd{text-align:center;font-size:12px;font-weight:600;letter-spacing:.08em;color:var(--ink-2);padding-bottom:4px}
+.dp-days{row-gap:4px}
+.dp-d{justify-self:center;position:relative;width:46px;height:46px;border-radius:50%;font-size:18px;font-weight:500;color:var(--ink);display:grid;place-items:center;font-variant-numeric:tabular-nums;transition:background .15s,transform .2s var(--ease)}
+.dp-d:active{transform:scale(.9);background:var(--chip)}
+.dp-d.out{color:#A3AAA5}
+.dp-d.today{box-shadow:inset 0 0 0 1.5px var(--accent)}
+.dp-d.sel{background:var(--accent);color:var(--on-accent);font-weight:600;box-shadow:none}
+.dp-d i{position:absolute;bottom:5px;left:50%;width:5px;height:5px;margin-left:-2.5px;border-radius:50%;background:var(--accent)}
+.dp-d.sel i{background:var(--on-accent)}
+.dp-quick{display:grid;grid-template-columns:repeat(4,minmax(0,auto));justify-content:space-between;gap:6px;padding:12px 14px 0}
+.dp-q{height:40px;padding:0 10px;white-space:nowrap;font-size:13.5px!important;border-radius:20px;border:1px solid var(--line);background:var(--card);color:var(--ink);font-size:14px;font-weight:500}
+.dp-q.on{border-color:var(--accent);color:var(--accent-text)}

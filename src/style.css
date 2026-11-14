@@ -1230,6 +1230,7 @@ html,body{overflow-x:clip}
 .nav .tab .ic{position:relative;z-index:1}
 .nav .tab.act .ic.pill-wait{background:transparent}
 .nav .tab .ic svg{position:relative;z-index:2}
+.nav .fab{position:relative;z-index:3}
 /* springy sheets (phone) */
 @media (max-width:899px){.sheet{transition:transform .52s var(--soft)}.sheet:not(.on){transition-duration:.34s;transition-timing-function:var(--ease)}}
 /* plus menu */

@@ -48,7 +48,7 @@ const seasonOf=d=>['Winter','Winter','Spring','Spring','Spring','Summer','Summer
 const seasonEnd=d=>{const m=d.getMonth(),y=d.getFullYear();const e={Winter:new Date(m===11?y+1:y,1,28),Spring:new Date(y,4,31),Summer:new Date(y,7,31),Fall:new Date(y,10,30)}[seasonOf(d)];return k(e);};
 const everyWord=n=>({1:'Daily',7:'Weekly',14:'Every 2 weeks',30:'Monthly',60:'Every 2 months',90:'Every 3 months',180:'Every 6 months',365:'Yearly'}[+n]||(+n%365===0?`Every ${+n/365} years`:+n%30===0?`Every ${+n/30} months`:+n%7===0?`Every ${+n/7} weeks`:`Every ${n} days`));
 const stepper=(val,lo,hi,step,on,fmt=v=>v)=>el('span',{class:'stp'},el('button',{'aria-label':'Lower',html:ic('minus',16,2),onclick:()=>on(Math.max(lo,val-step))}),el('span',{class:'sv tnum'},String(fmt(val))),el('button',{'aria-label':'Raise',html:ic('plus',16,2),onclick:()=>on(Math.min(hi,val+step))}));
-const toolHead=(page,hub,t,{sub,actions}={})=>page.append(pageHead(t.name,sub||null,{back:hub,to:'area',actions:actions||plusB(t.word,()=>entrySheet(hub,t))}));
+const toolHead=(page,hub,t,{sub,actions}={})=>page.append(pageHead(t.name,sub||null,{back:hub,to:'area',icon:t.icon,actions:actions||plusB(t.word,()=>entrySheet(hub,t))}));
 const plusB=(word,fn)=>el('button',{class:'iconbtn green','aria-label':`New ${word}`,html:ic('plus',22,2),onclick:fn});
 const moreB=(label,fn)=>el('button',{class:'iconbtn green','aria-label':label,html:sv('<circle cx="5" cy="12" r="1.8" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.8" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.8" fill="currentColor" stroke="none"/>',22),onclick:fn});
 const seedHub=name=>{App.state.params=Object.assign(App.state.params||{},{name});};
@@ -144,7 +144,7 @@ const HUBS={
 const toolOf=(hub,id)=>toolsOf(hub).find(t=>t.id===id);
 function viewAreas(root){
   const page=el('div',{class:'page'}),areas=get.settings().areas||AREAS;
-  page.append(pageHead('Life Areas',`${areas.length} areas`,{actions:el('button',{class:'iconbtn green','aria-label':'Manage life areas',html:ic('gear',22),onclick:()=>App.go('setpage',{id:'areas'})})}));
+  page.append(pageHead('Life Areas',`${areas.length} areas`,{icon:'heart',actions:el('button',{class:'iconbtn green','aria-label':'Manage life areas',html:ic('gear',22),onclick:()=>App.go('setpage',{id:'areas'})})}));
   page.append(el('div',{class:'list'},areas.map(a=>{const c=areaRecords(a),n=c.tasks.length+c.habits.length+c.goals.length+c.projects.length+get.all('entry').filter(x=>x.hub===a&&!isCfg(x)).length;return el('button',{class:'li',onclick:()=>App.go('area',{name:a})},el('span',{class:'sq',html:ic(areaIcon(a),20,1.7)}),el('span',{class:'grow'},el('b',{style:'font-size:17px'},a),el('small',{},areaLine(a)||(n?`${n} items`:'Nothing here yet'))),el('span',{class:'chev',html:ic('chevr',16,2)}));})));
   root.append(page);
 }

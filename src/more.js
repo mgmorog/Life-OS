@@ -6,7 +6,10 @@ const PLACES={
  today:{n:'Today',i:'sun'},studio:{n:'Studio',i:'layers'},calendar:{n:'Calendar',i:'cal'},
 };
 const backBtn=(label='More',to='more')=>el('button',{class:'back',onclick:()=>App.back(to),html:ic('chevl',20,2.2)+esc(label)});
-function pageHead(title,sub,{back='More',to='more',actions=null}={}){return el('header',{},el('div',{class:'pghead'},backBtn(back,to),actions?el('div',{style:'display:flex;gap:2px;align-items:center'},actions):null),el('h1',{class:'pgtitle',style:'margin-top:4px'},title),sub?el('div',{class:'small muted',style:'margin-top:4px'},sub):null);}
+/* module pages show their icon beside the title, the same icon used for them in lists, so the two are learned together */
+const titleIc=i=>el('span',{class:'tic','aria-hidden':'true',html:ic(i,22,1.8)});
+const withIc=(i,h)=>i?el('div',{class:'tirow'},titleIc(i),h):h;
+function pageHead(title,sub,{back='More',to='more',actions=null,icon=null}={}){return el('header',{},el('div',{class:'pghead'},backBtn(back,to),actions?el('div',{style:'display:flex;gap:2px;align-items:center'},actions):null),withIc(icon,el('h1',{class:'pgtitle',style:'margin-top:4px'},title)),sub?el('div',{class:'small muted',style:'margin-top:4px'},sub):null);}
 function placeCount(id){
   const tk=todayK();
   switch(id){
@@ -115,13 +118,13 @@ function viewSearch(root){
   };
   draw();root.append(page);if(!isTouch())setTimeout(()=>input.focus({preventScroll:true}),60);
 }
-function subList(title,ids,root){
-  const page=el('div',{class:'page'});page.append(pageHead(title));
+function subList(title,ids,root,icon){
+  const page=el('div',{class:'page'});page.append(pageHead(title,null,{icon}));
   page.append(el('div',{class:'list'},ids.map(id=>{const p=PLACES[id],c=placeCount(id);return el('button',{class:'li',onclick:()=>App.go(id)},el('span',{class:'sq',html:ic(p.i,20)}),el('span',{class:'grow'},el('b',{style:'font-size:17px'},p.n),el('small',{},c.s)),el('span',{class:'chev',html:ic('chevr',16,2)}));})));
   root.append(page);
 }
-const viewOrganize=root=>subList('Organize',['inbox','tasks','habits','routines','projects','goals','lists'],root);
-const viewReflect=root=>subList('Reflect',['reviews','insights'],root);
+const viewOrganize=root=>subList('Organize',['inbox','tasks','habits','routines','projects','goals','lists'],root,'grid');
+const viewReflect=root=>subList('Reflect',['reviews','insights'],root,'clip');
 
 /* Inbox: oldest first, every entry is an idea */
 function tidySheet(list){
@@ -148,7 +151,7 @@ function viewReviews(root){
   const page=el('div',{class:'page'}),list=get.all('review').sort((a,b)=>b.createdAt-a.createdAt);
   const rd=get.settings().reviewDay??0,cw=k(today().getDay()===rd?weekStartOf(today()):addD(weekStartOf(today()),-7)),doneW=list.find(r=>(r.period||'week')==='week'&&r.week===cw),lastW=list.find(r=>(r.period||'week')==='week');
   const stk=(()=>{const ws=new Set(list.filter(r=>(r.period||'week')==='week').map(r=>r.week));let n=0,w=doneW?cw:k(addD(fromK(cw),-7));while(ws.has(w)){n++;w=k(addD(fromK(w),-7));}return n;})();
-  page.append(pageHead('Reviews',(doneW?`This week’s review is done`:`Weekly review due ${DOW[rd]}${lastW?` · last one ${relDay(k(new Date(lastW.createdAt)))}`:''}`)+(stk>1?` · ${stk} weeks in a row`:''),{back:'Reflect',to:'reflect'}));
+  page.append(pageHead('Reviews',(doneW?`This week’s review is done`:`Weekly review due ${DOW[rd]}${lastW?` · last one ${relDay(k(new Date(lastW.createdAt)))}`:''}`)+(stk>1?` · ${stk} weeks in a row`:''),{back:'Reflect',to:'reflect',icon:'clip'}));
   page.append(el('button',{class:doneW?'btn line block':'btn primary block',onclick:()=>App.go('review')},doneW?'Review this week again':'Start weekly review'),el('div',{style:'display:flex;gap:8px'},el('button',{class:'btn line',style:'flex:1',onclick:()=>App.go('review',{period:'month'})},'Monthly'),el('button',{class:'btn line',style:'flex:1',onclick:()=>App.go('review',{period:'quarter'})},'Quarterly')));
   page.append(scorecardCard());
   page.append(monthLetterCard());
@@ -179,7 +182,7 @@ function weekStats(a,b){let done=0,open=0,habit=0,dk=a,planned=0;while(dk<=b){co
 /* Insights: only ever real numbers */
 function viewInsights(root){
   const page=el('div',{class:'page'}),tk=todayK();
-  page.append(pageHead('Insights','Plans vs. what happened',{back:'Reflect',to:'reflect'}));
+  page.append(pageHead('Insights','Plans vs. what happened',{back:'Reflect',to:'reflect',icon:'chart'}));
   const weeks=[];let s=weekStartOf(today());for(let i=0;i<8;i++){const a=k(addD(s,-7*i)),st=weekStats(a,k(addD(fromK(a),6)));weeks.unshift({a,...st});}
   const total=weeks.reduce((n,w)=>n+w.planned,0);
   if(total<3){page.append(el('div',{class:'list'},emptyState('Not enough history yet','Plan and finish a few things. Patterns show up here after about a week.')));{const mi=typeof moodInsight==='function'?moodInsight():null;if(mi)page.append(mi);}root.append(page);return;}
@@ -250,7 +253,7 @@ function viewDiscover(root){
   const order=[...new Set(base.map(i=>i[0]))].sort((a,b)=>(mix[a]||0)-(mix[b]||0)),buckets=order.map(a=>base.filter(i=>i[0]===a)),pool=[];
   while(buckets.some(b=>b.length))buckets.forEach(b=>{if(b.length)pool.push(b.shift());});const fi=pool.findIndex(i=>i[2]===S.discFirst);if(fi>0)pool.unshift(pool.splice(fi,1)[0]);
   const page=el('div',{class:'page'});
-  page.append(pageHead('Discover',`${pool.length} idea${pool.length===1?'':'s'} picked for you`,{back:'More',to:'more'}));
+  page.append(pageHead('Discover',`${pool.length} idea${pool.length===1?'':'s'} picked for you`,{back:'More',to:'more',icon:'compass'}));
   page.append(el('div',{class:'chips',style:'flex-wrap:nowrap;overflow-x:auto;margin:0 -16px;padding:0 16px 2px;scrollbar-width:none'},[null,...areas].map(a=>el('button',{class:'chip'+(S.discArea===a?' on':''),style:'flex:none',onclick:()=>{S.discArea=a;App.refresh();}},a||'For you'))));
   const ent=Object.entries(mix).sort((a,b)=>b[1]-a[1]),tot=ent.reduce((n,e)=>n+e[1],0);
   if(tot&&!S.discArea){const shades=['#466B5A','#8BB09C','#B9CFC3','#DCE6E0'],top=ent.slice(0,3);const other=tot-top.reduce((n,e)=>n+e[1],0);const parts=[...top,...(other?[['Other',other]]:[])],quiet=areas.filter(a=>!mix[a]);
@@ -284,7 +287,7 @@ function viewTools(root){
   const S=App.state,all=get.all('resource').sort((a,b)=>(b.createdAt||0)-(a.createdAt||0)),page=el('div',{class:'page'});
   const used=[...new Set(all.map(r=>r.area).filter(Boolean))];if(S.resArea&&!used.includes(S.resArea))S.resArea=null;
   const res=S.resArea?all.filter(r=>r.area===S.resArea):all;
-  page.append(pageHead('Tools & Resources',all.length?`${all.length} saved · ${TEMPLATES.length} templates`:'Templates and references',{actions:el('button',{class:'iconbtn green','aria-label':'New resource',html:ic('plus',22,2),onclick:()=>resourceSheet(null)})}));
+  page.append(pageHead('Tools & Resources',all.length?`${all.length} saved · ${TEMPLATES.length} templates`:'Templates and references',{icon:'books',actions:el('button',{class:'iconbtn green','aria-label':'New resource',html:ic('plus',22,2),onclick:()=>resourceSheet(null)})}));
   const host=u=>{try{return new URL(/^https?:/i.test(u)?u:'https://'+u).hostname.replace(/^www\./,'');}catch(e){return '';}};
   const meta=r=>{const nl=(r.notes||'').trim().split('\n')[0];return joinMeta([r.area,r.url?host(r.url):null,nl&&!r.url?(nl.length>34?nl.slice(0,32).trim()+'…':nl):null,(r.photos||[]).length?el('span',{class:'omi',html:ic('image',13,2)+` ${(r.photos||[]).length}`}):null].filter(Boolean));};
   page.append(el('div',{class:'lbl'},'Saved'));
@@ -300,7 +303,7 @@ const trashWhat=t=>{const r=t.rec||{};if(r.kind==='entry'){const x=toolOf(r.hub,
 function purgeTrash(){const cut=Date.now()-30*864e5;get.all('trashed').forEach(t=>{if((t.deletedAt||0)<cut)remove(t.id,{silent:true,hard:true});});}
 function viewTrash(root){
   purgeTrash();const list=get.all('trashed').slice().sort((a,b)=>(b.deletedAt||0)-(a.deletedAt||0)),page=el('div',{class:'page'});
-  page.append(pageHead('Recently deleted',list.length?`${list.length} item${list.length===1?'':'s'} · kept for 30 days`:'Kept for 30 days'));
+  page.append(pageHead('Recently deleted',list.length?`${list.length} item${list.length===1?'':'s'} · kept for 30 days`:'Kept for 30 days',{icon:'trash'}));
   if(!list.length){page.append(el('div',{class:'list'},emptyState('Nothing here','Things you delete stay here for 30 days, then they’re gone.')));root.append(page);return;}
   page.append(el('div',{class:'list'},list.map(t=>{const left=Math.max(1,30-Math.floor((Date.now()-t.deletedAt)/864e5));return el('div',{class:'li',style:'min-height:60px;flex-wrap:wrap'},el('span',{class:'grow',style:'min-width:150px'},el('b',{style:'font-weight:500'},trashTitle(t)),el('small',{},`${trashWhat(t)} · ${left} day${left===1?'':'s'} left`)),el('span',{style:'display:flex;gap:6px'},el('button',{class:'chip',onclick:()=>{put(t.rec);const cal=t.rec.f&&t.rec.f.calId&&get.id('del-'+t.rec.f.calId);if(cal)put(cal.rec);toast(`Restored to ${t.rec.kind==='entry'?`${t.rec.hub} › ${trashWhat(t)}`:(PLACES[t.rec.kind+'s']?PLACES[t.rec.kind+'s'].n:trashWhat(t))}`);}},'Restore'),el('button',{class:'chip',onclick:()=>askConfirm({title:'Delete for good?',body:`“${trashTitle(t)}” can’t be brought back.`,yes:'Delete',no:'Keep it',onYes:()=>remove(t.id,{hard:true})})},'Delete')));})));
   page.append(el('button',{class:'delete',onclick:()=>askConfirm({title:'Empty Recently deleted?',body:'Everything here will be gone for good.',yes:'Empty',hold:true,no:'Keep it',onYes:()=>{list.forEach(t=>remove(t.id,{silent:true,hard:true}));App.refresh();}})},'Empty Recently deleted'));
@@ -312,7 +315,7 @@ const openPhotoRec=r=>{if(r.kind==='entry'){const t=toolOf(r.hub,r.tool);if(t)Ap
 function removePhoto(r,p){const holder=r.photos?r:r.f;const before=clone(holder.photos);holder.photos=holder.photos.filter(q=>q!==p&&q.url!==p.url);put(r);toast('Photo removed',()=>{holder.photos=before;put(r);});}
 function viewPhotos(root){
   const list=allPhotos(),page=el('div',{class:'page'});
-  page.append(pageHead('Photos',list.length?`${list.length} photo${list.length===1?'':'s'}`:null));
+  page.append(pageHead('Photos',list.length?`${list.length} photo${list.length===1?'':'s'}`:null,{icon:'image'}));
   if(!list.length){page.append(el('div',{class:'list'},emptyState('No photos yet','Photos you add anywhere, like ideas, tasks, recipes or home info, all show up here.')));root.append(page);return;}
   const src=r=>r.kind==='idea'?'Ideas':r.kind==='task'?'Tasks':r.kind==='entry'?'Life areas':r.kind==='list'?'Lists':'Other',counts={};list.forEach(x=>{const k0=src(x.r);counts[k0]=(counts[k0]||0)+1;});const S=App.state;if(S.phSrc&&!counts[S.phSrc])S.phSrc=null;
   if(Object.keys(counts).length>1)page.append(chipsH([['All','All',list.length],...['Ideas','Tasks','Life areas','Lists','Other'].filter(k0=>counts[k0]).map(k0=>[k0,k0,counts[k0]])],S.phSrc||'All',v=>{S.phSrc=v==='All'?null:v;App.refresh();}));
@@ -325,7 +328,7 @@ function viewArchive(root){
   let all=[...recs.values()].filter(r=>r.archived);if(S.archType!=='all')all=all.filter(r=>r.kind===S.archType);
   all.sort((a,b)=>S.archSort==='new'?(b.archivedAt||0)-(a.archivedAt||0):(a.archivedAt||0)-(b.archivedAt||0));
   const page=el('div',{class:'page'});
-  page.append(pageHead('Archive',`${all.length} item${all.length===1?'':'s'}`));
+  page.append(pageHead('Archive',`${all.length} item${all.length===1?'':'s'}`,{icon:'archive'}));
   const kinds=[...new Set([...recs.values()].filter(r=>r.archived).map(r=>r.kind))];
   page.append(el('div',{class:'chips'},el('button',{class:'chip line',onclick:e=>openMenu(e.clientX,e.clientY,[{label:'All types',onclick:()=>{S.archType='all';App.refresh();}},...kinds.map(x=>({label:x==='entry'?'Life areas':KINDN[x]||x,onclick:()=>{S.archType=x;App.refresh();}}))])},S.archType==='all'?'All types':S.archType==='entry'?'Life areas':KINDN[S.archType],el('span',{style:'display:grid',html:ic('chevd',14,2.2)})),el('button',{class:'chip line',onclick:()=>{S.archSort=S.archSort==='new'?'old':'new';App.refresh();}},S.archSort==='new'?'Newest first':'Oldest first')));
   if(!all.length){page.append(el('div',{class:'list'},emptyState('Nothing archived','Finished goals, habits you’ve set down and old projects rest here.')));root.append(page);return;}

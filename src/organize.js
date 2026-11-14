@@ -6,7 +6,7 @@ function orgHead(title,sub,{type,menu,menuLabel}={}){
   return el('header',{},el('div',{class:'pghead'},backBtn(b,to),el('div',{style:'display:flex;align-items:center'},
     el('button',{class:'iconbtn green','aria-label':`Search ${title.toLowerCase()}`,html:ic('search',21,1.9),onclick:e=>{searchFrom(e.currentTarget);App.state.q='';App.state.qType=type||'All';App.go('search');}}),
     menu?moreB(menuLabel||`${title} options`,e=>{const r=e.currentTarget.getBoundingClientRect();openMenu(r.right,r.bottom+4,menu());}):null)),
-    el('div',{class:'otitle'},el('h1',{class:'pgtitle'},title),sub?el('span',{class:'osub'},sub):null));
+    withIc((Object.values(PLACES).find(p=>p.n===title)||{}).i,el('div',{class:'otitle'},el('h1',{class:'pgtitle'},title),sub?el('span',{class:'osub'},sub):null)));
 }
 const addBar=(label,aria,fn)=>el('button',{class:'oadd','aria-label':aria,onclick:fn},el('span',{style:'display:grid',html:ic('plus',20,2)}),label);
 const areasIn=list=>[...new Set(list.map(r=>r.area).filter(Boolean))].sort();

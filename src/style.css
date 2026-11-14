@@ -1513,3 +1513,7 @@ html.a-motion #st-dock .scard{transition:none}
 .dp-quick{display:grid;grid-template-columns:repeat(4,minmax(0,auto));justify-content:space-between;gap:6px;padding:12px 14px 0}
 .dp-q{height:40px;padding:0 10px;white-space:nowrap;font-size:13.5px!important;border-radius:20px;border:1px solid var(--line);background:var(--card);color:var(--ink);font-size:14px;font-weight:500}
 .dp-q.on{border-color:var(--accent);color:var(--accent-text)}
+
+/* module icon beside page titles: same icon as in the lists, so the two are learned together */
+.tirow{display:flex;align-items:flex-start;gap:12px;margin-top:4px}.tirow>.pgtitle,.tirow>.otitle{flex:1;min-width:0;margin-top:0!important}
+.tic{width:40px;height:40px;border-radius:12px;background:var(--accent-soft);color:var(--accent-text);display:grid;place-items:center;flex:none;margin-top:4px}

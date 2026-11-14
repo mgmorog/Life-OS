@@ -110,7 +110,7 @@ function viewToday(root){
   {const wc=waitCard(dk);if(wc)page.append(wc);}
   if(isToday){const pc=pinnedListsToday();if(pc)page.append(pc);const pl=plateCard(dk);if(pl)page.append(pl);}
   const tm=addD(sel,1),tmk=k(tm),td=dayItems(tmk),tl=[...td.allDay,...td.timed,...td.anytime],firstT=td.timed[0];
-  page.append(el('section',{class:'card'+(first?' fade-up':''),style:first?'animation-delay:.12s':null},el('button',{class:'tmr',onclick:ev=>{const r=ev.currentTarget.closest('.card').getBoundingClientRect(),S2=App.state;zoomFrom(r,()=>{S2.sel=tmk;S2._fresh=true;S2._gridTop=null;S2._anim=null;scrollTo(0,0);clearTimeout(App._r);App.render();});}},
+  page.append(el('section',{class:'card'+(first?' fade-up':''),style:first?'animation-delay:.12s':null},el('button',{class:'tmr',onclick:()=>{const S2=App.state;S2.sel=tmk;S2._fresh=true;S2._gridTop=null;S2._anim=null;S2._noGlide=true;scrollTo(0,0);clearTimeout(App._r);App.render();}},
     el('div',{class:'tile'},el('small',{},DOW[tm.getDay()].slice(0,3).toUpperCase()),el('span',{},String(tm.getDate()))),
     el('div',{class:'grow'},el('h3',{},isToday?'Tomorrow':relDay(tmk)),el('p',{},tl.length?`${tl.length} planned${firstT?' · first at '+fmtT(firstT.time):''}`:'Nothing planned yet')),
     el('span',{class:'chev',html:ic('chevr',16,2.2)}))));
@@ -269,7 +269,7 @@ function timeGrid(dk,timed){
   const syncJump=()=>{if(!jump)return;const y=nowMin()/60*HH+12;jump.hidden=y>g.scrollTop&&y<g.scrollTop+g.clientHeight;};
   requestAnimationFrame(()=>{
     if(S._gridTop!=null&&!S._fresh)g.scrollTop=S._gridTop;
-    else{const to=isToday?nowTop():Math.max(0,Math.floor((timed[0]?timed[0].time:8*60)/60)*HH+12-16);S._fresh=false;gridGlide(g,gw,to,isToday);}
+    else{const to=isToday?nowTop():Math.max(0,Math.floor((timed[0]?timed[0].time:8*60)/60)*HH+12-16);S._fresh=false;if(S._noGlide){S._noGlide=false;g.scrollTop=to;}else gridGlide(g,gw,to,isToday);}
     tickNow();syncJump();
   });
   g.addEventListener('scroll',()=>{S._gridTop=g.scrollTop;syncJump();},{passive:true});

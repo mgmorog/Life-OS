@@ -151,7 +151,7 @@ const SC={
 };
 function scIds(){const s=get.settings();if(Array.isArray(s.scorecard)&&s.scorecard.length)return s.scorecard.filter(id=>SC[id]);const pick=Object.keys(SC).filter(id=>id!=='inbox'&&SC[id].has());return (pick.length>=3?pick:['tasks','habits','focus','top3']).slice(0,4);}
 function scWeeks(n=8,end=todayK()){const ws=weekStartOf(fromK(end));return Array.from({length:n},(_,i)=>{const a=k(addD(ws,-7*(n-1-i)));return[a,k(addD(fromK(a),6))];});}
-function scorecardCard({a,b,title='Scorecard'}={}){const ids=scIds(),wk=scWeeks(8,b||todayK());
+function scorecardCard({a,b,title='Scorecard',always=false}={}){const ids=scIds(),wk=scWeeks(8,b||todayK());if(!always&&!ids.some(id=>wk.some(([x,y])=>+SC[id].v(x,y)>0)))return null;
   return el('section',{class:'card scorec'},el('div',{class:'bl'},el('span',{class:'lbl'},title),el('button',{class:'linkbtn small',onclick:scPickSheet},'Choose')),
     el('div',{class:'scrows'},ids.map(id=>{const M=SC[id],vals=wk.map(([x,y])=>M.v(x,y)),cur=vals[vals.length-1],prev=vals[vals.length-2],fmt=M.fmt||(v=>String(Math.round(v))),d=cur-prev,good=M.low?d<0:d>0,dir=Math.abs(d)<1e-9?'flat':good?'up':'down';
       return el('div',{class:'scrow'},el('span',{class:'grow'},el('span',{class:'tt'},M.n),el('small',{},`Last week ${fmt(prev)}`)),dSpark(vals,64,24),el('span',{class:'scv'},el('b',{class:'serif tnum'},fmt(cur)),el('span',{class:'atr '+dir},dir==='flat'?'Same':d>0?'▲':'▼')));})));}

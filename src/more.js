@@ -9,7 +9,7 @@ const backBtn=(label='More',to='more')=>el('button',{class:'back',onclick:()=>Ap
 /* module pages show their icon beside the title, the same icon used for them in lists, so the two are learned together */
 const titleIc=i=>el('span',{class:'tic','aria-hidden':'true',html:ic(i,22,1.8)});
 const withIc=(i,h)=>i?el('div',{class:'tirow'},titleIc(i),h):h;
-function pageHead(title,sub,{back='More',to='more',actions=null,icon=null}={}){return el('header',{},el('div',{class:'pghead'},backBtn(back,to),actions?el('div',{style:'display:flex;gap:2px;align-items:center'},actions):null),withIc(icon,el('h1',{class:'pgtitle',style:'margin-top:4px'},title)),sub?el('div',{class:'small muted',style:'margin-top:4px'},sub):null);}
+function pageHead(title,sub,{back='More',to='more',actions=null,icon=null}={}){return el('header',{},el('div',{class:'pghead'},backBtn(back,to),actions?el('div',{style:'display:flex;gap:2px;align-items:center'},actions):null),withIc(icon,el('h1',{class:'pgtitle',style:'margin-top:4px'+(String(title).length>13?';font-size:36px;white-space:nowrap':'')},title)),sub?el('div',{class:'small muted',style:'margin-top:4px'},sub):null);}
 function placeCount(id){
   const tk=todayK();
   switch(id){
@@ -36,13 +36,13 @@ function viewMore(root){
   page.append(el('button',{class:'searchbox',style:'color:var(--ink-3);width:100%;flex:none',onclick:e=>{searchFrom(e.currentTarget);App.state.qType='All';App.go('search');},html:ic('search',20,2)+'<span>Search everything</span>'}));
   const PE=!!App.state.pinEdit;
   page.append(el('div',{class:'pghead'},el('span',{class:'lbl'},'Pinned'),el('span',{style:'display:flex;gap:4px'},PE?el('button',{class:'linkbtn',onclick:editPins},'Add'):null,el('button',{class:'linkbtn',onclick:()=>{App.state.pinEdit=!PE;App.refresh();}},PE?'Done':'Edit'))));
-  page.append(el('div',{class:'pins'+(PE?' edit':'')},(S.pinned||[]).map(id=>{const p=pinInfo(id);if(!p)return null;return pinDrag(el('button',{class:'ptile','data-pin':id,'aria-label':p.c?`${p.n}, ${p.c}`:p.n,onclick:()=>{if(App.state.pinEdit)return;p.go();}},PE?el('span',{class:'pin-x',role:'button','aria-label':`Unpin ${p.n}`,onclick:e=>{e.stopPropagation();setSettings({pinned:(get.settings().pinned||[]).filter(x=>x!==id)});}},'−'):null,el('span',{class:'ic',html:ic(p.i,22,1.7)}),el('span',{class:'clip',style:'max-width:100%'},p.n),p.c?el('span',{class:'cnt'},String(parseInt(p.c)||p.c)):null));})));
+  page.append(el('div',{class:'pins'+(PE?' edit':'')},(S.pinned||[]).map(id=>{const p=pinInfo(id);if(!p)return null;return pinDrag(el('button',{class:'ptile','data-pin':id,'aria-label':p.n,onclick:()=>{if(App.state.pinEdit)return;p.go();}},PE?el('span',{class:'pin-x',role:'button','aria-label':`Unpin ${p.n}`,onclick:e=>{e.stopPropagation();setSettings({pinned:(get.settings().pinned||[]).filter(x=>x!==id)});}},'−'):null,el('span',{class:'ic',html:ic(p.i,22,1.7)}),el('span',{class:'clip',style:'max-width:100%'},p.n)));})));
   const absent=['today','studio','calendar'].filter(x=>!(S.nav||[]).includes(x));
   if(absent.length)page.append(el('div',{class:'lbl'},'Main views'),el('div',{class:'list'},absent.map(x=>el('button',{class:'li',style:'min-height:56px',onclick:()=>App.go(x)},el('span',{class:'sq',html:ic(PLACES[x].i,20,1.7)}),el('span',{class:'grow'},el('b',{},PLACES[x].n)),el('span',{class:'chev',html:ic('chevr',16,2)})))));
   const row=(i,n,s,on)=>el('button',{class:'li',style:'min-height:60px',onclick:on},el('span',{class:'sq',html:ic(i,20,1.7)}),el('span',{class:'grow'},el('b',{style:'font-size:17px'},n)),el('span',{class:'chev',html:ic('chevr',18,2)}));
   const place=id=>row(PLACES[id].i,PLACES[id].n,null,()=>App.go(id));
   page.append(el('div',{class:'lbl'},'Organize'),el('div',{class:'list'},['inbox','tasks','habits','routines','projects','goals','lists'].map(place)),
-    el('div',{class:'lbl'},'Life'),el('div',{class:'list'},row('heart','Life Areas',null,()=>App.go('areas')),place('reviews'),place('insights')),
+    el('div',{class:'lbl'},'Life'),el('div',{class:'list'},row('heart','Life Areas',null,()=>App.go('areas')),place('reviews')),
     el('div',{class:'lbl'},'Kept'),el('div',{class:'list'},
     row('image','Photos',null,()=>App.go('photos')),
     row('archive','Archive',null,()=>App.go('archive')),
@@ -146,7 +146,8 @@ function viewReviews(root){
   const stk=(()=>{const ws=new Set(list.filter(r=>(r.period||'week')==='week').map(r=>r.week));let n=0,w=doneW?cw:k(addD(fromK(cw),-7));while(ws.has(w)){n++;w=k(addD(fromK(w),-7));}return n;})();
   page.append(pageHead('Reviews',(doneW?`This week’s review is done`:`Weekly review due ${DOW[rd]}${lastW?` · last one ${relDay(k(new Date(lastW.createdAt)))}`:''}`)+(stk>1?` · ${stk} weeks in a row`:''),{back:'More',to:'more',icon:'clip'}));
   page.append(el('button',{class:doneW?'btn line block':'btn primary block',onclick:()=>App.go('review')},doneW?'Review this week again':'Start weekly review'),el('div',{style:'display:flex;gap:8px'},el('button',{class:'btn line',style:'flex:1',onclick:()=>App.go('review',{period:'month'})},'Monthly'),el('button',{class:'btn line',style:'flex:1',onclick:()=>App.go('review',{period:'quarter'})},'Quarterly')));
-  page.append(scorecardCard());
+  {const sc=scorecardCard();if(sc)page.append(sc);}
+  {const tmp=el('div');viewInsights(tmp);const ip=tmp.firstChild;if(ip){ip.firstChild&&ip.firstChild.remove();[...ip.children].forEach(c=>{if(c.querySelector&&c.querySelector('.empty'))c.remove();});if(ip.children.length)page.append(el('div',{class:'lbl'},'Insights'),...ip.children);}}
   page.append(monthLetterCard());
   page.append(el('button',{class:'otidy',onclick:()=>{if(!toolOn('Personal growth','yir'))setToolOn('Personal growth','yir',true);App.go('tool',{hub:'Personal growth',tool:'yir'});}},el('span',{class:'oric',html:ic('star',20)}),el('span',{class:'grow'},el('b',{},`${today().getFullYear()} in review`),el('small',{},'Your year across every module, and a theme for the next one')),el('span',{class:'chev',html:ic('chevr',16,2)})));
   if(list.length)page.append(el('div',{class:'lbl'},'Past reviews'),el('div',{class:'list'},list.map(r=>el('button',{class:'li',onclick:()=>{const inst=openSheet({title:rvTitle(r),left:{label:'Close'},right:{label:'Copy',onclick:()=>shareText(rvTitle(r),rvText(r),'Review copied')},build:b=>{if(r.stats)b.append(el('div',{class:'stat3'},el('div',{},el('b',{},String(r.stats.done)),el('small',{},'finished')),el('div',{},el('b',{},String(r.stats.open)),el('small',{},'left open')),el('div',{},el('b',{},String(r.stats.habit)),el('small',{},'habit sessions'))));[['Wins',r.wins],['What got in the way',r.blocks],[(r.period||'week')==='week'?'Next week':'Next',r.next]].forEach(([t,v])=>{if(v)b.append(el('div',{class:'sect'},t),el('p',{style:'white-space:pre-wrap'},v));});if(!r.wins&&!r.blocks&&!r.next&&!r.stats)b.append(el('p',{class:'muted'},'No notes saved.'));}});}},el('span',{class:'grow'},el('b',{},rvTitle(r)),el('small',{},r.wins||r.next||'No notes')),el('span',{class:'chev',html:ic('chevr',16,2)})))));
@@ -175,7 +176,7 @@ function weekStats(a,b){let done=0,open=0,habit=0,dk=a,planned=0;while(dk<=b){co
 /* Insights: only ever real numbers */
 function viewInsights(root){
   const page=el('div',{class:'page'}),tk=todayK();
-  page.append(pageHead('Insights','Plans vs. what happened',{back:'More',to:'more',icon:'chart'}));
+  page.append(pageHead('Insights',null,{back:'More',to:'more',icon:'chart'}));
   const weeks=[];let s=weekStartOf(today());for(let i=0;i<8;i++){const a=k(addD(s,-7*i)),st=weekStats(a,k(addD(fromK(a),6)));weeks.unshift({a,...st});}
   const total=weeks.reduce((n,w)=>n+w.planned,0);
   if(total<3){page.append(el('div',{class:'list'},emptyState('Not enough history yet','Plan and finish a few things. Patterns show up here after about a week.')));{const mi=typeof moodInsight==='function'?moodInsight():null;if(mi)page.append(mi);}root.append(page);return;}
@@ -297,7 +298,7 @@ function purgeTrash(){const cut=Date.now()-30*864e5;get.all('trashed').forEach(t
 function trashRestore(t){put(t.rec);const cal=t.rec.f&&t.rec.f.calId&&get.id('del-'+t.rec.f.calId);if(cal)put(cal.rec);}
 function viewTrash(root){
   purgeTrash();const S=App.state,list=get.all('trashed').slice().sort((a,b)=>(b.deletedAt||0)-(a.deletedAt||0)),page=el('div',{class:'page'});
-  page.append(pageHead('Recently deleted',list.length?`${list.length} item${list.length===1?'':'s'} · kept for 30 days`:'Kept for 30 days',{icon:'trash'}));
+  page.append(pageHead('Recently deleted',list.length?`${list.length} item${list.length===1?'':'s'}`:null,{icon:'trash'}));
   if(!list.length){S.trashSel=null;page.append(el('div',{class:'list'},emptyState('Nothing here','Things you delete stay here for 30 days, then they’re gone.')));root.append(page);return;}
   const emptyAll=()=>askConfirm({title:'Empty Recently deleted?',body:'Everything here will be gone for good.',yes:'Empty',hold:true,no:'Keep it',onYes:()=>{list.forEach(t=>remove(t.id,{silent:true,hard:true}));S.trashSel=null;App.refresh();}});
   const left=t=>Math.max(1,30-Math.floor((Date.now()-t.deletedAt)/864e5)),meta=t=>`${trashWhat(t)} · ${left(t)} day${left(t)===1?'':'s'} left`;

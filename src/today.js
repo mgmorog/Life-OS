@@ -110,7 +110,6 @@ function viewToday(root){
   if(isToday){const gc=gsCard();if(gc)page.append(gc);const pe=planEveCard(dk);if(pe)page.append(pe);}
   page.append(alldayRow(dk));
   page.append(...dayCard(dk));
-  {const nc=nowCard(dk);if(nc)page.append(nc);}
   const rem=reminderCard();if(rem)page.append(rem);
   if(isToday&&typeof s.seenVer==='number'&&s.seenVer<APP_VER)page.append(el('div',{class:'focus-chip'},el('button',{class:'grow small',style:'text-align:left;min-height:32px',onclick:whatsNew},`What’s new in Life OS ${APP_VER}`),el('button',{class:'fa',onclick:whatsNew},'See ›'),el('button',{class:'iconbtn','aria-label':'Dismiss',style:'width:32px;height:32px',html:ic('x',14,2.2),onclick:()=>setSettings({seenVer:APP_VER})})));
   if(isToday&&s.inboxNudge&&inboxN>=5&&s.nudgeOff!==weekKey(today()))page.append(el('div',{class:'focus-chip'},el('button',{class:'grow small',style:'text-align:left;min-height:32px',onclick:()=>App.go('inbox')},`${inboxN} ideas waiting in your Inbox`),el('button',{class:'fa',onclick:()=>App.go('inbox')},'Sort ›'),el('button',{class:'iconbtn','aria-label':'Dismiss for this week',style:'width:32px;height:32px',html:ic('x',14,2.2),onclick:()=>setSettings({nudgeOff:weekKey(today())})})));

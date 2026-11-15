@@ -368,7 +368,7 @@ function viewFoundation(root){
   page.append(pageHead('Personalized foundation',null,{back:'Settings',to:'prefs'}));
   page.append(el('div',{class:'lbl'},`${done} of 5 done`),el('div',{class:'list'},steps.map(([id,t,sub,on])=>{const d=!!f[id];const next=!d&&steps.find(x=>!f[x[0]])[0]===id;return el('button',{class:'li',style:'min-height:64px',onclick:on},el('span',{class:'tick'+(d?' on':''),html:ic('check',14,3)}),el('span',{class:'grow'},el('b',{style:d?'color:var(--ink-2)':''},t),el('small',{},sub)),next?el('span',{class:'linkbtn small'},'Next'):null,el('span',{class:'chev',html:ic('chevr',16,2)}));})));
   if(done===5)page.append(el('button',{class:'btn primary block',onclick:()=>{setSettings({introDone:true});App.go('today');}},'Go to Today'));
-  else if(!s.introDone)page.append(el('button',{class:'btn text',onclick:()=>{setSettings({introDone:true});App.go('today');}},'Skip for now'));
+  else{page.append(el('button',{class:'btn line block',onclick:()=>askConfirm({title:'Finish setup?',body:'The checklist leaves Settings. You can still do any step later, and bring the checklist back from Data & help.',yes:'Finish',no:'Keep going',danger:false,onYes:()=>{setSettings({introDone:true,foundationOff:true});toast('Setup finished');App.go('prefs');}})},'Finish setup'),el('p',{class:'small muted',style:'text-align:center;margin:-4px 0 0'},'Skip what’s left. Nothing is lost.'));}
   root.append(page);
 }
 function photoRefs(list){const out=[];const walk=o=>{if(!o||typeof o!=='object')return;if(Array.isArray(o.photos))o.photos.forEach(ph=>{if(ph&&typeof ph==='object'&&ph.url)out.push(ph);});for(const k in o){const v=o[k];if(v&&typeof v==='object'&&k!=='photos')walk(v);}};list.forEach(walk);return out;}

@@ -1744,3 +1744,8 @@ html.c-fade .todo.won .t3in .tick-host.done{opacity:1}
 .modrow small{display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
 .setbody,.setres{display:flex;flex-direction:column;gap:inherit}
 .setres:empty{display:none}
+
+/* v142 every sheet reorder lifts like Today */
+.dlift{position:relative;z-index:5;background:var(--card);border-radius:14px;box-shadow:0 14px 30px rgba(20,30,25,.18),0 2px 6px rgba(20,30,25,.08);cursor:grabbing}
+.dragging>[data-i]:not(.dlift){will-change:transform}
+.list.dragging{overflow:visible}

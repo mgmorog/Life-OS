@@ -83,22 +83,33 @@ function fieldNotes(id,label,ph,val,onIn,{rows=1,min=26}={}){const links=el('spa
 /* press a handle and drag: the row follows the finger, the others slide out of the way, and the sheet scrolls at its edges */
 /* a finger lifted after a drag can land on a delete button; ignore taps for a moment */
 function dragQuiet(){const stop=ev=>{ev.stopPropagation();ev.preventDefault();};window.addEventListener('click',stop,true);setTimeout(()=>window.removeEventListener('click',stop,true),350);}
+/* Same feel as dragging on Today: the row lifts and follows the finger, the others slide aside, and it settles into its slot when let go */
 function reorderable(h,row,box,commit){
-  const isItem=n=>n&&n.hasAttribute('data-i');
-  const slide=n=>{const a=n.getBoundingClientRect().top;return()=>{const b=n.getBoundingClientRect().top;if(a===b)return;n.style.transition='none';n.style.transform=`translateY(${a-b}px)`;requestAnimationFrame(()=>{n.style.transition='transform .16s ease';n.style.transform='';});};};
   h.addEventListener('pointerdown',e=>{if(e.button)return;e.preventDefault();e.stopPropagation();const a=document.activeElement;if(a&&a.matches('input,textarea'))a.blur();
-    try{h.setPointerCapture(e.pointerId);}catch(err){}row.classList.add('drag');box.classList.add('dragging');buzz(8);let y=e.clientY,moved=false,live=true;const y0=y;const sc=row.closest('.sbody');
-    const place=()=>{row.style.transform='';const r=row.getBoundingClientRect(),mid=r.top+r.height/2,prev=row.previousElementSibling,next=row.nextElementSibling;
-      if(isItem(prev)&&y<prev.getBoundingClientRect().top+prev.offsetHeight/2){const f=slide(prev);box.insertBefore(row,prev);f();moved=true;buzz(4);}
-      else if(isItem(next)&&y>next.getBoundingClientRect().top+next.offsetHeight/2){const f=slide(next);box.insertBefore(next,row);f();moved=true;buzz(4);}
-      const r2=row.getBoundingClientRect();row.style.transform=`translateY(${y-(r2.top+r2.height/2)}px)`;};
-    const loop=()=>{if(!live)return;if(!row.isConnected){up();return;}if(sc){const b=sc.getBoundingClientRect(),edge=64;if(y<b.top+edge&&y<y0-8)sc.scrollTop-=7;else if(y>b.bottom-edge&&y>y0+8)sc.scrollTop+=7;}place();requestAnimationFrame(loop);};
-    const mv=ev=>{if(ev.pointerId===e.pointerId)y=ev.clientY;};
+    try{h.setPointerCapture(e.pointerId);}catch(err){}
+    const seq=[...box.children].filter(n=>n.hasAttribute('data-i')&&n.offsetHeight),i0=seq.indexOf(row);if(i0<0)return;
+    const tops=seq.map(n=>n.getBoundingClientRect().top),hs=seq.map(n=>n.offsetHeight),H=hs[i0];
+    const gap=seq[i0+1]?tops[i0+1]-tops[i0]-H:seq[i0-1]?tops[i0]-tops[i0-1]-hs[i0-1]:0,step=H+Math.max(0,gap);
+    const sc=row.closest('.sbody'),s0=sc?sc.scrollTop:0,y0=e.clientY;let y=y0,to=i0,live=true;
+    row.classList.add('drag','dlift');box.classList.add('dragging');App.dragging=true;buzz(6);
+    const ease='transform .25s cubic-bezier(.2,.8,.2,1)';
+    const frame=()=>{const ds=sc?sc.scrollTop-s0:0,dy=y-y0+ds;row.style.transform=`translateY(${dy}px) scale(1.02)`;
+      const c=tops[i0]+dy+H/2;let t=0;for(let j=0;j<seq.length;j++){if(j!==i0&&c>tops[j]+hs[j]/2)t++;}
+      if(t!==to){to=t;buzz(4);seq.forEach((o,j)=>{if(o===row)return;let sh=0;if(i0<to&&j>i0&&j<=to)sh=-step;if(i0>to&&j<i0&&j>=to)sh=step;o.style.transition=ease;o.style.transform=sh?`translateY(${sh}px)`:'';});}};
+    const loop=()=>{if(!live)return;if(!row.isConnected){up();return;}if(sc){const b=sc.getBoundingClientRect(),edge=64;if(y<b.top+edge&&y<y0-8)sc.scrollTop-=7;else if(y>b.bottom-edge&&y>y0+8)sc.scrollTop+=7;}frame();requestAnimationFrame(loop);};
+    const mv=ev=>{if(ev.pointerId===e.pointerId){y=ev.clientY;if(ev.cancelable)ev.preventDefault();}};
     const ends=['pointerup','pointercancel','touchend','touchcancel'];
-    /* Moving a row up the page takes it out of the document for a moment, and the phone then stops telling the handle about the finger. So listen on the window, where the finger always reports */
     const lost=ev=>{if(ev.target===window)up();};
-    const up=()=>{if(!live)return;live=false;window.removeEventListener('pointermove',mv,true);window.removeEventListener('blur',lost);ends.forEach(n=>window.removeEventListener(n,up,true));row.classList.remove('drag');box.classList.remove('dragging');row.style.transform='';const shh=row.closest('.sheet');if(shh)shh.classList.remove('typing');if(moved){dragQuiet();commit();}};
-    window.addEventListener('pointermove',mv,true);window.addEventListener('blur',lost);ends.forEach(n=>window.addEventListener(n,up,true));loop();});
+    const up=()=>{if(!live)return;live=false;window.removeEventListener('pointermove',mv,true);window.removeEventListener('blur',lost);ends.forEach(n=>window.removeEventListener(n,up,true));
+      App.dragging=false;App._dragEnd=Date.now();box.classList.remove('dragging');const shh=row.closest('.sheet');if(shh)shh.classList.remove('typing');
+      const before=row.getBoundingClientRect().top;
+      seq.forEach(o=>{if(o!==row){o.style.transition='none';o.style.transform='';}});
+      if(to!==i0){const order=seq.filter(n=>n!==row);order.splice(to,0,row);const anchor=seq[seq.length-1].nextSibling;order.forEach(n=>box.insertBefore(n,anchor));}
+      row.style.transition='none';row.style.transform='';const slot=row.getBoundingClientRect().top;
+      row.style.transform=`translateY(${before-slot}px) scale(1.02)`;void row.offsetHeight;
+      row.style.transition=motionOK()?'transform .3s cubic-bezier(.3,1.15,.5,1)':'none';row.style.transform='';
+      setTimeout(()=>{row.classList.remove('drag','dlift');seq.forEach(o=>o.style.transition='');if(to!==i0){dragQuiet();commit();}},motionOK()?320:0);};
+    window.addEventListener('pointermove',mv,{capture:true,passive:false});window.addEventListener('blur',lost);ends.forEach(n=>window.addEventListener(n,up,true));loop();});
 }
 function stepsEditor(D,{tick=true,word='step'}={}){const Word=word[0].toUpperCase()+word.slice(1);
   const wrap=el('div',{style:'display:grid;gap:8px'}),box=el('div',{class:'steps'});

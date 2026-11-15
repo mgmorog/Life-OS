@@ -741,3 +741,15 @@ function pinDropIn(root){const id=App.state._pinDrop;if(!id)return;App.state._pi
 /* focus: +5 min floats up from the ring, and the ring eases back to make room */
 function plusFive(){const r=$('.fring');if(!r||!motionOK())return;const a=$('#fr-arc');if(a){a.style.transition='stroke-dashoffset .6s cubic-bezier(.3,1.15,.5,1)';setTimeout(()=>{a.style.transition='';},1700);}
   const f=el('span',{class:'p5f'},'+5 min');r.append(f);f.animate([{transform:'translate(-50%,0)',opacity:0},{transform:'translate(-50%,-14px)',opacity:1,offset:.25},{transform:'translate(-50%,-48px)',opacity:0}],{duration:950,easing:'cubic-bezier(.2,.7,.3,1)',fill:'forwards'}).onfinish=()=>f.remove();}
+/* Switches glide everywhere. Most switch taps redraw their page or sheet, which used to swap in a switch that was
+   already on, so the thumb snapped. Remember the tap, find the new switch, start it from the old state, then let it slide.
+   A row that appears because the switch turned on (marked .condrow) grows in under it. */
+document.addEventListener('click',e=>{const s0=e.target.closest&&e.target.closest('.sw');if(!s0)return;
+  const key=(s0.getAttribute('aria-label')||'').replace(/ (on|off)$/,''),was=s0.classList.contains('on'),t0=performance.now();
+  const find=()=>[...document.querySelectorAll('.sw')].find(x=>x.isConnected&&(x.getAttribute('aria-label')||'').replace(/ (on|off)$/,'')===key);
+  const tick=()=>{const s=find();if(s&&(s!==s0||s.classList.contains('on')!==was)){const now=s.classList.contains('on');if(now===was)return;
+      if(motionOK()){s.classList.add('nt');s.classList.toggle('on',was);void s.offsetWidth;s.classList.remove('nt');requestAnimationFrame(()=>s.classList.toggle('on',now));
+        const row=s.closest('.li'),nx=row&&row.nextElementSibling;if(now&&nx&&nx.classList.contains('condrow'))nx.animate([{opacity:0,transform:'translateY(-6px)',maxHeight:'0px'},{opacity:1,transform:'none',maxHeight:'80px'}],{duration:320,easing:'cubic-bezier(.3,1.1,.5,1)'});}
+      return;}
+    if(performance.now()-t0<700)requestAnimationFrame(tick);};
+  requestAnimationFrame(tick);},true);

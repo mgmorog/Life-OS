@@ -65,7 +65,7 @@ function orderSheet({title,init,max,word,limit,groups,info,exact=false,onDone}){
   return inst;
 }
 const pinInfo=id=>{if(id&&id.startsWith('area:')){const a=id.slice(5);return (get.settings().areas||AREAS).includes(a)?{n:a,i:areaIcon(a),go:()=>App.go('area',{name:a}),c:''}:null;}const p=PLACES[id];if(!p||id==='tools'||id==='discover')return null;return{n:p.n,i:p.i,go:()=>App.go(id),c:placeCount(id).c};};
-function editPins(){const s=get.settings();orderSheet({title:'Edit pinned',init:(s.pinned||[]).filter(pinInfo),max:4,word:'pinned',limit:'Four is the limit. Remove one to add another.',info:pinInfo,groups:[['Places',['inbox','tasks','habits','goals','projects','routines','lists','reviews','insights','photos','archive','trash','today','calendar','studio','areas']],['Life areas',(s.areas||AREAS).map(a=>'area:'+a)]],onDone:D=>setSettings({pinned:D})});}
+function editPins(){const s=get.settings();orderSheet({title:'Edit pinned',init:(s.pinned||[]).filter(pinInfo),max:4,word:'pinned',limit:'Four is the limit. Remove one to add another.',info:pinInfo,groups:[['Places',['inbox','tasks','habits','goals','projects','routines','lists','reviews','photos','archive','trash','today','calendar','studio','areas']],['Life areas',(s.areas||AREAS).map(a=>'area:'+a)]],onDone:D=>setSettings({pinned:D})});}
 /* search */
 function searchIndex(){
   const out=[];const push=(type,t,sub,icon,go,n,m)=>out.push(Object.assign({type,t:t||'',sub,icon,go,n:n||''},m||{}));const cd=r=>r.createdAt?k(new Date(r.createdAt)):null;
@@ -351,7 +351,7 @@ function viewArchive(root){
 /* Settings */
 function setRow(label,sub,val,on){return el('button',{class:'li',style:'min-height:56px',onclick:on},el('span',{class:'grow'},el('b',{style:'font-weight:500'},label),sub?el('small',{},sub):null),val?el('span',{class:'small muted'},val):null,el('span',{class:'chev',html:ic('chevr',16,2)}));}
 function pickOne(title,opts,val,on){const inst=openSheet({title,build:b=>b.append(el('div',{class:'list'},opts.map(([v,l])=>el('button',{class:'li',style:'min-height:52px','aria-pressed':String(v===val),onclick:()=>{on(v);inst.close();}},el('span',{class:'grow'},l),v===val?el('span',{style:'color:var(--accent-text);display:grid',html:ic('check',18,2.6)}):null))))});}
-function navSheet(){const s=get.settings();orderSheet({title:'Bottom bar',init:s.nav||[],max:3,exact:true,word:'chosen',limit:'Three is the limit. Remove one to add another.',info:id=>PLACES[id],groups:[['Places',['today','studio','calendar','inbox','tasks','habits','goals','projects','routines','lists','reviews','insights']]],onDone:D=>setSettings({nav:D})});}
+function navSheet(){const s=get.settings();orderSheet({title:'Bottom bar',init:s.nav||[],max:3,exact:true,word:'chosen',limit:'Three is the limit. Remove one to add another.',info:id=>PLACES[id],groups:[['Places',['today','studio','calendar','inbox','tasks','habits','goals','projects','routines','lists','reviews','areas']]],onDone:D=>setSettings({nav:D})});}
 function areasSheet(){
   const s=get.settings();let D=[...(s.areas||AREAS)];let v='';let inst;
   inst=openSheet({title:'Life areas',left:{label:'Cancel'},right:{label:'Done',onclick:()=>{setSettings({areas:D,foundation:{...(s.foundation||{}),areas:true}});inst.close();}},build:body=>{

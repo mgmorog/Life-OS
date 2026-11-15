@@ -1730,3 +1730,4 @@ html.c-fade .todo.won .t3in .tick-host.done{opacity:1}
 .resli .rk-edit{background:#EBEEF6;color:#46578A}
 .resli .rk-image{background:#F6EAE4;color:#9A4A33}
 .tplmine{display:inline-flex;align-items:center;gap:6px;background:var(--accent-soft);color:var(--accent-deep)}
+.sw.nt,.sw.nt::after{transition:none!important}

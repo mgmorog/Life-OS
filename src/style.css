@@ -1545,3 +1545,45 @@ html.a-motion #st-dock .scard{transition:none}
 .daytog.today:not(.on){border:2px solid var(--accent-text)}
 .daytog:disabled{opacity:.4}
 .dpstat{display:inline-flex;align-items:center;gap:6px;font-size:14px;color:var(--ink-2)}.dpstat b{font-weight:600;color:var(--ink)}.dpstat i{font-style:normal;color:var(--line-2,#C9CEC9);margin:0 4px}
+/* ---------- fitness: routines with sets, rest, supersets and muscles ---------- */
+.wexs{display:flex;flex-direction:column;gap:10px}
+.wex{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.wex.inss,.extable.inss{border-color:var(--h2)}
+.wex.ssnext,.extable.ssnext{border-bottom-left-radius:6px;border-bottom-right-radius:6px;margin-bottom:-6px;position:relative}
+.wex.ssnext+.wex,.extable.ssnext+.extable{border-top-left-radius:6px;border-top-right-radius:6px}
+.wexh,.extable .exh{display:flex;align-items:center;gap:8px;padding:12px 8px 6px 14px}
+.wexh b{font-size:16px;font-weight:600;display:block}
+.extable .exh small{display:block;font-size:12.5px;margin-top:1px}
+.wmus{display:block;font-size:13px;color:var(--accent-text);min-height:28px;text-align:left;padding:0}
+.wmus.empty{color:var(--ink-2);text-decoration:underline;text-underline-offset:3px}
+.sspill{flex:none;font-size:11.5px;font-weight:600;color:var(--accent-deep);background:var(--accent-soft);padding:4px 8px;border-radius:10px;white-space:nowrap}
+.wexf{display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--line-2);padding:0 6px}
+.wexf>button:first-child{min-height:44px;padding:0 8px;font-size:14px;font-weight:600;color:var(--accent-text)}
+.restbtn{display:inline-flex;align-items:center;gap:5px;min-height:36px;padding:0 10px;border-radius:18px;font-size:13px;font-weight:600;color:var(--accent-text);white-space:nowrap}
+.restbtn:active{background:var(--accent-soft)}
+.iconbtn{width:40px;height:40px;flex:none;display:grid;place-items:center;border-radius:50%;color:var(--ink-2)}
+.iconbtn:active{background:var(--chip)}
+.nb.sty{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:14px;color:#4E5853}
+.nb.sty.t-w{background:#F6EBD3;color:#7A5A12}.nb.sty.t-d{background:#DCE8F3;color:#24527A}.nb.sty.t-f{background:#F5DED6;color:#8A3A22}
+.mgrid{display:grid;grid-template-columns:92px minmax(0,1fr) 34px;gap:8px 10px;align-items:center;font-size:14px}
+.mgrid b{text-align:right;font-weight:600}
+.mbar{height:8px;border-radius:4px;background:var(--h0);overflow:hidden}.mbar i{display:block;height:100%;background:var(--accent);border-radius:4px}
+.nudge{border-top:1px solid var(--line-2);margin-top:12px;padding-top:12px;display:grid;gap:6px;justify-items:start}
+.nudge p{margin:0}
+.wklinked{display:flex;align-items:center;gap:8px;width:100%;min-height:44px;padding:0 4px;font-size:13.5px;color:var(--accent-text);text-align:left}
+.nextup{display:inline-block;margin-left:8px;font-size:11px;font-weight:600;color:#fff;background:var(--accent);padding:3px 8px;border-radius:10px;vertical-align:2px}
+.rnum{width:30px;height:30px;flex:none;border-radius:50%;display:grid;place-items:center;font-weight:600;font-size:14px;background:var(--accent-soft);color:var(--accent-text)}
+.rnum.on{background:var(--accent);color:#fff}
+.splitbtn{display:flex;flex:1;gap:2px}.splitbtn .btn{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.splitbtn .btn.more{flex:none;width:48px;padding:0}
+.splitbtn .btn:first-child:not(:last-child){border-top-right-radius:6px;border-bottom-right-radius:6px}.splitbtn .btn.more{border-top-left-radius:6px;border-bottom-left-radius:6px}
+.wksug{background:var(--card);border:1px solid var(--h2);border-radius:16px;padding:14px;margin-top:10px}
+.wksug.on{display:flex;align-items:center;gap:10px;padding:10px 14px;border-color:var(--line)}
+.startchip{display:inline-flex;align-items:center;gap:5px;background:var(--accent);color:#fff;border-color:var(--accent)}
+.daycol{flex:1 1 0;min-width:0;max-width:46px;display:flex;flex-direction:column;align-items:center;gap:3px}
+.daycol .daytog{width:100%;max-width:none}
+.daycol small{height:14px;font-size:10.5px;font-weight:600;color:var(--ink-2);white-space:nowrap}
+.daycol small.on{color:var(--accent-text)}
+.exmeta{display:flex;align-items:center;gap:6px;padding:0 10px 4px 14px;flex-wrap:wrap}
+.exmeta .restbtn{padding:0 8px;margin-left:-8px}.exmeta .sspill+.restbtn{margin-left:0}
+.splitbtn{flex:1.6}.splitbtn .btn:first-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 12px}

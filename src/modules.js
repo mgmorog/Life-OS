@@ -23,9 +23,9 @@ function habitSheet(rec,seed={}){
   let render,nCount=D.track==='count'?D.goalN:8,nTime=D.track==='time'?D.goalN:20;
   const inst=formSheet({title:isEdit?'Edit habit':'New habit',addLabel:isEdit?'Save':'Add',D,word:'habit',isEdit,canAdd:()=>!!D.title.trim(),commit:()=>commit(),build:(body,update,i)=>{
     const ctx=formCtx(()=>render());
-    const T=fieldTitle('f-habit-title','Title','What do you want to keep doing?',D.title,v=>{D.title=v;update();},()=>{if(D.title.trim()){commit();inst.close();}});
+    const sug=isEdit?null:el('div',{});const T=fieldTitle('f-habit-title','Title','What do you want to keep doing?',D.title,v=>{D.title=v;update();wkSuggest(sug,D);},()=>{if(D.title.trim()){commit();inst.close();}});
     const how=el('div',{class:'group'}),track=el('div',{}),det=el('div',{class:'group'});
-    body.append(T.wrap,fieldNotes('f-habit-notes','Why it matters','A reason to come back to',D.notes,v=>D.notes=v),el('div',{class:'sect'},'How often'),how,el('div',{class:'sect'},'Track by'),track,el('div',{class:'sect'},'Details'),det);
+    body.append(T.wrap,sug||'',fieldNotes('f-habit-notes','Why it matters','A reason to come back to',D.notes,v=>D.notes=v),el('div',{class:'sect'},'How often'),how,el('div',{class:'sect'},'Track by'),track,el('div',{class:'sect'},'Details'),det);
     render=()=>{how.innerHTML='';track.innerHTML='';det.innerHTML='';
       how.append(el('div',{style:'padding:12px var(--pad)'},seg([['days','Days of the week'],['times','Times a week']],D.howOften,v=>{D.howOften=v;if(v==='times')D.days=[];else if(!D.days.length)D.days=[monIdx(today())];render();})));
       if(D.howOften==='days'){const presets=[['Every day',[0,1,2,3,4,5,6]],['Weekdays',[0,1,2,3,4]],['Weekends',[5,6]]];

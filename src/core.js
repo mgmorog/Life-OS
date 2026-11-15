@@ -144,10 +144,10 @@ async function flush(id,attempt=0){
 function flushAll(){[...dirty,...deleted].forEach(id=>flush(id));}
 addEventListener('online',flushAll);
 document.addEventListener('visibilitychange',()=>{if(document.hidden){cacheNow();flushAll();}else{App.refresh();}});
-function put(r,{silent=false}={}){r.updatedAt=Date.now();if(!r.createdAt)r.createdAt=r.updatedAt;recs.set(r.id,r);deleted.delete(r.id);queueWrite(r.id);const tr='del-'+r.id;if(recs.has(tr)){recs.delete(tr);deleted.add(tr);queueWrite(tr);}if(!silent)App.refresh();return r;}
+function put(r,{silent=false}={}){r.updatedAt=Date.now();if(!r.createdAt)r.createdAt=r.updatedAt;recs.set(r.id,r);deleted.delete(r.id);queueWrite(r.id);const tr='del-'+r.id;if(recs.has(tr)){recs.delete(tr);deleted.add(tr);queueWrite(tr);}if(typeof wkHook==='function')wkHook(r);if(!silent)App.refresh();return r;}
 function create(kind,fields){return put(Object.assign({id:uid(kind[0]),kind},fields));}
 const NO_TRASH=new Set(['settings','remstate','focus','plan','trashed','areanote','discover']);
-function remove(id,{silent=false,hard=false}={}){const was=recs.get(id);if(was&&!hard&&!NO_TRASH.has(was.kind)&&!(was.f&&was.f.t==='cfg')&&!was.example){const tr={id:'del-'+id,kind:'trashed',rec:JSON.parse(JSON.stringify(was)),deletedAt:Date.now(),createdAt:Date.now(),updatedAt:Date.now()};recs.set(tr.id,tr);deleted.delete(tr.id);queueWrite(tr.id);}recs.delete(id);deleted.add(id);queueWrite(id);if(!silent)App.refresh();}
+function remove(id,{silent=false,hard=false}={}){const was=recs.get(id);if(was&&!hard&&!NO_TRASH.has(was.kind)&&!(was.f&&was.f.t==='cfg')&&!was.example){const tr={id:'del-'+id,kind:'trashed',rec:JSON.parse(JSON.stringify(was)),deletedAt:Date.now(),createdAt:Date.now(),updatedAt:Date.now()};recs.set(tr.id,tr);deleted.delete(tr.id);queueWrite(tr.id);}recs.delete(id);deleted.add(id);queueWrite(id);if(was&&typeof wkHook==='function')wkHook(was);if(!silent)App.refresh();}
 function setSettings(patch){const s=Object.assign({},DEFAULT_SETTINGS,get.settings(),patch);put(s);}
 async function connect(){
   const claude=window.claude;
@@ -240,6 +240,7 @@ function toggleItem(e,dk){
   if(e.kind==='step'){const g0=e.rec.kind==='goal'?e.rec:goalFor(e.rec),a0=g0?goalProgress(g0):0;e.step.d=!e.step.d;e.step.doneAt=e.step.d?Date.now():null;put(e.rec,{silent:true});if(g0&&e.step.d&&goalProgress(g0)>a0){App.state.goalPulse={id:g0.id,from:a0,to:goalProgress(g0),at:Date.now()};toast(`${e.step.t}. ${g0.title} is now at ${Math.round(goalProgress(g0)*100)}%.`);}return e.step.d;}
   if(e.kind==='gcal')return false;
   if(e.kind==='routine'){const r=e.rec;r.runs=r.runs||{};if(r.runs[dk])delete r.runs[dk];else r.runs[dk]=Date.now();put(r,{silent:true});return !!r.runs[dk];}
+  if(e.kind==='habit'&&e.rec.link&&e.rec.link.log&&(!e.rec.track||e.rec.track==='check')&&typeof wkHabitToggle==='function')return wkHabitToggle(e.rec,dk);
   if(e.kind==='habit'){const h=e.rec;h.logs=h.logs||{};if(habitDone(h,dk))delete h.logs[dk];else{h.logs[dk]=h.track==='count'||h.track==='time'?(h.goalN||1):true;if(h.skips)delete h.skips[dk];if(dk===todayK()){const n=new Date();h.logT=Object.assign({},h.logT,{[dk]:n.getHours()*60+n.getMinutes()});}}put(h,{silent:true});syncHabitGoals(h);celebrateStreak(h,dk);return habitDone(h,dk);}
   const r=e.rec;if(e.kind==='task'){const d=e.occ||dk;return setTaskDone(r,d,!(r.doneDates&&r.doneDates[d]));}r.doneDates=r.doneDates||{};if(r.doneDates[dk])delete r.doneDates[dk];else r.doneDates[dk]=Date.now();
   if(e.kind==='block'&&r.part){const h=get.id(r.part);if(h&&h.kind==='habit'){h.logs=h.logs||{};if(r.doneDates[dk])h.logs[dk]=true;else delete h.logs[dk];put(h,{silent:true});}}

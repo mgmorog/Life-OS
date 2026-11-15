@@ -197,6 +197,7 @@ function askFields({title,fields,D={},save,addLabel='Save',word='change',isEdit=
 function pickSheet(title,opts,on){const inst=openSheet({title,left:{label:'Cancel'},build:b=>b.append(el('div',{class:'list'},opts.map(([v,l,s])=>el('button',{class:'li',style:'min-height:54px',onclick:()=>{inst.close();on(v);}},el('span',{class:'grow'},el('b',{style:'font-weight:500'},l),s?el('small',{},s):null)))))});}
 function entrySheet(hub,t,rec,{seed=null,after=null,type=null,preset=null}={}){
   if(t.wheel){wheelSheet(hub,t,rec);return;}
+  if(hub==='Health'&&t.id==='workouts'&&(type==='routine'||(rec&&rec.f&&rec.f.t==='routine'))){workoutRoutineSheet(rec,{after});return;}
   const isEdit=!!rec,ty=type!==null?type:(isEdit?(rec.f.t||t.legacy||''):(t.t||'')),def=(t.types&&t.types[ty])||t,fields=def.fields,word=def.word||t.word,D=isEdit?clone(rec.f):fieldDefaults(fields,{});
   if(!isEdit&&ty)D.t=ty;
   if(!isEdit&&preset)Object.assign(D,preset);

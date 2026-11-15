@@ -75,14 +75,15 @@ function habitLeftNote(h){
   /* One round chip per day left this week. Tap to plan that day, tap again to take it off. Planned days are filled. */
   const tk=todayK(),target=h.target||1,left=target-habitWeek(h,tk),ws=weekStartOf(today()),days=[];
   for(let i=0;i<7;i++){const d=k(addD(ws,i));if(d>=tk)days.push(d);}
-  const S=h.sessions||{},doneT=habitDone(h,tk),plan=days.filter(d=>S[d]&&!(d===tk&&doneT));
+  const rs=h.link&&h.link.log?wkRoutines(h):[],S=h.sessions||{},doneT=habitDone(h,tk),plan=days.filter(d=>S[d]&&!(d===tk&&doneT));
   if(!days.length||(left<=0&&!plan.length))return null;
   const nm=d=>DOW[fromK(d).getDay()].slice(0,3),full=d=>d===tk?'today':DOW[fromK(d).getDay()];
     const doneN=habitWeek(h,tk),text=el('span',{class:'dpstat'},el('b',{},String(doneN)),' Done',el('i',{'aria-hidden':'true'},'|'),el('b',{},String(plan.length)),' Planned');
   const toggle=d=>{buzz(6);h.sessions=h.sessions||{};if(h.sessions[d]){delete h.sessions[d];put(h);}else{h.sessions[d]={time:h.setTime??null};put(h);}};
   return el('div',{class:'ohnext'},el('div',{class:'small',style:'color:var(--ink-2)'},text),
     el('div',{class:'daytogs',role:'group','aria-label':`Plan ${h.title} this week`},days.map(d=>{const on=!!S[d]&&!(d===tk&&doneT),busy=!on&&freeMinutes(d)<(h.dur||30);
-      return el('button',{class:'daytog'+(d===tk?' today':'')+(on?' on':'')+(busy?' busy':''),disabled:d===tk&&doneT,'aria-pressed':String(on),'aria-label':`${on?'Planned':'Plan'} ${h.title} ${full(d)}${busy?', busy day':''}`,onclick:e=>{e.stopPropagation();toggle(d);}},nm(d));})));}
+      const b=el('button',{class:'daytog'+(d===tk?' today':'')+(on?' on':'')+(busy?' busy':''),disabled:d===tk&&doneT,'aria-pressed':String(on),'aria-label':`${on?'Planned':'Plan'} ${h.title} ${full(d)}${busy?', busy day':''}${rs.length?'. Press and hold to pick the routine':''}`,onclick:e=>{e.stopPropagation();toggle(d);}},nm(d));
+      if(!rs.length)return b;const pr=on&&S[d].rid&&get.id(S[d].rid);return el('span',{class:'daycol'},withPress(b,()=>wkPinSheet(h,d)),el('small',{class:pr?'on':''},on?(pr?shortR(pr):'Any'):''));})),rs.length?el('p',{class:'small muted',style:'margin-top:6px'},'Press and hold a day to pick its routine.'):null);}
 
 /* ---------- Routines: what your runs show ---------- */
 function routineInsights(r){const log=rtLog(r);if(log.length<5)return[];const off=r.insightOff||{},out=[],mins=rtMins(r),steps=r.steps||[];const dismiss=key=>{r.insightOff=Object.assign({},off,{[key]:true});put(r);};

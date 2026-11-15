@@ -145,7 +145,7 @@ const toolOf=(hub,id)=>toolsOf(hub).find(t=>t.id===id);
 function viewAreas(root){
   const page=el('div',{class:'page'}),areas=get.settings().areas||AREAS;
   page.append(pageHead('Life Areas',`${areas.length} areas`,{icon:'heart',actions:el('button',{class:'iconbtn green','aria-label':'Manage life areas',html:ic('gear',22),onclick:()=>App.go('setpage',{id:'areas'})})}));
-  page.append(el('div',{class:'list'},areas.map(a=>{const c=areaRecords(a),n=c.tasks.length+c.habits.length+c.goals.length+c.projects.length+get.all('entry').filter(x=>x.hub===a&&!isCfg(x)).length;return el('button',{class:'li',onclick:()=>App.go('area',{name:a})},el('span',{class:'sq',html:ic(areaIcon(a),20,1.7)}),el('span',{class:'grow'},el('b',{style:'font-size:17px'},a),el('small',{},areaLine(a)||(n?`${n} item${n===1?"":"s"}`:'Nothing here yet'))),el('span',{class:'chev',html:ic('chevr',16,2)}));})));
+  page.append(el('div',{class:'list'},areas.map(a=>{const c=areaRecords(a),n=c.tasks.length+c.habits.length+c.goals.length+c.projects.length+get.all('entry').filter(x=>x.hub===a&&!isCfg(x)).length;return el('button',{class:'li',style:'min-height:60px',onclick:()=>App.go('area',{name:a})},el('span',{class:'sq',html:ic(areaIcon(a),20,1.7)}),el('span',{class:'grow'},el('b',{style:'font-size:17px'},a),null),el('span',{class:'chev',html:ic('chevr',16,2)}));})));
   {const loose=get.all('resource').filter(r=>!r.area&&!r.archived);if(loose.length)page.append(lblRow('Resources without an area'),el('p',{class:'small muted',style:'margin:-2px 4px 8px'},'Give each one a life area and it moves there.'),el('div',{class:'list'},loose.map(r=>resRow(r))));}
   root.append(page);
 }

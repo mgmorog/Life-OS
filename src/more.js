@@ -119,7 +119,7 @@ function viewSearch(root){
 }
 function subList(title,ids,root,icon){
   const page=el('div',{class:'page'});page.append(pageHead(title,null,{icon}));
-  page.append(el('div',{class:'list'},ids.map(id=>{const p=PLACES[id],c=placeCount(id);return el('button',{class:'li',onclick:()=>App.go(id)},el('span',{class:'sq',html:ic(p.i,20)}),el('span',{class:'grow'},el('b',{style:'font-size:17px'},p.n),el('small',{},c.s)),el('span',{class:'chev',html:ic('chevr',16,2)}));})));
+  page.append(el('div',{class:'list'},ids.map(id=>{const p=PLACES[id],c=placeCount(id);return el('button',{class:'li',style:'min-height:60px',onclick:()=>App.go(id)},el('span',{class:'sq',html:ic(p.i,20)}),el('span',{class:'grow'},el('b',{style:'font-size:17px'},p.n)),el('span',{class:'chev',html:ic('chevr',16,2)}));})));
   root.append(page);
 }
 const viewOrganize=root=>subList('Organize',['inbox','tasks','habits','routines','projects','goals','lists'],root,'grid');

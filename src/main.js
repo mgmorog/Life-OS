@@ -2,7 +2,7 @@
 const TOPS=['today','studio','calendar','more'];
 const App={
   state:{view:'today',sel:todayK(),params:{},loading:true,_fresh:true},
-  go(view,params={}){const S=this.state;try{const tt=$('#toast');if(tt&&tt.classList.contains('on')&&Date.now()-toastAt>1200)tt.classList.remove('on');}catch(e){}if(S.view==='today'){const g=$('#grid');if(g)S._gridTop=g.scrollTop;}
+  go(view,params={}){const S=this.state;if(view!==S.view)S.trashSel=null;try{const tt=$('#toast');if(tt&&tt.classList.contains('on')&&Date.now()-toastAt>1200)tt.classList.remove('on');}catch(e){}if(S.view==='today'){const g=$('#grid');if(g)S._gridTop=g.scrollTop;}
     const y=scrollY;S.scrolls=S.scrolls||{};S.scrolls[S.view]=y;
     if(view==='today')S._fresh=S._fresh||S.view!=='today';
     (S.stack=S.stack||[]).push({view:S.view,params:S.params,y});if(S.stack.length>30)S.stack.shift();

@@ -1724,3 +1724,4 @@ html.c-fade .todo.won .t3in .tick-host.done{opacity:1}
 /* v127: un-inverting the Today card dissolves from green back to white */
 .todo.lose::after{content:"";position:absolute;inset:-1px;border-radius:inherit;background:var(--accent);pointer-events:none;z-index:6;animation:loseOut .8s cubic-bezier(.4,0,.2,1) forwards}
 @keyframes loseOut{0%{opacity:1}100%{opacity:0}}
+.trbar{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px}.trbar .chip{display:inline-flex;align-items:center;gap:6px}

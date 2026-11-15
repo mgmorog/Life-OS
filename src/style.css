@@ -1731,3 +1731,16 @@ html.c-fade .todo.won .t3in .tick-host.done{opacity:1}
 .resli .rk-image{background:#F6EAE4;color:#9A4A33}
 .tplmine{display:inline-flex;align-items:center;gap:6px;background:var(--accent-soft);color:var(--accent-deep)}
 .sw.nt,.sw.nt::after{transition:none!important}
+/* v138: settings */
+.setsearch{display:flex;align-items:center;gap:10px}
+.setsearch input{flex:1;border:0;outline:0;background:none;font:inherit;color:var(--ink);min-width:0}
+.helpl details.hsec{display:block;padding:0}
+.helpl details.hsec summary{list-style:none;display:flex;align-items:center;justify-content:space-between;min-height:52px;padding:0 16px;cursor:pointer}
+.helpl details.hsec summary::-webkit-details-marker{display:none}
+.helpl details.hsec .chev{transition:transform .25s var(--ease)}
+.helpl details.hsec[open] .chev{transform:rotate(90deg)}
+.helpl details.hsec p{margin:0;padding:0 16px 14px;line-height:1.45}
+.helpl details.hsec[open] p{animation:fadeUp .25s var(--ease)}
+.modrow small{display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
+.setbody,.setres{display:flex;flex-direction:column;gap:inherit}
+.setres:empty{display:none}

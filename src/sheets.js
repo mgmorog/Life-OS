@@ -13,7 +13,7 @@ function formCtx(rerender){
   };
   ctx.panel=(id,cls,...kids)=>{if(ctx.open!==id)return null;const fresh=ctx._shown!==id;ctx._shown=id;return el('div',{class:'panel '+cls+(fresh?'':' still')},kids);};
   ctx.sw=(on,label,fn)=>{const b=el('button',{class:'sw'+(on?' on':''),role:'switch','aria-checked':String(on),'aria-label':label,onclick:e=>{e.stopPropagation();fn(!on);}});return b;};
-  ctx.stepper=(v,min,max,fn)=>el('span',{class:'stepper'},el('button',{'aria-label':'Less',disabled:v<=min,onclick:e=>{e.stopPropagation();fn(v-1);}},'−'),el('b',{},String(v)),el('button',{'aria-label':'More',disabled:v>=max,onclick:e=>{e.stopPropagation();fn(v+1);}},'+'));
+  ctx.stepper=(v,min,max,fn)=>el('span',{class:'stepper'},el('button',{'aria-label':'Less',disabled:v<=min,onclick:e=>{e.stopPropagation();fn(v-1);}},'−'),el('b',{'data-roll':'stp'+min+'-'+max},String(v)),el('button',{'aria-label':'More',disabled:v>=max,onclick:e=>{e.stopPropagation();fn(v+1);}},'+'));
   ctx.calendar=(val,fn,{noDate=false,minK=null,range=null}={})=>{
     const base=val?fromK(val):today();let vy=base.getFullYear(),vm=base.getMonth();const wrap=el('div',{class:'cal',onclick:e=>e.stopPropagation()});
     const draw=()=>{wrap.innerHTML='';const first=new Date(vy,vm,1),ws=get.settings().weekStart??1,lead=(first.getDay()-ws+7)%7,start=addD(first,-lead),tk=todayK();

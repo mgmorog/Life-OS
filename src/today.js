@@ -197,15 +197,31 @@ function wireTodayDrag(card,dk){
       const prev={};cur.forEach((x,i)=>prev[x.id]=i);App.state._t3prev=prev;t3Set(dk,next);};
     addEventListener('pointermove',mv,{passive:false});addEventListener('pointerup',up);addEventListener('pointercancel',up);}));
 }
+/* checking a habit card off: everything animates in place (ring fills, card fades into its color, soft glow),
+   then the card glides to its new spot in the row. No re-render, so nothing flashes or restarts */
+function habTileSet(card,h,dk){
+  const now=habitDone(h,dk);buzz(now?12:6);
+  const f=card.querySelector('.hr-fill');if(f){const C=2*Math.PI*17;f.style.strokeDashoffset=String(C-C*Math.max(0,Math.min(1,habProg(h,dk))));}
+  const sub=card.querySelector('.hsub');if(sub)sub.textContent=habSub(h,dk);
+  const pill=card.querySelector('.hpill');if(pill){pill.classList.toggle('on',now);pill.setAttribute('aria-pressed',String(now));pill.innerHTML=now?ic('check',14,2.8)+'<span>Done</span>':'<span>Log today</span>';}
+  card.classList.toggle('done',now);card.classList.remove('glow');if(now&&motionOK()){void card.offsetWidth;card.classList.add('glow');}
+  const row=card.parentElement,hc=card.closest('.habcard');
+  if(hc){const tiles=[...row.children],n=tiles.filter(t=>t.classList.contains('done')).length,cnt=hc.querySelector('.bl .linkbtn');if(cnt&&/ of \d+ today$/.test(cnt.textContent))cnt.textContent=`${n} of ${tiles.length} today`;}
+  clearTimeout(card._mv);card._mv=setTimeout(()=>{if(!row||!card.isConnected)return;
+    const tiles=[...row.children],others=tiles.filter(t=>t!==card),firstDone=others.find(t=>t.classList.contains('done'));
+    const ref=card.classList.contains('done')?null:firstDone||null;
+    if((ref?ref.previousElementSibling===card:row.lastElementChild===card))return;
+    const before=new Map(tiles.map(t=>[t,t.getBoundingClientRect().left]));
+    row.insertBefore(card,ref);
+    if(!motionOK())return;
+    tiles.forEach(t=>{const dx=before.get(t)-t.getBoundingClientRect().left;if(!dx)return;t.animate([{transform:`translateX(${dx}px)`},{transform:'none'}],{duration:520,easing:'cubic-bezier(.3,1.05,.4,1)'});});
+    if(card.classList.contains('done')){const r=row.getBoundingClientRect(),c=card.getBoundingClientRect();if(c.right>r.right)row.scrollTo({left:row.scrollLeft+(c.right-r.right)+20,behavior:'smooth'});}
+  },now?650:350);
+}
 /* habits: a sideways row of cards; finished ones slide to the end and flip to green */
 function habTile(e,dk,loose){
   const h=e.rec,on=habitDone(h,dk),p=habProg(h,dk),c=h.color?colorHex(h.color):null;
-  const toggle=ev=>{ev&&ev.stopPropagation();buzz(on?6:12);toggleItem({kind:'habit',rec:h},dk);const now=habitDone(h,dk),f=card.querySelector('.hr-fill');
-    if(f){const C=2*Math.PI*17;f.style.strokeDashoffset=String(C-C*Math.max(0,Math.min(1,habProg(h,dk))));}
-    const sub=card.querySelector('.hsub');if(sub)sub.textContent=habSub(h,dk);
-    card.classList.toggle('done',now);if(now){card.classList.remove('glow');void card.offsetWidth;card.classList.add('glow');}
-    const pill=card.querySelector('.hpill');if(pill){pill.classList.toggle('on',now);pill.innerHTML=now?ic('check',14,2.8)+'<span>Done</span>':'<span>Log today</span>';}
-    App.state._habMoved=h.id;setTimeout(()=>App.refresh(),now?1100:500);};
+  const toggle=ev=>{ev&&ev.stopPropagation();toggleItem({kind:'habit',rec:h},dk);habTileSet(card,h,dk);};
   const act=!on&&h.link&&h.link.log&&typeof wkRoutines==='function'&&wkRoutines(h).length?el('button',{class:'hpill','aria-label':`Start ${(wkFor(h,dk)||{f:{}}).f.what||'a workout'}`,onclick:ev=>{ev.stopPropagation();wkStart(h,dk);}},el('span',{style:'display:grid',html:ic('play',12,2.4)}),'Start')
     :!on&&h.track==='count'?el('button',{class:'hpill','aria-label':`Add one to ${h.title}`,onclick:ev=>{ev.stopPropagation();buzz(6);logHabit(h,dk,1);}},'+1')
     :!on&&h.track==='time'?el('button',{class:'hpill','aria-label':`Log time for ${h.title}`,onclick:ev=>{ev.stopPropagation();logTimeSheet(h,dk);}},'Log')
@@ -214,7 +230,6 @@ function habTile(e,dk,loose){
     el('button',{class:'htap','aria-label':`Open ${h.title}`,onclick:()=>App.go('habit',{id:h.id})},habRing(p,h.icon?glyph(h.icon,24,1.9):'',c),
       el('span',{class:'htt'},h.title),el('span',{class:'hsub'},habSub(h,dk))),act);
   const menu=loose?(x,y)=>openMenu(x,y,[{label:'Do it today',icon:'sun',onclick:()=>planHabitDay(h,dk)},{label:'Do it today at a time…',icon:'time',onclick:()=>{h.sessions=h.sessions||{};h.sessions[dk]={time:null};put(h,{silent:true});timeSheet({kind:'habit',id:h.id,rec:h,title:h.title,time:null},dk);}},{label:'Plan another day…',icon:'cal',onclick:()=>habitPlanSheet(h)},{label:'Open habit',icon:'habit',onclick:()=>App.go('habit',{id:h.id})}]):(x,y)=>itemMenu(e,dk,x,y);
-  if(App.state._habMoved===h.id){card.classList.add('arrive');App.state._habMoved=null;}
   onPress(card,menu,'.hpill');card.addEventListener('contextmenu',ev=>{ev.preventDefault();if(lastPointer==='mouse')menu(ev.clientX,ev.clientY);});
   return card;
 }

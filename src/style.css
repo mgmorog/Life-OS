@@ -1679,16 +1679,18 @@ html.a-motion #st-dock .scard{transition:none}
 .htile.done .hring circle:last-child{stroke:#fff}
 .htile.done .hpill{background:#fff;color:var(--c);border-color:#fff}
 .habcard{padding-bottom:6px}
-/* v122: habit card check-off motion */
-.htile .hr-fill{transition:stroke-dashoffset .7s cubic-bezier(.3,1.05,.5,1),stroke .45s var(--ease)}
-.htile .hring circle:first-child{transition:stroke .45s var(--ease)}
-.htile,.htile .hsub,.htile .hring-in,.htile .hpill{transition:background-color .45s var(--ease) .12s,border-color .45s var(--ease) .12s,color .45s var(--ease) .12s,box-shadow .45s var(--ease)}
-.htile.glow{animation:habGlow 1s var(--ease)}
-@keyframes habGlow{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--c) 45%,transparent)}45%{box-shadow:0 0 0 8px color-mix(in srgb,var(--c) 18%,transparent),0 10px 24px color-mix(in srgb,var(--c) 30%,transparent)}100%{box-shadow:0 0 0 14px transparent}}
-.htile.glow .hring-in{animation:habPop .5s cubic-bezier(.3,1.6,.5,1) .15s}
-@keyframes habPop{0%{transform:scale(1)}50%{transform:scale(1.18)}100%{transform:scale(1)}}
-.htile.arrive{animation:habArrive .45s cubic-bezier(.3,1.15,.5,1)}
-@keyframes habArrive{from{opacity:0;transform:translateX(-18px) scale(.96)}}
-html.a-motion .htile.glow,html.a-motion .htile.glow .hring-in,html.a-motion .htile.arrive{animation:none}
+/* v124: habit card check-off motion, one smooth pass */
+.htile .hr-fill{transition:stroke-dashoffset .6s cubic-bezier(.33,1,.68,1),stroke .4s ease}
+.htile .hring circle:first-child{transition:stroke .4s ease}
+.htile{transition:background-color .4s ease,border-color .4s ease,color .4s ease}
+.htile .hsub,.htile .hring-in{transition:color .4s ease}
+.htile .hpill{transition:background-color .4s ease,border-color .4s ease,color .4s ease,transform .45s cubic-bezier(.3,1.6,.5,1)}
+.htile .hpill:active{transform:scale(.94)}
+.htile.glow{animation:habGlow .9s ease-out}
+@keyframes habGlow{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--c) 40%,transparent)}100%{box-shadow:0 0 0 12px color-mix(in srgb,var(--c) 0%,transparent)}}
+.htile.glow .hring-in{animation:habPop .45s cubic-bezier(.3,1.5,.5,1) .1s}
+@keyframes habPop{50%{transform:scale(1.14)}}
+.htile{will-change:transform}
+html.a-motion .htile.glow,html.a-motion .htile.glow .hring-in{animation:none}
 .dragrow{transition:box-shadow .2s}
 .dragrow.dlift{transition:none}

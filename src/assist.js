@@ -71,13 +71,19 @@ function carriedPrompt(tasks){const tk=todayK(),t=tasks.find(x=>x.date&&isOpenTa
   const card=el('section',{class:'card',style:'padding:16px'},el('div',{class:'lbl olate'},n>=3?`Waiting ${n} days`:`Moved ${t.moves} times`),el('div',{class:'oserif',style:'font-size:23px;line-height:28px;margin-top:6px'},`${t.title} keeps moving. What’s the plan?`),el('div',{class:'ochk',style:'margin-top:12px'},btnP('Do it today',()=>{t.date=tk;t.moves=0;t.nudgeOff=tk;put(t);}),btnL('Pick a day',()=>{t.nudgeOff=tk;t.moves=0;put(t,{silent:true});taskSheet(t);}),btnL('Drop it',()=>{t.archived=true;t.archivedAt=Date.now();put(t);toast('Dropped',()=>{t.archived=false;put(t);});})));card._tid=t.id;return card;}
 
 /* ---------- Habits: what's left this week ---------- */
-function habitLeftNote(h){const tk=todayK(),left=(h.target||1)-habitWeek(h,tk);if(left<=0)return null;const ws=weekStartOf(today()),days=[];for(let i=0;i<7;i++){const d=k(addD(ws,i));if(d>tk)days.push(d);}
-  const planned=days.filter(d=>(h.sessions||{})[d]),need=left-planned.length-(habitDone(h,tk)?0:0),free=days.filter(d=>!planned.includes(d)&&freeMinutes(d)>=(h.dur||30));
-  const name=d=>DOW[fromK(d).getDay()],list=a=>a.length>1?`${a.slice(0,-1).join(', ')} and ${a[a.length-1]}`:a[0];
-  const tries=free.slice(0,Math.max(need,0)>1?3:2);
-  const room=days.length+(habitDone(h,tk)?0:1);if(left>room)return el('div',{class:'ohnext'},el('div',{class:'small',style:'color:var(--ink-2)'},room?`${left} more to hit ${h.target||1} this week, with ${room} day${room>1?'s':''} left. Get what you can, and start fresh ${DOW[weekStartOf(today()).getDay()]}.`:`Week’s over. Fresh start tomorrow.`));
-  const text=need<=0?`${left} more this week. Planned for ${list(planned.map(name))}.`:!free.length?`${left} more this week, and the week is full.`:`${left} more this week. Today${habitDone(h,tk)?'’s done, so':' counts, or'} plan ${left>1?'them':'it'} on a free day:`;
-  return el('div',{class:'ohnext'},el('div',{class:'small',style:'color:var(--ink-2)'},text),need>0&&free.length?el('div',{class:'tags',style:'margin-top:6px'},tries.map(d=>el('button',{class:'ochip',style:'min-height:40px','aria-label':`Plan ${h.title} on ${name(d)}`,onclick:()=>{h.sessions=h.sessions||{};h.sessions[d]={time:h.setTime??null};put(h);toast(`${h.title} planned for ${name(d)}`,()=>{delete h.sessions[d];put(h);});}},name(d).slice(0,3)))):null);}
+function habitLeftNote(h){
+  /* One round chip per day left this week. Tap to plan that day, tap again to take it off. Planned days are filled. */
+  const tk=todayK(),target=h.target||1,left=target-habitWeek(h,tk),ws=weekStartOf(today()),days=[];
+  for(let i=0;i<7;i++){const d=k(addD(ws,i));if(d>=tk)days.push(d);}
+  const S=h.sessions||{},doneT=habitDone(h,tk),plan=days.filter(d=>S[d]&&!(d===tk&&doneT));
+  if(!days.length||(left<=0&&!plan.length))return null;
+  const nm=d=>DOW[fromK(d).getDay()].slice(0,3),full=d=>d===tk?'today':DOW[fromK(d).getDay()];
+  const open=Math.max(0,left-plan.length);
+  const text=left<=0?'Goal met this week.':left>days.length?`${left} more to hit ${target}, with ${days.length} day${days.length>1?'s':''} left. Get what you can.`:plan.length?`${left} more this week · ${plan.length} planned${open?`, ${open} to place`:''}`:`${left} more this week. Tap the days you’ll do it.`;
+  const toggle=d=>{buzz(6);h.sessions=h.sessions||{};if(h.sessions[d]){const was=h.sessions[d];delete h.sessions[d];put(h);toast(`Off ${full(d)}`,()=>{h.sessions[d]=was;put(h);});}else{h.sessions[d]={time:h.setTime??null};put(h);}};
+  return el('div',{class:'ohnext'},el('div',{class:'small',style:'color:var(--ink-2)'},text),
+    el('div',{class:'daytogs',role:'group','aria-label':`Plan ${h.title} this week`},days.map(d=>{const on=!!S[d]&&!(d===tk&&doneT),busy=!on&&freeMinutes(d)<(h.dur||30);
+      return el('button',{class:'daytog'+(d===tk?' today':'')+(on?' on':'')+(busy?' busy':''),disabled:d===tk&&doneT,'aria-pressed':String(on),'aria-label':`${on?'Planned':'Plan'} ${h.title} ${full(d)}${busy?', busy day':''}`,onclick:e=>{e.stopPropagation();toggle(d);}},nm(d));})));}
 
 /* ---------- Routines: what your runs show ---------- */
 function routineInsights(r){const log=rtLog(r);if(log.length<5)return[];const off=r.insightOff||{},out=[],mins=rtMins(r),steps=r.steps||[];const dismiss=key=>{r.insightOff=Object.assign({},off,{[key]:true});put(r);};

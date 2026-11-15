@@ -223,11 +223,10 @@ function viewHabits(root){
     if(dk!==tk)page.append(el('div',{class:'small muted',style:'padding-inline:4px'},`Filling in ${relDay(dk)==='Yesterday'?'yesterday':relDay(dk)}`));
     if(!dueNow.length)page.append(emptyOf('Nothing due','No habits are set for this day.'));
     const dayly=dueNow.filter(h=>!habitWeekly(h)),weekly=dueNow.filter(habitWeekly);
-    const sect=(n,g0,right)=>{const g=g0.slice().sort((a,b)=>habitDone(a,dk)-habitDone(b,dk));if(g.length)page.append(el('div',{class:'sh2 shstick'},el('span',{class:'lbl'},n),el('span',{class:'small muted'},right)),el('div',{class:'list'},g.map(h=>{const r=habitRow(h,dk);if(dk!==tk||!habitWeekly(h)||habitDone(h,dk)||shared)return r;const nt=habitLeftNote(h);return nt?el('div',{},r,nt):r;})));};
-    const needy=dk===tk?weekly.filter(h=>!habitDone(h,dk)&&habitLeftNote(h)):[],shared=needy.length>1;
+    const sect=(n,g0,right)=>{const g=g0.slice().sort((a,b)=>habitDone(a,dk)-habitDone(b,dk));if(g.length)page.append(el('div',{class:'sh2 shstick'},el('span',{class:'lbl'},n),el('span',{class:'small muted'},right)),el('div',{class:'list'},g.map(h=>{const r=habitRow(h,dk);if(dk!==tk||!habitWeekly(h))return r;const nt=habitLeftNote(h);return nt?el('div',{},r,nt):r;})));};
+    
     [['morning','Morning'],['afternoon','Afternoon'],['evening','Evening'],['set','At a set time'],['anytime','Anytime']].forEach(([v,n])=>{const g=dayly.filter(h=>(h.tod||'anytime')===v);sect(n,g,`${g.filter(h=>habitDone(h,dk)).length} of ${g.length}`);});
     sect('This week',weekly,`${weekly.filter(h=>habitWeek(h,dk)>=(h.target||1)).length} of ${weekly.length} met`);
-    if(shared){const c=weekPlanCard(needy);if(c)page.append(c);}
   }else if(S.habTab==='all'){
     if(!active.length)page.append(emptyOf('No active habits','Add one, or resume one from Paused.'));
     else{const rw=[...Array(7)].map((_,i)=>addK(tk,i-6));

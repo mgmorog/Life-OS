@@ -1535,3 +1535,12 @@ html.a-motion #st-dock .scard{transition:none}
   .sheet.pinned,.sheet.pinned.typing:not(.full),.sheet.full,.sheet.full.typing{top:44px;bottom:0;height:auto;max-height:none}
   .sheet.pinned .sbody,.sheet.pinned.typing .sbody,.sheet.full .sbody,.sheet.full.typing .sbody{padding-bottom:calc(var(--kb,0px) + 72px)}
 }
+
+/* quick-plan day chips on weekly habits: round, filled when planned */
+.daytogs{display:flex;gap:6px;margin-top:8px}
+.daytog{flex:1 1 0;min-width:0;max-width:46px;aspect-ratio:1;border-radius:50%;display:grid;place-items:center;background:#fff;border:1px solid var(--line);color:var(--ink);font-size:12px;font-weight:600;padding:0;transition:background .18s,color .18s,border-color .18s,transform .12s}
+.daytog:active{transform:scale(.94)}
+.daytog.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.daytog.busy{color:var(--ink-3)}
+.daytog.today:not(.on){border:2px solid var(--accent-text)}
+.daytog:disabled{opacity:.4}

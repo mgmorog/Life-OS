@@ -48,8 +48,7 @@ function viewMore(root){
     row('grid','Organize','Inbox, Tasks, Habits + 4 more',()=>App.go('organize')),
     row('heart','Life Areas',`${areas.slice(0,3).join(', ')}${areas.length>3?` + ${areas.length-3} more`:''}`,()=>App.go('areas')),
     row('clip','Reflect',placeCount('reviews').s,()=>App.go('reflect')),
-    row('compass','Discover','Ideas worth trying',()=>App.go('discover')),
-    row('books','Tools & Resources',tools?`${tools} saved`:'Templates and references',()=>App.go('tools'))),
+    row('compass','Discover','Ideas worth trying',()=>App.go('discover'))),
     el('div',{class:'lbl'},'Kept'),el('div',{class:'list'},
     row('image','Photos',(()=>{const n=allPhotos().length;return n?`${n} attached`:'Everything you’ve attached';})(),()=>App.go('photos')),
     row('archive','Archive',arch?`${arch} finished and hidden`:'Nothing archived',()=>App.go('archive')),
@@ -72,7 +71,7 @@ function orderSheet({title,init,max,word,limit,groups,info,exact=false,onDone}){
   return inst;
 }
 const pinInfo=id=>{if(id&&id.startsWith('area:')){const a=id.slice(5);return (get.settings().areas||AREAS).includes(a)?{n:a,i:areaIcon(a),go:()=>App.go('area',{name:a}),c:''}:null;}const p=PLACES[id];if(!p)return null;return{n:p.n,i:p.i,go:()=>App.go(id),c:placeCount(id).c};};
-function editPins(){const s=get.settings();orderSheet({title:'Edit pinned',init:(s.pinned||[]).filter(pinInfo),max:4,word:'pinned',limit:'Four is the limit. Remove one to add another.',info:pinInfo,groups:[['Places',['inbox','tasks','habits','goals','projects','routines','lists','reviews','insights','discover','tools','photos','archive','trash','today','calendar','studio','areas']],['Life areas',(s.areas||AREAS).map(a=>'area:'+a)]],onDone:D=>setSettings({pinned:D})});}
+function editPins(){const s=get.settings();orderSheet({title:'Edit pinned',init:(s.pinned||[]).filter(pinInfo),max:4,word:'pinned',limit:'Four is the limit. Remove one to add another.',info:pinInfo,groups:[['Places',['inbox','tasks','habits','goals','projects','routines','lists','reviews','insights','discover','photos','archive','trash','today','calendar','studio','areas']],['Life areas',(s.areas||AREAS).map(a=>'area:'+a)]],onDone:D=>setSettings({pinned:D})});}
 /* search */
 function searchIndex(){
   const out=[];const push=(type,t,sub,icon,go,n,m)=>out.push(Object.assign({type,t:t||'',sub,icon,go,n:n||''},m||{}));const cd=r=>r.createdAt?k(new Date(r.createdAt)):null;
@@ -90,9 +89,9 @@ function searchIndex(){
   (get.settings().areas||AREAS).forEach(a=>{push('Hubs',a,'Life area','heart',()=>App.go('area',{name:a}));toolsOf(a).filter(t=>!hubHidden(a).includes(t.id)&&!t.priv).forEach(t=>push('Hubs',t.name,`In ${a}`,t.icon||'grid',()=>App.go('tool',{hub:a,tool:t.id})));});
   get.all('entry').filter(x=>!isCfg(x)).forEach(x=>{const t=toolOf(x.hub,x.tool);if(t&&!t.priv)push('Hubs',t.title(x),`${t.name} · ${x.hub}`,t.icon||'grid',()=>App.go('tool',{hub:x.hub,tool:x.tool}),x.f.secret==='Yes'?'':[x.f.note,x.f.how,x.f.ing,x.f.impact,x.f.result].filter(v=>typeof v==='string').join(' '),{a:x.hub,d:(x.f.date&&/^\d{4}-/.test(x.f.date)?x.f.date:cd(x))});});
   allPhotos().forEach(({r,title,what})=>{if(!out.some(o=>o.type==='Photos'&&o.t===title))push('Photos',title,`Photo · ${what}`,'image',()=>openPhotoRec(r));});
-  get.all('resource').forEach(r=>push('Tools',r.title,r.area||'Resource','books',()=>openRec(r)));
-  TEMPLATES.forEach(t=>push('Tools',t.t,'Template','books',()=>App.go('tools')));
-  Object.entries(PLACES).forEach(([id,p])=>push('Places',p.n,'Open','arrow',()=>App.go(id)));
+  get.all('resource').forEach(r=>push('Resources',r.title,r.area?`Resource · ${r.area}`:'Resource','books',()=>r.area?App.go('area',{name:r.area}):openRec(r)));
+  [...userTpls(),...TEMPLATES.filter(t=>t.kind!=='upkeep')].forEach(t=>push('Templates',t.t,`${t.mine?'Your template':'Template'} · ${t.kind[0].toUpperCase()+t.kind.slice(1)}`,'books',()=>addTemplate(t)));
+  Object.entries(PLACES).filter(([id])=>id!=='tools').forEach(([id,p])=>push('Places',p.n,'Open','arrow',()=>App.go(id)));
   return out;
 }
 const readSearches=()=>{try{return JSON.parse(localStorage.getItem('lifeos-searches')||'[]');}catch(e){return[];}};
@@ -274,7 +273,7 @@ function viewDiscover(root){
 }
 /* Tools */
 const TEMPLATES=[{t:'Packing list',kind:'list',items:['Chargers','Toiletries','Medications','ID and wallet','Clothes for each day','Snacks']},{t:'Grocery staples',kind:'list',items:['Eggs','Milk','Bread','Coffee','Fruit','Vegetables','Rice or pasta']},{t:'Weekly reset',kind:'routine',steps:[['Empty Inbox',10],['Check next week’s calendar',5],['Clear the kitchen and desk',15],['Plan the week in Studio',15]]},{t:'Morning routine',kind:'routine',steps:[['Water and stretch',5],['Shower and dress',15],['Breakfast',15],['Look over Today',5]]},{t:'Shutdown routine',kind:'routine',steps:[['Capture loose ends',5],['Check tomorrow',5],['Set out what you need',5]]},{t:'Home upkeep basics',kind:'upkeep',items:[['Test smoke alarms',180],['Replace furnace filter',90],['Clean gutters',365],['Check fire extinguisher',365],['Clean dryer vent',365]]}];
-function saveTemplate(kind,r){const name=r.title.replace(/ copy$/,'');const ex=get.all('tpl').find(x=>x.t===name&&x.tk===kind);const data=kind==='list'?{items:(r.items||[]).map(i=>i.t)}:kind==='project'?{items:projectTasks(r).map(t=>t.title),notes:r.notes||''}:{steps:(r.steps||[]).map(s=>[s.t,s.min||0])};if(ex){Object.assign(ex,data);put(ex);toast('Template updated');return;}create('tpl',Object.assign({t:name,tk:kind,title:name},data));toast(`Saved to Tools & Resources`,null,'Undo',{open:dest('tools')});}
+function saveTemplate(kind,r){const name=r.title.replace(/ copy$/,'');const ex=get.all('tpl').find(x=>x.t===name&&x.tk===kind);const data=kind==='list'?{items:(r.items||[]).map(i=>i.t)}:kind==='project'?{items:projectTasks(r).map(t=>t.title),notes:r.notes||''}:{steps:(r.steps||[]).map(s=>[s.t,s.min||0])};if(ex){Object.assign(ex,data);put(ex);toast('Template updated');return;}create('tpl',Object.assign({t:name,tk:kind,title:name},data));toast(`Saved as a template. It’s in New ${kind} under Start from.`);}
 const userTpls=()=>get.all('tpl').map(x=>({t:x.t,kind:x.tk,items:x.items,steps:x.steps,notes:x.notes,id:x.id,mine:true}));
 const tplHave=t=>t.kind==='upkeep'?t.items.every(([w])=>entries('Home','upkeep').some(x=>(x.f.what||'').toLowerCase()===w.toLowerCase())):get.all(t.kind).find(r=>r.title===(t.kind==='list'&&t.t==='Packing list'?'Packing list':t.t));
 function addTemplate(t){

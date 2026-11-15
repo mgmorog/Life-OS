@@ -1725,3 +1725,8 @@ html.c-fade .todo.won .t3in .tick-host.done{opacity:1}
 .todo.lose::after{content:"";position:absolute;inset:-1px;border-radius:inherit;background:var(--accent);pointer-events:none;z-index:6;animation:loseOut .8s cubic-bezier(.4,0,.2,1) forwards}
 @keyframes loseOut{0%{opacity:1}100%{opacity:0}}
 .trbar{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px}.trbar .chip{display:inline-flex;align-items:center;gap:6px}
+/* v129: resources live in life areas */
+.resli .sq{width:38px;height:38px;border-radius:12px}
+.resli .rk-edit{background:#EBEEF6;color:#46578A}
+.resli .rk-image{background:#F6EAE4;color:#9A4A33}
+.tplmine{display:inline-flex;align-items:center;gap:6px;background:var(--accent-soft);color:var(--accent-deep)}

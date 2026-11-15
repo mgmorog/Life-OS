@@ -364,8 +364,8 @@ function pickListSheet(text,done,photos=[]){
 }
 function resourceSheet(rec,seed={},done){
   const isEdit=!!rec;const D=isEdit?clone(rec):Object.assign({title:'',notes:'',url:'',area:null},seed);let render;
-  const inst=formSheet({title:isEdit?'Edit resource':'New resource',addLabel:isEdit?'Save':'Add',D,word:'resource',isEdit,canAdd:()=>!!D.title.trim(),commit:()=>{D.title=D.title.trim();if(isEdit){Object.assign(rec,D);put(rec);}else{create('resource',D);done&&done();}toast('Saved');},
-    build:(body,update)=>{const ctx=formCtx(()=>render());const T=fieldTitle('f-res-title','Title','A guide, template or reference',D.title,v=>{D.title=v;update();});const det=el('div',{class:'group'});
+  const inst=formSheet({title:isEdit?'Edit resource':'New resource',addLabel:isEdit?'Save':'Add',D,word:'resource',isEdit,canAdd:()=>!!D.title.trim(),commit:()=>{D.title=D.title.trim();if(isEdit){Object.assign(rec,D);put(rec);}else{create('resource',D);done&&done();}toast('Saved',null,'Undo',{open:D.area?dest('area',{name:D.area}):dest('areas')});},
+    build:(body,update)=>{const ctx=formCtx(()=>render());const T=fieldTitle('f-res-title','Title','A link, guide or note to keep',D.title,v=>{D.title=v;update();});const det=el('div',{class:'group'});
       const u=el('label',{class:'field'},el('span',{class:'eyebrow'},'Link'),el('input',{id:'f-res-url',type:'url',placeholder:'https://',value:D.url||'',autocomplete:'off',oninput:e=>D.url=e.target.value}));
       body.append(T.wrap,u,fieldNotes('f-res-notes','Notes','What to remember',D.notes,v=>D.notes=v),det);if((D.photos||[]).length)body.append(el('div',{class:'sect'},'Attached'),photosEditor(D));render=()=>{det.innerHTML='';ctx.areaRow(det,D);};render();
       if(isEdit)body.append(el('button',{class:'delete',onclick:()=>archiveFlow(rec,inst)},'Archive resource'),el('button',{class:'delete',onclick:()=>{const c=clone(rec);remove(rec.id);inst.close();toast('Resource deleted',()=>put(c));}},'Delete resource'));else if(!T.input.value)focusIfKeyboard(T.input);}});

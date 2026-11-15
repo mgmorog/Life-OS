@@ -1587,3 +1587,48 @@ html.a-motion #st-dock .scard{transition:none}
 .exmeta{display:flex;align-items:center;gap:6px;padding:0 10px 4px 14px;flex-wrap:wrap}
 .exmeta .restbtn{padding:0 8px;margin-left:-8px}.exmeta .sspill+.restbtn{margin-left:0}
 .splitbtn{flex:1.6}.splitbtn .btn:first-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 12px}
+
+/* ---------- Today · Stack (v119) ---------- */
+.hd .date{font-size:30px;gap:6px}
+.hd .date svg{margin-top:2px}
+.hd{min-height:48px}
+.allday-row.top{margin:2px 0 0;align-items:center}
+.allday-row.top .adchip{height:32px;border-radius:16px;padding:0 12px;font-size:13.5px;font-weight:600}
+.adadd{display:inline-flex;align-items:center;gap:5px;height:32px;min-width:32px;justify-content:center;padding:0 10px;border-radius:16px;background:var(--chip);color:var(--ink-2);font-size:13.5px;font-weight:600}
+.adadd{white-space:nowrap}.adadd.ic-only{padding:0;width:32px}
+.card.t3{border-color:#CFDCD3;box-shadow:0 1px 0 rgba(31,42,36,.03),0 10px 26px rgba(63,107,85,.10)}
+.t3 .t3n{font-size:26px;width:26px}
+.t3row .tt{font-size:17px;font-weight:600}
+.t3row,.t3slot{min-height:56px}
+.daycard .bl,.habcard .bl,.upcard .bl{display:flex;justify-content:space-between;align-items:center;min-height:28px}
+.daycard .bl .lbl,.habcard .bl .lbl,.upcard .bl .lbl{font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
+.daycard.todo{padding:16px 20px 8px}
+.daycard .anytime{margin-top:6px;border-top:0}
+.daycard .anytime>.trow-wrap:last-child .trow,.daycard .anytime>.trow:last-child{border-bottom:0}
+.addrow{display:flex;align-items:center;gap:12px;min-height:48px;width:100%;color:var(--ink-2);font-size:15px;font-weight:500;text-align:left;border-top:1px solid var(--line)}
+@media (hover:hover){.addrow:hover{color:var(--accent-text)}}
+.habcard{padding:16px 20px 10px}
+.hlist{display:grid;margin-top:4px}
+.hrow{display:flex;align-items:center;gap:12px;min-height:56px;touch-action:pan-y}
+.hrow .t{flex:1;min-width:0;text-align:left;padding:8px 0;display:flex;flex-direction:column;gap:2px}
+.hrow .tt{font-weight:600;font-size:16px}
+.hrow .meta{font-size:13px;color:var(--ink-2)}
+.hrow .tick-hit{margin-left:auto}
+.hrow.done .tt{color:var(--ink-3)}
+.hring{position:relative;width:40px;height:40px;flex:none;display:grid;place-items:center}
+.hring svg{position:absolute;inset:0}
+.hring svg circle:last-child{transition:stroke-dasharray .6s var(--ease)}
+.hring-in{position:relative;display:grid;place-items:center;color:var(--accent-text)}
+.upcard{padding:16px 20px 8px}
+.nowchip{display:inline-flex;align-items:center;height:24px;padding:0 10px;border-radius:12px;background:var(--now);color:#fff;font-size:12px;font-weight:600}
+.uplist{display:grid;gap:4px;margin-top:8px}
+.uprow{display:flex;align-items:center;gap:12px;min-height:48px;width:100%;text-align:left;border-radius:12px;--c:var(--accent)}
+@media (hover:hover){.uprow:hover{background:var(--line-2)}}
+.uprow .upt{width:48px;flex:none;font-weight:600;font-size:14px}
+.uprow .upbar{width:3px;align-self:stretch;margin-block:6px;border-radius:2px;background:var(--c);opacity:.7;flex:none}
+.uprow .grow{display:flex;flex-direction:column;gap:2px;min-width:0}
+.uprow .tt{font-weight:500;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.uprow .meta{font-size:12.5px;color:var(--ink-2)}
+.uprow .upnow{color:var(--now);font-weight:600}
+.uptoggle{margin-top:2px;min-height:44px}
+.gridin{margin-top:4px;animation:fadeUp .3s var(--ease)}

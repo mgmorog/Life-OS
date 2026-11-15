@@ -530,8 +530,8 @@ function streakRoll(root){root.querySelectorAll('[data-rollfrom]').forEach(n=>{c
 /* empty states trace their little drawing in the first time they appear */
 const EMPTYSEEN=new Set();
 function emptyDraw(root){root.querySelectorAll('.empty .eart').forEach(s=>{const k=(s.parentElement.querySelector('b')||{}).textContent||'';if(EMPTYSEEN.has(k))return;EMPTYSEEN.add(k);if(!motionOK())return;
-  s.querySelectorAll('path,rect,circle').forEach((p,i)=>{const L=p.getTotalLength?p.getTotalLength():120;p.style.strokeDasharray=L;p.animate([{strokeDashoffset:L},{strokeDashoffset:0}],{duration:650,delay:i*130,easing:EASE,fill:'backwards'}).onfinish=()=>{p.style.strokeDasharray='';};});
-  [...s.parentElement.children].filter(c=>c!==s).forEach((c,i)=>c.animate([{opacity:0,transform:'translateY(6px)'},{opacity:1,transform:'none'}],{duration:420,delay:480+i*90,easing:EASE,fill:'backwards'}));});}
+  s.querySelectorAll('path,rect,circle').forEach((p,i)=>{const L=p.getTotalLength?p.getTotalLength():120;p.style.strokeDasharray=L;p.animate([{strokeDashoffset:L},{strokeDashoffset:0}],{duration:520,delay:i*90,easing:EASE,fill:'backwards'}).onfinish=()=>{p.style.strokeDasharray='';};});
+});}
 /* focus finished: the ring closes, a ripple spreads once, and the time reads Done for a moment */
 let frDoneAt=0;
 function focusRipple(rg){frDoneAt=Date.now();if(!motionOK())return;[0,1].forEach(i=>{const r=document.createElement('span');r.className='frip';rg.append(r);r.animate([{opacity:.55,transform:'scale(.92)'},{opacity:0,transform:'scale(1.32)'}],{duration:1200,delay:i*240,easing:'cubic-bezier(.2,.7,.3,1)',fill:'both'}).onfinish=()=>r.remove();});

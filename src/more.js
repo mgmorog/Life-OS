@@ -37,22 +37,16 @@ function viewMore(root){
   const PE=!!App.state.pinEdit;
   page.append(el('div',{class:'pghead'},el('span',{class:'lbl'},'Pinned'),el('span',{style:'display:flex;gap:4px'},PE?el('button',{class:'linkbtn',onclick:editPins},'Add'):null,el('button',{class:'linkbtn',onclick:()=>{App.state.pinEdit=!PE;App.refresh();}},PE?'Done':'Edit'))));
   page.append(el('div',{class:'pins'+(PE?' edit':'')},(S.pinned||[]).map(id=>{const p=pinInfo(id);if(!p)return null;return pinDrag(el('button',{class:'ptile','data-pin':id,'aria-label':p.c?`${p.n}, ${p.c}`:p.n,onclick:()=>{if(App.state.pinEdit)return;p.go();}},PE?el('span',{class:'pin-x',role:'button','aria-label':`Unpin ${p.n}`,onclick:e=>{e.stopPropagation();setSettings({pinned:(get.settings().pinned||[]).filter(x=>x!==id)});}},'−'):null,el('span',{class:'ic',html:ic(p.i,22,1.7)}),el('span',{class:'clip',style:'max-width:100%'},p.n),p.c?el('span',{class:'cnt'},String(parseInt(p.c)||p.c)):null));})));
-  const rec=readRecent().map(id=>get.id(id)).filter(r=>r&&!r.archived).slice(0,4);
-  if(rec.length)page.append(el('div',{class:'lbl'},'Recent'),el('div',{class:'list'},rec.map(r=>el('button',{class:'li',style:'min-height:52px',onclick:()=>openRec(r)},el('span',{style:'color:var(--accent-text);display:grid',html:ic(KINDI[r.kind],18)}),el('span',{class:'grow clip'},r.title),el('small',{class:'small muted'},KINDN[r.kind])))));
   const absent=['today','studio','calendar'].filter(x=>!(S.nav||[]).includes(x));
   if(absent.length)page.append(el('div',{class:'lbl'},'Main views'),el('div',{class:'list'},absent.map(x=>el('button',{class:'li',style:'min-height:56px',onclick:()=>App.go(x)},el('span',{class:'sq',html:ic(PLACES[x].i,20,1.7)}),el('span',{class:'grow'},el('b',{},PLACES[x].n)),el('span',{class:'chev',html:ic('chevr',16,2)})))));
-  page.append(el('div',{class:'lbl'},'Browse all'));
   const row=(i,n,s,on)=>el('button',{class:'li',style:'min-height:60px',onclick:on},el('span',{class:'sq',html:ic(i,20,1.7)}),el('span',{class:'grow'},el('b',{style:'font-size:17px'},n)),el('span',{class:'chev',html:ic('chevr',18,2)}));
-  const areas=S.areas||AREAS,arch=[...recs.values()].filter(r=>r.archived).length,tools=get.all('resource').length;
-  page.append(el('div',{class:'list'},
-    row('grid','Organize','Inbox, Tasks, Habits + 4 more',()=>App.go('organize')),
-    row('heart','Life Areas',`${areas.slice(0,3).join(', ')}${areas.length>3?` + ${areas.length-3} more`:''}`,()=>App.go('areas')),
-    row('clip','Reflect',placeCount('reviews').s,()=>App.go('reflect')),
-    row('compass','Discover','Ideas worth trying',()=>App.go('discover'))),
+  const place=id=>row(PLACES[id].i,PLACES[id].n,null,()=>App.go(id));
+  page.append(el('div',{class:'lbl'},'Organize'),el('div',{class:'list'},['inbox','tasks','habits','routines','projects','goals','lists'].map(place)),
+    el('div',{class:'lbl'},'Life'),el('div',{class:'list'},row('heart','Life Areas',null,()=>App.go('areas')),place('reviews'),place('insights')),
     el('div',{class:'lbl'},'Kept'),el('div',{class:'list'},
-    row('image','Photos',(()=>{const n=allPhotos().length;return n?`${n} attached`:'Everything you’ve attached';})(),()=>App.go('photos')),
-    row('archive','Archive',arch?`${arch} finished and hidden`:'Nothing archived',()=>App.go('archive')),
-    row('trash','Recently deleted',(()=>{const n=get.all('trashed').length;return n?`${n} kept for 30 days`:'Kept for 30 days';})(),()=>App.go('trash'))));
+    row('image','Photos',null,()=>App.go('photos')),
+    row('archive','Archive',null,()=>App.go('archive')),
+    row('trash','Recently deleted',null,()=>App.go('trash'))));
   root.append(page);
 }
 /* choose a few places and put them in order: used by pins and the bottom bar */
@@ -70,8 +64,8 @@ function orderSheet({title,init,max,word,limit,groups,info,exact=false,onDone}){
     groups.forEach(([label,ids])=>{const f=ids.filter(x=>!D.includes(x));if(f.length)box.append(el('div',{class:'lbl'},label),el('div',{class:'list'},f.map(pickRow)));});}
   return inst;
 }
-const pinInfo=id=>{if(id&&id.startsWith('area:')){const a=id.slice(5);return (get.settings().areas||AREAS).includes(a)?{n:a,i:areaIcon(a),go:()=>App.go('area',{name:a}),c:''}:null;}const p=PLACES[id];if(!p)return null;return{n:p.n,i:p.i,go:()=>App.go(id),c:placeCount(id).c};};
-function editPins(){const s=get.settings();orderSheet({title:'Edit pinned',init:(s.pinned||[]).filter(pinInfo),max:4,word:'pinned',limit:'Four is the limit. Remove one to add another.',info:pinInfo,groups:[['Places',['inbox','tasks','habits','goals','projects','routines','lists','reviews','insights','discover','photos','archive','trash','today','calendar','studio','areas']],['Life areas',(s.areas||AREAS).map(a=>'area:'+a)]],onDone:D=>setSettings({pinned:D})});}
+const pinInfo=id=>{if(id&&id.startsWith('area:')){const a=id.slice(5);return (get.settings().areas||AREAS).includes(a)?{n:a,i:areaIcon(a),go:()=>App.go('area',{name:a}),c:''}:null;}const p=PLACES[id];if(!p||id==='tools'||id==='discover')return null;return{n:p.n,i:p.i,go:()=>App.go(id),c:placeCount(id).c};};
+function editPins(){const s=get.settings();orderSheet({title:'Edit pinned',init:(s.pinned||[]).filter(pinInfo),max:4,word:'pinned',limit:'Four is the limit. Remove one to add another.',info:pinInfo,groups:[['Places',['inbox','tasks','habits','goals','projects','routines','lists','reviews','insights','photos','archive','trash','today','calendar','studio','areas']],['Life areas',(s.areas||AREAS).map(a=>'area:'+a)]],onDone:D=>setSettings({pinned:D})});}
 /* search */
 function searchIndex(){
   const out=[];const push=(type,t,sub,icon,go,n,m)=>out.push(Object.assign({type,t:t||'',sub,icon,go,n:n||''},m||{}));const cd=r=>r.createdAt?k(new Date(r.createdAt)):null;
@@ -91,7 +85,7 @@ function searchIndex(){
   allPhotos().forEach(({r,title,what})=>{if(!out.some(o=>o.type==='Photos'&&o.t===title))push('Photos',title,`Photo · ${what}`,'image',()=>openPhotoRec(r));});
   get.all('resource').forEach(r=>push('Resources',r.title,r.area?`Resource · ${r.area}`:'Resource','books',()=>r.area?App.go('area',{name:r.area}):openRec(r)));
   [...userTpls(),...TEMPLATES.filter(t=>t.kind!=='upkeep')].forEach(t=>push('Templates',t.t,`${t.mine?'Your template':'Template'} · ${t.kind[0].toUpperCase()+t.kind.slice(1)}`,'books',()=>addTemplate(t)));
-  Object.entries(PLACES).filter(([id])=>id!=='tools').forEach(([id,p])=>push('Places',p.n,'Open','arrow',()=>App.go(id)));
+  Object.entries(PLACES).filter(([id])=>!['tools','discover'].includes(id)).forEach(([id,p])=>push('Places',p.n,'Open','arrow',()=>App.go(id)));
   return out;
 }
 const readSearches=()=>{try{return JSON.parse(localStorage.getItem('lifeos-searches')||'[]');}catch(e){return[];}};
@@ -150,7 +144,7 @@ function viewReviews(root){
   const page=el('div',{class:'page'}),list=get.all('review').sort((a,b)=>b.createdAt-a.createdAt);
   const rd=get.settings().reviewDay??0,cw=k(today().getDay()===rd?weekStartOf(today()):addD(weekStartOf(today()),-7)),doneW=list.find(r=>(r.period||'week')==='week'&&r.week===cw),lastW=list.find(r=>(r.period||'week')==='week');
   const stk=(()=>{const ws=new Set(list.filter(r=>(r.period||'week')==='week').map(r=>r.week));let n=0,w=doneW?cw:k(addD(fromK(cw),-7));while(ws.has(w)){n++;w=k(addD(fromK(w),-7));}return n;})();
-  page.append(pageHead('Reviews',(doneW?`This week’s review is done`:`Weekly review due ${DOW[rd]}${lastW?` · last one ${relDay(k(new Date(lastW.createdAt)))}`:''}`)+(stk>1?` · ${stk} weeks in a row`:''),{back:'Reflect',to:'reflect',icon:'clip'}));
+  page.append(pageHead('Reviews',(doneW?`This week’s review is done`:`Weekly review due ${DOW[rd]}${lastW?` · last one ${relDay(k(new Date(lastW.createdAt)))}`:''}`)+(stk>1?` · ${stk} weeks in a row`:''),{back:'More',to:'more',icon:'clip'}));
   page.append(el('button',{class:doneW?'btn line block':'btn primary block',onclick:()=>App.go('review')},doneW?'Review this week again':'Start weekly review'),el('div',{style:'display:flex;gap:8px'},el('button',{class:'btn line',style:'flex:1',onclick:()=>App.go('review',{period:'month'})},'Monthly'),el('button',{class:'btn line',style:'flex:1',onclick:()=>App.go('review',{period:'quarter'})},'Quarterly')));
   page.append(scorecardCard());
   page.append(monthLetterCard());
@@ -181,7 +175,7 @@ function weekStats(a,b){let done=0,open=0,habit=0,dk=a,planned=0;while(dk<=b){co
 /* Insights: only ever real numbers */
 function viewInsights(root){
   const page=el('div',{class:'page'}),tk=todayK();
-  page.append(pageHead('Insights','Plans vs. what happened',{back:'Reflect',to:'reflect',icon:'chart'}));
+  page.append(pageHead('Insights','Plans vs. what happened',{back:'More',to:'more',icon:'chart'}));
   const weeks=[];let s=weekStartOf(today());for(let i=0;i<8;i++){const a=k(addD(s,-7*i)),st=weekStats(a,k(addD(fromK(a),6)));weeks.unshift({a,...st});}
   const total=weeks.reduce((n,w)=>n+w.planned,0);
   if(total<3){page.append(el('div',{class:'list'},emptyState('Not enough history yet','Plan and finish a few things. Patterns show up here after about a week.')));{const mi=typeof moodInsight==='function'?moodInsight():null;if(mi)page.append(mi);}root.append(page);return;}
@@ -337,7 +331,9 @@ function viewArchive(root){
   let all=[...recs.values()].filter(r=>r.archived);if(S.archType!=='all')all=all.filter(r=>r.kind===S.archType);
   all.sort((a,b)=>S.archSort==='new'?(b.archivedAt||0)-(a.archivedAt||0):(a.archivedAt||0)-(b.archivedAt||0));
   const page=el('div',{class:'page'});
-  page.append(pageHead('Archive',`${all.length} item${all.length===1?'':'s'}`,{icon:'archive'}));
+  const anyArch=[...recs.values()].some(r=>r.archived);
+  page.append(pageHead('Archive',anyArch?`${all.length} item${all.length===1?'':'s'}`:null,{icon:'archive'}));
+  if(!anyArch){page.append(el('div',{class:'list'},emptyState('Nothing archived','Finished goals, habits you’ve set down and old projects rest here.')));root.append(page);return;}
   const kinds=[...new Set([...recs.values()].filter(r=>r.archived).map(r=>r.kind))];
   page.append(el('div',{class:'chips'},el('button',{class:'chip line',onclick:e=>openMenu(e.clientX,e.clientY,[{label:'All types',onclick:()=>{S.archType='all';App.refresh();}},...kinds.map(x=>({label:x==='entry'?'Life areas':KINDN[x]||x,onclick:()=>{S.archType=x;App.refresh();}}))])},S.archType==='all'?'All types':S.archType==='entry'?'Life areas':KINDN[S.archType],el('span',{style:'display:grid',html:ic('chevd',14,2.2)})),el('button',{class:'chip line',onclick:()=>{S.archSort=S.archSort==='new'?'old':'new';App.refresh();}},S.archSort==='new'?'Newest first':'Oldest first')));
   if(!all.length){page.append(el('div',{class:'list'},emptyState('Nothing archived','Finished goals, habits you’ve set down and old projects rest here.')));root.append(page);return;}

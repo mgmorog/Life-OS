@@ -1,6 +1,6 @@
 /* ---------- Organize: Inbox, Tasks, Habits, Routines, Projects, Goals, Lists ---------- */
 /* Shared page parts */
-function backInfo(){const st=App.state.stack||[],p=st[st.length-1];if(!p||p.view==='more')return['More','more'];if(p.view==='organize')return['Organize','organize'];const pl=PLACES[p.view];return[pl?pl.n:'Back','more'];}
+function backInfo(){const st=App.state.stack||[],p=st[st.length-1];if(!p||p.view==='more')return['More','more'];const pl=PLACES[p.view];return[pl?pl.n:'Back','more'];}
 function orgHead(title,sub,{type,menu,menuLabel}={}){
   const[b,to]=backInfo();
   return el('header',{},el('div',{class:'pghead'},backBtn(b,to),el('div',{style:'display:flex;align-items:center'},

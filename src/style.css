@@ -1694,3 +1694,30 @@ html.a-motion #st-dock .scard{transition:none}
 html.a-motion .htile.glow,html.a-motion .htile.glow .hring-in{animation:none}
 .dragrow{transition:box-shadow .2s}
 .dragrow.dlift{transition:none}
+/* v125: Top 3 all done inverts the Today card; slower habit ring fill */
+.htile .hr-fill{transition:stroke-dashoffset 1.3s cubic-bezier(.22,.9,.3,1) .1s,stroke .45s ease}
+.card.todo.won{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:0 12px 30px rgba(47,74,61,.28)}
+.todo.won.win{animation:wonIn .9s var(--ease) both}
+@keyframes wonIn{from{background:var(--card);border-color:#CFDCD3;color:var(--ink);box-shadow:var(--shadow-1)}}
+.todo.won .bl .lbl,.todo.won .secl,.todo.won .small.muted,.todo.won .t3n,.todo.won .trow .meta,.todo.won .t3done{color:rgba(255,255,255,.9)}
+.todo.won .bl .small.muted span[style]{color:#fff!important}
+.todo.won .secl::after,.todo.won .t3row,.todo.won .trow,.todo.won .addrow,.todo.won .t3add,.todo.won .anytime{border-color:rgba(255,255,255,.18)!important}
+.todo.won .t3bar{background:rgba(255,255,255,.22)}.todo.won .t3bar>i{background:#fff}
+.todo.won .dragrow,.todo.won .dragrow .swr,.todo.won .trow,.todo.won .t3row{background:transparent}
+.todo.won .tt,.todo.won .t3row .tt,.todo.won .trow .t{color:#fff}
+.todo.won .t3row.done .tt,.todo.won .trow.done .tt{color:rgba(255,255,255,.7)}
+.todo.won .tick{border-color:rgba(255,255,255,.75);background:transparent}
+.todo.won .tick.on,.todo.won .done>.tick{background:#fff;border-color:#fff;color:var(--accent)}
+.todo.won .dgrip,.todo.won .addrow,.todo.won .t3add,.todo.won .trow .iconbtn{color:rgba(255,255,255,.75)}
+.todo.won .dragrow.dlift .trow{background:var(--accent-deep)}
+.todo.won .t3sheen{background:linear-gradient(105deg,transparent 30%,rgba(255,255,255,.28) 50%,transparent 70%)}
+html.a-motion .todo.won.win{animation:none}
+html.c-fade .todo.won .t3in .tick-host.done{opacity:1}
+.todo.won .t3row.done .tt{color:#fff;background-image:linear-gradient(rgba(255,255,255,.85),rgba(255,255,255,.85))}
+.todo.won .tick-host.done .tt{background-image:linear-gradient(rgba(255,255,255,.85),rgba(255,255,255,.85))}
+.todo.won .secl::after{background:rgba(255,255,255,.22)}
+.todo.won .swr+.swr::before,.todo.won .trow-wrap+.trow-wrap::before{border-color:rgba(255,255,255,.18)}
+.todo.won .trow,.todo.won .t3row{border-color:rgba(255,255,255,.16)!important}
+.todo.won .t3done{color:#fff}
+.todo.won .sring circle{stroke:rgba(255,255,255,.35)}
+.todo.won .trow-wrap{border-color:rgba(255,255,255,.16)}

@@ -109,7 +109,6 @@ function viewToday(root){
   if(!s.introDone&&!recs.size)page.append(introCard());
   if(isToday){const gc=gsCard();if(gc)page.append(gc);const pe=planEveCard(dk);if(pe)page.append(pe);}
   page.append(alldayRow(dk));
-  if(isToday||dk===addK(todayK(),1)){const t3=top3Card(dk);if(t3)page.append(t3);}
   page.append(...dayCard(dk));
   {const nc=nowCard(dk);if(nc)page.append(nc);}
   const rem=reminderCard();if(rem)page.append(rem);
@@ -154,7 +153,7 @@ function dueExtras(dk,shown){
   const tk=todayK();return get.all('task').filter(t=>isOpenTask(t)&&t.deadline&&(t.deadline===dk||(dk===tk&&t.deadline<dk))&&!shown.has(t.id)&&!occursOn(t.date,t.repeat,dk,t.skip));
 }
 /* Today, Stack layout: To-do, Habits and Coming up cards (the day's time grid opens inline in Coming up) */
-function habRing(p,inner){const r=17,C=2*Math.PI*r,d=Math.max(0,Math.min(1,p))*C;return el('span',{class:'hring','aria-hidden':'true',html:`<svg width="40" height="40" viewBox="0 0 40 40"><circle cx="20" cy="20" r="${r}" fill="none" stroke="var(--line)" stroke-width="3.5"/><circle cx="20" cy="20" r="${r}" fill="none" stroke="var(--accent)" stroke-width="3.5" stroke-linecap="round" stroke-dasharray="${d.toFixed(1)} ${C.toFixed(1)}" transform="rotate(-90 20 20)"/></svg><span class="hring-in">${inner||''}</span>`});}
+function habRing(p,inner,c){const r=17,C=2*Math.PI*r,d=Math.max(0,Math.min(1,p))*C;return el('span',{class:'hring','aria-hidden':'true',style:c?`--c:${c}`:null,html:`<svg width="40" height="40" viewBox="0 0 40 40"><circle cx="20" cy="20" r="${r}" fill="none" stroke="var(--line)" stroke-width="3.5"/><circle cx="20" cy="20" r="${r}" fill="none" stroke="var(--c,var(--accent))" stroke-width="3.5" stroke-linecap="round" stroke-dasharray="${d.toFixed(1)} ${C.toFixed(1)}" transform="rotate(-90 20 20)"/></svg><span class="hring-in">${inner||''}</span>`});}
 function habProg(h,dk){const v=(h.logs||{})[dk];if(h.track==='count'||h.track==='time'){const n=typeof v==='number'?v:v?h.goalN:0;return n/Math.max(h.goalN||1,1);}if(h.days&&h.days.length)return habitWeek(h,dk)/h.days.length;if(h.target)return habitWeek(h,dk)/h.target;return habitDone(h,dk)?1:0;}
 function habSub(h,dk){if(h.track==='count'||h.track==='time')return habitMeta(h,dk);const on=habitDone(h,dk),lt=(h.logT||{})[dk];if(on&&lt!=null)return `Done at ${fmtT(lt)}`;if(h.days&&h.days.length)return `${habitWeek(h,dk)} of ${h.days.length} this week`;if(h.target)return `${habitWeek(h,dk)} of ${h.target} this week`;return on?'Done today':'Today';}
 function habRow(e,dk,loose){
@@ -163,7 +162,7 @@ function habRow(e,dk,loose){
     :h.track==='count'?el('button',{class:'chip',style:'height:36px','aria-label':`Add one to ${h.title}`,onclick:()=>{buzz(6);logHabit(h,dk,1);}},'+1')
     :h.track==='time'?el('button',{class:'chip',style:'height:36px','aria-label':`Log time for ${h.title}`,onclick:()=>logTimeSheet(h,dk)},'Log')
     :el('span',{class:'tick-hit'},tickBtn(on,v=>{row.classList.toggle('done',v);toggleItem({kind:'habit',rec:h},dk);setTimeout(()=>App.refresh(),820);},`Log ${h.title}`));
-  const row=el('div',{class:'hrow tick-host'+(on?' done':''),'data-id':h.id,'data-k':'hab:'+h.id},habRing(habProg(h,dk),h.icon?glyph(h.icon,16,2):''),
+  const row=el('div',{class:'hrow tick-host'+(on?' done':''),'data-id':h.id,'data-k':'hab:'+h.id},habRing(habProg(h,dk),h.icon?glyph(h.icon,16,2):'',h.color?colorHex(h.color):null),
     el('button',{class:'t',onclick:()=>App.go('habit',{id:h.id})},el('span',{class:'tt'},h.title),el('span',{class:'meta'},habSub(h,dk))),act);
   if(loose)return withPress(row,(x,y)=>openMenu(x,y,[{label:'Do it today',icon:'sun',onclick:()=>planHabitDay(h,dk)},{label:'Do it today at a time…',icon:'time',onclick:()=>{h.sessions=h.sessions||{};h.sessions[dk]={time:null};put(h,{silent:true});timeSheet({kind:'habit',id:h.id,rec:h,title:h.title,time:null},dk);}},{label:'Plan another day…',icon:'cal',onclick:()=>habitPlanSheet(h)},{label:'Open habit',icon:'habit',onclick:()=>App.go('habit',{id:h.id})}]));
   onPress(row,(x,y)=>itemMenu(e,dk,x,y),'.tick-hit');row.addEventListener('contextmenu',ev=>{ev.preventDefault();if(lastPointer==='mouse')itemMenu(e,dk,ev.clientX,ev.clientY);});
@@ -179,25 +178,31 @@ function dayCard(dk){
   const S=App.state,tk=todayK(),isToday=dk===tk,isPast=dk<tk,first=!S._painted,fu=first?' fade-up':'';
   const{timed,anytime}=dayItems(dk);
   const nowM=nowMin(),late=isToday&&get.settings().carryOver?carried():[];
-  const todoAny=anytime.filter(e=>e.kind!=='habit'&&e.kind!=='gcal'),habAny=anytime.filter(e=>e.kind==='habit'),habTimed=timed.filter(e=>e.kind==='habit');
-  const allIds=new Set([...timed,...anytime].map(e=>e.id)),lateIn=late.filter(t=>!allIds.has(t.id));
-  const shown=new Set([...late.map(t=>t.id),...allIds]),due=dueExtras(dk,shown);
+  const t3on=isToday||dk===addK(tk,1),t3ids=new Set(t3on?t3Get(dk).map(x=>x.id):[]),t3es=t3on?t3Get(dk).map(x=>t3Entry(x,dk)).filter(Boolean):[];
+  const notT3=x=>!t3ids.has(x.id);
+  const todoAny=anytime.filter(e=>e.kind!=='habit'&&e.kind!=='gcal'&&notT3(e)),habAny=anytime.filter(e=>e.kind==='habit'),habTimed=timed.filter(e=>e.kind==='habit');
+  const allIds=new Set([...timed,...anytime].map(e=>e.id)),lateIn=late.filter(t=>!allIds.has(t.id)&&notT3(t));
+  const shown=new Set([...late.map(t=>t.id),...allIds,...t3ids]),due=dueExtras(dk,shown);
   const lateDone=isToday?get.all('task').filter(t=>t.date&&t.date<tk&&(!t.repeat||t.repeat.type==='never')&&isDone(t,t.date)&&k(new Date(typeof t.doneDates[t.date]==='number'?t.doneDates[t.date]:0))===tk):[];
-  const total=todoAny.length+lateIn.length+due.length+lateDone.length,doneN=todoAny.filter(e=>e.done).length+lateDone.length;
+  const lateList=late.filter(notT3),lateDoneL=lateDone.filter(notT3);
+  const total=todoAny.length+lateIn.length+due.length+lateDoneL.length+t3es.length,doneN=todoAny.filter(e=>e.done).length+lateDoneL.length+t3es.filter(e=>e.done).length;
   const out=[];
   /* To-do */
-  const todo=el('section',{class:'card daycard todo'+fu},
-    el('div',{class:'bl'},el('span',{class:'lbl'},'To-do'),total?el('button',{class:'small muted tnum',style:'min-height:28px','aria-pressed':String(!!S.hideDone),'aria-label':S.hideDone?'Show finished items':'Hide finished items',onclick:()=>{S.hideDone=!S.hideDone;App.refresh();}},el('span',{'data-roll':'done'},`${doneN} of ${total} done`),doneN?el('span',{style:'margin-left:6px;color:var(--accent-text);font-weight:600'},S.hideDone?'Show':'Hide'):null):null),
+  const t3=t3on?top3Card(dk):null;
+  if(t3){t3.querySelectorAll(':scope>.bl,:scope>.t3bar').forEach(n=>n.remove());}
+  const todo=el('section',{class:'card daycard todo'+(t3?' t3 withT3':'')+fu},
+    el('div',{class:'bl'},el('span',{class:'lbl'},t3?(isToday?'Today':'Tomorrow'):'To-do'),total?el('button',{class:'small muted tnum',style:'min-height:28px','aria-pressed':String(!!S.hideDone),'aria-label':S.hideDone?'Show finished items':'Hide finished items',onclick:()=>{S.hideDone=!S.hideDone;App.refresh();}},el('span',{'data-roll':'done'},`${doneN} of ${total} done`),doneN?el('span',{style:'margin-left:6px;color:var(--accent-text);font-weight:600'},S.hideDone?'Show':'Hide'):null):null),
     total?el('div',{class:'progress t3bar'},el('i',{style:`width:${Math.round(doneN/total*100)}%`})):null);
+  if(t3){if(t3.classList.contains('win'))todo.classList.add('win');const w=el('div',{class:'t3in'});w.append(...t3.childNodes);todo.append(w);}
   onSwipe(todo,()=>goDay(addK(S.sel,1)),()=>goDay(addK(S.sel,-1)));
-  if(late.length>1)todo.append(el('div',{class:'sect-h',style:'margin-top:6px'},el('span',{class:'lbl'},'Carried over'),el('button',{class:'linkbtn small',onclick:()=>{const before=late.map(t=>[t,t.date]);late.forEach(t=>{t.date=tk;t.moves=(t.moves||0)+1;put(t,{silent:true});});App.refresh();toast(`${late.length} moved to today`,()=>{before.forEach(([t,d])=>{t.date=d;put(t,{silent:true});});App.refresh();});}},'Move all to today')));
+  if(lateList.length>1)todo.append(el('div',{class:'sect-h',style:'margin-top:6px'},el('span',{class:'lbl'},'Carried over'),el('button',{class:'linkbtn small',onclick:()=>{const before=late.map(t=>[t,t.date]);late.forEach(t=>{t.date=tk;t.moves=(t.moves||0)+1;put(t,{silent:true});});App.refresh();toast(`${late.length} moved to today`,()=>{before.forEach(([t,d])=>{t.date=d;put(t,{silent:true});});App.refresh();});}},'Move all to today')));
   const a=el('div',{class:'anytime'});
-  late.forEach(t=>a.append(anyRow({kind:'task',id:t.id,rec:t,title:t.title,time:null,done:false},t.date,{late:relDay(t.date),target:dk})));
+  lateList.forEach(t=>a.append(anyRow({kind:'task',id:t.id,rec:t,title:t.title,time:null,done:false},t.date,{late:relDay(t.date),target:dk})));
   due.forEach(t=>a.append(anyRow({kind:'task',id:t.id,rec:t,title:t.title,time:null,done:false},t.date||dk,{target:dk})));
   todoAny.filter(e=>!e.done).forEach(e=>a.append(anyRow(e,dk,{target:dk})));
   if(!S.hideDone)todoAny.filter(e=>e.done).forEach(e=>a.append(anyRow(e,dk,{target:dk})));
-  if(!S.hideDone)lateDone.forEach(t=>a.append(anyRow({kind:'task',id:t.id,rec:t,title:t.title,time:null,done:true},t.date,{late:relDay(t.date),target:dk})));
-  if(a.childNodes.length)todo.append(a);else todo.append(el('p',{class:'sub',style:'margin:6px 0 0'},isPast?'Nothing was left open.':total?'All done. Nice work.':'Nothing to do yet.'));
+  if(!S.hideDone)lateDoneL.forEach(t=>a.append(anyRow({kind:'task',id:t.id,rec:t,title:t.title,time:null,done:true},t.date,{late:relDay(t.date),target:dk})));
+  if(a.childNodes.length)todo.append(a);else if(!t3es.length)todo.append(el('p',{class:'sub',style:'margin:6px 0 0'},isPast?'Nothing was left open.':total?'All done. Nice work.':'Nothing to do yet.'));
   if(!isPast||!total)todo.append(el('button',{class:'addrow',onclick:()=>taskSheet(null,{date:dk})},el('span',{style:'display:grid',html:ic('plus',18,2.2)}),'Add a to-do'));
   out.push(todo);
   /* Habits */
@@ -216,7 +221,7 @@ function dayCard(dk){
   const upcoming=isToday?sched.filter(e=>!e.done&&e.time+(e.dur||30)>nowM):sched;
   const open=!!S.gridOpen;
   const cu=el('section',{class:'card upcard'+fu,style:first?'animation-delay:.1s':null},
-    el('div',{class:'bl'},el('span',{class:'lbl'},isToday?'Coming up':isPast?'Schedule':'Planned'),isToday?el('span',{class:'nowchip tnum'},`Now ${fmtS(nowM)}`):null));
+    el('div',{class:'bl'},el('span',{class:'lbl'},isToday?'Coming up':isPast?'Schedule':'Planned'),null));
   const rows=el('div',{class:'uplist'});
   upcoming.slice(0,3).forEach(e=>{const during=isToday&&e.time<=nowM;const end=e.time+(e.dur||30);
     rows.append(el('button',{class:'uprow',style:`--c:${e.color||'var(--accent)'}`,onclick:()=>openItem(e,dk)},el('span',{class:'upt tnum'},fmtS(e.time)),el('span',{class:'upbar'}),el('span',{class:'grow'},el('span',{class:'tt'},e.title),el('span',{class:'meta'},e.kind==='task'?fmtT(e.time):fmtRange(e.time,end),during?el('b',{class:'upnow'},` · ${fmtDurS(end-nowM)} left`):isToday&&e===upcoming[0]?` · in ${fmtDurS(e.time-nowM)}`:''))));});

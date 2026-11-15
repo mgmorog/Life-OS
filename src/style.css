@@ -1616,7 +1616,7 @@ html.a-motion #st-dock .scard{transition:none}
 .hrow .tick-hit{margin-left:auto}
 .hrow.done .tt{color:var(--ink-3)}
 .hring{position:relative;width:40px;height:40px;flex:none;display:grid;place-items:center}
-.hring svg{position:absolute;inset:0}
+
 .hring svg circle:last-child{transition:stroke-dasharray .6s var(--ease)}
 .hring-in{position:relative;display:grid;place-items:center;color:var(--accent-text)}
 .upcard{padding:16px 20px 8px}
@@ -1632,3 +1632,16 @@ html.a-motion #st-dock .scard{transition:none}
 .uprow .upnow{color:var(--now);font-weight:600}
 .uptoggle{margin-top:2px;min-height:44px}
 .gridin{margin-top:4px;animation:fadeUp .3s var(--ease)}
+/* v120: Top 3 lives inside the Today card; habit ring takes the habit's color; icon centred */
+.hring>svg{position:absolute;inset:0}
+.hring-in svg{position:static}
+.hring-in{width:40px;height:40px}
+.card.withT3{padding:16px 20px 8px}
+.withT3 .t3bar{margin-bottom:2px}
+.t3in{display:grid}
+.t3in>:first-child{border-top:0}
+.withT3 .anytime{margin-top:0;border-top:1px solid var(--line)}
+.withT3 .anytime .trow{padding-left:36px}
+.withT3 .stepsin{padding-left:36px}
+.withT3 .addrow{padding-left:36px}
+.withT3 .t3add{padding-left:36px}

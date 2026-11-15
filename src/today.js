@@ -261,7 +261,7 @@ function dayCard(dk){
   const todo=el('section',{class:'card daycard todo'+(t3?' t3 withT3':'')+fu},
     el('div',{class:'bl'},el('span',{class:'lbl'},t3?(isToday?'Today':'Tomorrow'):'To-do'),total?el('button',{class:'small muted tnum',style:'min-height:28px','aria-pressed':String(!!S.hideDone),'aria-label':S.hideDone?'Show finished items':'Hide finished items',onclick:()=>{S.hideDone=!S.hideDone;App.refresh();}},el('span',{'data-roll':'done'},`${doneN} of ${total} done`),doneN?el('span',{style:'margin-left:6px;color:var(--accent-text);font-weight:600'},S.hideDone?'Show':'Hide'):null):null),
     total?el('div',{class:'progress t3bar'},el('i',{style:`width:${Math.round(doneN/total*100)}%`})):null);
-  if(t3){if(t3.classList.contains('win'))todo.classList.add('win');if(t3es.length===T3_MAX&&t3es.every(e=>e.done))todo.classList.add('won');const w=el('div',{class:'t3in'});w.append(...t3.childNodes);
+  if(t3){if(t3.classList.contains('win'))todo.classList.add('win');{const won=t3es.length===T3_MAX&&t3es.every(e=>e.done);if(won){todo.classList.add('won');S._won=dk;}else if(S._won===dk){S._won=null;if(motionOK())todo.classList.add('lose');}}const w=el('div',{class:'t3in'});w.append(...t3.childNodes);
     w.querySelectorAll('.t3grip').forEach(g=>g.remove());
     w.querySelectorAll(':scope>.t3row[data-k]').forEach(r=>{const e=t3Entry({id:r.dataset.k.slice(3)},dk);if(!e)return;r.append(dGrip());const nx=r.nextSibling,par=r.parentNode;
       const sw=!e.done&&['task','habit'].includes(e.kind)?swipeAct(r,{right:{label:'Done',color:'var(--accent)',run:()=>{toggleItem(e,dk);App.refresh();}},left:{label:'Edit',color:'var(--ink)',run:()=>{openItem(e,dk);setTimeout(()=>App.refresh(),260);}}}):r;

@@ -185,7 +185,7 @@ function habitRow(h,dk){
   const row=el('div',{class:'li tick-host'+(done?' done':''),'data-k':'h:'+h.id,style:'min-height:60px'});
   const line=(()=>{if(skip)return el('small',{},'Skipped');
     if(!done&&dk===todayK()&&missedYesterday(h))return el('small',{class:'olate'},'Missed yesterday · Never miss twice');
-    const parts=[];if(habitWeekly(h))parts.push(`${habitWeek(h,dk)} of ${h.target||1} this week`);
+    const parts=[];if(habitWeekly(h)&&!(App.state.view==='habits'&&App.state.habTab==='today'&&dk===todayK()))parts.push(`${habitWeek(h,dk)} of ${h.target||1} this week`);
     const MS={day:{7:'1 week',30:'30 days',100:'100 days',365:'1 year'},week:{4:'1 month',12:'3 months',26:'6 months',52:'1 year'}},ms=(MS[s.unit]||{})[s.n];
     return el('small',{class:'ometa'},joinMeta([...parts,s.n>1?(()=>{const pf=streakSeen(h.id,s.n);return el('span',{class:'omi','data-rollfrom':pf!=null&&pf>1?pf:null,'data-rollto':s.n},flameI(),streakText(s));})():(streakSeen(h.id,s.n),null)]),ms?el('span',{class:'mstone','data-ms':`${h.id}:${s.unit}:${s.n}`},'★ '+ms):null);})();
   if(h.track==='count'||h.track==='time'){const v=typeof(h.logs||{})[dk]==='number'?h.logs[dk]:h.logs&&h.logs[dk]?h.goalN:0;
@@ -215,7 +215,7 @@ function viewHabits(root){
   page.append(addBar('Add a habit','New habit',()=>habitSheet(null)));
   if(!everyAll.length&&!arch.length){page.append(emptyOf('Your first habit','Pick something small. Set how often, and it shows up on Today.'));root.append(page);return;}
   const dueNow=active.filter(h=>habitDue(h,dk));
-  page.append(viewsRow([['today','Today',S.habTab==='today'?active.filter(h=>counts(h,dk)).length:0],['all','All habits',S.habTab==='all'?active.length:0],['paused','Paused',paused.length]],S.habTab,v=>{S.habTab=v;App.refresh();},'hab',everyAll));
+  page.append(viewsRow([['today','Today',0],['all','All habits',S.habTab==='all'?active.length:0],['paused','Paused',paused.length]],S.habTab,v=>{S.habTab=v;App.refresh();},'hab',everyAll));
   const note=areaNote('hab');if(note)page.append(note);
   if(S.habTab==='today'){
     const st=weekStartOf(today());
@@ -226,7 +226,7 @@ function viewHabits(root){
     const sect=(n,g0,right)=>{const g=g0.slice().sort((a,b)=>habitDone(a,dk)-habitDone(b,dk));if(g.length)page.append(el('div',{class:'sh2 shstick'},el('span',{class:'lbl'},n),el('span',{class:'small muted'},right)),el('div',{class:'list'},g.map(h=>{const r=habitRow(h,dk);if(dk!==tk||!habitWeekly(h))return r;const nt=habitLeftNote(h);return nt?el('div',{},r,nt):r;})));};
     
     [['morning','Morning'],['afternoon','Afternoon'],['evening','Evening'],['set','At a set time'],['anytime','Anytime']].forEach(([v,n])=>{const g=dayly.filter(h=>(h.tod||'anytime')===v);sect(n,g,`${g.filter(h=>habitDone(h,dk)).length} of ${g.length}`);});
-    sect('This week',weekly,`${weekly.filter(h=>habitWeek(h,dk)>=(h.target||1)).length} of ${weekly.length} met`);
+    sect('This week',weekly,'');
   }else if(S.habTab==='all'){
     if(!active.length)page.append(emptyOf('No active habits','Add one, or resume one from Paused.'));
     else{const rw=[...Array(7)].map((_,i)=>addK(tk,i-6));

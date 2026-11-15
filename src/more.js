@@ -9,7 +9,7 @@ const backBtn=(label='More',to='more')=>el('button',{class:'back',onclick:()=>Ap
 /* module pages show their icon beside the title, the same icon used for them in lists, so the two are learned together */
 const titleIc=i=>el('span',{class:'tic','aria-hidden':'true',html:ic(i,22,1.8)});
 const withIc=(i,h)=>i?el('div',{class:'tirow'},titleIc(i),h):h;
-function pageHead(title,sub,{back='More',to='more',actions=null,icon=null}={}){return el('header',{},el('div',{class:'pghead'},backBtn(back,to),actions?el('div',{style:'display:flex;gap:2px;align-items:center'},actions):null),withIc(icon,el('h1',{class:'pgtitle',style:'margin-top:4px'+(String(title).length>13?';font-size:36px;white-space:nowrap':'')},title)),sub?el('div',{class:'small muted',style:'margin-top:4px'},sub):null);}
+function pageHead(title,sub,{back='More',to='more',actions=null,icon=null}={}){return el('header',{},el('div',{class:'pghead'},backBtn(back,to),actions?el('div',{style:'display:flex;gap:2px;align-items:center'},actions):null),withIc(icon,el('h1',{class:'pgtitle',style:'margin-top:4px'+(String(title).length>13?`;font-size:${Math.min(40,Math.floor(300/(.5*String(title).length)))}px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis`:'')},title)),sub?el('div',{class:'small muted',style:'margin-top:4px'},sub):null);}
 function placeCount(id){
   const tk=todayK();
   switch(id){
@@ -80,7 +80,7 @@ function searchIndex(){
   get.all('list').forEach(l=>{push('Lists',l.title,`${(l.items||[]).length} items`,'list',()=>openRec(l));(l.items||[]).forEach(i=>push('Lists',i.t,`In “${l.title}”`,'list',()=>openRec(l),i.note));});
   get.all('routine').forEach(r=>push('Routines',r.title,'Routine','routine',()=>openRec(r)));
   get.all('wait').forEach(r=>push('Tasks',r.title,`Waiting on${r.who?' '+r.who:''}${r.done?' · received':''}`,'time',()=>openRec(r),r.notes,{d:r.since}));
-  (get.settings().areas||AREAS).forEach(a=>{push('Hubs',a,'Life area','heart',()=>App.go('area',{name:a}));toolsOf(a).filter(t=>!hubHidden(a).includes(t.id)&&!t.priv).forEach(t=>push('Hubs',t.name,`In ${a}`,t.icon||'grid',()=>App.go('tool',{hub:a,tool:t.id})));});
+  (get.settings().areas||AREAS).forEach(a=>{push('Hubs',a,'Life area','heart',()=>App.go('area',{name:a}));toolsOf(a).filter(t=>!t.hide&&!hubHidden(a).includes(t.id)&&!t.priv).forEach(t=>push('Hubs',t.name,`In ${a}`,t.icon||'grid',()=>App.go('tool',{hub:a,tool:t.id})));});
   get.all('entry').filter(x=>!isCfg(x)).forEach(x=>{const t=toolOf(x.hub,x.tool);if(t&&!t.priv)push('Hubs',t.title(x),`${t.name} · ${x.hub}`,t.icon||'grid',()=>App.go('tool',{hub:x.hub,tool:x.tool}),x.f.secret==='Yes'?'':[x.f.note,x.f.how,x.f.ing,x.f.impact,x.f.result].filter(v=>typeof v==='string').join(' '),{a:x.hub,d:(x.f.date&&/^\d{4}-/.test(x.f.date)?x.f.date:cd(x))});});
   allPhotos().forEach(({r,title,what})=>{if(!out.some(o=>o.type==='Photos'&&o.t===title))push('Photos',title,`Photo · ${what}`,'image',()=>openPhotoRec(r));});
   get.all('resource').forEach(r=>push('Resources',r.title,r.area?`Resource · ${r.area}`:'Resource','books',()=>r.area?App.go('area',{name:r.area}):openRec(r)));
@@ -365,7 +365,7 @@ function viewFoundation(root){
   const s=get.settings(),f=foundationDone(s),page=el('div',{class:'page'});
   const steps=[['areas','Choose your life areas','The parts of life you want to plan around',areasSheet],['work','Set your working hours','So Studio knows when you’re free',workSheet],['review','Pick your review day','When the weekly check-in shows up',()=>pickOne('Review day',DOW.map((d,i)=>[i,d]),s.reviewDay??0,v=>setSettings({reviewDay:v,foundation:{...(get.settings().foundation||{}),review:true}}))],['goal','Add your first goal','Something you are working toward this quarter',()=>goalSheet(null,{after:()=>setSettings({foundation:{...(get.settings().foundation||{}),goal:true}})})],['calendar','Connect a calendar',PWA.on?'See your plans in Apple Calendar':'Bring in events you already have',()=>App.go('setpage',{id:'calendar'})]];
   const done=steps.filter(x=>f[x[0]]).length;
-  page.append(pageHead('Personalized foundation','Five short steps so plans and suggestions fit how you actually live.',{back:'Settings',to:'prefs'}));
+  page.append(pageHead('Personalized foundation',null,{back:'Settings',to:'prefs'}));
   page.append(el('div',{class:'lbl'},`${done} of 5 done`),el('div',{class:'list'},steps.map(([id,t,sub,on])=>{const d=!!f[id];const next=!d&&steps.find(x=>!f[x[0]])[0]===id;return el('button',{class:'li',style:'min-height:64px',onclick:on},el('span',{class:'tick'+(d?' on':''),html:ic('check',14,3)}),el('span',{class:'grow'},el('b',{style:d?'color:var(--ink-2)':''},t),el('small',{},sub)),next?el('span',{class:'linkbtn small'},'Next'):null,el('span',{class:'chev',html:ic('chevr',16,2)}));})));
   if(done===5)page.append(el('button',{class:'btn primary block',onclick:()=>{setSettings({introDone:true});App.go('today');}},'Go to Today'));
   else if(!s.introDone)page.append(el('button',{class:'btn text',onclick:()=>{setSettings({introDone:true});App.go('today');}},'Skip for now'));

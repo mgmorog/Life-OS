@@ -129,7 +129,7 @@ HUBS['Personal growth'].tools.push(
    afterX:x=>{if(!x.f.review)x.f.review=addK(k(new Date(x.createdAt||Date.now())),91);},
    subX:x=>x.f.status==='Open'?[x.f.conf,x.f.review?`check back ${mD(x.f.review)}`:null].filter(Boolean).join(' · '):[x.f.status,x.f.conf?`was ${x.f.conf.toLowerCase()}`:null].filter(Boolean).join(' · '),
    head:(hub,t,l)=>{const dn=l.filter(x=>x.f.status!=='Open');if(dn.length<3)return null;const sure=dn.filter(x=>x.f.conf==='Very sure'),good=xs=>xs.filter(x=>x.f.status==='Went well').length;return headCard(kv('Went well',`${good(dn)} of ${dn.length}`),sure.length?kv('When very sure',`${good(sure)} of ${sure.length}`):null);}}),
- {id:'yir',name:'Year in review',icon:'star',word:'year',optIn:true,fields:[F('what','Theme')],view:vYir,title:x=>x.f.what,sub:()=>'',sum:()=>`${today().getFullYear()} so far`,tile:()=>({v:String(today().getFullYear()),sub:'so far'}),intro:null});
+ {id:'yir',name:'Year in review',icon:'star',word:'year',optIn:true,hide:true,fields:[F('what','Theme')],view:vYir,title:x=>x.f.what,sub:()=>'',sum:()=>`${today().getFullYear()} so far`,tile:()=>({v:String(today().getFullYear()),sub:'so far'}),intro:null});
 function yirStats(y){const a=`${y}-01-01`,b=`${y}-12-31`,cnt=(hub,tool,f=x=>inYear(x.f.date,y))=>entries(hub,tool).filter(f).length;
   return[
    ['Tasks finished',SC.tasks.v(a,b)],['Habit check-ins',SC.habits.v(a,b)],

@@ -42,7 +42,7 @@ function viewMore(root){
   const absent=['today','studio','calendar'].filter(x=>!(S.nav||[]).includes(x));
   if(absent.length)page.append(el('div',{class:'lbl'},'Main views'),el('div',{class:'list'},absent.map(x=>el('button',{class:'li',style:'min-height:56px',onclick:()=>App.go(x)},el('span',{class:'sq',html:ic(PLACES[x].i,20,1.7)}),el('span',{class:'grow'},el('b',{},PLACES[x].n)),el('span',{class:'chev',html:ic('chevr',16,2)})))));
   page.append(el('div',{class:'lbl'},'Browse all'));
-  const row=(i,n,s,on)=>el('button',{class:'li',onclick:on},el('span',{class:'sq',html:ic(i,20,1.7)}),el('span',{class:'grow'},el('b',{style:'font-size:17px'},n),el('small',{},s)),el('span',{class:'chev',html:ic('chevr',18,2)}));
+  const row=(i,n,s,on)=>el('button',{class:'li',style:'min-height:60px',onclick:on},el('span',{class:'sq',html:ic(i,20,1.7)}),el('span',{class:'grow'},el('b',{style:'font-size:17px'},n)),el('span',{class:'chev',html:ic('chevr',18,2)}));
   const areas=S.areas||AREAS,arch=[...recs.values()].filter(r=>r.archived).length,tools=get.all('resource').length;
   page.append(el('div',{class:'list'},
     row('grid','Organize','Inbox, Tasks, Habits + 4 more',()=>App.go('organize')),

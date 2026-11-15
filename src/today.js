@@ -197,11 +197,14 @@ function wireTodayDrag(card,dk){
       const prev={};cur.forEach((x,i)=>prev[x.id]=i);App.state._t3prev=prev;t3Set(dk,next);};
     addEventListener('pointermove',mv,{passive:false});addEventListener('pointerup',up);addEventListener('pointercancel',up);}));
 }
+/* the habit ring fills (or empties) slowly, frame by frame, so it glides the same on iPhone as everywhere else */
+function ringTo(f,to){cancelAnimationFrame(f._raf);const from=parseFloat(f.getAttribute('stroke-dashoffset'))||0;if(!motionOK()||Math.abs(from-to)<.01){f.setAttribute('stroke-dashoffset',to.toFixed(2));return;}
+  const t0=performance.now()+100,D=1400,ease=x=>1-Math.pow(1-x,3);const step=t=>{const x=Math.max(0,Math.min(1,(t-t0)/D));f.setAttribute('stroke-dashoffset',(from+(to-from)*ease(x)).toFixed(2));if(x<1)f._raf=requestAnimationFrame(step);};f._raf=requestAnimationFrame(step);}
 /* checking a habit card off: everything animates in place (ring fills, card fades into its color, soft glow),
    then the card glides to its new spot in the row. No re-render, so nothing flashes or restarts */
 function habTileSet(card,h,dk){
   const now=habitDone(h,dk);buzz(now?12:6);
-  const f=card.querySelector('.hr-fill');if(f){const C=2*Math.PI*17;f.style.strokeDashoffset=String(C-C*Math.max(0,Math.min(1,habProg(h,dk))));}
+  const f=card.querySelector('.hr-fill');if(f){const C=2*Math.PI*17;ringTo(f,C-C*Math.max(0,Math.min(1,habProg(h,dk))));}
   const sub=card.querySelector('.hsub');if(sub)sub.textContent=habSub(h,dk);
   const pill=card.querySelector('.hpill');if(pill){pill.classList.toggle('on',now);pill.setAttribute('aria-pressed',String(now));pill.innerHTML=now?ic('check',14,2.8)+'<span>Done</span>':'<span>Log today</span>';}
   card.classList.toggle('done',now);card.classList.remove('glow');if(now&&motionOK()){void card.offsetWidth;card.classList.add('glow');}

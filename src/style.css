@@ -1544,3 +1544,4 @@ html.a-motion #st-dock .scard{transition:none}
 .daytog.busy{color:var(--ink-3)}
 .daytog.today:not(.on){border:2px solid var(--accent-text)}
 .daytog:disabled{opacity:.4}
+.dpstat{display:inline-flex;align-items:center;gap:6px;font-size:14px;color:var(--ink-2)}.dpstat b{font-weight:600;color:var(--ink)}.dpstat i{font-style:normal;color:var(--line-2,#C9CEC9);margin:0 4px}

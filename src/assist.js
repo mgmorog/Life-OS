@@ -78,9 +78,8 @@ function habitLeftNote(h){
   const S=h.sessions||{},doneT=habitDone(h,tk),plan=days.filter(d=>S[d]&&!(d===tk&&doneT));
   if(!days.length||(left<=0&&!plan.length))return null;
   const nm=d=>DOW[fromK(d).getDay()].slice(0,3),full=d=>d===tk?'today':DOW[fromK(d).getDay()];
-  const open=Math.max(0,left-plan.length);
-  const text=left<=0?'Goal met this week.':left>days.length?`${left} more to hit ${target}, with ${days.length} day${days.length>1?'s':''} left. Get what you can.`:plan.length?`${left} more this week · ${plan.length} planned${open?`, ${open} to place`:''}`:`${left} more this week. Tap the days you’ll do it.`;
-  const toggle=d=>{buzz(6);h.sessions=h.sessions||{};if(h.sessions[d]){const was=h.sessions[d];delete h.sessions[d];put(h);toast(`Off ${full(d)}`,()=>{h.sessions[d]=was;put(h);});}else{h.sessions[d]={time:h.setTime??null};put(h);}};
+    const doneN=habitWeek(h,tk),text=el('span',{class:'dpstat'},el('b',{},String(doneN)),' Done',el('i',{'aria-hidden':'true'},'|'),el('b',{},String(plan.length)),' Planned');
+  const toggle=d=>{buzz(6);h.sessions=h.sessions||{};if(h.sessions[d]){delete h.sessions[d];put(h);}else{h.sessions[d]={time:h.setTime??null};put(h);}};
   return el('div',{class:'ohnext'},el('div',{class:'small',style:'color:var(--ink-2)'},text),
     el('div',{class:'daytogs',role:'group','aria-label':`Plan ${h.title} this week`},days.map(d=>{const on=!!S[d]&&!(d===tk&&doneT),busy=!on&&freeMinutes(d)<(h.dur||30);
       return el('button',{class:'daytog'+(d===tk?' today':'')+(on?' on':'')+(busy?' busy':''),disabled:d===tk&&doneT,'aria-pressed':String(on),'aria-label':`${on?'Planned':'Plan'} ${h.title} ${full(d)}${busy?', busy day':''}`,onclick:e=>{e.stopPropagation();toggle(d);}},nm(d));})));}

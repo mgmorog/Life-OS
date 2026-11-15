@@ -1645,3 +1645,37 @@ html.a-motion #st-dock .scard{transition:none}
 .withT3 .stepsin{padding-left:36px}
 .withT3 .addrow{padding-left:36px}
 .withT3 .t3add{padding-left:36px}
+/* v121: Priorities / Other, drag any row by its grip, habit cards row */
+.secl{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2);display:flex;align-items:center;gap:10px;padding:12px 0 4px}
+.secl::after{content:"";flex:1;height:1px;background:var(--line)}
+.withT3 .secl+.anytime{border-top:0}
+.t3in{position:relative}
+.t3in>.dragrow+.dragrow .t3row{border-top:1px solid var(--line)}
+.t3in>.dragrow:first-child .t3row{border-top:0}
+.dragrow{position:relative;background:var(--card)}
+.dragrow .swr{background:var(--card)}
+.dgrip{margin-left:auto;width:36px;height:44px;display:grid;place-items:center;color:var(--ink-3);touch-action:none;cursor:grab;flex:none;opacity:.7}
+.trow .dgrip{margin-left:0}
+.dragrow.dlift{z-index:5;border-radius:14px;box-shadow:0 14px 30px rgba(20,30,25,.18),0 2px 6px rgba(20,30,25,.08);cursor:grabbing}
+.dragrow.dlift .trow,.dragrow.dlift .t3row{border-color:transparent;background:var(--card);border-radius:14px}
+.dropline{position:absolute;left:0;right:0;height:3px;border-radius:2px;background:var(--accent);opacity:0;pointer-events:none;transition:top .12s,opacity .12s;z-index:4}
+.dropline.on{opacity:1}
+.t3in.dz{background:color-mix(in srgb,var(--accent-soft) 45%,transparent);border-radius:12px}
+.todo.demote .secl:last-of-type{color:var(--accent-text)}
+.hscroll{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x proximity;scrollbar-width:none;margin:8px -20px 0;padding:2px 20px 8px;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
+.hscroll::-webkit-scrollbar{display:none}
+.htile{flex:0 0 148px;scroll-snap-align:start;background:var(--card);border:1px solid var(--line);border-radius:22px;padding:16px 12px 14px;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center;transition:background .35s var(--ease),border-color .35s var(--ease),color .35s var(--ease);--c:var(--accent)}
+.htap{display:flex;flex-direction:column;align-items:center;gap:8px;width:100%}
+.htile .hring{width:68px;height:68px}
+.htile .hring>svg{width:68px;height:68px}
+.htile .hring-in{width:68px;height:68px;color:var(--c)}
+.htt{font-weight:600;font-size:15.5px;line-height:1.2;overflow-wrap:anywhere}
+.hsub{font-size:12.5px;color:var(--ink-2);line-height:1.25}
+.hpill{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:34px;min-width:44px;padding:0 14px;border-radius:17px;border:1.5px solid var(--c);color:var(--c);background:var(--card);font-size:13.5px;font-weight:600;margin-top:auto}
+.htile.done{background:var(--c);border-color:var(--c);color:#fff}
+.htile.done .hsub{color:rgba(255,255,255,.85)}
+.htile.done .hring-in{color:#fff}
+.htile.done .hring circle:first-child{stroke:rgba(255,255,255,.25)}
+.htile.done .hring circle:last-child{stroke:#fff}
+.htile.done .hpill{background:#fff;color:var(--c);border-color:#fff}
+.habcard{padding-bottom:6px}

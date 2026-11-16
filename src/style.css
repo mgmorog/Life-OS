@@ -2115,7 +2115,7 @@ html.c-fade .todo.won .t3in .tick-host.done{opacity:1}
 .hahead .haic{display:grid;color:var(--ink-3)}
 .hahead .hachev{display:grid;color:var(--ink-3);transition:transform .3s var(--ease)}
 .hacard.shut .hachev{transform:rotate(-90deg)}
-.hring{width:38px!important;height:38px!important}.hring>span{width:30px!important;height:30px!important;font-size:10.5px!important;font-weight:700}
+
 .habody{border-top:1px solid var(--line-2)}
 .habody .ohab2{padding-left:0;padding-right:0}
 .habody .ohab2:last-child{border-bottom:0}
@@ -2127,8 +2127,8 @@ html.c-fade .todo.won .t3in .tick-host.done{opacity:1}
 .hatx{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
 .hatx b{font:400 20px/1.2 var(--display);color:var(--ink)}
 .hatx small{font-size:12.5px;color:var(--ink-2)}
-.hring{width:42px!important;height:42px!important}.hring>span{width:34px!important;height:34px!important;color:var(--accent-text);display:grid!important;place-items:center}
-.hring.full>span{background:var(--accent)!important;color:#fff}
+.haring{width:42px!important;height:42px!important}.haring>span{width:34px!important;height:34px!important;color:var(--accent-text);display:grid!important;place-items:center}
+.haring.full>span{background:var(--accent)!important;color:#fff}
 
 /* v192 tighter Habits top */
 .habpg{gap:10px}
@@ -2138,3 +2138,27 @@ html.c-fade .todo.won .t3in .tick-host.done{opacity:1}
 .habpg .fchips{align-items:center}
 .hafold{margin-left:auto;flex:none;display:inline-flex;align-items:center;gap:4px;height:34px;padding:0 4px 0 10px;font-size:13.5px;font-weight:600;color:var(--accent-text)}
 .habpg .rings{margin-top:2px}
+
+/* v194 Today as one quiet feed */
+.todo.feed{padding-bottom:6px}
+.todo.feed .secl{padding:18px 0 6px}
+.secl.secr::after{order:1}.secl.secr>span{order:0}
+.secln{order:2;flex:none;font-size:13px;font-weight:600;letter-spacing:0;text-transform:none;color:var(--accent-text)}
+.todo.feed .trow{min-height:52px}
+.todo.feed .trow .tt{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;-webkit-line-clamp:unset}
+.tside{flex:none;font-size:13.5px;color:var(--ink-3);margin-left:8px;align-self:center}
+.tick-hit.impt .tick:not(.on){border-color:#B7861B;position:relative}
+.tick-hit.impt .tick:not(.on)::before{content:"!";position:absolute;inset:0;display:grid;place-items:center;color:#B7861B;font-weight:800;font-size:14px;line-height:1}
+.fhabs{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;margin:2px -18px 0;padding:4px 18px 6px;-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 30px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 30px),transparent)}
+.fhabs::-webkit-scrollbar{display:none}
+.fhab{flex:none;width:70px;display:flex;flex-direction:column;align-items:center;gap:5px;padding:2px 0}
+.fhab .hring{transform:scale(1.25);margin:6px 0 4px;transition:transform .3s var(--spring)}
+.fhab:active .hring{transform:scale(1.15)}
+.fhab small{font-size:11.5px;line-height:1.2;color:var(--ink-2);text-align:center;max-width:68px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.fhab small em{display:block;font-style:normal;color:var(--ink-3)}
+.fhab.done small{color:var(--ink-3)}
+.fsched{background:none;padding:0;margin:0;box-shadow:none;border:0}
+.fsched .uplist{margin-top:2px}
+.ftmr{padding:4px 0 6px;width:100%}
+.ftmr h3{font-size:20px}
+.todo.feed .donefold{margin-top:6px;border-top:1px solid var(--line)}

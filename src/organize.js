@@ -273,7 +273,7 @@ function viewHabits(root){
         const ord=[...g.filter(h=>!habitDone(h,tk)),...g.filter(h=>habitDone(h,tk))];
         page.append(el('div',{class:'card hacard'+(shut?' shut':'')},
           el('button',{class:'hahead','aria-expanded':String(!shut),onclick:()=>{shut?S.habShut.delete(a):S.habShut.add(a);App.refresh();}},
-            el('span',{class:'ring sm hring'+(due.length&&dn===due.length?' full':''),style:`--p:${due.length?dn/due.length*100:0}`},el('span',{html:ic(areaIcon(a),18,1.9)})),
+            el('span',{class:'ring sm haring'+(due.length&&dn===due.length?' full':''),style:`--p:${due.length?dn/due.length*100:0}`},el('span',{html:ic(areaIcon(a),18,1.9)})),
             el('span',{class:'hatx'},el('b',{},a),el('small',{},due.length?(dn===due.length?`All ${due.length} done today`:`${dn} of ${due.length} done today`):`${g.length} habit${g.length>1?'s':''}`)),el('span',{class:'hachev',html:ic('chevd',18,2.2)})),
           shut?null:el('div',{class:'habody'},ord.map(oneRow))));});}
   }else{

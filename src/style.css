@@ -2048,3 +2048,15 @@ html.c-fade .todo.won .t3in .tick-host.done{opacity:1}
 .rprow.nomove small{color:var(--ink-3)}
 .rprow.nomove.on .rpck{background:var(--ink-3);border-color:var(--ink-3)}
 .rpnote{flex:0 0 100%;margin:0 2px 2px;font-size:12.5px;line-height:1.35;color:var(--ink-2)}
+.rprow.nomove{cursor:default}.rprow.nomove .cpill{flex:none}
+
+/* v180 replan: choose the action first */
+.rpseg{display:flex;background:var(--seg);border-radius:14px;padding:3px;gap:3px}
+.rpseg button{flex:1;height:38px;border-radius:11px;font-size:14.5px;font-weight:600;color:var(--ink-2);transition:background-color .25s,color .25s,box-shadow .25s}
+.rpseg button.on{background:var(--card);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.rpseg button[disabled]{opacity:.4}
+.rprow.nomove{opacity:.55}.rprow.nomove .rpck{border-style:dashed}
+.rprow.op{opacity:1}
+.rpnote2{flex:0 0 100%;margin:0 2px 2px;font-size:12.5px;line-height:1.35;color:var(--ink-2)}
+.rpacts .rpmove{flex:1 1 100%}
+.rpseg button{display:flex;align-items:center;justify-content:center}

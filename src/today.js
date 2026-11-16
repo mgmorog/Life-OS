@@ -549,30 +549,36 @@ function replanSheet(tasks,dk,ex){ex=ex||{};const tk=todayK(),sat=(()=>{const d=
     ...(ex.area||[]).map(r=>({key:'a'+r.id,open:!r.tick,title:r.title,d:addK(tk,-(+((String(r.sub).match(/(\d+) days?/)||[])[1]||1))),sub:[String(r.sub||'').replace(/(\d+ days?) overdue/i,'$1 late').split(' · ').slice(-1)[0],r.area].filter(Boolean).join(' · '),move:false,area:r}))
   ].sort((a,b)=>a.d<b.d?-1:a.d>b.d?1:0);
   if(!items.length)return;
-  const sel=new Set(ex.only?[ex.only]:items.filter(x=>!x.open).map(x=>x.key));let inst,mode='pick';
-  const chosen=()=>items.filter(x=>sel.has(x.key));
+  /* pick the action first (Replan or Mark complete); the list then lets you select only what that action can do */
+  const canDo=x=>!x.open,canAct=(x,a)=>a==='replan'?x.move:canDo(x);
+  let act=ex.act||(items.some(x=>x.move)?'replan':'done'),inst,mode='pick';
+  const S2={replan:new Set(ex.only?[ex.only]:items.filter(x=>x.move).map(x=>x.key)),done:new Set(ex.only&&act==='done'?[ex.only]:[])};
+  const sel=()=>S2[act],chosen=()=>items.filter(x=>sel().has(x.key)&&canAct(x,act));
   const finish=(msg,undo)=>{inst.close();App.refresh();toast(msg,undo);};
   const markDone=()=>{const l=chosen(),snap=l.filter(x=>x.rec).map(x=>[x.rec,JSON.stringify(x.rec.doneDates||{})]);
     l.forEach(x=>{if(x.area){const b=x.area.tick&&(x.area.tick.matches('button')?x.area.tick:x.area.tick.querySelector('button'));if(b)b.click();return;}const r=x.rec;r.doneDates=Object.assign({},r.doneDates||{});r.doneDates[x.doneK]=Date.now();put(r,{silent:true});});
-    finish(l.length>1?`${l.length} done`:`${l[0].title} done`,snap.length?()=>{snap.forEach(([r,dd])=>{r.doneDates=JSON.parse(dd);put(r,{silent:true});});App.refresh();}:null);};
-  const moveTo=v=>{const l=chosen(),mv=l.filter(x=>x.move),keep=l.length-mv.length,before=mv.map(x=>[x.rec,x.rec.date]);
+    finish(l.length>1?`${l.length} completed`:`${l[0].title} completed`,snap.length?()=>{snap.forEach(([r,dd])=>{r.doneDates=JSON.parse(dd);put(r,{silent:true});});App.refresh();}:null);};
+  const moveTo=v=>{const mv=chosen(),before=mv.map(x=>[x.rec,x.rec.date]);
     mv.forEach((x,i)=>{const t=x.rec;t.date=v==='spread'?addK(tk,1+Math.floor(i/2)):v;t.moves=(t.moves||0)+1;put(t,{silent:true});});
-    finish(`${mv.length===1?mv[0].title:mv.length} moved${keep?` · ${keep} keep their own schedule`:''}`,()=>{before.forEach(([t,d])=>{t.date=d;put(t,{silent:true});});App.refresh();});};
-  const draw=b=>{b.replaceChildren();const l=chosen(),nMove=l.filter(x=>x.move).length;
+    finish(mv.length===1?`${mv[0].title} replanned`:`${mv.length} replanned`,()=>{before.forEach(([t,d])=>{t.date=d;put(t,{silent:true});});App.refresh();});};
+  const draw=b=>{b.replaceChildren();const l=chosen(),n=l.length;
     if(mode==='move'){
-      const opts=[[tk,'Today','Back on today’s list'],[addK(tk,1),'Tomorrow',relDay(addK(tk,1))],[sat,'This weekend',relDay(sat)],[mon,'Next week',relDay(mon)],...(nMove>1?[['spread','Spread out','2 a day from tomorrow']]:[]),[null,'Someday','No date, in Anytime']];
-      b.append(el('button',{class:'rpback',onclick:()=>{mode='pick';draw(b);}},el('span',{style:'display:grid',html:ic('chevl',16,2.4)}),`Move ${nMove} ${nMove===1?'to-do':'to-dos'}`),
+      const opts=[[tk,'Today','Back on today’s list'],[addK(tk,1),'Tomorrow',relDay(addK(tk,1))],[sat,'This weekend',relDay(sat)],[mon,'Next week',relDay(mon)],...(n>1?[['spread','Spread out','2 a day from tomorrow']]:[]),[null,'Someday','No date, in Anytime']];
+      b.append(el('button',{class:'rpback',onclick:()=>{mode='pick';draw(b);}},el('span',{style:'display:grid',html:ic('chevl',16,2.4)}),`Replan ${n} ${n===1?'to-do':'to-dos'}`),
         el('div',{class:'rpgrid'},opts.map(([v,t1,t2])=>el('button',{class:'rpopt'+(v===null?' quiet':''),onclick:()=>moveTo(v)},el('b',{},t1),el('span',{},t2))),
-          el('label',{class:'rpopt wide'},el('b',{},'Pick a date'),el('input',{type:'date',class:'rpdate',min:tk,onchange:ev=>{if(ev.target.value)moveTo(ev.target.value);}}))),
-null);
+          el('label',{class:'rpopt wide'},el('b',{},'Pick a date'),el('input',{type:'date',class:'rpdate',min:tk,onchange:ev=>{if(ev.target.value)moveTo(ev.target.value);}}))));
       return;}
-    const pickable=items.filter(x=>!x.open),all=sel.size===pickable.length;
-    b.append(el('div',{class:'rpbar'},el('span',{class:'small muted'},sel.size?`${sel.size} selected`:'Pick what to change'),el('button',{class:'linkbtn small',onclick:()=>{if(all)sel.clear();else pickable.forEach(x=>sel.add(x.key));draw(b);}},all?'Clear':'Select all')),
-      el('div',{class:'list rplist'},items.map(x=>el('button',{class:'rprow'+(sel.has(x.key)?' on':'')+(x.open?' op':'')+(!x.move&&!x.open?' nomove':''),'aria-pressed':x.open?null:String(sel.has(x.key)),onclick:()=>{if(x.open){inst.close();setTimeout(()=>x.area.go&&x.area.go(),260);return;}sel.has(x.key)?sel.delete(x.key):sel.add(x.key);draw(b);}},
-        x.open?el('span',{class:'rpck op',html:ic('chevr',14,2.4)}):el('span',{class:'rpck',html:sel.has(x.key)?ic('check',14,3):''}),el('span',{class:'grow'},el('span',{class:'tt'},x.title),el('small',{},x.sub))))),
-      el('div',{class:'rpacts'},l.length>nMove?el('p',{class:'rpnote'},nMove?`Grayed items follow their own schedule (chores, repeats, deadlines). They can be marked done, but only ${nMove} will move.`:'These follow their own schedule (chores, repeats, deadlines), so they can be marked done but not moved.'):null,
-        el('button',{class:'rpdone',disabled:sel.size?null:'',onclick:markDone},el('span',{style:'display:grid',html:ic('check',16,2.6)}),'Mark done'),
-        el('button',{class:'rpmove',disabled:nMove?null:'',onclick:()=>{mode='move';draw(b);}},nMove&&nMove<l.length?`Move ${nMove}`:'Move…')));};
+    const pickable=items.filter(x=>canAct(x,act)),all=pickable.length&&pickable.every(x=>sel().has(x.key));
+    const seg=el('div',{class:'rpseg',role:'tablist'},[['replan','Replan'],['done','Mark complete']].map(([k,t])=>el('button',{class:act===k?'on':'',role:'tab','aria-selected':String(act===k),disabled:k==='replan'&&!items.some(x=>x.move)?'':null,onclick:()=>{if(act===k)return;act=k;draw(b);}},t)));
+    const hint=act==='replan'&&items.some(x=>!x.move)?el('p',{class:'rpnote2'},'Grayed items follow their own schedule, so they can’t be replanned. Switch to Mark complete to finish them.'):null;
+    b.append(...[seg,el('div',{class:'rpbar'},el('span',{class:'small muted'},sel().size&&n?`${n} selected`:act==='replan'?'Pick to-dos to replan':'Pick what you finished'),pickable.length?el('button',{class:'linkbtn small',onclick:()=>{if(all)sel().clear();else pickable.forEach(x=>sel().add(x.key));draw(b);}},all?'Clear':'Select all'):null),
+      el('div',{class:'list rplist'},items.map(x=>{const ok=canAct(x,act),on=ok&&sel().has(x.key);
+        if(x.open)return el('button',{class:'rprow nomove op',onclick:()=>{inst.close();setTimeout(()=>x.area.go&&x.area.go(),260);}},el('span',{class:'rpck op',html:ic('chevr',14,2.4)}),el('span',{class:'grow'},el('span',{class:'tt'},x.title),el('small',{},x.sub)));
+        return el('button',{class:'rprow'+(on?' on':'')+(ok?'':' nomove'),disabled:ok?null:'','aria-pressed':ok?String(on):null,onclick:()=>{if(!ok)return;sel().has(x.key)?sel().delete(x.key):sel().add(x.key);draw(b);}},
+          el('span',{class:'rpck',html:on?ic('check',14,3):''}),el('span',{class:'grow'},el('span',{class:'tt'},x.title),el('small',{},x.sub)));})),
+      el('div',{class:'rpacts'},hint,act==='replan'
+        ?el('button',{class:'rpmove',disabled:n?null:'',onclick:()=>{mode='move';draw(b);}},n?`Replan ${n}…`:'Replan…')
+        :el('button',{class:'rpmove',disabled:n?null:'',onclick:markDone},el('span',{style:'display:grid',html:ic('check',16,2.6)}),n?`Mark ${n} complete`:'Mark complete'))].filter(Boolean));};
   inst=openSheet({title:items.length>1?`${items.length} overdue`:items[0].title,left:{label:'Cancel'},right:{label:'See all',onclick:()=>{inst.close();const S=App.state;S.taskF=new Set(['overdue']);S.taskTab='all';setTimeout(()=>App.go('tasks'),200);}},build:b=>draw(b)});}
 /* Focus: a sheet that slides up with the next priority, an editable timer (25 min), switch, pause, done */
 function prFocusSheet(dk){let curId=null,mins=25,tm=null,picking=false;

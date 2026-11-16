@@ -2002,3 +2002,8 @@ html.c-fade .todo.won .t3in .tick-host.done{opacity:1}
 .allday-row.top::-webkit-scrollbar{display:none}
 .allday-row.top>*{flex:none}
 .todo .anytime .trow .tt{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+
+/* v173 habit cards hug their content */
+.habcard .hscroll{align-items:flex-start}
+.htile{gap:10px}
+.htt{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}

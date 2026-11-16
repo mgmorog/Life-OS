@@ -2129,3 +2129,12 @@ html.c-fade .todo.won .t3in .tick-host.done{opacity:1}
 .hatx small{font-size:12.5px;color:var(--ink-2)}
 .hring{width:42px!important;height:42px!important}.hring>span{width:34px!important;height:34px!important;color:var(--accent-text);display:grid!important;place-items:center}
 .hring.full>span{background:var(--accent)!important;color:#fff}
+
+/* v192 tighter Habits top */
+.habpg{gap:10px}
+.habpg>header{margin-bottom:-2px}
+.habpg .oadd{height:46px;border-radius:14px}
+.habpg .tstick{margin-bottom:0;padding-bottom:4px}
+.habpg .fchips{align-items:center}
+.hafold{margin-left:auto;flex:none;display:inline-flex;align-items:center;gap:4px;height:34px;padding:0 4px 0 10px;font-size:13.5px;font-weight:600;color:var(--accent-text)}
+.habpg .rings{margin-top:2px}

@@ -227,7 +227,7 @@ function habTile(e,dk,loose){
     :!on&&h.track==='time'?el('button',{class:'hpill','aria-label':`Log time for ${h.title}`,onclick:ev=>{ev.stopPropagation();logTimeSheet(h,dk);}},'Log')
     :el('button',{class:'hpill'+(on?' on':''),'aria-pressed':String(on),'aria-label':on?`Undo ${h.title}`:`Log ${h.title} today`,onclick:toggle},on?el('span',{style:'display:grid',html:ic('check',14,2.8)}):null,on?'Done':'Log today');
   const card=el('div',{class:'htile'+(on?' done':''),'data-k':'hab:'+h.id,style:c?`--c:${c}`:null},
-    el('button',{class:'htap','aria-label':`Open ${h.title}`,onclick:()=>App.go('habit',{id:h.id})},habRing(p,h.icon?glyph(h.icon,24,1.9):'',c),
+    el('button',{class:'htap','aria-label':`Open ${h.title}`,onclick:()=>App.go('habit',{id:h.id})},habRing(p,habGlyph(h),c),
       el('span',{class:'htt'},h.title),el('span',{class:'hsub'},habSub(h,dk))),act);
   const menu=loose?(x,y)=>openMenu(x,y,[{label:'Do it today',icon:'sun',onclick:()=>planHabitDay(h,dk)},{label:'Do it today at a time…',icon:'time',onclick:()=>{h.sessions=h.sessions||{};h.sessions[dk]={time:null};put(h,{silent:true});timeSheet({kind:'habit',id:h.id,rec:h,title:h.title,time:null},dk);}},{label:'Plan another day…',icon:'cal',onclick:()=>habitPlanSheet(h)},{label:'Open habit',icon:'habit',onclick:()=>App.go('habit',{id:h.id})}]):(x,y)=>itemMenu(e,dk,x,y);
   onPress(card,menu,'.hpill');card.addEventListener('contextmenu',ev=>{ev.preventDefault();if(lastPointer==='mouse')menu(ev.clientX,ev.clientY);});
@@ -255,8 +255,10 @@ function dayCard(dk){
   /* To-do */
   /* Priorities as three rings; the first one not done sits under them as Up next; everything else folds away */
   const t3=t3on&&get.settings().top3On!==false;
+  const nx0=isToday&&t3on&&get.settings().top3On!==false?t3es.find(e=>!e.done):null,foc=nx0&&frNow()&&t3es.some(e=>e.id===frNow().id);
+  const FOCUSBTN=nx0?el('button',{class:'prfocus2'+(foc?' on':''),'aria-label':foc?'Focusing — open timer':'Focus',onclick:()=>prFocusSheet(dk),html:ic('play',13,2.6)}):null;
   const todo=el('section',{class:'card daycard todo rcard'+fu},
-    el('div',{class:'bl'},el('span',{class:'lbl'},(()=>{const d=isToday?'Today':relDay(dk);return t3?(['Today','Tomorrow','Yesterday'].includes(d)?`${d}’s priorities`:`Priorities · ${d}`):d;})()),total?el('span',{class:'small muted tnum'},el('span',{'data-roll':'done'},`${doneN} of ${total} today`)):null),
+    el('div',{class:'bl'},el('span',{class:'lbl'},(()=>{const d=isToday?'Today':relDay(dk);return t3?(['Today','Tomorrow','Yesterday'].includes(d)?`${d}’s priorities`:`Priorities · ${d}`):d;})()),el('span',{class:'blr'},total?el('span',{class:'small muted tnum'},el('span',{'data-roll':'done'},`${doneN} of ${total} today`)):null,FOCUSBTN)),
     total?el('div',{class:'progress t3bar rbar'},el('i',{style:`width:${Math.round(doneN/total*100)}%`})):null);
   onSwipe(todo,()=>goDay(addK(S.sel,1)),()=>goDay(addK(S.sel,-1)));
   const W=t3&&t3es.length===T3_MAX&&t3es.every(e=>e.done);
@@ -264,15 +266,11 @@ function dayCard(dk){
   if(t3)todo.append(priorityRings(dk,t3es,W));
   const nx=t3?t3es.find(e=>!e.done):null;
   if(W)todo.append(el('p',{class:'wonmsg'},'What mattered most is done.'));
-  else if(nx)todo.append(el('div',{class:'focusrow'},el('button',{class:'prfocus',onclick:()=>prFocusSheet(dk)},el('span',{style:'display:grid',html:ic('play',14,2.4)}),frNow()&&t3es.some(e=>e.id===frNow().id)?'Focusing':'Focus')));
   /* chores, bills, meds and upkeep from your life areas join the to-dos */
   const AIs=(isToday?areaItems(dk):[]).filter(r=>!(r.rid&&t3ids.has(r.rid))),aiLate=AIs.filter(r=>!r.done&&r.late),aiOpen=AIs.filter(r=>!r.done&&!r.late),aiDone=AIs.filter(r=>r.done);
   /* everything overdue is one red row */
   const nLate=lateList.length+aiLate.length;
-  if(nLate){const oldest=lateList.length?lateList.reduce((m,t)=>t.date<m?t.date:m,lateList[0].date):null;
-    todo.append(el('div',{class:'odrow'},el('span',{class:'grow'},el('b',{},`${nLate} overdue`),oldest?el('span',{class:'odsub'},`Oldest ${daysBetween(oldest,todayK())} days ago`):null),
-      lateList.length?el('button',{class:'cpill r',onclick:()=>replanSheet(lateList,dk)},'Replan'):null,
-      el('button',{class:'cpill',onclick:()=>{S.taskF=new Set(['overdue']);S.taskTab='all';App.go('tasks');}},'See all')));}
+  const odBtn=nLate?el('button',{class:'odlink',onclick:()=>lateList.length?replanSheet(lateList,dk):(S.taskF=new Set(['overdue']),S.taskTab='all',App.go('tasks'))},`${nLate} overdue`,el('span',{style:'display:grid',html:ic('chevr',13,2.4)})):null;
   /* also today: the next three, timed first, then high priority, then bills and meds */
   const cand=[...due.map(t=>({t:'t',e:{kind:'task',id:t.id,rec:t,title:t.title,time:t.time??null,done:false},d:t.date||dk})),...todoAny.filter(e=>!e.done).map(e=>({t:'t',e,d:dk})),...aiOpen.map(r=>({t:'a',r}))];
   const rk=c=>c.t==='a'?[1,9e9,1,['Bill','Med'].includes(c.r.kind)?0:1]:[c.e.time!=null?0:1,c.e.time??9e9,c.e.rec.priority==='high'?0:1,1];
@@ -286,10 +284,11 @@ function dayCard(dk){
   /* every row, done ones and area items too, gets a handle so it can be dropped on a ring */
   [a,dn].forEach(box=>box.querySelectorAll(':scope>.trow-wrap').forEach(w=>{if(w.classList.contains('aitem'))return;const id=w.querySelector('.trow')?.dataset.id;const r=id&&get.id(id);w.classList.add('dragrow');w.dataset.id=id||'';w.dataset.can=r&&r.kind==='task'?'1':'0';const tr=w.querySelector('.trow');if(tr&&w.dataset.can==='1')tr.append(dGrip());}));
   const nDone=dn.querySelectorAll(':scope>.trow-wrap').length;
-  if(shownC.length){if(t3)todo.append(el('div',{class:'secl'},'Also today'));todo.append(a);}
-  else if(!t3es.length&&!nLate)todo.append(el('p',{class:'sub',style:'margin:6px 0 0'},isPast?'Nothing was left open.':total?'All done. Nice work.':'Nothing to do yet.'));
-  if(more>0)todo.append(el('button',{class:'morerow',onclick:()=>{S.taskF=new Set(['today']);S.taskTab='all';App.go('tasks');}},el('span',{},`${more} more today`),el('span',{style:'display:grid',html:ic('chevr',16,2.2)})));
-  if(!isPast||!total)todo.append(el('button',{class:'addrow',onclick:()=>taskSheet(null,{date:dk})},el('span',{style:'display:grid',html:ic('plus',18,2.2)}),'Add a to-do'));
+  if(shownC.length||odBtn){if(t3||odBtn)todo.append(el('div',{class:'secl'+(odBtn?' hasod':'')},el('span',{},'Also today'),odBtn));if(shownC.length)todo.append(a);}
+  if(!shownC.length&&!t3es.length&&!nLate)todo.append(el('p',{class:'sub',style:'margin:6px 0 0'},isPast?'Nothing was left open.':total?'All done. Nice work.':'Nothing to do yet.'));
+  const canAdd=!isPast||!total;
+  if(more>0||canAdd)todo.append(el('div',{class:'tfoot'},canAdd?el('button',{class:'tadd','aria-label':'Add a to-do',onclick:()=>taskSheet(null,{date:dk}),html:ic('plus',16,2.4)}):el('span'),
+    more>0?el('button',{class:'tmore',onclick:()=>{S.taskF=new Set(['today']);S.taskTab='all';App.go('tasks');}},'More',el('span',{style:'display:grid',html:ic('chevr',13,2.4)})):null));
   if(nDone){S._doneOpen=S._doneOpen||{};const op=!!S._doneOpen[dk];todo.append(el('button',{class:'donefold'+(op?' open':''),'aria-expanded':String(op),onclick:()=>{S._doneOpen[dk]=!op;App.refresh();}},el('span',{},`Done · ${nDone}`),el('span',{class:'chev',html:ic('chevd',16,2.2)})));if(op)todo.append(dn);}
   if(t3)wireRingDrop(todo,dk);
   out.push(todo);
@@ -362,7 +361,7 @@ function metaOf(e,late,dk){
 function gridTimeAt(x,y,grab=0,dur=0){const g=$('#grid');if(!g)return null;const r=g.getBoundingClientRect();if(x<r.left||x>r.right||y<r.top||y>r.bottom)return null;const py=y-r.top+g.scrollTop-12,m=py/HH*60-grab;return Math.max(0,Math.min(1440-Math.max(dur,15),Math.round(m/15)*15));}
 function dropPreview(x,y,dur=30,grab=0,text){const t=gridTimeAt(x,y,grab,dur);let p=$('#drop-prev');const cv=$('.gcanvas');if(t==null||!cv){p&&p.remove();return null;}if(!p){p=el('div',{class:'droptime',id:'drop-prev'});cv.append(p);}p.style.top=t/60*HH+12+'px';p.style.height=Math.max(dur/60*HH-2,24)+'px';p.textContent=(dropCarry&&dropCarry.title?dropCarry.title+' · ':'')+(text||(dur>=30?fmtRange(t,t+dur):fmtT(t)));carryPreview(p,t);return t;}
 function clearPreview(){const p=$('#drop-prev');p&&p.remove();if(!App.dragging)dropCarry=null;}
-function autoscrollGrid(x,y){const g=$('#grid');if(g){const r=g.getBoundingClientRect();if(x>=r.left&&x<=r.right){if(y<r.top+36&&y>r.top-20)g.scrollTop-=7;else if(y>r.bottom-36&&y<r.bottom+20)g.scrollTop+=7;}}if(y<70)scrollBy(0,-7);else if(y>innerHeight-(innerWidth<900?110:40))scrollBy(0,7);}
+function autoscrollGrid(x,y){const g=$('#grid');if(g&&!g.classList.contains('gfull')){const r=g.getBoundingClientRect();if(x>=r.left&&x<=r.right){if(y<r.top+36&&y>r.top-20)g.scrollTop-=7;else if(y>r.bottom-36&&y<r.bottom+20)g.scrollTop+=7;}}if(y<70)scrollBy(0,-7);else if(y>innerHeight-(innerWidth<900?110:40))scrollBy(0,7);}
 function timeGrid(dk,timed){
   const S=App.state,isToday=dk===todayK();
   const gw=el('div',{class:'gridwrap'}),g=el('div',{class:'grid',id:'grid',tabindex:0,'aria-label':'Time grid'}),cv=el('div',{class:'gcanvas'});
@@ -404,15 +403,16 @@ function timeGrid(dk,timed){
   });
   if(isToday)cv.append(el('div',{class:'now',id:'now'},el('span',{class:'npill',id:'nowpill'}),el('span',{class:'bar'})));
   g.append(cv);gw.append(g);
-  const nowTop=()=>{const t=nowMin()/60*HH+12-g.clientHeight/4,h=Math.max(0,Math.floor((t-12)/HH));return Math.max(0,h*HH+12-16);};
+  /* the whole day shows at its own height (no scroll box inside the page): from 6 AM, or earlier if something starts earlier, to 11 PM or later */
+  const sH=Math.max(0,Math.min(6,...timed.map(e=>Math.floor(e.time/60)))),eH=Math.min(24,Math.max(23,...timed.map(e=>Math.ceil(Math.min(1440,e.time+(e.dur||30))/60))));
+  g.classList.add('gfull');g.style.height=((eH-sH)*HH+28)+'px';
+  const nowTop=()=>sH*HH;
   let jump=null;
-  if(isToday){jump=el('button',{class:'nowjump',hidden:true,onclick:()=>g.scrollTo({top:nowTop(),behavior:'smooth'})},'Now');gw.append(jump);}
   /* the Now pill only appears after you scroll the day yourself, never while it opens or glides to now */
   let touched=false;['touchstart','wheel','pointerdown'].forEach(n=>g.addEventListener(n,()=>{touched=true;},{passive:true}));
   const syncJump=()=>{if(!jump)return;const y=nowMin()/60*HH+12;jump.hidden=!touched||(y>g.scrollTop&&y<g.scrollTop+g.clientHeight);};
   requestAnimationFrame(()=>{
-    if(S._gridTop!=null&&!S._fresh)g.scrollTop=S._gridTop;
-    else{const to=isToday?nowTop():Math.max(0,Math.floor((timed[0]?timed[0].time:8*60)/60)*HH+12-16);S._fresh=false;if(S._noGlide){S._noGlide=false;g.scrollTop=to;}else gridGlide(g,gw,to,isToday);}
+    g.scrollTop=sH*HH;S._fresh=false;S._noGlide=false;
     tickNow();syncJump();
   });
   g.addEventListener('scroll',()=>{S._gridTop=g.scrollTop;syncJump();},{passive:true});
@@ -521,7 +521,7 @@ function replanSheet(tasks,dk){const tk=todayK(),sat=(()=>{const d=today();const
   const apply=(list,v)=>{const before=list.map(t=>[t,t.date]);list.forEach((t,i)=>{t.date=v==='spread'?addK(tk,1+Math.floor(i/2)):v;t.moves=(t.moves||0)+1;put(t,{silent:true});});inst.close();App.refresh();toast(list.length>1?`${list.length} replanned`:`${list[0].title} replanned`,()=>{before.forEach(([t,d])=>{t.date=d;put(t,{silent:true});});App.refresh();});};
   const grid=(list)=>el('div',{class:'rpgrid'},opts(list.length===1).map(([v,b,s])=>el('button',{class:'rpopt'+(v===null?' quiet':''),onclick:()=>apply(list,v)},el('b',{},b),el('span',{},s))),
     list.length===1?el('label',{class:'rpopt wide'},el('b',{},'Pick a date'),el('input',{type:'date',class:'rpdate',min:tk,onchange:ev=>{if(ev.target.value)apply(list,ev.target.value);}})):null);
-  inst=openSheet({title:tasks.length>1?`Replan ${tasks.length} overdue`:tasks[0].title,left:{label:'Cancel'},build:b=>{b.append(grid(tasks));
+  inst=openSheet({title:tasks.length>1?`Replan ${tasks.length} overdue`:tasks[0].title,left:{label:'Cancel'},right:tasks.length>1?{label:'See all',onclick:()=>{inst.close();const S=App.state;S.taskF=new Set(['overdue']);S.taskTab='all';setTimeout(()=>App.go('tasks'),200);}}:null,build:b=>{b.append(grid(tasks));
     if(tasks.length>1)b.append(el('div',{class:'lbl',style:'margin:18px 4px 8px'},'Or one at a time'),el('div',{class:'list'},tasks.map(t=>el('div',{class:'li',style:'min-height:56px'},el('span',{class:'grow'},el('span',{class:'tt',style:'display:block'},t.title),el('small',{style:'color:var(--now)'},`${daysBetween(t.date,tk)} days overdue`)),el('button',{class:'cpill r',onclick:()=>{inst.close();setTimeout(()=>replanSheet([t],dk),260);}},'Replan')))));}});}
 /* Focus: a sheet that slides up with the next priority, an editable timer (25 min), switch, pause, done */
 function prFocusSheet(dk){const S=App.state;let curId=null,mins=25,tm=null;
@@ -553,3 +553,7 @@ function prFocusSheet(dk){const S=App.state;let curId=null,mins=25,tm=null;
   let y0=null,dy=0;box.addEventListener('pointerdown',ev=>{if(ev.target.closest('button,input,label'))return;y0=ev.clientY;dy=0;box.classList.add('drag');});
   box.addEventListener('pointermove',ev=>{if(y0==null)return;dy=Math.max(0,ev.clientY-y0);box.style.transform=`translateY(${dy}px)`;});
   const end=()=>{if(y0==null)return;y0=null;box.classList.remove('drag');box.style.transform='';if(dy>120)close();};box.addEventListener('pointerup',end);box.addEventListener('pointercancel',end);}
+
+/* every habit gets an icon: its own, else one that fits its name, else its area's */
+const HAB_KW=[[/read|book|pages/i,'g:book'],[/workout|gym|lift|push|pull|legs|weights/i,'g:dumbbell'],[/journal|write|writing|morning pages/i,'g:pencil'],[/call|friend|text mom|text dad/i,'g:phone'],[/guitar|piano|music|sing|practice guitar/i,'g:music'],[/meal|cook|eat|veg/i,'g:meal'],[/coffee|tea/i,'g:coffee'],[/water|drink|hydrat/i,'drop'],[/phone after|screen|sleep|bed|night|pm\b/i,'moon'],[/meditat|breath|mindful|pray|gratitude/i,'leaf'],[/run|walk|stretch|yoga|steps|bike|swim/i,'heart'],[/dog|cat|pet/i,'a_pets'],[/spanish|french|language|study|learn|duolingo/i,'a_learn'],[/clean|tidy|dishes|laundry/i,'a_home'],[/save|budget|spend/i,'a_money']];
+function habGlyph(h){if(h.icon&&GL[h.icon])return glyph(h.icon,24,1.9);if(h.icon&&P[h.icon])return ic(h.icon,24,1.9);const k=HAB_KW.find(([r])=>r.test(h.title||''));if(k)return k[1].startsWith('g:')?glyph(k[1].slice(2),24,1.9):ic(k[1],24,1.9);return ic(h.area?areaIcon(h.area):'habit',24,1.9);}

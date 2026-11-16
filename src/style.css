@@ -1903,3 +1903,24 @@ html.c-fade .todo.won .t3in .tick-host.done{opacity:1}
 .trow .meta .atag{margin:0 0 0 2px;vertical-align:-2px}
 .trow .t>.atag{display:flex;margin-top:3px}
 .aitem .trow{display:flex;align-items:center}.aitem .trow>.t{flex:1;min-width:0;text-align:left}
+
+/* v167 full-height day grid */
+.grid.gfull{overflow:hidden;overscroll-behavior:auto;touch-action:auto}
+.gridwrap:has(.gfull)::after{display:none}
+.hscroll{scroll-padding-inline:20px}
+
+/* v167 calmer priorities card */
+.daycard .bl .blr{display:flex;align-items:center;gap:10px}
+.prfocus2{width:30px;height:30px;border-radius:50%;flex:none;display:grid;place-items:center;background:var(--accent-soft,#E6EFEA);color:var(--accent-text);padding-left:2px;transition:transform .2s var(--ease),background-color .3s}
+.prfocus2:active{transform:scale(.9)}
+.prfocus2.on{background:var(--accent);color:#fff;box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 18%,transparent)}
+.todo.won .prfocus2{display:none}
+.secl.hasod{justify-content:space-between}
+.secl>span:first-child{flex:none}
+.secl.hasod::after{order:1}
+.secl .odlink{order:2;flex:none;display:inline-flex;align-items:center;gap:2px;font-size:12px;font-weight:700;letter-spacing:0;text-transform:none;color:var(--now);background:color-mix(in srgb,var(--now) 10%,transparent);height:24px;padding:0 8px 0 10px;border-radius:12px}
+.secl .odlink:active{opacity:.7}
+.tfoot{display:flex;align-items:center;justify-content:space-between;padding:8px 0 4px}
+.tadd{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;border:1.5px dashed #C3CBC5;color:var(--accent-text);flex:none}
+.tadd:active{transform:scale(.92)}
+.tmore{display:inline-flex;align-items:center;gap:2px;font-size:13.5px;font-weight:600;color:var(--accent-text);height:32px;padding:0 4px}

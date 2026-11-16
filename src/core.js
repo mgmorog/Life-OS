@@ -351,7 +351,7 @@ function askConfirm({title,body,yes='Discard',no='Keep editing',danger=true,alt,
   const cs=el('div',{class:'cscrim'}),box=el('div',{class:'confirm',role:'alertdialog','aria-label':title});
   const off=()=>{cs.classList.remove('on');box.classList.remove('on');setTimeout(()=>{cs.remove();box.remove();},280);};
   box._no=off;cs.onclick=off;
-  box.append(el('div',{class:'box'},el('h3',{},title),body?el('p',{},body):null,hold?holdBtn(`Hold to ${yes.toLowerCase()}`,()=>{off();onYes();}):el('button',{class:'btn '+(danger?'danger':'primary'),onclick:()=>{off();onYes();}},yes),others.map(a=>el('button',{class:'btn quiet',onclick:()=>{off();a.onclick();}},a.label)),el('button',{class:'btn quiet',onclick:off},no)));
+  box.append(el('div',{class:'box'},el('h3',{},title),body?el('p',{},body):null,hold?holdBtn(`Hold to ${yes.toLowerCase()}`,()=>{off();onYes();}):el('button',{class:'btn '+(danger?'danger':'primary'),onclick:()=>{off();onYes();}},yes),others.map(a=>el('button',{class:'btn quiet',style:a.danger?'color:var(--now)':null,onclick:()=>{off();a.onclick();}},a.label)),el('button',{class:'btn quiet',onclick:off},no)));
   $('#layers').append(cs,box);void box.offsetWidth;requestAnimationFrame(()=>{cs.classList.add('on');box.classList.add('on');});
 }
 function closeMenu(){const m=$('.menu'),s=$('.mscrim');m&&m.remove();s&&s.remove();}

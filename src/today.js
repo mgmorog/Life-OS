@@ -271,7 +271,7 @@ function dayCard(dk){
   const AIs=(isToday?areaItems(dk):[]).filter(r=>!(r.rid&&t3ids.has(r.rid))),aiLate=AIs.filter(r=>!r.done&&r.late),aiOpen=AIs.filter(r=>!r.done&&!r.late),aiDone=AIs.filter(r=>r.done);
   /* everything overdue is one red row */
   const nLate=lateList.length+aiLate.length+missedL.length+dueLate.length;
-  const odBtn=nLate?el('button',{class:'odlink',onclick:()=>lateList.length||missedL.length||dueLate.length?replanSheet(lateList,dk,{missed:missedL,dueLate}):(S.taskF=new Set(['overdue']),S.taskTab='all',App.go('tasks'))},`${nLate} overdue`,el('span',{style:'display:grid',html:ic('chevr',13,2.4)})):null;
+  const odBtn=nLate?el('button',{class:'odlink',onclick:()=>nLate?replanSheet(lateList,dk,{missed:missedL,dueLate,area:aiLate}):(S.taskF=new Set(['overdue']),S.taskTab='all',App.go('tasks'))},`${nLate} overdue`,el('span',{style:'display:grid',html:ic('chevr',13,2.4)})):null;
   /* also today: the next three, timed first, then high priority, then bills and meds */
   const cand=[...due.map(t=>({t:'t',e:{kind:'task',id:t.id,rec:t,title:t.title,time:t.time??null,done:false},d:t.date||dk})),...todoAny.filter(e=>!e.done).map(e=>({t:'t',e,d:dk})),...aiOpen.map(r=>({t:'a',r}))];
   const rk=c=>c.t==='a'?[1,9e9,1,['Bill','Med'].includes(c.r.kind)?0:1]:[c.e.time!=null?0:1,c.e.time??9e9,c.e.rec.priority==='high'?0:1,1];
@@ -539,19 +539,41 @@ function areaRow(r){const sub=String(r.sub||'').replace(new RegExp('^'+(r.kind||
   const w=el('div',{class:'trow-wrap aitem'+(r.rid?' dragrow':''),'data-id':r.rid||'','data-can':r.rid?'1':'0'},row);if(r.rid)row.append(dGrip());return w;}
 function prToggle(e,dk){if(e.kind==='entry'){if(e.tick)e.tick.click();else if(e.go)e.go();setTimeout(()=>App.refresh(),e.tick?420:0);return;}toggleItem(e,dk);App.refresh();}
 /* Replan overdue to-dos: quick choices for all of them, or one at a time below */
-function replanSheet(tasks,dk,ex){ex=ex||{};const missed=ex.missed||[],dueLate=ex.dueLate||[],nAll=tasks.length+missed.length+dueLate.length;const tk=todayK(),sat=(()=>{const d=today();const n=(6-d.getDay()+7)%7||7;return addK(tk,n);})(),mon=(()=>{const d=today();const n=(8-d.getDay())%7||7;return addK(tk,n);})();
-  let inst;const opts=one=>[[tk,'Today','Back on today’s list'],[addK(tk,1),'Tomorrow',relDay(addK(tk,1))],[sat,'This weekend',relDay(sat)],[mon,'Next week',relDay(mon)],...(one?[]:[['spread','Spread out','2 a day from tomorrow']]),[null,'Someday','No date, in Anytime']];
-  const apply=(list,v)=>{const before=list.map(t=>[t,t.date]);list.forEach((t,i)=>{t.date=v==='spread'?addK(tk,1+Math.floor(i/2)):v;t.moves=(t.moves||0)+1;put(t,{silent:true});});inst.close();App.refresh();toast(list.length>1?`${list.length} replanned`:`${list[0].title} replanned`,()=>{before.forEach(([t,d])=>{t.date=d;put(t,{silent:true});});App.refresh();});};
-  const grid=(list)=>el('div',{class:'rpgrid'},opts(list.length===1).map(([v,b,s])=>el('button',{class:'rpopt'+(v===null?' quiet':''),onclick:()=>apply(list,v)},el('b',{},b),el('span',{},s))),
-    list.length===1?el('label',{class:'rpopt wide'},el('b',{},'Pick a date'),el('input',{type:'date',class:'rpdate',min:tk,onchange:ev=>{if(ev.target.value)apply(list,ev.target.value);}})):null);
-  inst=openSheet({title:nAll>1?(tasks.length>1?`Replan ${tasks.length} overdue`:`${nAll} overdue`):(tasks[0]||missed[0]||dueLate[0]).title,left:{label:'Cancel'},right:nAll>1?{label:'See all',onclick:()=>{inst.close();const S=App.state;S.taskF=new Set(['overdue']);S.taskTab='all';setTimeout(()=>App.go('tasks'),200);}}:null,build:b=>{if(tasks.length)b.append(grid(tasks));
-    const xrow=(title,sub,btns)=>el('div',{class:'li',style:'min-height:56px'},el('span',{class:'grow'},el('span',{class:'tt',style:'display:block'},title),el('small',{style:'color:var(--now)'},sub)),...btns);
-    const redraw=()=>{inst.close();App.refresh();};
-    if(missed.length)b.append(el('div',{class:'lbl',style:'margin:18px 4px 8px'},'Missed repeats'),el('div',{class:'list'},missed.map(e=>{const t=e.rec;return xrow(t.title,`Was due ${relDay(e.occ)}`,[
-      el('button',{class:'cpill',onclick:()=>{t.doneDates=t.doneDates||{};t.doneDates[e.occ]=Date.now();put(t,{silent:true});redraw();toast(`${t.title} done`,()=>{delete t.doneDates[e.occ];put(t,{silent:true});App.refresh();});}},'Done'),
-      el('button',{class:'cpill',style:'margin-left:6px',onclick:()=>{t.skip=[...(t.skip||[]),e.occ];put(t,{silent:true});redraw();toast(`Skipped ${relDay(e.occ)}`,()=>{t.skip=t.skip.filter(d=>d!==e.occ);put(t,{silent:true});App.refresh();});}},'Skip')]);})));
-    if(dueLate.length)b.append(el('div',{class:'lbl',style:'margin:18px 4px 8px'},'Past deadline'),el('div',{class:'list'},dueLate.map(t=>xrow(t.title,`Was due ${relDay(t.deadline)}`,[el('button',{class:'cpill',onclick:()=>{inst.close();setTimeout(()=>taskSheet(t),260);}},'Open')]))));
-    if(tasks.length>1)b.append(el('div',{class:'lbl',style:'margin:18px 4px 8px'},'Or one at a time'),el('div',{class:'list'},tasks.map(t=>el('div',{class:'li',style:'min-height:56px'},el('span',{class:'grow'},el('span',{class:'tt',style:'display:block'},t.title),el('small',{style:'color:var(--now)'},`${daysBetween(t.date,tk)} days overdue`)),el('button',{class:'cpill r',onclick:()=>{inst.close();setTimeout(()=>replanSheet([t],dk),260);}},'Replan')))));}});}
+function replanSheet(tasks,dk,ex){ex=ex||{};const tk=todayK(),sat=(()=>{const d=today();const n=(6-d.getDay()+7)%7||7;return addK(tk,n);})(),mon=(()=>{const d=today();const n=(8-d.getDay())%7||7;return addK(tk,n);})();
+  /* everything overdue becomes one selectable list: to-dos can move or be done; missed repeats, past deadlines and life-area items can be done */
+  const lateTxt=d=>{const n=daysBetween(d,tk);return n===1?'1 day late':`${n} days late`;};
+  const items=[
+    ...tasks.map(t=>({key:t.id,title:t.title,d:t.date,sub:[lateTxt(t.date),t.area].filter(Boolean).join(' · '),move:true,rec:t,doneK:t.date})),
+    ...(ex.missed||[]).map(e=>({key:'m'+e.rec.id,title:e.rec.title,d:e.occ,sub:`Missed · was due ${relDay(e.occ)}`,move:false,rec:e.rec,doneK:e.occ,skip:e.occ})),
+    ...(ex.dueLate||[]).map(t=>({key:'d'+t.id,title:t.title,d:t.deadline,sub:`Deadline was ${relDay(t.deadline)}`,move:false,rec:t,doneK:t.date||tk})),
+    ...(ex.area||[]).map(r=>({key:'a'+r.id,open:!r.tick,title:r.title,d:addK(tk,-(+((String(r.sub).match(/(\d+) days?/)||[])[1]||1))),sub:[String(r.sub||'').replace(/(\d+ days?) overdue/i,'$1 late').split(' · ').slice(-1)[0],r.area].filter(Boolean).join(' · '),move:false,area:r}))
+  ].sort((a,b)=>a.d<b.d?-1:a.d>b.d?1:0);
+  if(!items.length)return;
+  const sel=new Set(ex.only?[ex.only]:items.filter(x=>!x.open).map(x=>x.key));let inst,mode='pick';
+  const chosen=()=>items.filter(x=>sel.has(x.key));
+  const finish=(msg,undo)=>{inst.close();App.refresh();toast(msg,undo);};
+  const markDone=()=>{const l=chosen(),snap=l.filter(x=>x.rec).map(x=>[x.rec,JSON.stringify(x.rec.doneDates||{})]);
+    l.forEach(x=>{if(x.area){const b=x.area.tick&&(x.area.tick.matches('button')?x.area.tick:x.area.tick.querySelector('button'));if(b)b.click();return;}const r=x.rec;r.doneDates=Object.assign({},r.doneDates||{});r.doneDates[x.doneK]=Date.now();put(r,{silent:true});});
+    finish(l.length>1?`${l.length} done`:`${l[0].title} done`,snap.length?()=>{snap.forEach(([r,dd])=>{r.doneDates=JSON.parse(dd);put(r,{silent:true});});App.refresh();}:null);};
+  const moveTo=v=>{const l=chosen(),mv=l.filter(x=>x.move),keep=l.length-mv.length,before=mv.map(x=>[x.rec,x.rec.date]);
+    mv.forEach((x,i)=>{const t=x.rec;t.date=v==='spread'?addK(tk,1+Math.floor(i/2)):v;t.moves=(t.moves||0)+1;put(t,{silent:true});});
+    finish(`${mv.length===1?mv[0].title:mv.length} moved${keep?` · ${keep} keep their own schedule`:''}`,()=>{before.forEach(([t,d])=>{t.date=d;put(t,{silent:true});});App.refresh();});};
+  const draw=b=>{b.replaceChildren();const l=chosen(),nMove=l.filter(x=>x.move).length;
+    if(mode==='move'){
+      const opts=[[tk,'Today','Back on today’s list'],[addK(tk,1),'Tomorrow',relDay(addK(tk,1))],[sat,'This weekend',relDay(sat)],[mon,'Next week',relDay(mon)],...(nMove>1?[['spread','Spread out','2 a day from tomorrow']]:[]),[null,'Someday','No date, in Anytime']];
+      b.append(el('button',{class:'rpback',onclick:()=>{mode='pick';draw(b);}},el('span',{style:'display:grid',html:ic('chevl',16,2.4)}),`Move ${nMove} ${nMove===1?'to-do':'to-dos'}`),
+        el('div',{class:'rpgrid'},opts.map(([v,t1,t2])=>el('button',{class:'rpopt'+(v===null?' quiet':''),onclick:()=>moveTo(v)},el('b',{},t1),el('span',{},t2))),
+          el('label',{class:'rpopt wide'},el('b',{},'Pick a date'),el('input',{type:'date',class:'rpdate',min:tk,onchange:ev=>{if(ev.target.value)moveTo(ev.target.value);}}))),
+        nMove<l.length?el('p',{class:'small muted',style:'margin:12px 4px 0'},`${l.length-nMove} selected ${l.length-nMove===1?'item keeps its':'items keep their'} own schedule (repeats, deadlines and life-area items).`):null);
+      return;}
+    const pickable=items.filter(x=>!x.open),all=sel.size===pickable.length;
+    b.append(el('div',{class:'rpbar'},el('span',{class:'small muted'},sel.size?`${sel.size} selected`:'Pick what to change'),el('button',{class:'linkbtn small',onclick:()=>{if(all)sel.clear();else pickable.forEach(x=>sel.add(x.key));draw(b);}},all?'Clear':'Select all')),
+      el('div',{class:'list rplist'},items.map(x=>el('button',{class:'rprow'+(sel.has(x.key)?' on':'')+(x.open?' op':''),'aria-pressed':x.open?null:String(sel.has(x.key)),onclick:()=>{if(x.open){inst.close();setTimeout(()=>x.area.go&&x.area.go(),260);return;}sel.has(x.key)?sel.delete(x.key):sel.add(x.key);draw(b);}},
+        x.open?el('span',{class:'rpck op',html:ic('chevr',14,2.4)}):el('span',{class:'rpck',html:sel.has(x.key)?ic('check',14,3):''}),el('span',{class:'grow'},el('span',{class:'tt'},x.title),el('small',{},x.sub))))),
+      el('div',{class:'rpacts'},
+        el('button',{class:'rpdone',disabled:sel.size?null:'',onclick:markDone},el('span',{style:'display:grid',html:ic('check',16,2.6)}),'Mark done'),
+        el('button',{class:'rpmove',disabled:nMove?null:'',onclick:()=>{mode='move';draw(b);}},nMove&&nMove<l.length?`Move ${nMove}`:'Move…')));};
+  inst=openSheet({title:items.length>1?`${items.length} overdue`:items[0].title,left:{label:'Cancel'},right:{label:'See all',onclick:()=>{inst.close();const S=App.state;S.taskF=new Set(['overdue']);S.taskTab='all';setTimeout(()=>App.go('tasks'),200);}},build:b=>draw(b)});}
 /* Focus: a sheet that slides up with the next priority, an editable timer (25 min), switch, pause, done */
 function prFocusSheet(dk){let curId=null,mins=25,tm=null,picking=false;
   const es=()=>t3Get(dk).map(x=>t3Entry(x,dk)).filter(e=>e&&!e.done);

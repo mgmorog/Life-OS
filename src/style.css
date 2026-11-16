@@ -2023,3 +2023,23 @@ html.c-fade .todo.won .t3in .tick-host.done{opacity:1}
 .oqplus{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;color:var(--accent-text);flex:none}
 .oqplus:active{background:var(--accent-soft)}
 .oquick .qadd{height:30px}
+
+/* v178 replan: select, then Mark done or Move */
+.rpbar{display:flex;justify-content:space-between;align-items:center;margin:0 4px 8px;min-height:32px}
+.rplist{margin-bottom:12px}
+.rprow{display:flex;align-items:center;gap:14px;width:100%;min-height:60px;padding:8px 16px;text-align:left;border-bottom:1px solid var(--line-2);background:var(--card)}
+.rprow:last-child{border-bottom:0}
+.rprow .grow{min-width:0;display:flex;flex-direction:column;gap:2px}
+.rprow .tt{font-size:16px;color:var(--ink)}
+.rprow small{font-size:13px;color:var(--now)}
+.rpck{width:24px;height:24px;border-radius:50%;border:1.8px solid var(--ink-3);flex:none;display:grid;place-items:center;color:#fff;transition:background-color .2s,border-color .2s,transform .25s cubic-bezier(.3,1.5,.5,1)}
+.rprow.on .rpck{background:var(--accent);border-color:var(--accent)}
+.rprow:active .rpck{transform:scale(.88)}
+.rpacts{position:sticky;bottom:-40px;display:flex;gap:10px;padding:12px 16px calc(14px + env(safe-area-inset-bottom,0px));background:var(--bg);box-shadow:0 -1px 0 var(--line);margin:0 -16px -40px}
+.rpacts button{flex:1;height:52px;border-radius:26px;display:inline-flex;align-items:center;justify-content:center;gap:6px;font-size:16px;font-weight:700}
+.rpdone{background:var(--card);color:var(--accent-text);border:1px solid var(--line)}
+.rpmove{background:var(--accent);color:#fff}
+.rpacts button[disabled]{opacity:.4}
+.rpback{display:inline-flex;align-items:center;gap:4px;height:36px;margin:0 0 10px;color:var(--accent-text);font-weight:600;font-size:15px}
+.rpck.op{border:0;background:var(--chip);color:var(--ink-2)}
+.rprow.op small{color:var(--ink-2)}

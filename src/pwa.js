@@ -51,7 +51,7 @@ const PWA={
       if(!p.supported()){g.append(el('div',{class:'li',style:'min-height:60px'},el('span',{class:'grow'},el('b',{style:'font-weight:500'},'Notifications'),el('small',{},p.why()))));return;}
       const on=p.wanted();
       setToggle(ctx,g,null,'Reminders when the app is closed','Sent to this device',on,async v=>{if(v){const r=await p.enable();if(r!=='ok'){toast(r==='denied'?'Notifications are off for Life OS in your phone’s Settings.':'Couldn’t turn on notifications. Try again.');App.refresh();return;}this._sig.r=null;this.afterChange();toast('Reminders will reach you here');}else{await p.disable();toast('Notifications off on this device');}App.refresh();});
-      if(on)g.append(el('button',{class:'li',style:'min-height:52px;color:var(--accent-text);font-weight:600',onclick:async()=>{const r=await p.test();toast(r?'Sent. It should arrive in a few seconds.':'Couldn’t send a test. Check your connection.');}},'Send a test notification'));
+      if(on)g.append(condRow(el('button',{class:'li',style:'min-height:52px;color:var(--accent-text);font-weight:600',onclick:async()=>{const r=await p.test();toast(r?'Sent. It should arrive in a few seconds.':'Couldn’t send a test. Check your connection.');}},'Send a test notification')));
     }else if(id==='calendar'){
       const g=group('On your iPhone calendar');
       if(!s.icsToken){g.append(setRow('Show Life OS in Apple Calendar','Your blocks, timed tasks and all-day items, updated about every hour',null,()=>{setSettings({icsToken:this.newToken(),icsAdded:false});this.afterChange();}));}

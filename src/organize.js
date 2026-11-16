@@ -223,7 +223,7 @@ const missedYesterday=h=>{if(habitWeekly(h))return false;const y=addK(todayK(),-
 const habOrd=(a,b)=>(a.order??1e9)-(b.order??1e9)||(a.createdAt||0)-(b.createdAt||0);
 function reorderSheet({title,items,onDone}){let D=items.slice(),inst,box;const draw=()=>{box.innerHTML='';box.append(el('p',{class:'small',style:'color:var(--ink-2)'},'Drag to set the order.'));const list=el('div',{class:'list'});D.forEach((x,i)=>{const r=el('div',{class:'li',style:'min-height:54px','data-i':String(i)},el('span',{class:'grow'},el('b',{style:'font-weight:500'},x.n),x.s?el('small',{},x.s):null));const h=el('span',{class:'grip','aria-label':`Drag ${x.n} to reorder`,html:sv('<circle cx="9" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="18" r="1"/>',18)});r.append(h);list.append(r);reorderable(h,r,list,()=>{const c=D.slice();D=[...list.children].map(n=>c[+n.dataset.i]);draw();});});box.append(list);};inst=openSheet({title,left:{label:'Cancel'},right:{label:'Done',onclick:()=>{onDone(D);inst.close();}},build:b=>{box=el('div',{style:'display:grid;gap:12px'});b.append(box);draw();}});return inst;}
 function viewHabits(root){
-  const S=App.state;S.habTab=S.habTab||'today';S.habDay=S.habDay&&S.habDay<=todayK()?S.habDay:todayK();
+  const S=App.state;if(!(S.habF instanceof Set))S.habF=new Set();S.habDay=S.habDay&&S.habDay<=todayK()?S.habDay:todayK();
   const everyAll=get.all('habit',{every:true}).sort(habOrd),every=areaOnly(everyAll,'hab'),active=every.filter(h=>!h.paused),paused=every.filter(h=>h.paused),arch=get.all('habit',{archived:true,every:true}).filter(h=>h.archived),page=el('div',{class:'page'}),tk=todayK(),dk=S.habDay;
   const counts=(h,d)=>habitDue(h,d)&&(!habitWeekly(h)||habitDone(h,d)||habitWeek(h,d)<(h.target||1));
   const todayList=active.filter(h=>counts(h,tk)),fin=todayList.filter(h=>habitDone(h,tk)).length;
@@ -234,11 +234,15 @@ function viewHabits(root){
   /* header matches Tasks: view chips, then area chips */
   if(!(S.habA instanceof Set))S.habA=new Set();
   const hAreas=[...new Set(active.map(h=>h.area).filter(Boolean))].sort((a,b)=>a.localeCompare(b)),inHA=h=>!S.habA.size||S.habA.has(h.area);
-  const vchip=(k,l,n)=>el('button',{class:'fchip'+(S.habTab===k?' on':''),onclick:()=>{S.habTab=k;App.refresh();}},l,n!=null?el('span',{class:'n'},String(n)):null);
-  page.append(el('div',{class:'tstick'},el('div',{class:'fchips'},vchip('today','Today',null),vchip('all','All habits',active.length),paused.length||S.habTab==='paused'?vchip('paused','Paused',paused.length):null),
-    hAreas.length>1&&S.habTab!=='paused'?el('div',{class:'achips'},el('button',{class:'achip'+(!S.habA.size?' on':''),onclick:()=>{S.habA.clear();App.refresh();}},'All areas'),hAreas.map(a=>el('button',{class:'achip'+(S.habA.has(a)?' on':''),onclick:()=>{S.habA.has(a)?S.habA.delete(a):S.habA.add(a);App.refresh();}},el('span',{style:'display:grid',html:ic(areaIcon(a),13,1.9)}),a))):null));
+  /* filters work like Tasks: All is the default; tap Today or Paused to add it, tap again to take it off */
+  const tdN=active.filter(h=>counts(h,tk)&&!habitDone(h,tk)).length;
+  const vchip=(k,l,n)=>el('button',{class:'fchip'+(S.habF.has(k)?' on':''),'aria-pressed':String(S.habF.has(k)),onclick:()=>{S.habF.has(k)?S.habF.delete(k):S.habF.add(k);App.refresh();}},l,n!=null?el('span',{class:'n'},String(n)):null);
+  page.append(el('div',{class:'tstick'},el('div',{class:'fchips'},el('button',{class:'fchip'+(!S.habF.size?' on':''),onclick:()=>{S.habF.clear();App.refresh();}},'All',el('span',{class:'n'},String(active.length))),vchip('today','Today',tdN),paused.length||S.habF.has('paused')?vchip('paused','Paused',paused.length):null),
+    hAreas.length>1?el('div',{class:'achips'},el('button',{class:'achip'+(!S.habA.size?' on':''),onclick:()=>{S.habA.clear();App.refresh();}},'All areas'),hAreas.map(a=>el('button',{class:'achip'+(S.habA.has(a)?' on':''),onclick:()=>{S.habA.has(a)?S.habA.delete(a):S.habA.add(a);App.refresh();}},el('span',{style:'display:grid',html:ic(areaIcon(a),13,1.9)}),a))):null));
   const note=areaNote('hab');if(note)page.append(note);
-  if(S.habTab==='today'){
+  const views=S.habF.size?['today','paused'].filter(v=>S.habF.has(v)):['all'];
+  for(const T of views){if(views.length>1)page.append(el('div',{class:'sh2',style:'margin-top:14px'},el('span',{class:'lbl',style:'font-size:13px'},T==='today'?'Today':'Paused')));
+  if(T==='today'){
     const st=weekStartOf(today());
     page.append(el('div',{class:'rings'},Array.from({length:7},(_,i)=>{const d=addD(st,i),x=k(d),list=active.filter(h=>counts(h,x)),f=list.filter(h=>habitDone(h,x)).length,pc=list.length?f/list.length*100:0;return el('button',{class:x===dk?'on':'',disabled:x>tk,'aria-label':`${shortDay(x)}, ${f} of ${list.length} done`,'aria-pressed':String(x===dk),onclick:()=>{S.habDay=x;App.refresh();}},DOW[d.getDay()][0],el('span',{class:'ring sm',style:`--p:${pc}`},el('span',{},String(d.getDate()))));})));
     if(dk!==tk)page.append(el('div',{class:'small muted',style:'padding-inline:4px'},`Filling in ${relDay(dk)==='Yesterday'?'yesterday':relDay(dk)}`));
@@ -250,16 +254,17 @@ function viewHabits(root){
     const sect=(n,g)=>{if(g.length)page.append(el('div',{class:'sh2'},el('span',{class:'lbl'},n),el('span',{class:'small muted'},String(g.length))),el('div',{class:'list'},g.map(h=>habitRow(h,dk))));};
     if(onlyAny)sect('To do',open);else tods.forEach(([v,n])=>sect(n,open.filter(h=>(h.tod||'anytime')===v)));
     if(doneL.length){const op=!!S.habDoneOpen;page.append(el('button',{class:'donebar','aria-expanded':String(op),onclick:()=>{S.habDoneOpen=!op;App.refresh();}},el('span',{},`Done · ${doneL.length}`),el('span',{style:'display:grid',html:ic(op?'chevu':'chevd',16,2.2)})));if(op)page.append(el('div',{class:'list'},doneL.map(h=>habitRow(h,dk))));}
-  }else if(S.habTab==='all'){
+  }else if(T==='all'){
     if(!active.length)page.append(emptyOf('No active habits','Add one, or resume one from Paused.'));
     else{const rw=[...Array(7)].map((_,i)=>addK(tk,i-6));
       page.append(el('div',{class:'list'},active.filter(inHA).map(h=>{const s=habitStreak(h);return el('button',{class:'li ohab',onclick:()=>App.go('habit',{id:h.id})},el('span',{class:'grow'},el('span',{class:'ohn'},el('b',{},h.title),habitRate(h)==null?el('span',{class:'ohr'},'New'):el('span',{class:'ohr','aria-label':`${Math.round(habitRate(h)*100)} percent in the last 30 days`},`${Math.round(habitRate(h)*100)}%`)),el('small',{},[h.track==='count'?`${h.goalN} ${h.unit||'times'}`:h.track==='time'?`${h.goalN} min`:null,habitSched(h),h.area].filter(Boolean).join(' · ')),el('span',{class:'odots','aria-hidden':'true','data-dk':h.id},rw.map(d=>el('i',{class:habitDotState(h,d)+(d===tk?' td':'')})))),s.n?el('span',{class:'ohs'},flameI(),String(s.n)):null);})),
         el('div',{class:'olegend'},[['on','Done'],['miss','Missed'],['skip','Skipped'],['off','Not due']].map(([c,t])=>el('span',{},el('span',{class:'odots'},el('i',{class:c})),t))),el('p',{class:'small muted',style:'padding-inline:4px'},'Percent is the last 30 days. The flame is your current streak.'));}
   }else{
-    if(paused.length){page.append(el('p',{class:'small muted',style:'padding-inline:4px'},'Paused habits stay off Today. Their history is kept, and a daily streak picks up where it stopped.'));
-      paused.forEach(h=>{const ps=h.pausedStreak;page.append(el('div',{class:'card ohold'},el('button',{style:'display:block;width:100%;text-align:left',onclick:()=>App.go('habit',{id:h.id})},el('b',{},h.title),el('small',{},[h.pausedAt?`Paused ${relDay(k(new Date(h.pausedAt)))}`:'Paused',!habitWeekly(h)&&ps&&ps.n>1?`${ps.n}-day streak saved`:''].filter(Boolean).join(' · '))),btns(btnP('Resume',()=>{setHabitPaused(h,false);toast('Resumed');}),btnL('Archive',()=>archiveFlow(h)))));});}
+    const pausedA=paused.filter(inHA);if(pausedA.length){page.append(el('p',{class:'small muted',style:'padding-inline:4px'},'Paused habits stay off Today. Their history is kept, and a daily streak picks up where it stopped.'));
+      pausedA.forEach(h=>{const ps=h.pausedStreak;page.append(el('div',{class:'card ohold'},el('button',{style:'display:block;width:100%;text-align:left',onclick:()=>App.go('habit',{id:h.id})},el('b',{},h.title),el('small',{},[h.pausedAt?`Paused ${relDay(k(new Date(h.pausedAt)))}`:'Paused',!habitWeekly(h)&&ps&&ps.n>1?`${ps.n}-day streak saved`:''].filter(Boolean).join(' · '))),btns(btnP('Resume',()=>{setHabitPaused(h,false);toast('Resumed');}),btnL('Archive',()=>archiveFlow(h)))));});}
     else if(!arch.length)page.append(emptyOf('Nothing paused','Pause a habit when life gets busy. Its history stays.'));
     if(arch.length)page.append(lblRow(`Archived · ${arch.length}`),el('div',{class:'list'},arch.map(h=>el('button',{class:'li',style:'min-height:56px',onclick:()=>App.go('habit',{id:h.id})},el('span',{class:'grow'},el('b',{style:'font-weight:500'},h.title),el('small',{},h.archivedAt?`Since ${relDay(k(new Date(h.archivedAt)))}`:'Archived')),pill(h.built?'Built':'Stopped',h.built?'soft':'neu')))));
+  }
   }
   root.append(page);
 }

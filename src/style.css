@@ -2094,3 +2094,16 @@ html.c-fade .todo.won .t3in .tick-host.done{opacity:1}
 .ohs2{display:inline-flex;align-items:center;gap:3px;font-size:13px;font-weight:600;color:var(--ink-2);font-variant-numeric:tabular-nums}
 .ohs2.none{color:var(--ink-3)}
 .ohab2.done .ohbody b{color:var(--ink-2)}
+
+/* v189 All habits: two tidy lines (name + percent, week dots + schedule + streak) */
+.ohab2{min-height:70px}
+.ohab2 .ohbody{gap:6px;width:100%}
+.oh1,.oh2{display:flex;align-items:center;gap:10px;width:100%}
+.oh1 b{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ohpct{font-size:14px;font-weight:700;color:var(--accent-text);font-variant-numeric:tabular-nums;flex:none}
+.oh2 .odots{margin:0;flex:none}
+.oh2 small{flex:1;color:var(--ink-3);font-size:12.5px}
+.oh2 .ohs2{flex:none}
+.ohab2 .oh2 .odots{gap:5px}.ohab2 .odots i{width:10px;height:10px}
+.ohab2 .odots i.td{width:13px;height:13px}
+.ohab2.done .ohpct{color:var(--ink-3)}

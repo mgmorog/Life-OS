@@ -10,7 +10,7 @@ const App={
     try{if(/^[a-z-]+$/.test(view))history.replaceState(null,'','#'+(view==='settings'?'prefs':view));}catch(e){}
     this.render();window.scrollTo(0,0);
   },
-  back(fallback){const S=this.state;const p=(S.stack||[]).pop();let y=0;if(p&&p.view!==S.view){S.view=p.view;S.params=p.params;y=p.y||0;}else{S.view=fallback||'more';S.params={};}S.entering=true;S.dir=S._swiped?'swiped':'pop';S._swiped=false;this.render();window.scrollTo(0,y);},
+  back(fallback){const S=this.state;const p=(S.stack||[]).pop();let y=0;if(p&&p.view!==S.view){S.view=p.view;S.params=p.params;y=p.y||0;}else{const[fv,fid]=String(fallback||'more').split(':');S.view=fv;S.params=fid?{id:fid}:{};}S.entering=true;S.dir=S._swiped?'swiped':'pop';S._swiped=false;this.render();window.scrollTo(0,y);},
   refresh(){clearTimeout(this._r);this._r=setTimeout(()=>this.render(),0);if(PWA.on)PWA.afterChange();},
   dataReady(){this.state.loading=false;purgeTrash();migrate();{const s0=get.settings();if(!s0.tickHalo&&recs.has('settings'))put(Object.assign({},DEFAULT_SETTINGS,s0,{completed:'fade',celebrate:'flow',tickHalo:true}),{silent:true});}applyPrefs();{const s1=get.settings();if(s1.seenVer==null&&s1.introDone)setSettings({seenVer:APP_VER-1});let hv='';try{hv=location.hash.slice(1);}catch(e){}if(!hv&&this.state.view==='today'&&s1.startPage&&s1.startPage!=='today')this.state.view=s1.startPage;if(!hv&&!s1.introDone&&!OB_TEST()&&![...recs.values()].some(r=>r.kind!=='settings'))this.state.view='welcome';}try{travelMigrate();tripReturn();nwAutoSnap();}catch(e){console.warn(e);}Gcal.start();this.render();checkReminders();if(PWA.on)PWA.afterChange();},
   render(){

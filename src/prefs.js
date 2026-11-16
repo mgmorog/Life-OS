@@ -36,7 +36,7 @@ const SET_INDEX=[['Work days','planning'],['Work hours','planning'],['Protect ev
  ['Open the app to','display'],['Text size','display'],['Bold text','display'],['Stronger borders','display'],['Higher contrast text','display'],['Reduce motion','display'],['Haptics','display'],['Celebration','display'],['Timer chime','display'],['Week starts on','planning'],['Time format','display'],['Time zone','display'],['Currency symbol','display'],['Formats','display'],
  ['Export','data'],['Back up','data'],['Restore from a backup','data'],['Example data','data'],['Erase all data','data'],['Sign out','data'],['Check for updates','data'],['Help','data'],['What’s new','data'],['Getting started','data'],
  ['Bottom bar','nav'],['Modules','modules'],['Personalized foundation','foundation']];
-const icRow=(i,n,val,on)=>el('button',{class:'li',style:'min-height:60px',onclick:on},el('span',{class:'sq',html:ic(i,20,1.7)}),el('span',{class:'grow',style:'flex:none'},el('b',{style:'white-space:nowrap'},n)),val?el('span',{class:'small muted clip',style:'flex:1;min-width:0;text-align:right','data-roll':'sr:'+n},val):null,el('span',{class:'chev',html:ic('chevr',16,2)}));
+const icRow=(i,n,val,on)=>el('button',{class:'li',style:'min-height:60px',onclick:on},el('span',{class:'sq',html:ic(i,20,1.7)}),el('span',{class:'grow',style:val?'flex:none':null},el('b',{style:'white-space:nowrap'},n)),val?el('span',{class:'small muted clip',style:'flex:1;min-width:0;text-align:right','data-roll':'sr:'+n},val):null,el('span',{class:'chev',html:ic('chevr',16,2)}));
 function viewPrefs(root){
   const s=get.settings(),S=App.state,page=el('div',{class:'page'});
   page.append(pageHead('Settings',null,{icon:'gear'}));

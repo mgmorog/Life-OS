@@ -526,13 +526,16 @@ function carrySheet(dk){let inst;const draw=b=>{const late=carried();b.replaceCh
 /* ---------- one list (v166): life-area items as to-dos, overdue row, replan, focus sheet ---------- */
 const AI_PRE=[['dprep','Health','Meal prep'],['dpe','Health','Meal prep'],['drev','Learning','Cards'],['dm','Health','Med'],['db','Finances','Bill'],['dc','Home','Chore'],['du','Home','Upkeep'],['dv','Home','Car'],['dx','Personal growth','Experiment'],['tr','Finances','Trial']];
 function areaItems(dk){if(get.settings().areaDue===false)return[];let rows=[];try{rows=areaDueRows(dk);}catch(e){console.warn(e);return[];}
-  return rows.map(r=>{const p=AI_PRE.find(([x])=>String(r.id||'').startsWith(x));const sub=String(r.sub||'');const late=r.late||/overdue|past due/i.test(sub);
-    return Object.assign({},r,{area:p?p[1]:sub.split(' · ')[0],kind:p?p[2]:null,rid:p&&!['dprep','drev'].includes(p[0])?String(r.id).slice(p[0].length):null,late:late&&!r.done});});}
+  /* overdue means the date has passed (not just due soon); the area is the life area, the type is the module */
+  return rows.map(r=>{const p=AI_PRE.find(([x])=>String(r.id||'').startsWith(x));const sub=String(r.sub||''),mod=sub.split(' · ')[0];const late=/overdue|\bago\b|past due|past its date|missed/i.test(sub);
+    const area=p?p[1]:(r.hub||mod);
+    return Object.assign({},r,{area,kind:p?p[2]:(r.hub&&mod&&mod!==r.hub?mod:null),rid:p&&!['dprep','drev'].includes(p[0])?String(r.id).slice(p[0].length):null,late:late&&!r.done});});}
 function areaTag(a){return el('span',{class:'atag'},el('span',{style:'display:grid',html:ic(areaIcon(a),13,1.9)}),a);}
-function areaRow(r){const sub=String(r.sub||'').replace(new RegExp('^'+(r.kind||'').replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\s*·\\s*','i'),'');
+function areaRow(r){const sub=String(r.sub||'').replace(new RegExp('^'+(r.kind||'').replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\s*·\\s*','i'),'');const subT=sub===r.kind?'':sub;
+  const meta=el('span',{class:'meta'},subT?el('span',{class:r.late?'late':''},subT):null,subT&&r.area?' · ':null,r.area?areaTag(r.area):null,r.kind?el('span',{class:'kt'},` · ${r.kind}`):null);
   const row=el('div',{class:'trow tick-host'+(r.done?' done':''),'data-id':r.rid||''},
     el('span',{class:'tick-hit'},r.tick||el('button',{class:'ddt',style:'width:24px;height:24px;color:var(--accent-text)','aria-label':`Open ${r.title}`,html:ic('chevr',16,2),onclick:r.go})),
-    el('button',{class:'t',onclick:r.go},el('span',{class:'tt'},r.title),el('span',{class:'meta'+(r.late?' late':'')},sub),r.area?areaTag(r.area):null,r.kind?el('span',{class:'ktag'},r.kind):null));
+    el('button',{class:'t',onclick:r.go},el('span',{class:'tt'},r.title),meta));
   const w=el('div',{class:'trow-wrap aitem'+(r.rid?' dragrow':''),'data-id':r.rid||'','data-can':r.rid?'1':'0'},row);if(r.rid)row.append(dGrip());return w;}
 function prToggle(e,dk){if(e.kind==='entry'){if(e.tick)e.tick.click();else if(e.go)e.go();setTimeout(()=>App.refresh(),e.tick?420:0);return;}toggleItem(e,dk);App.refresh();}
 /* Replan overdue to-dos: quick choices for all of them, or one at a time below */

@@ -2007,3 +2007,12 @@ html.c-fade .todo.won .t3in .tick-host.done{opacity:1}
 .habcard .hscroll{align-items:flex-start}
 .htile{gap:10px}
 .htt{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+
+/* v174 one-line meta for life-area items */
+.aitem .meta{display:block;font-size:13px;color:var(--ink-2);line-height:1.35;margin-top:2px}
+.aitem .meta .late{color:var(--now)}
+.aitem .meta .atag{display:inline-flex;margin:0;vertical-align:-2px}
+.aitem .meta .kt{color:var(--ink-3)}
+/* Tasks: the filter header is the only thing that sticks; no drag handles here (no rings to drop on) */
+.page:has(.tstick) .sh2.shstick{position:static}
+.page:has(.tstick) .dgrip{display:none}

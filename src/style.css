@@ -2083,3 +2083,14 @@ html.c-fade .todo.won .t3in .tick-host.done{opacity:1}
 .hplan{display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 10px;border-radius:14px;background:var(--accent-soft,#E6EFEA);color:var(--accent-text);font-weight:600;font-size:12.5px}
 .li.moving{background:color-mix(in srgb,var(--accent) 7%,var(--card))}
 .fchips,.achips{-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent)}
+
+/* v188 All habits rows: tick, body, and a right column with percent over streak */
+.ohab2{align-items:center;min-height:84px;gap:12px}
+.ohab2 .ohbody{display:flex;flex-direction:column;align-items:flex-start;gap:3px;text-align:left;min-width:0}
+.ohab2 .ohbody b{font-weight:600;font-size:16px}
+.ohab2 .ohbody .odots{margin-top:5px}
+.ohright{display:flex;flex-direction:column;align-items:flex-end;gap:4px;min-width:52px;flex:none}
+.ohright>b{font-size:15px;font-weight:700;color:var(--accent-text);font-variant-numeric:tabular-nums}
+.ohs2{display:inline-flex;align-items:center;gap:3px;font-size:13px;font-weight:600;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.ohs2.none{color:var(--ink-3)}
+.ohab2.done .ohbody b{color:var(--ink-2)}

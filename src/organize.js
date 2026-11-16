@@ -434,7 +434,7 @@ function viewList(root,id){
 
 /* ---------- Shared page rows ---------- */
 const detailRow=(icon,label,val,fn,{on=false,trailing=null}={})=>el(fn?'button':'div',{class:'row',onclick:fn||null},el('span',{class:'ic',html:ic(icon)}),el('span',{},label),trailing||el('span',{class:'ovalr'+(on?' on':'')},el('span',{class:'clip'},val),fn?el('span',{style:'display:grid',html:ic('chevr',16,2)}):null));
-const switchEl=(on,label,fn)=>el('button',{class:'sw'+(on?' on':''),role:'switch','aria-checked':String(on),'aria-label':label,onclick:e=>{e.stopPropagation();fn(!on);}});
+const switchEl=(on,label,fn)=>swMake(on,label,v=>fn(v));
 const hideToast=()=>{const t=$('#toast');t&&t.classList.remove('on');};
 
 /* ---------- One habit ---------- */

@@ -414,6 +414,14 @@ function emptyState(title,text,action){const art=document.createElement('span');
 const motionOK=()=>!document.documentElement.classList.contains('a-motion')&&!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches);
 /* kept for callers: page changes now animate with plain transforms (motion.js), not View Transitions */
 function vt(update){update();return null;}
+/* Every switch: it flips itself the moment it's tapped (so the knob starts gliding on the element you touched),
+   then hands the new value to fire. motion.js keeps this same element through any redraw that follows.
+   flip:false for switches whose tap may be cancelled (they flip when the redraw says so). */
+function swMake(on,label,fire,flip=true){const b=el('button',{class:'sw'+(on?' on':''),role:'switch','aria-checked':String(on),'aria-label':label});b._fire=fire;b._flip=flip;
+  b.addEventListener('click',e=>{e.stopPropagation();const me=e.currentTarget,nv=!me.classList.contains('on');
+    if(me._flip){me.classList.toggle('on',nv);me.setAttribute('aria-checked',String(nv));}
+    me._fire(nv,e);});
+  return b;}
 function seg(opts,val,on){
   const idx=Math.max(0,opts.findIndex(([v])=>v===val));
   const root=el('div',{class:'seg',role:'group',onclick:e=>e.stopPropagation()});
@@ -422,8 +430,7 @@ function seg(opts,val,on){
     const from=btns.findIndex(b=>b.classList.contains('on'));if(from===i)return;
     const all=$$('.seg'),at=all.indexOf(root),r0=root.querySelector('.seg-thumb').getBoundingClientRect();
     on(v);
-    let sg=root;if(root.isConnected){btns.forEach((b,j)=>{b.classList.toggle('on',j===i);b.setAttribute('aria-pressed',String(j===i));});th.style.gridColumn=String(i+1);}else sg=$$('.seg')[at];
-    segGlide(r0,sg);
+    if(root.isConnected){btns.forEach((b,j)=>{b.classList.toggle('on',j===i);b.setAttribute('aria-pressed',String(j===i));});th.style.gridColumn=String(i+1);segGlide(r0,root);} /* redrawn: motion.js glides the new one */
   }},el('span',{class:'seg-l'},l)));
   root.append(th,...btns);return root;
 }

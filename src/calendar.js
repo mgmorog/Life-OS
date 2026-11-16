@@ -174,7 +174,7 @@ function filterSheet(opts={}){
         if(showHeat){const g=el('div',{class:'group'});g.append(ctx.row('dc','grid','Daily capacity',cap.mode==='hours'?`${cap.hours} hours`:`${cap.full} items`,{tap:()=>{step='cap';draw();},expand:false,trailing:el('span',{class:'chev',html:ic('chevr',16,2.2)})}));box.append(el('div',{class:'sect'},'Heat map'),g);}
       }else{
         const full=cap.mode==='hours'?cap.hours:cap.full,unit=cap.mode==='hours'?'h':'';
-        const wrap=el('div',{class:'slide-l',style:'display:flex;flex-direction:column;gap:12px'});
+        const wrap=el('div',{class:box._step===step?'':'slide-l',style:'display:flex;flex-direction:column;gap:12px'});box._step=step;
         const g=el('div',{class:'group'});
         g.append(ctx.row('m','chart','Measure by',null,{expand:false,trailing:seg([['items','Items'],['hours','Hours']],cap.mode,v=>{cap.mode=v;draw();})}));
         g.append(ctx.row('fl','grid','A full day',null,{expand:false,trailing:el('span',{style:'display:flex;align-items:center;gap:8px'},cap.mode==='hours'?ctx.stepper(cap.hours,2,16,v=>{cap.hours=v;draw();}):ctx.stepper(cap.full,2,20,v=>{cap.full=v;draw();}),cap.mode==='hours'?'hrs':'items')}));

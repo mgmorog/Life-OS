@@ -105,16 +105,17 @@ function listPlay(root,before){
 
 /* Counts like "1 of 3" roll like an odometer when the first number changes (data-roll spans hold only text) */
 const ROLLS=new Map();
+/* One counter motion everywhere: the old number rolls up (or down) out of a little window as the new one rolls in */
+function rollNode(n,prev){
+  const txt=n.textContent,m=txt.match(/\d+/);if(!m||!prev||!motionOK()||n.querySelector('.roll-win'))return;const pm=prev.match(/\d+/);if(!pm||pm[0]===m[0]||prev.replace(/\d+/,'#')!==txt.replace(/\d+/,'#'))return;
+  const up=+m[0]>+pm[0],i=m.index,after=txt.slice(i+m[0].length);
+  const col=el('span',{class:'roll-col'},el('span',{},up?pm[0]:m[0]),el('span',{},up?m[0]:pm[0]));
+  n.replaceChildren(txt.slice(0,i),el('span',{class:'roll-win'},col),after);
+  col.animate([{transform:`translateY(${up?0:-50}%)`},{transform:`translateY(${up?-50:0}%)`}],{duration:520,easing:SOFT,fill:'forwards'}).onfinish=()=>{if(n.isConnected)n.textContent=txt;};
+  if(n.classList.contains('badge'))n.animate([{transform:'scale(1)'},{transform:'scale(1.3)',offset:.4},{transform:'none'}],{duration:440,easing:SPRING});
+}
 function rollCounts(root,scope){
-  root.querySelectorAll('[data-roll]').forEach(n=>{
-    const key=(n.dataset.roll==='inbox'?'':scope)+':'+n.dataset.roll,txt=n.textContent,m=txt.match(/\d+/),prev=ROLLS.get(key);ROLLS.set(key,txt);
-    if(!m||!prev||!motionOK())return;const pm=prev.match(/\d+/);if(!pm||pm[0]===m[0]||prev.replace(/\d+/,'#')!==txt.replace(/\d+/,'#'))return;
-    const up=+m[0]>+pm[0],i=m.index,after=txt.slice(i+m[0].length);
-    const col=el('span',{class:'roll-col'},el('span',{},up?pm[0]:m[0]),el('span',{},up?m[0]:pm[0]));
-    n.replaceChildren(txt.slice(0,i),el('span',{class:'roll-win'},col),after);
-    col.animate([{transform:`translateY(${up?0:-50}%)`},{transform:`translateY(${up?-50:0}%)`}],{duration:520,easing:SOFT,fill:'forwards'}).onfinish=()=>{if(n.isConnected)n.textContent=txt;};
-    if(n.classList.contains('badge'))n.animate([{transform:'scale(1)'},{transform:'scale(1.3)',offset:.4},{transform:'none'}],{duration:440,easing:SPRING});
-  });
+  root.querySelectorAll('[data-roll]').forEach(n=>{const key=(n.dataset.roll==='inbox'?'':scope)+':'+n.dataset.roll,txt=n.textContent,prev=ROLLS.get(key);ROLLS.set(key,txt);rollNode(n,prev);});
 }
 
 /* The + opens a small menu: the + turns into an ×, the page dims, the options float up one by one */
@@ -228,11 +229,7 @@ function meterPops(root,scope){
 
 /* Steppers slide their numbers; swatches spring their ring open */
 document.addEventListener('click',e=>{
-  if(!motionOK())return;const btn=e.target.closest&&e.target.closest('.stepper button,.stp button');
-  if(btn){const st=btn.closest('.stepper,.stp'),all=$$('.stepper,.stp'),idx=all.indexOf(st),vEl=st.querySelector('b,.sv');if(!vEl)return;const old=vEl.textContent,dir=btn===st.querySelector('button')?-1:1,g=ghostOf(vEl);
-    setTimeout(()=>{const ns=$$('.stepper,.stp')[idx],nv=ns&&ns.querySelector('b,.sv');if(!nv||nv.textContent===old){g&&g.remove();if(nv&&nv.textContent===old)nv.animate([{transform:'none'},{transform:'translateX(3px)'},{transform:'translateX(-3px)'},{transform:'none'}],{duration:240});return;}
-      if(g)g.animate([{opacity:1,transform:'none'},{opacity:0,transform:`translateY(${-dir*14}px)`}],{duration:220,easing:EASE,fill:'forwards'}).onfinish=()=>g.remove();
-      nv.style.display='inline-block';nv.animate([{opacity:0,transform:`translateY(${dir*14}px)`},{opacity:1,transform:'none'}],{duration:340,easing:SOFT});},0);return;}
+  if(!motionOK())return;
   const sw=e.target.closest&&e.target.closest('.swatch');
   if(sw)setTimeout(()=>{const on=$$('.swatch.on').find(n=>n.getBoundingClientRect().width);if(on)on.animate([{boxShadow:'0 0 0 0 #fff,0 0 0 0 var(--c)',transform:'scale(.88)'},{boxShadow:'0 0 0 2px #fff,0 0 0 4px var(--c)',transform:'none'}],{duration:380,easing:SPRING});},0);
 },true);
@@ -741,15 +738,33 @@ function pinDropIn(root){const id=App.state._pinDrop;if(!id)return;App.state._pi
 /* focus: +5 min floats up from the ring, and the ring eases back to make room */
 function plusFive(){const r=$('.fring');if(!r||!motionOK())return;const a=$('#fr-arc');if(a){a.style.transition='stroke-dashoffset .6s cubic-bezier(.3,1.15,.5,1)';setTimeout(()=>{a.style.transition='';},1700);}
   const f=el('span',{class:'p5f'},'+5 min');r.append(f);f.animate([{transform:'translate(-50%,0)',opacity:0},{transform:'translate(-50%,-14px)',opacity:1,offset:.25},{transform:'translate(-50%,-48px)',opacity:0}],{duration:950,easing:'cubic-bezier(.2,.7,.3,1)',fill:'forwards'}).onfinish=()=>f.remove();}
-/* Switches glide everywhere. Most switch taps redraw their page or sheet, which used to swap in a switch that was
-   already on, so the thumb snapped. Remember the tap, find the new switch, start it from the old state, then let it slide.
-   A row that appears because the switch turned on (marked .condrow) grows in under it. */
-document.addEventListener('click',e=>{const s0=e.target.closest&&e.target.closest('.sw');if(!s0)return;
-  const key=(s0.getAttribute('aria-label')||'').replace(/ (on|off)$/,''),was=s0.classList.contains('on'),t0=performance.now();
-  const find=()=>[...document.querySelectorAll('.sw')].find(x=>x.isConnected&&(x.getAttribute('aria-label')||'').replace(/ (on|off)$/,'')===key);
-  const tick=()=>{const s=find();if(s&&(s!==s0||s.classList.contains('on')!==was)){const now=s.classList.contains('on');if(now===was)return;
-      if(motionOK()){s.classList.add('nt');s.classList.toggle('on',was);void s.offsetWidth;s.classList.remove('nt');requestAnimationFrame(()=>s.classList.toggle('on',now));
-        const row=s.closest('.li'),nx=row&&row.nextElementSibling;if(now&&nx&&nx.classList.contains('condrow'))nx.animate([{opacity:0,transform:'translateY(-6px)',maxHeight:'0px'},{opacity:1,transform:'none',maxHeight:'80px'}],{duration:320,easing:'cubic-bezier(.3,1.1,.5,1)'});}
-      return;}
-    if(performance.now()-t0<700)requestAnimationFrame(tick);};
-  requestAnimationFrame(tick);},true);
+/* Redraws keep their motion. Most taps on a switch, segmented control or stepper redraw the page or sheet.
+   Snapshot at the tap; when the redraw lands (always before the next paint) keep the very switch that was tapped,
+   glide the new segmented thumb from where the old one was, roll the stepper number, and grow in a row that appeared. */
+const moSwKey=s=>(s.getAttribute('aria-label')||'').replace(/ (on|off)$/,''),moSegKey=g=>[...g.querySelectorAll('.seg-l')].map(x=>x.textContent).join('|');
+function moSnap(sc){return{sc,sw:[...sc.querySelectorAll('.sw')].map(n=>({n,k:moSwKey(n),on:n.classList.contains('on')})),
+  seg:[...sc.querySelectorAll('.seg')].map(g=>{const t=g.querySelector('.seg-thumb');return{g,k:moSegKey(g),r:t&&t.getBoundingClientRect()};}),
+  st:[...sc.querySelectorAll('.stepper b,.stp .sv')].map(b=>({b,k:b.dataset.roll||'',t:b.textContent,y:b.getBoundingClientRect().top})),
+  cr:[...sc.querySelectorAll('.condrow')].map(n=>{const p=n.previousElementSibling,s=p&&p.querySelector('.sw');return{n,t:n.textContent,k:s?moSwKey(s):null};})};}
+function moChanged(S){return S.sw.some(x=>!x.n.isConnected)||S.seg.some(x=>!x.g.isConnected)||S.st.some(x=>!x.b.isConnected||x.b.textContent!==x.t);}
+/* restart a CSS transition on a fresh element from the old state, synchronously (before anything paints) */
+function moFlip(n,was,now){if(was===now||!motionOK())return;n.classList.add('nt');n.classList.toggle('on',was);void n.offsetWidth;n.classList.remove('nt');void n.offsetWidth;n.classList.toggle('on',now);}
+function moApply(S){const sc=S.sc.isConnected?S.sc:document;
+  const olds=S.sw.filter(x=>!x.n.isConnected);
+  sc.querySelectorAll('.sw').forEach(n=>{if(S.sw.some(x=>x.n===n))return;const k=moSwKey(n),i=olds.findIndex(x=>x.k===k);if(i<0)return;const o=olds.splice(i,1)[0];moFlip(n,o.on,n.classList.contains('on'));});
+  const used=new Set();
+  sc.querySelectorAll('.seg').forEach(g=>{if(S.seg.some(x=>x.g===g))return;const k=moSegKey(g),o=S.seg.find(x=>!used.has(x)&&!x.g.isConnected&&x.k===k);if(!o||!o.r)return;used.add(o);const t=g.querySelector('.seg-thumb'),r1=t&&t.getBoundingClientRect();if(r1&&Math.abs(r1.left-o.r.left)>1)segGlide(o.r,g);});
+  const usedS=new Set();
+  sc.querySelectorAll('.stepper b,.stp .sv').forEach(n=>{let o=S.st.find(x=>x.b===n);if(!o){const k=n.dataset.roll||'',y=n.getBoundingClientRect().top;o=S.st.filter(x=>!usedS.has(x)&&!x.b.isConnected&&x.k===k).sort((a,b)=>Math.abs(a.y-y)-Math.abs(b.y-y))[0];}if(!o)return;usedS.add(o);if(n.textContent!==o.t)rollNode(n,o.t);});
+  if(!motionOK())return;
+  const ease='cubic-bezier(.3,1,.5,1)',nowCr=[...sc.querySelectorAll('.condrow')];
+  nowCr.forEach(n=>{if(S.cr.some(x=>x.t===n.textContent))return;const h=n.offsetHeight;n.style.overflow='hidden';n.animate([{opacity:0,height:'0px',paddingTop:'0px',paddingBottom:'0px'},{opacity:1,height:h+'px'}],{duration:320,easing:ease}).onfinish=()=>{n.style.overflow='';};});
+  /* a row that went away with its switch folds up instead of vanishing (so nothing below jumps) */
+  S.cr.forEach(x=>{if(x.n.isConnected||!x.k||nowCr.some(n=>n.textContent===x.t))return;const s=[...sc.querySelectorAll('.sw')].find(n=>moSwKey(n)===x.k),row=s&&s.closest('.li');if(!row)return;
+    const g=x.n;row.after(g);g.style.pointerEvents='none';g.style.overflow='hidden';const h=g.offsetHeight;g.animate([{opacity:1,height:h+'px'},{opacity:0,height:'0px',paddingTop:'0px',paddingBottom:'0px'}],{duration:280,easing:ease,fill:'forwards'}).onfinish=()=>g.remove();});
+}
+document.addEventListener('click',e=>{const t=e.target.closest&&e.target.closest('.sw,.seg button,.stepper button,.stp button');if(!t)return;
+  const S=moSnap(t.closest('.sheet')||t.closest('#view')||document.body);
+  /* mutation callbacks run right after the redraw, before the browser paints it */
+  const mo=new MutationObserver(()=>{if(!moChanged(S))return;mo.disconnect();moApply(S);});
+  mo.observe(document.body,{childList:true,subtree:true,characterData:true});setTimeout(()=>mo.disconnect(),1200);},true);

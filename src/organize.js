@@ -257,13 +257,23 @@ function viewHabits(root){
   }else if(T==='all'){
     if(!active.length)page.append(emptyOf('No active habits','Add one, or resume one from Paused.'));
     else{const rw=[...Array(7)].map((_,i)=>addK(tk,i-6));
-      page.append(el('div',{class:'list'},active.filter(inHA).map(h=>{const s=habitStreak(h),dn=habitDone(h,tk),r=habitRate(h);
+      const oneRow=h=>{const s=habitStreak(h),dn=habitDone(h,tk),r=habitRate(h);
         /* tick on the left marks today; percent and streak share one tidy column on the right */
         const tick=el('span',{class:'tick-hit'},tickBtn(dn,on=>{if(h.track==='count'||h.track==='time'){h.logs=h.logs||{};if(on)h.logs[tk]=h.goalN||1;else delete h.logs[tk];put(h);}else toggleItem({kind:'habit',rec:h},tk);if(on){const n=habitStreak(h);toast(n.n>1?`${h.title} · ${streakText(n)} in a row`:`${h.title} done`,()=>{if(h.track==='count'||h.track==='time'){delete h.logs[tk];put(h);}else toggleItem({kind:'habit',rec:h},tk);App.refresh();});}setTimeout(()=>App.refresh(),700);}));
         const sh=(()=>{const n=h.target||1;return h.track==='count'?`${h.goalN}× a day`:habitWeekly(h)?(n>=7?'Daily':`${n}×/wk`):h.days.length===7?'Daily':`${h.days.length}×/wk`;})();
         return el('div',{class:'li ohab2 tick-host'+(dn?' done':'')},tick,el('button',{class:'grow ohbody',onclick:()=>App.go('habit',{id:h.id})},
           el('span',{class:'oh1'},el('b',{},h.title),el('span',{class:'ohpct','aria-label':r==null?'New':`${Math.round(r*100)} percent in the last 30 days`},r==null?'New':`${Math.round(r*100)}%`)),
-          el('span',{class:'oh2'},el('span',{class:'odots','aria-hidden':'true','data-dk':h.id},rw.map(d=>el('i',{class:habitDotState(h,d)+(d===tk?' td':'')}))),el('small',{},sh),s.n?el('span',{class:'ohs2'},flameI(),String(s.n)):null)));})));}
+          el('span',{class:'oh2'},el('span',{class:'odots','aria-hidden':'true','data-dk':h.id},rw.map(d=>el('i',{class:habitDotState(h,d)+(d===tk?' td':'')}))),el('small',{},sh),s.n?el('span',{class:'ohs2'},flameI(),String(s.n)):null)));};
+      /* grouped by life area: each area is a card with a ring for today, and folds when you tap its name */
+      if(!(S.habShut instanceof Set))S.habShut=new Set();
+      const L=active.filter(inHA),byA=new Map();L.forEach(h=>{const a=h.area||'Other';if(!byA.has(a))byA.set(a,[]);byA.get(a).push(h);});
+      [...byA.keys()].sort((x,y)=>x==='Other'?1:y==='Other'?-1:x.localeCompare(y)).forEach(a=>{const g=byA.get(a),due=g.filter(h=>counts(h,tk)),dn=due.filter(h=>habitDone(h,tk)).length,shut=S.habShut.has(a);
+        const ord=[...g.filter(h=>!habitDone(h,tk)),...g.filter(h=>habitDone(h,tk))];
+        page.append(el('div',{class:'card hacard'+(shut?' shut':'')},
+          el('button',{class:'hahead','aria-expanded':String(!shut),onclick:()=>{shut?S.habShut.delete(a):S.habShut.add(a);App.refresh();}},
+            el('span',{class:'ring sm hring',style:`--p:${due.length?dn/due.length*100:0}`},el('span',{},due.length?`${dn}/${due.length}`:'–')),
+            el('b',{},a),el('span',{class:'haic',html:ic(areaIcon(a),15,1.9)}),el('span',{class:'hachev',html:ic('chevd',16,2.2)})),
+          shut?null:el('div',{class:'habody'},ord.map(oneRow))));});}
   }else{
     const pausedA=paused.filter(inHA);if(pausedA.length){page.append(el('p',{class:'small muted',style:'padding-inline:4px'},'Paused habits stay off Today. Their history is kept, and a daily streak picks up where it stopped.'));
       pausedA.forEach(h=>{const ps=h.pausedStreak;page.append(el('div',{class:'card ohold'},el('button',{style:'display:block;width:100%;text-align:left',onclick:()=>App.go('habit',{id:h.id})},el('b',{},h.title),el('small',{},[h.pausedAt?`Paused ${relDay(k(new Date(h.pausedAt)))}`:'Paused',!habitWeekly(h)&&ps&&ps.n>1?`${ps.n}-day streak saved`:''].filter(Boolean).join(' · '))),btns(btnP('Resume',()=>{setHabitPaused(h,false);toast('Resumed');}),btnL('Archive',()=>archiveFlow(h)))));});}

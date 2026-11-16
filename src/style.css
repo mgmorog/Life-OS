@@ -2107,3 +2107,15 @@ html.c-fade .todo.won .t3in .tick-host.done{opacity:1}
 .ohab2 .oh2 .odots{gap:5px}.ohab2 .odots i{width:10px;height:10px}
 .ohab2 .odots i.td{width:13px;height:13px}
 .ohab2.done .ohpct{color:var(--ink-3)}
+
+/* v190 All habits grouped by life area (G) */
+.hacard{padding:6px 14px 4px;margin-bottom:10px}
+.hahead{display:flex;align-items:center;gap:10px;width:100%;min-height:52px;text-align:left}
+.hahead b{flex:1;font:400 20px/1.2 var(--display);color:var(--ink)}
+.hahead .haic{display:grid;color:var(--ink-3)}
+.hahead .hachev{display:grid;color:var(--ink-3);transition:transform .3s var(--ease)}
+.hacard.shut .hachev{transform:rotate(-90deg)}
+.hring{width:38px!important;height:38px!important}.hring>span{width:30px!important;height:30px!important;font-size:10.5px!important;font-weight:700}
+.habody{border-top:1px solid var(--line-2)}
+.habody .ohab2{padding-left:0;padding-right:0}
+.habody .ohab2:last-child{border-bottom:0}

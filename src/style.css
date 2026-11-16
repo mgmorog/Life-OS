@@ -1890,7 +1890,7 @@ html.c-fade .todo.won .t3in .tick-host.done{opacity:1}
 .fvsheet .go{background:#fff;color:var(--accent-deep,#2F4A3D)}.fvsheet .dn{background:rgba(255,255,255,.16);color:#fff}
 
 /* v166 Tasks filters */
-.tstick{position:sticky;top:calc(env(safe-area-inset-top,0px) + 44px);z-index:12;background:var(--bg);margin:0 -16px 6px;padding:6px 16px 4px}
+.tstick{position:sticky;top:env(safe-area-inset-top,0px);z-index:12;background:var(--bg);margin:0 -16px 6px;padding:8px 16px 6px;box-shadow:0 1px 0 var(--line)}
 .fchips,.achips{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin:0 -16px;padding:0 16px 6px}.fchips::-webkit-scrollbar,.achips::-webkit-scrollbar{display:none}
 .fchip{flex:none;height:36px;padding:0 14px;border-radius:999px;background:var(--chip,#EFF0EA);border:1px solid var(--line);font-size:14px;font-weight:600;display:inline-flex;align-items:center;gap:6px;color:var(--ink)}
 .fchip .n{font-weight:500;opacity:.75}

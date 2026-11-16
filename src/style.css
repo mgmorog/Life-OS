@@ -190,7 +190,7 @@ h1,h2,h3,p{margin:0}
 .trow{-webkit-touch-callout:none;user-select:none;-webkit-user-select:none}
 .blk{-webkit-touch-callout:none}
 .blk.lift{opacity:.4;box-shadow:none}
-.blk .rz{touch-action:none;height:14px}
+.blk .rz{touch-action:pan-y;height:14px}
 .blk .rz::after{content:"";position:absolute;left:50%;bottom:3px;width:22px;height:3px;margin-left:-11px;border-radius:2px;background:var(--c);opacity:0;transition:opacity .15s}
 @media(hover:hover){.blk:hover .rz::after{opacity:.5}}
 .trow-wrap{border-bottom:1px solid var(--line)}
@@ -2174,3 +2174,26 @@ html.c-fade .todo.won .t3in .tick-host.done{opacity:1}
 .panel.wide .hexrow{margin-top:14px}
 .panel.wide .hexrow input[type=color]{width:36px;height:36px}
 .panel.wide .hexrow input[type=text]{height:38px;width:104px;font-size:15px}
+
+/* v196 separate cards, slim rows that fold away, open-only items look different from tickable ones */
+.fcard{padding:16px 18px 12px}
+.fcard .fhabs{margin:6px -18px 0}
+.ftm{padding:6px 16px}
+.ftmrow{display:flex;align-items:center;gap:14px;width:100%;min-height:58px;text-align:left}
+.ftmd{width:44px;height:48px;border-radius:12px;background:var(--line-2);display:flex;flex-direction:column;align-items:center;justify-content:center;flex:none}
+.ftmd small{font-size:10px;letter-spacing:.1em;color:var(--ink-2);font-weight:700}.ftmd b{font:400 20px/1 var(--display)}
+.ftmrow .grow b{display:block;font-weight:600;font-size:16px}.ftmrow .grow small{font-size:13.5px;color:var(--ink-2)}
+.ftmrow .chev{color:var(--ink-3);display:grid}
+.tick-hit.aiopen{display:grid;place-items:center;color:var(--ink-3);position:relative}
+.tick-hit.aiopen::before{content:"";position:absolute;width:28px;height:28px;border-radius:50%;background:var(--line-2)}
+.tick-hit.aiopen svg{position:relative}
+.aichev{display:grid;color:var(--ink-3);flex:none;align-self:center;margin-left:4px}
+.todo.feed .trow.done .tt{transition:color .3s}
+.revc{min-height:200px}
+
+/* entry sheets (products, certifications…): calmer fields */
+.esheet .field{padding:10px 14px 11px;gap:2px}
+.esheet .field .eyebrow{font-size:11px;letter-spacing:.1em}
+.esheet .field input[type=date],.esheet .field input[type=number],.esheet .field select{text-align:left;font-size:16.5px;min-height:28px}
+.esheet .field input[type=date]::-webkit-date-and-time-value{text-align:left}
+.esheet .field textarea{min-height:28px}

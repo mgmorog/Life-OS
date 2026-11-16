@@ -56,7 +56,7 @@ function demoFill(t,i,r,t0){const f={};const fs=Array.isArray(t.fields)?t.fields
   fs.forEach((d,k)=>{const L=(d.label||'').toLowerCase();
     if(d.id==='what'||d.id==='lesson'||(k===0&&(!d.type||d.type==='text'||d.type==='area')))f[d.id]=bank.length?bank[i%bank.length]:`${capW(t.word||'item')} ${i+1}`;
     else if(d.type==='select'&&d.opts&&d.opts.length)f[d.id]=pick(d.opts);
-    else if(d.type==='date'){const past=t.tpl==='log'||/last|done|bought|logged|started|when/.test(L);f[d.id]=past?addK(t0,-Math.floor(r()*45)):addK(t0,Math.floor(r()*120)-10);}
+    else if(d.type==='date'){const past=t.tpl==='log'||/last|done|bought|logged|started|when|opened|since|joined|issued|purchased|earned/.test(L);f[d.id]=past?addK(t0,-Math.floor(r()*45)):addK(t0,Math.floor(r()*120)-10);}
     else if(d.type==='number'){if(d.def!=null&&r()<.5)f[d.id]=d.def;else if(/cost|price|amount|budget|\$|balance|paid|value|saved|goal|limit|income|owed/.test(L))f[d.id]=Math.round(r()*r()*2400+12);else if(/min|hour|time/.test(L))f[d.id]=Math.round(r()*80+10);else if(/every/.test(L))f[d.id]=pick([7,14,30,90,180,365]);else f[d.id]=Math.round(r()*9+1);}
     else if(d.type==='time')f[d.id]=pick(['07:00','08:30','12:15','17:45','20:00']);
     else if(d.type==='area')f[d.id]=pick(DEMO_NOTES);
@@ -74,7 +74,7 @@ function loadDemo(quiet){
   const NR={type:'never',end:null},AR=AREAS;
   /* every area on, every module on */
   const allAreas=[...new Set([...AREAS,...OPT_AREAS])];const shown={};allAreas.forEach(a=>shown[a]=toolsOf(a).filter(x=>x.optIn).map(x=>x.id));
-  setSettings({areas:allAreas.slice().sort((a,b)=>a.localeCompare(b)),hubHidden:{},hubShown:shown,introDone:true,foundationOff:true,demoSnap:snap,demoVer:3});
+  setSettings({areas:allAreas.slice().sort((a,b)=>a.localeCompare(b)),hubHidden:{},hubShown:shown,introDone:true,foundationOff:true,demoSnap:snap,demoVer:4});
   /* projects first, so tasks can belong to them */
   const projs=[['Kitchen refresh','Home',['Measure the cabinets','Pick a paint color','Order hardware','Paint weekend']],['Q1 Workday release','Career',['Write test scripts','UAT with grant managers','Sign-off from Finance','Go-live checklist','Train AP team']],['Japan trip','Travel',['Book flights','Book Kyoto ryokan','Get JR pass','Pocket wifi']],['Move to the new office','Career',[]],['Garage cleanout (paused)','Home',['Sort donations','Sell the old bike']]];
   const P=projs.map(([title,area,steps],i)=>mk('project',{title,notes:i===1?'Release target is the first week of February. Keep Finance in the loop on every change to costing allocations.':'',area,deadline:i===2?addK(t,120):i===1?addK(t,40):null,color:pick(['sage','clay','blue','plum','rose']),status:'active',paused:i===4,part:null,steps:steps.map((x,j)=>({id:uid('s'),t:x,d:j===0&&i!==3}))}));
@@ -147,4 +147,4 @@ function clearDemo(){const s=get.settings(),snap=s.demoSnap;
     App.refresh();toast('Demo cleared');}});}
 
 /* refresh an already-loaded demo with the current generator, keeping the original settings snapshot */
-function demoRefresh(){const s=get.settings(),keep=s.demoSnap;if(!keep)return;[...recs.values()].filter(r=>r.demo).forEach(r=>remove(r.id,{silent:true,hard:true}));setSettings({demoSnap:null});loadDemo(true);setSettings({demoSnap:keep,demoVer:3});}
+function demoRefresh(){const s=get.settings(),keep=s.demoSnap;if(!keep)return;[...recs.values()].filter(r=>r.demo).forEach(r=>remove(r.id,{silent:true,hard:true}));setSettings({demoSnap:null});loadDemo(true);setSettings({demoSnap:keep,demoVer:4});}

@@ -257,7 +257,7 @@ function dayCard(dk){
   const nx0=isToday&&t3on&&get.settings().top3On!==false?t3es.find(e=>!e.done):null,foc=nx0&&frNow()&&t3es.some(e=>e.id===frNow().id);
   const FOCUSBTN=nx0?el('button',{class:'prfocus2'+(foc?' on':''),'aria-label':foc?'Focusing — open timer':'Focus',onclick:()=>prFocusSheet(dk),html:ic('play',13,2.6)}):null;
   const todo=el('section',{class:'card daycard todo rcard'+fu},
-    el('div',{class:'bl'},el('span',{class:'lbl'},(()=>{const d=isToday?'Today':relDay(dk);return t3?(['Today','Tomorrow','Yesterday'].includes(d)?`${d}’s priorities`:`Priorities · ${d}`):d;})()),el('span',{class:'blr'},total?el('span',{class:'small muted tnum'},el('span',{'data-roll':'done'},`${doneN} of ${total} today`)):null,FOCUSBTN)),
+    el('div',{class:'bl'},el('span',{class:'lbl'},(()=>{const d=isToday?'Today':relDay(dk);return t3?(['Today','Tomorrow','Yesterday'].includes(d)?`${d}’s priorities`:`Priorities · ${d}`):d;})()),el('span',{class:'blr'},total?el('span',{class:'small muted tnum'},el('span',{'data-roll':'done'},doneN>=total?'All done':`${total-doneN} left`)):null,FOCUSBTN)),
     total?el('div',{class:'progress t3bar rbar'},el('i',{style:`width:${Math.round(doneN/total*100)}%`})):null);
   onSwipe(todo,()=>goDay(addK(S.sel,1)),()=>goDay(addK(S.sel,-1)));
   const W=t3&&t3es.length===T3_MAX&&t3es.every(e=>e.done);
@@ -296,17 +296,19 @@ function dayCard(dk){
   const habE=[...habAny,...habTimed];
   if(habE.length||loose.length){
     /* one feed: habits are a quiet row of rings inside the same card */
-    todo.append(el('div',{class:'secl secr'},el('span',{},'Habits'),el('button',{class:'secln',onclick:()=>App.go('habits')},'All habits')));
+    const hcard=el('section',{class:'card fcard'+fu},el('div',{class:'bl'},el('span',{class:'lbl'},'Habits'),el('button',{class:'linkbtn small',style:'min-height:28px',onclick:()=>App.go('habits')},'All habits')));
     const l=el('div',{class:'fhabs'});
     const items=[...habE.map(e=>({e,loose:false})),...loose.map(h=>({e:{kind:'habit',id:h.id,rec:h,title:h.title,time:null},loose:true}))];
-    items.sort((x,y)=>habitDone(x.e.rec,dk)-habitDone(y.e.rec,dk)).forEach(({e})=>l.append(habDot(e,dk)));
-    todo.append(l);
+    /* keep the order steady while you tap; done ones sort to the end on the next visit */
+    S._habOrd=S._habOrd||{};const key=dk+':'+items.map(x=>x.e.id).sort().join(',');if(!S._habOrd[key]||!S._painted)S._habOrd[key]=items.slice().sort((x,y)=>habitDone(x.e.rec,dk)-habitDone(y.e.rec,dk)).map(x=>x.e.id);
+    const ord=S._habOrd[key];items.sort((x,y)=>ord.indexOf(x.e.id)-ord.indexOf(y.e.id)).forEach(({e})=>l.append(habDot(e,dk)));
+    hcard.append(l);out.push(hcard);
   }
   /* Coming up, with the full day inline */
   const sched=timed;
   const upcoming=isToday?sched.filter(e=>!e.done&&e.time+(e.dur||30)>nowM):sched;
   const open=!!S.gridOpen;
-  const cu=el('div',{class:'upcard fsched'},el('div',{class:'secl'},'Schedule'));
+  const cu=el('section',{class:'card upcard'+fu},el('div',{class:'bl'},el('span',{class:'lbl'},'Schedule')));
   const rows=el('div',{class:'uplist'});
   upcoming.slice(0,3).forEach(e=>{const during=isToday&&e.time<=nowM;const end=e.time+(e.dur||30);
     rows.append(el('button',{class:'uprow',style:`--c:${e.color||'var(--accent)'}`,onclick:()=>openItem(e,dk)},el('span',{class:'upt tnum'},fmtS(e.time)),el('span',{class:'upbar'}),el('span',{class:'grow'},el('span',{class:'tt'},e.title),el('span',{class:'meta'},sched.some(f=>f!==e&&f.kind!=='task'&&e.kind!=='task'&&f.time<e.time+(e.dur||30)&&e.time<f.time+(f.dur||30))?el('span',{class:'ovtag'},'Overlaps · '):null,e.kind==='task'?fmtT(e.time):fmtRange(e.time,end),during?el('b',{class:'upnow'},` · ${fmtDurS(end-nowM)} left`):isToday&&e===upcoming[0]?` · in ${fmtDurS(e.time-nowM)}`:''))));});
@@ -314,13 +316,13 @@ function dayCard(dk){
   cu.append(rows);
   cu.append(el('button',{class:'linkbtn small uptoggle','aria-expanded':String(open),onclick:()=>{S.gridOpen=!S.gridOpen;S._gridTop=null;App.refresh();}},open?'Hide full day':`See full day${sched.length?` · ${sched.length} ${sched.length===1?'item':'items'}`:''}`,el('span',{style:`display:grid;transition:transform .25s var(--ease);${open?'transform:rotate(90deg)':''}`,html:ic('chevr',16,2.2)})));
   if(open){const gw=el('div',{class:'gridin'});gw.append(timeGrid(dk,timed));cu.append(gw);}
-  todo.append(cu);
-  /* tomorrow, then the Done fold, close the card */
-  {const sel=fromK(dk),tm=addD(sel,1),tmk=k(tm),td=dayItems(tmk),tl=[...td.allDay,...td.timed,...td.anytime],firstT=td.timed[0];
-   todo.append(el('div',{class:'secl'},isToday?'Tomorrow':relDay(tmk)),el('button',{class:'tmr ftmr',onclick:()=>{S.sel=tmk;S._fresh=true;S._gridTop=null;S._anim=null;S._noGlide=true;scrollTo(0,0);clearTimeout(App._r);App.render();}},
-    el('div',{class:'tile'},el('small',{},DOW[tm.getDay()].slice(0,3).toUpperCase()),el('span',{},String(tm.getDate()))),
-    el('div',{class:'grow'},el('h3',{},tl.length?`${tl.length} planned`:'Nothing planned yet'),el('p',{},firstT?`First at ${fmtT(firstT.time)}`:'Tap to plan it')),el('span',{class:'chev',html:ic('chevr',16,2.2)})));}
   todo.append(...doneEls);
+  out.push(cu);
+  /* tomorrow as one line */
+  {const sel=fromK(dk),tm=addD(sel,1),tmk=k(tm),td=dayItems(tmk),tl=[...td.allDay,...td.timed,...td.anytime],firstT=td.timed[0];
+   out.push(el('section',{class:'card ftm'+fu},el('button',{class:'ftmrow',onclick:()=>{S.sel=tmk;S._fresh=true;S._gridTop=null;S._anim=null;S._noGlide=true;scrollTo(0,0);clearTimeout(App._r);App.render();}},
+     el('span',{class:'ftmd'},el('small',{},DOW[tm.getDay()].slice(0,3).toUpperCase()),el('b',{},String(tm.getDate()))),
+     el('span',{class:'grow'},el('b',{},isToday?'Tomorrow':relDay(tmk)),el('small',{},tl.length?`${tl.length} planned${firstT?`, first at ${fmtT(firstT.time)}`:''}`:'Nothing planned yet')),el('span',{class:'chev',html:ic('chevr',16,2.2)}))));}
   todo.classList.add('feed');
   return out;
 }
@@ -346,7 +348,7 @@ function anyRow(e,dk,{late,target,addToday,slim}={}){
   const S=App.state,steps=e.kind==='task'?(e.rec.steps||[]):[];S.expanded=S.expanded||{};
   const wrap=el('div',{class:'trow-wrap'});
   const row=el('div',{class:'trow tick-host'+(e.done?' done':''),'data-id':e.id},
-    el('span',{class:'tick-hit'+(slim&&e.kind==='task'&&e.rec.priority==='high'&&!e.done?' impt':'')},tickBtn(e.done,on=>{row.classList.toggle('done',on);toggleItem(e,dk);setTimeout(()=>App.refresh(),820);}),!slim&&steps.filter(x=>x.t).length&&!e.done?stepRing(e.id,steps.filter(x=>x.t&&stepDone(e.rec,x,dk)).length,steps.filter(x=>x.t).length):null),
+    el('span',{class:'tick-hit'+(slim&&e.kind==='task'&&e.rec.priority==='high'&&!e.done?' impt':'')},tickBtn(e.done,on=>{row.classList.toggle('done',on);toggleItem(e,dk);if(slim)foldAway(wrap,on);setTimeout(()=>App.refresh(),slim?900:820);}),!slim&&steps.filter(x=>x.t).length&&!e.done?stepRing(e.id,steps.filter(x=>x.t&&stepDone(e.rec,x,dk)).length,steps.filter(x=>x.t).length):null),
     el('button',{class:'t',onclick:()=>openItem(e,dk),'aria-label':slim&&e.kind==='task'&&e.rec.priority==='high'?`${e.title}, important`:null},el('span',{class:'tt'},!slim&&e.kind==='task'&&e.rec.priority==='high'&&!e.done?el('span',{class:'oflag','aria-label':'High priority',html:ic('flag',13,2.4)}):null,e.title),slim?null:metaOf(e,late,dk)),
     slim&&e.time!=null&&!e.done?el('span',{class:'tside tnum'},fmtT(e.time)):null,
     e.kind==='habit'&&!e.done&&e.rec.link&&e.rec.link.log&&wkRoutines(e.rec).length?el('button',{class:'chip startchip',style:'height:36px','aria-label':`Start ${(wkFor(e.rec,dk)||{f:{}}).f.what||'a workout'}`,onclick:ev=>{ev.stopPropagation();wkStart(e.rec,dk);}},el('span',{style:'display:grid',html:ic('play',12,2.4)}),'Start'):e.kind==='habit'&&e.rec.track==='count'?el('button',{class:'chip',style:'height:36px','aria-label':`Add one to ${e.title}`,onclick:()=>{buzz(6);logHabit(e.rec,dk,1);}},'+1'):e.kind==='habit'&&e.rec.track==='time'?el('button',{class:'chip',style:'height:36px','aria-label':`Log time for ${e.title}`,onclick:()=>logTimeSheet(e.rec,dk)},'Log'):null,
@@ -412,9 +414,11 @@ function timeGrid(dk,timed){
       move:(x,y)=>{dropPreview(x,y,span,grab);autoscrollGrid(x,y);},
       drop:(x,y)=>{const t=gridTimeAt(x,y,grab,span);dropCarry=null;clearPreview();if(t==null||t===e.time){App.state._settle=e.id;settleBlock();return;}const u=snapItem(e);setItemTime(e,dk,t);App.state._settle=e.id;App.refresh();toast(`Moved to ${fmtT(t)}`,u);}});
     const rz=b.querySelector('.rz');
-    if(rz)rz.addEventListener('pointerdown',ev=>{ev.stopPropagation();ev.preventDefault();const y0=ev.clientY,d0=e.dur;rz.setPointerCapture(ev.pointerId);App.dragging=true;let nd=d0,lastN=d0;const bub=el('span',{class:'rzbub'});cv.append(bub);const showB=()=>{bub.textContent=`Ends ${fmtT((e.time+nd)%1440)} · ${fmtDur(nd)}`;bub.style.top=(b.offsetTop+b.offsetHeight+8)+'px';};showB();if(motionOK())bub.animate([{opacity:0,transform:'translateY(-4px)'},{opacity:1,transform:'none'}],{duration:180,easing:EASE});
+    if(rz)rz.addEventListener('touchmove',tv=>{if(rz._on&&tv.cancelable)tv.preventDefault();},{passive:false});
+    if(rz)rz.addEventListener('pointerdown',ev=>{if(ev.pointerType!=='mouse'&&!rz._held){const x0=ev.clientX,yy=ev.clientY;let t=setTimeout(()=>{rz._held=true;buzz(10);rz.dispatchEvent(new PointerEvent('pointerdown',{pointerId:ev.pointerId,pointerType:ev.pointerType,clientX:x0,clientY:yy,bubbles:true}));},320);const cx=m=>{if(Math.hypot(m.clientX-x0,m.clientY-yy)>8){clearTimeout(t);fin();}};const fin=()=>{clearTimeout(t);removeEventListener('pointermove',cx);removeEventListener('pointerup',fin);removeEventListener('pointercancel',fin);};addEventListener('pointermove',cx);addEventListener('pointerup',fin);addEventListener('pointercancel',fin);return;}
+      rz._held=false;rz._on=true;ev.stopPropagation();ev.preventDefault();const y0=ev.clientY,d0=e.dur;try{rz.setPointerCapture(ev.pointerId);}catch(_){}App.dragging=true;let nd=d0,lastN=d0;const bub=el('span',{class:'rzbub'});cv.append(bub);const showB=()=>{bub.textContent=`Ends ${fmtT((e.time+nd)%1440)} · ${fmtDur(nd)}`;bub.style.top=(b.offsetTop+b.offsetHeight+8)+'px';};showB();if(motionOK())bub.animate([{opacity:0,transform:'translateY(-4px)'},{opacity:1,transform:'none'}],{duration:180,easing:EASE});
       const mv=m=>{nd=Math.max(15,Math.min(1440,Math.round((d0+(m.clientY-y0)/HH*60)/15)*15));b.style.height=Math.max(Math.min(nd,1440-e.time)/60*HH-2,26)+'px';if(bm)bm.textContent=fmtRange(e.time,e.time+nd);if(nd!==lastN){lastN=nd;buzz(4);}showB();};
-      const up=()=>{bub.remove();rz.removeEventListener('pointermove',mv);rz.removeEventListener('pointerup',up);rz.removeEventListener('pointercancel',up);App.dragging=false;App._dragEnd=Date.now();if(nd!==d0){const u=snapItem(e),r=detachIfRepeating(e.rec,dk);r.dur=nd;put(r);toast(`Now ${fmtDur(nd)}`,u);}else App.refresh();};
+      const up=()=>{rz._on=false;bub.remove();rz.removeEventListener('pointermove',mv);rz.removeEventListener('pointerup',up);rz.removeEventListener('pointercancel',up);App.dragging=false;App._dragEnd=Date.now();if(nd!==d0){const u=snapItem(e),r=detachIfRepeating(e.rec,dk);r.dur=nd;put(r);toast(`${e.title} now ends ${fmtT((e.time+nd)%1440)}`,u);}else App.refresh();};
       rz.addEventListener('pointermove',mv);rz.addEventListener('pointerup',up);rz.addEventListener('pointercancel',up);});
     cv.append(b);
   });
@@ -550,8 +554,10 @@ function areaTag(a){return el('span',{class:'atag'},el('span',{style:'display:gr
 function areaRow(r,slim){const sub=String(r.sub||'').replace(new RegExp('^'+(r.kind||'').replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\s*·\\s*','i'),'');const subT=(sub===r.kind?'':sub).replace(/(\d+ days?) overdue/i,'$1 late');
   const meta=el('span',{class:'meta'},subT?el('span',{class:r.late?'late':''},subT):null,subT&&r.area?' · ':null,r.area?areaTag(r.area):null,r.kind?el('span',{class:'kt'},` · ${r.kind}`):null);
   const row=el('div',{class:'trow tick-host'+(r.done?' done':''),'data-id':r.rid||''},
-    el('span',{class:'tick-hit'},r.tick||el('button',{class:'ddt',style:'width:24px;height:24px;color:var(--accent-text)','aria-label':`Open ${r.title}`,html:ic('chevr',16,2),onclick:r.go})),
-    el('button',{class:'t',onclick:r.go},el('span',{class:'tt'},r.title),slim?null:meta));
+    r.tick?el('span',{class:'tick-hit'},r.tick):el('span',{class:'tick-hit aiopen','aria-hidden':'true',html:ic(areaIcon(r.area||''),15,2)}),
+    el('button',{class:'t',onclick:r.go},el('span',{class:'tt'},r.title),slim?null:meta),
+    !r.tick?el('span',{class:'aichev',html:ic('chevr',16,2.2)}):null);
+  if(slim&&r.tick)r.tick.addEventListener('click',()=>{if(!r.done)foldAway(row.closest('.trow-wrap'),true);},true);
   if(r.rid&&!slim)row.append(dGrip());
   if(r.rid&&slim)draggable(row,{label:r.title,move:(x,y)=>ringHot(ringAt(x,y)),drop:(x,y)=>{const rg=ringAt(x,y);ringHot(null);if(rg)ringDrop(rg,r.rid,App.state.sel);}});
   /* swipe like your own to-dos: right to finish (when it can be ticked), left to open */
@@ -642,3 +648,6 @@ function prFocusSheet(dk){let curId=null,mins=25,tm=null,picking=false;
 const HAB_KW=[[/sleep|bed|night|no phone|screen|pm\b/i,'sun'],[/read|book|pages|study|spanish|french|language|duolingo|learn/i,'book'],[/workout|gym|lift|push|pull|legs|weights|run|bike|swim|yoga|stretch|walk|steps|cardio/i,'dumbbell'],[/journal|write|writing|pages/i,'pencil'],[/friend|family|date night|kids/i,'users'],[/guitar|piano|music|sing/i,'music'],[/meal|cook|eat|veg|lunch|breakfast/i,'meal'],[/coffee|tea|water|drink|hydrat/i,'coffee'],[/meditat|breath|mindful|pray|gratitude|outside|garden|plant/i,'leaf'],[/sleep|bed|night|no phone|screen|pm\b/i,'sun'],[/call|text mom|text dad|phone/i,'phone'],[/dog|cat|pet|clean|tidy|dishes|laundry|home/i,'home'],[/save|budget|spend|pay/i,'pay'],[/work|email|inbox/i,'brief']];
 const HAB_AREA={Health:'heart',Learning:'book','Personal growth':'leaf',Relationships:'users',Pets:'home',Recreation:'music',Career:'brief',Finances:'pay',Home:'home',Travel:'plane',Community:'users'};
 function habGlyph(h){const g=x=>glyph(x,24,1.9);if(h.icon&&h.icon!=='habit'&&GL[h.icon])return g(h.icon);const k2=HAB_KW.find(([r])=>r.test(h.title||''));if(k2)return g(k2[1]);return g(HAB_AREA[h.area]||'focus');}
+
+/* a ticked row in the Today card: the tick fills, the title fades, then the row folds shut before it moves to Done */
+function foldAway(w,on){if(!w||!motionOK())return;setTimeout(()=>{if(!w.isConnected)return;const h=w.offsetHeight;w.style.height=h+'px';w.style.overflow='hidden';w.getBoundingClientRect();w.style.transition='height .38s cubic-bezier(.2,.8,.2,1),opacity .3s ease';w.style.height='0px';w.style.opacity='0';},440);}

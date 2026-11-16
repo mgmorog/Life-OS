@@ -1996,3 +1996,9 @@ html.c-fade .todo.won .t3in .tick-host.done{opacity:1}
 .todo.won .trow-wrap:has(.sring)::after{background:rgba(255,255,255,.16)}
 .swr:has(.sring){margin-left:-8px;padding-left:8px}
 .swr:has(.sring)>.trow{position:relative;z-index:1}
+
+/* v172 polish: all-day chips stay on one line, long to-do titles clamp on Today */
+.allday-row.top{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin-inline:-16px;padding-inline:16px}
+.allday-row.top::-webkit-scrollbar{display:none}
+.allday-row.top>*{flex:none}
+.todo .anytime .trow .tt{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}

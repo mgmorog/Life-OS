@@ -1757,3 +1757,8 @@ html.c-fade .todo.won .t3in .tick-host.done{opacity:1}
 /* v153 header badges: a small round count tucked on the icon's corner; a plain dot when only What's new is waiting */
 .iconbtn .badge{top:1px;right:-1px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;font-size:10px;line-height:16px}
 .iconbtn .badge.dot{min-width:0;width:9px;height:9px;padding:0;border-radius:50%;top:8px;right:7px;background:var(--accent)}
+
+/* v154 icon picker (custom areas) */
+.icpick{display:grid;grid-template-columns:repeat(auto-fill,minmax(48px,1fr));gap:10px;padding:4px 2px}
+.icp{width:48px;height:48px;border-radius:50%;display:grid;place-items:center;background:var(--chip);color:var(--ink-2);transition:background .2s,color .2s,transform .2s var(--spring)}
+.icp.on{background:var(--accent);color:#fff;transform:scale(1.06)}

@@ -75,7 +75,7 @@ const glyph=(id,w=18,s=1.8)=>GL[id]?sv(GL[id].p,w,s):'';
 const COLORS=[['sage','Sage','#466B5A'],['blue','Blue','#4A6E9C'],['plum','Plum','#735B98'],['rose','Rose','#A8625F'],['clay','Clay','#8A6A50'],['ochre','Ochre','#8A6731'],['olive','Olive','#677A38'],['slate','Slate','#5D6573']];
 const colorHex=c=>!c?COLORS[0][2]:c[0]==='#'?c:(COLORS.find(x=>x[0]===c)||COLORS[0])[2];
 const AREA_ICON={Health:'a_health',Home:'a_home',Finances:'a_money',Relationships:'a_people',Career:'a_career',Learning:'a_learn',Recreation:'a_rec',Travel:'a_travel','Personal growth':'a_growth','Life admin':'a_admin',Family:'a_family',Pets:'a_pets',Community:'a_comm'};
-const areaIcon=a=>AREA_ICON[a]||'leaf';
+const areaIcon=a=>AREA_ICON[a]||((get.settings().areaIcons||{})[a])||'leaf';
 const AREAS=['Health','Home','Finances','Relationships','Career','Learning','Recreation','Travel','Personal growth'];
 const AREA_COLOR={Health:'#466B5A',Home:'#8A6A50',Finances:'#677A38',Relationships:'#A8625F',Career:'#4A6E9C',Learning:'#735B98',Recreation:'#8A6731',Travel:'#3F7680','Personal growth':'#5D6573'};
 

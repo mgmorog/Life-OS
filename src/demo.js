@@ -74,7 +74,7 @@ function loadDemo(quiet){
   const NR={type:'never',end:null},AR=AREAS;
   /* every area on, every module on */
   const allAreas=[...new Set([...AREAS,...OPT_AREAS])];const shown={};allAreas.forEach(a=>shown[a]=toolsOf(a).filter(x=>x.optIn).map(x=>x.id));
-  setSettings({areas:allAreas.slice().sort((a,b)=>a.localeCompare(b)),hubHidden:{},hubShown:shown,introDone:true,foundationOff:true,demoSnap:snap,demoVer:2});
+  setSettings({areas:allAreas.slice().sort((a,b)=>a.localeCompare(b)),hubHidden:{},hubShown:shown,introDone:true,foundationOff:true,demoSnap:snap,demoVer:3});
   /* projects first, so tasks can belong to them */
   const projs=[['Kitchen refresh','Home',['Measure the cabinets','Pick a paint color','Order hardware','Paint weekend']],['Q1 Workday release','Career',['Write test scripts','UAT with grant managers','Sign-off from Finance','Go-live checklist','Train AP team']],['Japan trip','Travel',['Book flights','Book Kyoto ryokan','Get JR pass','Pocket wifi']],['Move to the new office','Career',[]],['Garage cleanout (paused)','Home',['Sort donations','Sell the old bike']]];
   const P=projs.map(([title,area,steps],i)=>mk('project',{title,notes:i===1?'Release target is the first week of February. Keep Finance in the loop on every change to costing allocations.':'',area,deadline:i===2?addK(t,120):i===1?addK(t,40):null,color:pick(['sage','clay','blue','plum','rose']),status:'active',paused:i===4,part:null,steps:steps.map((x,j)=>({id:uid('s'),t:x,d:j===0&&i!==3}))}));
@@ -87,12 +87,13 @@ function loadDemo(quiet){
     T('This is a deliberately very long task title to see how the card handles wrapping when someone writes a whole sentence instead of a short to-do',{date:t})];
   T('Renew car registration',{date:addK(t,-3),area:'Home',priority:'high'});T('Send thank-you note to Priya',{date:addK(t,-1),area:'Relationships'});T('Return Amazon cables',{date:addK(t,-6),area:'Finances'});
   const TASKS=['Grocery run','Prep slides for staff meeting','Call the bank','Schedule haircut','Review AP aging report','Pay credit card','Plan date night','Update resume bullets','Clean out email','Order contact lenses','Workday config review','1:1 prep','Laundry','Text Grandma Rose','Reconcile grant budget','Approve expense reports','Vacuum','Meal prep','Book vet appointment','Return library books','Renew gym membership','Write weekly update','Call Mom','Pick up prescription','Draft board memo','Clean the fridge','Update budget sheet','Fix bike tire','Send invoice'];
-  for(let i=1;i<=30;i++){const n=2+Math.floor(r()*4);for(let j=0;j<n;j++)T(pick(TASKS),{date:addK(t,i),area:pick(AR),time:r()<.3?(8+Math.floor(r()*10))*60:null,priority:r()<.15?'high':'normal',steps:r()<.15?[{id:uid('s'),t:'First step',d:false},{id:uid('s'),t:'Second step',d:false}]:[]});}
+  const usedT=new Set(get.all('task').filter(x=>x.demo).map(x=>x.title));const freshT=()=>{const left=TASKS.filter(x=>!usedT.has(x));if(!left.length)return null;const x=pick(left);usedT.add(x);return x;};
+  for(let i=1;i<=30;i++){const n=1+Math.floor(r()*2);for(let j=0;j<n;j++){const nm=freshT();if(nm)T(nm,{date:addK(t,i),area:pick(AR),time:r()<.3?(8+Math.floor(r()*10))*60:null,priority:r()<.15?'high':'normal',steps:r()<.15?[{id:uid('s'),t:'First step',d:false},{id:uid('s'),t:'Second step',d:false}]:[]});}}
   T('Gym',{date:addK(t,-14),time:6*60+30,area:'Health',repeat:{type:'custom',unit:'week',n:1,days:[0,2,4],end:null}});
   T('Take out trash',{date:addK(t,-20),area:'Home',repeat:{type:'custom',unit:'week',n:1,days:[1],end:null}});
   T('Pay rent',{date:addK(t,-40),area:'Finances',repeat:{type:'custom',unit:'month',n:1,end:null},priority:'high'});
   ['Learn to make sourdough','Clean out the closet','Look into a ceramics class','Back up phone photos','Donate old clothes','Fix the squeaky door'].forEach((x,i)=>T(x,{area:pick(AR),deadline:i<2?addK(t,4+i*3):null}));
-  for(let d=1;d<=60;d++){const k=addK(t,-d),n=2+Math.floor(r()*4);for(let j=0;j<n;j++)T(pick(TASKS),{date:k,area:pick(AR),doneDates:r()<.95?done(k):{}});}
+  for(let d=1;d<=60;d++){const k=addK(t,-d),n=2+Math.floor(r()*4);for(let j=0;j<n;j++){const nm=pick(TASKS);let dn=r()<.95;if(!dn){if(usedT.has(nm))dn=true;else usedT.add(nm);}T(nm,{date:k,area:pick(AR),doneDates:dn?done(k):{}});}}
   P[1].steps.length&&[0,1,2].forEach(i=>T(['Fix costing allocation rule','Test spend authorization BP','Write release notes'][i],{date:addK(t,i+2),area:'Career',part:P[1].id,doneDates:i===0?done(addK(t,-1)):{}}));
   /* priorities: 3 today (one done), 2 tomorrow */
   const s1=get.settings();const tops=Object.assign({},s1.top3||{});tops[t]=[{id:today[0].id},{id:today[1].id},{id:today[2].id}];tops[addK(t,1)]=[{id:today[3].id},{id:today[5].id}];
@@ -134,7 +135,7 @@ function loadDemo(quiet){
   /* every module in every area */
   let n=0;allAreas.forEach(a=>toolsOf(a).forEach(tool=>{if(tool.hide||!Array.isArray(tool.fields))return;
     if(tool.id==='wheel'){for(let i=0;i<4;i++){const sc={};AREAS.forEach(x=>sc[x]=3+Math.floor(r()*8));mk('entry',{hub:a,tool:'wheel',f:{date:addK(t,-i*30),scores:sc}});n++;}return;}
-    if(!tool.fields.length)return;const cnt=5+Math.floor(r()*6);for(let i=0;i<cnt;i++){mk('entry',{hub:a,tool:tool.id,f:demoFill(tool,i,r,t)});n++;}}));
+    if(!tool.fields.length)return;const bk=DEMO_BANK[tool.id]||[],cnt=bk.length?Math.min(bk.length,3+Math.floor(r()*4)):5+Math.floor(r()*6);/* one entry per example name: never the same item twice */for(let i=0;i<cnt;i++){mk('entry',{hub:a,tool:tool.id,f:demoFill(tool,i,r,t)});n++;}}));
   /* area notes */
   allAreas.forEach(a=>{if(!get.id('area-'+a))put(Object.assign({id:'area-'+a,kind:'areanote',text:pick(['','Focus this quarter: consistency over intensity.','Keep it simple.'])},ex),{silent:true});});
   App.refresh();toast(`Demo loaded: ${n} module entries plus tasks, habits, goals and more`);
@@ -146,4 +147,4 @@ function clearDemo(){const s=get.settings(),snap=s.demoSnap;
     App.refresh();toast('Demo cleared');}});}
 
 /* refresh an already-loaded demo with the current generator, keeping the original settings snapshot */
-function demoRefresh(){const s=get.settings(),keep=s.demoSnap;if(!keep)return;[...recs.values()].filter(r=>r.demo).forEach(r=>remove(r.id,{silent:true,hard:true}));setSettings({demoSnap:null});loadDemo(true);setSettings({demoSnap:keep,demoVer:2});}
+function demoRefresh(){const s=get.settings(),keep=s.demoSnap;if(!keep)return;[...recs.values()].filter(r=>r.demo).forEach(r=>remove(r.id,{silent:true,hard:true}));setSettings({demoSnap:null});loadDemo(true);setSettings({demoSnap:keep,demoVer:3});}

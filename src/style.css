@@ -1989,3 +1989,8 @@ html.c-fade .todo.won .t3in .tick-host.done{opacity:1}
 .fvsheet .fvgo{width:100%!important;height:54px;border-radius:27px;background:var(--accent);color:#fff;font-size:17px;font-weight:700}
 .fvsheet .fvgo:active,.fvsheet .fvdone:active{transform:scale(.98)}
 .fvsheet .fvdone{align-self:center;gap:6px;height:44px;margin-top:6px;padding:0 14px;color:var(--accent-text);font-weight:600;font-size:15px;background:none}
+
+/* v170 step ring no longer clipped */
+.trow-wrap:has(.sring){padding-left:6px;margin-left:-6px;border-bottom-color:transparent;position:relative}
+.trow-wrap:has(.sring):not(:last-child)::after{content:"";position:absolute;left:6px;right:0;bottom:-1px;height:1px;background:var(--line);z-index:3}
+.todo.won .trow-wrap:has(.sring)::after{background:rgba(255,255,255,.16)}

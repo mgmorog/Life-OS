@@ -245,9 +245,10 @@ function dayCard(dk){
   const nowM=nowMin(),late=isToday&&get.settings().carryOver?carried():[];
   const t3on=!isPast||t3Get(dk).length>0,t3ids=new Set(t3on?t3Get(dk).map(x=>x.id):[]),t3es=t3on?t3Get(dk).map(x=>t3Entry(x,dk)).filter(Boolean):[];
   const notT3=x=>!t3ids.has(x.id);
-  const todoAny=anytime.filter(e=>e.kind!=='habit'&&e.kind!=='gcal'&&notT3(e)),habAny=anytime.filter(e=>e.kind==='habit'),habTimed=timed.filter(e=>e.kind==='habit');
+  const missedL=isToday?anytime.filter(e=>e.kind==='task'&&e.occ&&!e.done&&notT3(e)):[];
+  const todoAny=anytime.filter(e=>e.kind!=='habit'&&e.kind!=='gcal'&&notT3(e)&&!(e.kind==='task'&&e.occ&&!e.done)),habAny=anytime.filter(e=>e.kind==='habit'),habTimed=timed.filter(e=>e.kind==='habit');
   const allIds=new Set([...timed,...anytime].map(e=>e.id)),lateIn=late.filter(t=>!allIds.has(t.id)&&notT3(t));
-  const shown=new Set([...late.map(t=>t.id),...allIds,...t3ids]),due=dueExtras(dk,shown);
+  const shown=new Set([...late.map(t=>t.id),...allIds,...t3ids]),due0=dueExtras(dk,shown),dueLate=isToday?due0.filter(t=>t.deadline<dk):[],due=due0.filter(t=>!dueLate.includes(t));
   const lateDone=isToday?get.all('task').filter(t=>t.date&&t.date<tk&&(!t.repeat||t.repeat.type==='never')&&isDone(t,t.date)&&k(new Date(typeof t.doneDates[t.date]==='number'?t.doneDates[t.date]:0))===tk):[];
   const lateList=late.filter(notT3),lateDoneL=lateDone.filter(notT3);
   const aiT=isToday?areaItems(dk).filter(r=>!r.late&&!(r.rid&&t3ids.has(r.rid))):[];const total=todoAny.length+due.length+t3es.length+aiT.length,doneN=todoAny.filter(e=>e.done).length+t3es.filter(e=>e.done).length+aiT.filter(r=>r.done).length;
@@ -269,8 +270,8 @@ function dayCard(dk){
   /* chores, bills, meds and upkeep from your life areas join the to-dos */
   const AIs=(isToday?areaItems(dk):[]).filter(r=>!(r.rid&&t3ids.has(r.rid))),aiLate=AIs.filter(r=>!r.done&&r.late),aiOpen=AIs.filter(r=>!r.done&&!r.late),aiDone=AIs.filter(r=>r.done);
   /* everything overdue is one red row */
-  const nLate=lateList.length+aiLate.length;
-  const odBtn=nLate?el('button',{class:'odlink',onclick:()=>lateList.length?replanSheet(lateList,dk):(S.taskF=new Set(['overdue']),S.taskTab='all',App.go('tasks'))},`${nLate} overdue`,el('span',{style:'display:grid',html:ic('chevr',13,2.4)})):null;
+  const nLate=lateList.length+aiLate.length+missedL.length+dueLate.length;
+  const odBtn=nLate?el('button',{class:'odlink',onclick:()=>lateList.length||missedL.length||dueLate.length?replanSheet(lateList,dk,{missed:missedL,dueLate}):(S.taskF=new Set(['overdue']),S.taskTab='all',App.go('tasks'))},`${nLate} overdue`,el('span',{style:'display:grid',html:ic('chevr',13,2.4)})):null;
   /* also today: the next three, timed first, then high priority, then bills and meds */
   const cand=[...due.map(t=>({t:'t',e:{kind:'task',id:t.id,rec:t,title:t.title,time:t.time??null,done:false},d:t.date||dk})),...todoAny.filter(e=>!e.done).map(e=>({t:'t',e,d:dk})),...aiOpen.map(r=>({t:'a',r}))];
   const rk=c=>c.t==='a'?[1,9e9,1,['Bill','Med'].includes(c.r.kind)?0:1]:[c.e.time!=null?0:1,c.e.time??9e9,c.e.rec.priority==='high'?0:1,1];
@@ -535,12 +536,18 @@ function areaRow(r){const sub=String(r.sub||'').replace(new RegExp('^'+(r.kind||
   const w=el('div',{class:'trow-wrap aitem'+(r.rid?' dragrow':''),'data-id':r.rid||'','data-can':r.rid?'1':'0'},row);if(r.rid)row.append(dGrip());return w;}
 function prToggle(e,dk){if(e.kind==='entry'){if(e.tick)e.tick.click();else if(e.go)e.go();setTimeout(()=>App.refresh(),e.tick?420:0);return;}toggleItem(e,dk);App.refresh();}
 /* Replan overdue to-dos: quick choices for all of them, or one at a time below */
-function replanSheet(tasks,dk){const tk=todayK(),sat=(()=>{const d=today();const n=(6-d.getDay()+7)%7||7;return addK(tk,n);})(),mon=(()=>{const d=today();const n=(8-d.getDay())%7||7;return addK(tk,n);})();
+function replanSheet(tasks,dk,ex){ex=ex||{};const missed=ex.missed||[],dueLate=ex.dueLate||[],nAll=tasks.length+missed.length+dueLate.length;const tk=todayK(),sat=(()=>{const d=today();const n=(6-d.getDay()+7)%7||7;return addK(tk,n);})(),mon=(()=>{const d=today();const n=(8-d.getDay())%7||7;return addK(tk,n);})();
   let inst;const opts=one=>[[tk,'Today','Back on today’s list'],[addK(tk,1),'Tomorrow',relDay(addK(tk,1))],[sat,'This weekend',relDay(sat)],[mon,'Next week',relDay(mon)],...(one?[]:[['spread','Spread out','2 a day from tomorrow']]),[null,'Someday','No date, in Anytime']];
   const apply=(list,v)=>{const before=list.map(t=>[t,t.date]);list.forEach((t,i)=>{t.date=v==='spread'?addK(tk,1+Math.floor(i/2)):v;t.moves=(t.moves||0)+1;put(t,{silent:true});});inst.close();App.refresh();toast(list.length>1?`${list.length} replanned`:`${list[0].title} replanned`,()=>{before.forEach(([t,d])=>{t.date=d;put(t,{silent:true});});App.refresh();});};
   const grid=(list)=>el('div',{class:'rpgrid'},opts(list.length===1).map(([v,b,s])=>el('button',{class:'rpopt'+(v===null?' quiet':''),onclick:()=>apply(list,v)},el('b',{},b),el('span',{},s))),
     list.length===1?el('label',{class:'rpopt wide'},el('b',{},'Pick a date'),el('input',{type:'date',class:'rpdate',min:tk,onchange:ev=>{if(ev.target.value)apply(list,ev.target.value);}})):null);
-  inst=openSheet({title:tasks.length>1?`Replan ${tasks.length} overdue`:tasks[0].title,left:{label:'Cancel'},right:tasks.length>1?{label:'See all',onclick:()=>{inst.close();const S=App.state;S.taskF=new Set(['overdue']);S.taskTab='all';setTimeout(()=>App.go('tasks'),200);}}:null,build:b=>{b.append(grid(tasks));
+  inst=openSheet({title:nAll>1?(tasks.length>1?`Replan ${tasks.length} overdue`:`${nAll} overdue`):(tasks[0]||missed[0]||dueLate[0]).title,left:{label:'Cancel'},right:nAll>1?{label:'See all',onclick:()=>{inst.close();const S=App.state;S.taskF=new Set(['overdue']);S.taskTab='all';setTimeout(()=>App.go('tasks'),200);}}:null,build:b=>{if(tasks.length)b.append(grid(tasks));
+    const xrow=(title,sub,btns)=>el('div',{class:'li',style:'min-height:56px'},el('span',{class:'grow'},el('span',{class:'tt',style:'display:block'},title),el('small',{style:'color:var(--now)'},sub)),...btns);
+    const redraw=()=>{inst.close();App.refresh();};
+    if(missed.length)b.append(el('div',{class:'lbl',style:'margin:18px 4px 8px'},'Missed repeats'),el('div',{class:'list'},missed.map(e=>{const t=e.rec;return xrow(t.title,`Was due ${relDay(e.occ)}`,[
+      el('button',{class:'cpill',onclick:()=>{t.doneDates=t.doneDates||{};t.doneDates[e.occ]=Date.now();put(t,{silent:true});redraw();toast(`${t.title} done`,()=>{delete t.doneDates[e.occ];put(t,{silent:true});App.refresh();});}},'Done'),
+      el('button',{class:'cpill',style:'margin-left:6px',onclick:()=>{t.skip=[...(t.skip||[]),e.occ];put(t,{silent:true});redraw();toast(`Skipped ${relDay(e.occ)}`,()=>{t.skip=t.skip.filter(d=>d!==e.occ);put(t,{silent:true});App.refresh();});}},'Skip')]);})));
+    if(dueLate.length)b.append(el('div',{class:'lbl',style:'margin:18px 4px 8px'},'Past deadline'),el('div',{class:'list'},dueLate.map(t=>xrow(t.title,`Was due ${relDay(t.deadline)}`,[el('button',{class:'cpill',onclick:()=>{inst.close();setTimeout(()=>taskSheet(t),260);}},'Open')]))));
     if(tasks.length>1)b.append(el('div',{class:'lbl',style:'margin:18px 4px 8px'},'Or one at a time'),el('div',{class:'list'},tasks.map(t=>el('div',{class:'li',style:'min-height:56px'},el('span',{class:'grow'},el('span',{class:'tt',style:'display:block'},t.title),el('small',{style:'color:var(--now)'},`${daysBetween(t.date,tk)} days overdue`)),el('button',{class:'cpill r',onclick:()=>{inst.close();setTimeout(()=>replanSheet([t],dk),260);}},'Replan')))));}});}
 /* Focus: a sheet that slides up with the next priority, an editable timer (25 min), switch, pause, done */
 function prFocusSheet(dk){let curId=null,mins=25,tm=null,picking=false;

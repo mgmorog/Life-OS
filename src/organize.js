@@ -118,7 +118,7 @@ function weekPlanCard(hs){const tk=todayK(),ws=weekStartOf(today()),days=[];for(
     el('div',{class:'wkgrid',style:`grid-template-columns:minmax(0,1fr) repeat(${days.length},36px)`},el('span'),...days.map(d=>el('span',{class:'small muted',style:'text-align:center;font-weight:600'},nm(d))),
       ...hs.flatMap(h=>{const left=Math.max(0,(h.target||1)-habitWeek(h,tk)),pl=days.filter(d=>(h.sessions||{})[d]).length;return[el('span',{class:'wkname'},el('b',{},h.title),el('small',{class:pl>=left?'':'late'},pl>=left?'All planned':`${left-pl} to plan`)),...days.map(d=>{const on=!!(h.sessions||{})[d];return el('button',{class:'wkcell'+(on?' on':''),'aria-pressed':String(on),'aria-label':`${on?'Unplan':'Plan'} ${h.title} on ${DOW[fromK(d).getDay()]}`,onclick:()=>{h.sessions=h.sessions||{};if(on)delete h.sessions[d];else h.sessions[d]={time:h.setTime??null};put(h);}},on?el('span',{html:ic('check',13,3)}):null);})];})));}
 function viewTasks(root){
-  const S=App.state;if(!['all','today','upcoming','anytime','waiting','done'].includes(S.taskTab))S.taskTab='all';
+  const S=App.state;if(!['all','today','upcoming','anytime','waiting','done','hold'].includes(S.taskTab))S.taskTab='all';
   const tk=todayK(),all=get.all('task').filter(t=>!onHold(t)),tasks=areaOnly(all,'task'),page=el('div',{class:'page'}),held=get.all('task').filter(t=>isOpenTask(t)&&onHold(t)).length;
   const occToday=t=>t.date&&occursOn(t.date,t.repeat,tk,t.skip);
   const late0=carried().filter(t=>tasks.includes(t));
@@ -136,13 +136,13 @@ function viewTasks(root){
   if(S.taskTab!=='waiting')taskQuickAdd(page,S.taskF&&S.taskF.has('today')?tk:null);
   /* filters: tap to add, tap again to remove; nothing picked means All. Waiting and Done stay as their own views */
   if(!(S.taskF instanceof Set))S.taskF=new Set(S.taskTab==='today'?['today']:S.taskTab==='upcoming'?['week']:S.taskTab==='anytime'?['anytime']:[]);if(!(S.taskA instanceof Set))S.taskA=new Set();
-  if(!['waiting','done'].includes(S.taskTab))S.taskTab='all';S.aftask=null;
+  if(!['waiting','done','hold'].includes(S.taskTab))S.taskTab='all';S.aftask=null;
   const AIt=AI0,areaSet=[...new Set([...all.filter(isOpenTask).map(t=>t.area),...AIt.map(r=>r.area)].filter(Boolean))].sort((a,b)=>a.localeCompare(b));
   const inA=a=>!S.taskA.size||S.taskA.has(a);
   const wk=addK(tk,7),cnt={overdue:late.length+AIt.filter(r=>r.late).length,today:todayOpen.length+AIt.filter(r=>!r.late&&!r.done).length,week:upcoming.filter(([,d])=>d<=wk).length,anytime:anytime.length};
-  const fchip=(k,l,n,cls='')=>el('button',{class:'fchip'+cls+(k==='all'?(!S.taskF.size&&S.taskTab==='all'?' on':''):['waiting','done'].includes(k)?(S.taskTab===k?' on':''):(S.taskTab==='all'&&S.taskF.has(k)?' on':'')),'aria-pressed':'false',onclick:()=>{if(k==='all'){S.taskF.clear();S.taskTab='all';}else if(['waiting','done'].includes(k)){S.taskTab=S.taskTab===k?'all':k;S.taskF.clear();}else{S.taskTab='all';S.taskF.has(k)?S.taskF.delete(k):S.taskF.add(k);}App.refresh();}},l,n!=null?el('span',{class:'n'},String(n)):null);
+  const fchip=(k,l,n,cls='')=>el('button',{class:'fchip'+cls+(k==='all'?(!S.taskF.size&&S.taskTab==='all'?' on':''):['waiting','done','hold'].includes(k)?(S.taskTab===k?' on':''):(S.taskTab==='all'&&S.taskF.has(k)?' on':'')),'aria-pressed':'false',onclick:()=>{if(k==='all'){S.taskF.clear();S.taskTab='all';}else if(['waiting','done','hold'].includes(k)){S.taskTab=S.taskTab===k?'all':k;S.taskF.clear();}else{S.taskTab='all';S.taskF.has(k)?S.taskF.delete(k):S.taskF.add(k);}App.refresh();}},l,n!=null?el('span',{class:'n'},String(n)):null);
   page.append(el('div',{class:'tstick'},
-    el('div',{class:'fchips'},fchip('all','All',all.filter(isOpenTask).length+AIt.filter(r=>!r.done).length),fchip('overdue','Overdue',cnt.overdue,' red'),fchip('today','Today',cnt.today),fchip('week','Next 7 days',cnt.week),fchip('anytime','Anytime',cnt.anytime),get.all('wait').length||S.taskTab==='waiting'?fchip('waiting','Waiting',null):null,fchip('done','Done',null)),
+    el('div',{class:'fchips'},fchip('all','All',all.filter(isOpenTask).length+AIt.filter(r=>!r.done).length),fchip('overdue','Overdue',cnt.overdue,' red'),fchip('today','Today',cnt.today),fchip('week','Next 7 days',cnt.week),fchip('anytime','Anytime',cnt.anytime),get.all('wait').length||S.taskTab==='waiting'?fchip('waiting','Waiting',null):null,held||S.taskTab==='hold'?fchip('hold','On hold',held):null,fchip('done','Done',null)),
     areaSet.length?el('div',{class:'achips'},el('button',{class:'achip'+(!S.taskA.size?' on':''),onclick:()=>{S.taskA.clear();App.refresh();}},'All areas'),areaSet.map(a=>el('button',{class:'achip'+(S.taskA.has(a)?' on':''),'aria-pressed':String(S.taskA.has(a)),onclick:()=>{S.taskA.has(a)?S.taskA.delete(a):S.taskA.add(a);App.refresh();}},el('span',{style:'display:grid',html:ic(areaIcon(a),13,1.9)}),a))):null));
   const note=areaNote('task');if(note)page.append(note);
   
@@ -150,6 +150,12 @@ function viewTasks(root){
     if(S.taskGroup){if(label)page.append(el('div',{class:'sh2 shstick'},el('span',{class:'lbl '+(cls||'')},`${label} · ${list.length}`)));byArea(list).forEach(([a,g])=>page.append(el('div',{class:'ogroup'},a),el('div',{class:'list'},g.map(t=>row(t,true)))));return;}
     if(label)page.append(el('div',{class:'sh2 shstick'},el('span',{class:'lbl '+(cls||'')},`${label} · ${list.length}`)));page.append(el('div',{class:'list'},list.map(t=>row(t,false))));};
   if(S.taskTab==='waiting'){waitTab(page);
+  }else if(S.taskTab==='hold'){
+    /* to-dos in paused projects, grouped by project, with a way to resume each one */
+    const hl=get.all('task').filter(t=>isOpenTask(t)&&onHold(t)&&(!S.taskA.size||S.taskA.has(t.area||areaOfTask(t))));const byP=new Map();hl.forEach(t=>{const pid=t.part;if(!byP.has(pid))byP.set(pid,[]);byP.get(pid).push(t);});
+    if(!byP.size)page.append(el('p',{class:'sub',style:'padding:8px 6px'},'Nothing on hold.'));
+    byP.forEach((l,pid)=>{const pr=get.id(pid);page.append(el('div',{class:'sh2'},el('span',{class:'lbl'},pr?pr.title:'Project'),el('button',{class:'linkbtn small',onclick:()=>{pr.paused=false;put(pr,{silent:true});App.refresh();toast(`${pr.title} resumed`,()=>{pr.paused=true;put(pr,{silent:true});App.refresh();});}},'Resume')),
+      el('div',{class:'list'},l.map(t=>taskRow(t,t.date||tk))));});
   }else if(S.taskTab==='all'){
     const F=S.taskF.size?S.taskF:new Set(['overdue','today','week','anytime','later']),ta=t=>inA(t.area||areaOfTask(t));let any=false;
     const head=(label,n,right)=>page.append(el('div',{class:'sh2 shstick'},el('span',{class:'lbl'},label),right||el('span',{class:'small muted'},String(n))));
@@ -169,7 +175,7 @@ function viewTasks(root){
     else{const tk2=todayK(),y=addK(tk2,-1),wk=k(weekStartOf(new Date())),bucket=x=>{const d=k(new Date(x.ts));return d===tk2?'Today':d===y?'Yesterday':d>=wk?'Earlier this week':'Before that';};['Today','Yesterday','Earlier this week','Before that'].forEach(b=>{const g=doneAll.slice(0,60).filter(x=>bucket(x)===b);if(g.length)page.append(el('div',{class:'sh2 shstick'},el('span',{class:'lbl'},b),el('span',{class:'small muted'},String(g.length))),el('div',{class:'list nodim'},g.map(x=>taskRow(x.t,x.d,{doneOn:k(new Date(x.ts))}))));});}
   }
   if(S.taskTab==='all'&&S.taskF.has('today')&&todayDone.length){const openD=S.taskDoneOpen!==false;page.append(el('button',{class:'donebar','aria-expanded':String(openD),onclick:()=>{S.taskDoneOpen=!openD;App.refresh();}},el('span',{},`Done today · ${todayDone.length}`),el('span',{style:'display:grid',html:ic(openD?'chevu':'chevd',16,2.2)})));if(openD)page.append(el('div',{class:'list'},todayDone.map(x=>taskRow(x.t,x.d))));}
-  if(held)page.append(el('p',{class:'small muted',style:'padding:4px 6px'},`${held} task${held>1?'s':''} in projects on hold ${held>1?'aren’t':'isn’t'} shown here.`));root.append(page);
+  root.append(page);
 }
 
 /* ---------- Habits ---------- */

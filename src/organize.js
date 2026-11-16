@@ -85,7 +85,7 @@ function joinMeta(parts){const out=[];parts.filter(Boolean).forEach((p,i)=>{if(i
 function taskRow(t,dk,{late=false,date=false,doneOn=null,grouped=false}={}){
   const done=isDone(t,dk),steps=(t.steps||[]).filter(s=>s.t),sd=steps.filter(s=>stepDone(t,s,dk)).length,proj=t.part&&get.id(t.part);
   const meta=[];
-  if(late){const n=daysBetween(t.date,todayK());meta.push(el('span',{class:'olate'},n<=1?'From yesterday':`${n} days late`));}
+  if(late){const n=daysBetween(t.date,todayK());meta.push(el('span',{class:'olate'},n<=1?'1 day late':`${n} days late`));}
   if(doneOn)meta.push(`Done ${relDay(doneOn).replace(/^[A-Z](?=oday|omorrow|esterday)/,c=>c.toLowerCase())}`);
   if(date&&!late&&!doneOn)meta.push(t.date?relDay(dk):'No date');
   if(t.time!=null&&!doneOn)meta.push(el('span',{class:'otime'},fmtT(t.time)));
@@ -516,6 +516,6 @@ function goalBody(page,r){
   if(r.createdAt)page.append(el('p',{class:'small muted',style:'padding-inline:4px'},`Created ${relDay(k(new Date(r.createdAt)))}`));
 }
 const ptLate=t=>!taskDone(t)&&t.date&&(!t.repeat||t.repeat.type==='never')&&t.date<todayK();
-const ptMeta=t=>{if(ptLate(t)){const n=daysBetween(t.date,todayK());return el('span',{class:'olate'},n<=1?'From yesterday':`${n} days late`);}return ptWhen(t);};
+const ptMeta=t=>{if(ptLate(t)){const n=daysBetween(t.date,todayK());return el('span',{class:'olate'},n<=1?'1 day late':`${n} days late`);}return ptWhen(t);};
 const ptWhen=t=>t.date?relDay(nextOcc(t))+(t.time!=null?' · '+fmtT(t.time):''):t.planWeek?`Week of ${shortDay(t.planWeek)}`:'Not planned yet';
 const habitsToday=(dk=todayK())=>get.all('habit').filter(h=>habitDue(h,dk)&&(!habitWeekly(h)||habitDone(h,dk)||habitWeek(h,dk)<(h.target||1)));

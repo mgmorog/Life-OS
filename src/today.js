@@ -245,7 +245,7 @@ function dayCard(dk){
   const S=App.state,tk=todayK(),isToday=dk===tk,isPast=dk<tk,first=!S._painted,fu=first?' fade-up':'';
   const{timed,anytime}=dayItems(dk);
   const nowM=nowMin(),late=isToday&&get.settings().carryOver?carried():[];
-  const t3on=isToday||dk===addK(tk,1),t3ids=new Set(t3on?t3Get(dk).map(x=>x.id):[]),t3es=t3on?t3Get(dk).map(x=>t3Entry(x,dk)).filter(Boolean):[];
+  const t3on=!isPast||t3Get(dk).length>0,t3ids=new Set(t3on?t3Get(dk).map(x=>x.id):[]),t3es=t3on?t3Get(dk).map(x=>t3Entry(x,dk)).filter(Boolean):[];
   const notT3=x=>!t3ids.has(x.id);
   const todoAny=anytime.filter(e=>e.kind!=='habit'&&e.kind!=='gcal'&&notT3(e)),habAny=anytime.filter(e=>e.kind==='habit'),habTimed=timed.filter(e=>e.kind==='habit');
   const allIds=new Set([...timed,...anytime].map(e=>e.id)),lateIn=late.filter(t=>!allIds.has(t.id)&&notT3(t));
@@ -258,7 +258,7 @@ function dayCard(dk){
   const t3=t3on?top3Card(dk):null;
   if(t3){t3.querySelectorAll(':scope>.bl,:scope>.t3bar').forEach(n=>n.remove());}
   const todo=el('section',{class:'card daycard todo'+(t3?' t3 withT3':'')+fu},
-    el('div',{class:'bl'},el('span',{class:'lbl'},t3?(isToday?'Today':'Tomorrow'):'To-do'),total?el('button',{class:'small muted tnum',style:'min-height:28px','aria-pressed':String(!!S.hideDone),'aria-label':S.hideDone?'Show finished items':'Hide finished items',onclick:()=>{S.hideDone=!S.hideDone;App.refresh();}},el('span',{'data-roll':'done'},`${doneN} of ${total} done`),doneN?el('span',{style:'margin-left:6px;color:var(--accent-text);font-weight:600'},S.hideDone?'Show':'Hide'):null):null),
+    el('div',{class:'bl'},el('span',{class:'lbl'},isToday?'Today':relDay(dk)),total?el('button',{class:'small muted tnum',style:'min-height:28px','aria-pressed':String(!!S.hideDone),'aria-label':S.hideDone?'Show finished items':'Hide finished items',onclick:()=>{S.hideDone=!S.hideDone;App.refresh();}},el('span',{'data-roll':'done'},`${doneN} of ${total} done`),doneN?el('span',{style:'margin-left:6px;color:var(--accent-text);font-weight:600'},S.hideDone?'Show':'Hide'):null):null),
     total?el('div',{class:'progress t3bar'},el('i',{style:`width:${Math.round(doneN/total*100)}%`})):null);
   if(t3){if(t3.classList.contains('win'))todo.classList.add('win');{const won=t3es.length===T3_MAX&&t3es.every(e=>e.done);if(won){todo.classList.add('won');S._won=dk;}else if(S._won===dk){S._won=null;if(motionOK())todo.classList.add('lose');}}const w=el('div',{class:'t3in'});w.append(...t3.childNodes);
     w.querySelectorAll('.t3grip').forEach(g=>g.remove());
@@ -295,7 +295,7 @@ function dayCard(dk){
   const upcoming=isToday?sched.filter(e=>!e.done&&e.time+(e.dur||30)>nowM):sched;
   const open=!!S.gridOpen;
   const cu=el('section',{class:'card upcard'+fu,style:first?'animation-delay:.1s':null},
-    el('div',{class:'bl'},el('span',{class:'lbl'},isToday?'Coming up':isPast?'Schedule':'Planned'),null));
+    el('div',{class:'bl'},el('span',{class:'lbl'},'Schedule'),null));
   const rows=el('div',{class:'uplist'});
   upcoming.slice(0,3).forEach(e=>{const during=isToday&&e.time<=nowM;const end=e.time+(e.dur||30);
     rows.append(el('button',{class:'uprow',style:`--c:${e.color||'var(--accent)'}`,onclick:()=>openItem(e,dk)},el('span',{class:'upt tnum'},fmtS(e.time)),el('span',{class:'upbar'}),el('span',{class:'grow'},el('span',{class:'tt'},e.title),el('span',{class:'meta'},e.kind==='task'?fmtT(e.time):fmtRange(e.time,end),during?el('b',{class:'upnow'},` · ${fmtDurS(end-nowM)} left`):isToday&&e===upcoming[0]?` · in ${fmtDurS(e.time-nowM)}`:''))));});

@@ -564,13 +564,13 @@ function replanSheet(tasks,dk,ex){ex=ex||{};const tk=todayK(),sat=(()=>{const d=
       b.append(el('button',{class:'rpback',onclick:()=>{mode='pick';draw(b);}},el('span',{style:'display:grid',html:ic('chevl',16,2.4)}),`Move ${nMove} ${nMove===1?'to-do':'to-dos'}`),
         el('div',{class:'rpgrid'},opts.map(([v,t1,t2])=>el('button',{class:'rpopt'+(v===null?' quiet':''),onclick:()=>moveTo(v)},el('b',{},t1),el('span',{},t2))),
           el('label',{class:'rpopt wide'},el('b',{},'Pick a date'),el('input',{type:'date',class:'rpdate',min:tk,onchange:ev=>{if(ev.target.value)moveTo(ev.target.value);}}))),
-        nMove<l.length?el('p',{class:'small muted',style:'margin:12px 4px 0'},`${l.length-nMove} selected ${l.length-nMove===1?'item keeps its':'items keep their'} own schedule (repeats, deadlines and life-area items).`):null);
+null);
       return;}
     const pickable=items.filter(x=>!x.open),all=sel.size===pickable.length;
     b.append(el('div',{class:'rpbar'},el('span',{class:'small muted'},sel.size?`${sel.size} selected`:'Pick what to change'),el('button',{class:'linkbtn small',onclick:()=>{if(all)sel.clear();else pickable.forEach(x=>sel.add(x.key));draw(b);}},all?'Clear':'Select all')),
-      el('div',{class:'list rplist'},items.map(x=>el('button',{class:'rprow'+(sel.has(x.key)?' on':'')+(x.open?' op':''),'aria-pressed':x.open?null:String(sel.has(x.key)),onclick:()=>{if(x.open){inst.close();setTimeout(()=>x.area.go&&x.area.go(),260);return;}sel.has(x.key)?sel.delete(x.key):sel.add(x.key);draw(b);}},
+      el('div',{class:'list rplist'},items.map(x=>el('button',{class:'rprow'+(sel.has(x.key)?' on':'')+(x.open?' op':'')+(!x.move&&!x.open?' nomove':''),'aria-pressed':x.open?null:String(sel.has(x.key)),onclick:()=>{if(x.open){inst.close();setTimeout(()=>x.area.go&&x.area.go(),260);return;}sel.has(x.key)?sel.delete(x.key):sel.add(x.key);draw(b);}},
         x.open?el('span',{class:'rpck op',html:ic('chevr',14,2.4)}):el('span',{class:'rpck',html:sel.has(x.key)?ic('check',14,3):''}),el('span',{class:'grow'},el('span',{class:'tt'},x.title),el('small',{},x.sub))))),
-      el('div',{class:'rpacts'},
+      el('div',{class:'rpacts'},l.length>nMove?el('p',{class:'rpnote'},nMove?`Grayed items follow their own schedule (chores, repeats, deadlines). They can be marked done, but only ${nMove} will move.`:'These follow their own schedule (chores, repeats, deadlines), so they can be marked done but not moved.'):null,
         el('button',{class:'rpdone',disabled:sel.size?null:'',onclick:markDone},el('span',{style:'display:grid',html:ic('check',16,2.6)}),'Mark done'),
         el('button',{class:'rpmove',disabled:nMove?null:'',onclick:()=>{mode='move';draw(b);}},nMove&&nMove<l.length?`Move ${nMove}`:'Move…')));};
   inst=openSheet({title:items.length>1?`${items.length} overdue`:items[0].title,left:{label:'Cancel'},right:{label:'See all',onclick:()=>{inst.close();const S=App.state;S.taskF=new Set(['overdue']);S.taskTab='all';setTimeout(()=>App.go('tasks'),200);}},build:b=>draw(b)});}

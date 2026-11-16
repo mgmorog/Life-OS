@@ -1827,3 +1827,15 @@ html.c-fade .todo.won .t3in .tick-host.done{opacity:1}
 .todo.won .donefold,.todo.won .upnext .ar{color:rgba(255,255,255,.8)}.todo.won .donefold{border-color:rgba(255,255,255,.18)}
 .todo.won .trow .meta,.todo.won .trow .small{color:rgba(255,255,255,.8)}
 .todo.won .trow .chip,.todo.won .trow .pilltoday,.todo.won .trow button.sm{background:transparent;color:#fff;border-color:rgba(255,255,255,.6)}
+
+/* v165 calmer bottom of Today */
+.dduecard2 .ddlist{margin-top:6px}
+.dduecard2 .ddlist>.li{padding-left:0;padding-right:0;background:transparent;border-bottom:1px solid var(--line-2);border-radius:0}
+.dduecard2 .ddlist>.li:last-child{border-bottom:0}
+.dduecard2 small{color:var(--ink-2)!important}
+/* un-winning fades the green out gently instead of a solid slab */
+@keyframes loseOut{0%{opacity:.55}100%{opacity:0}}
+.todo.lose::after{animation-duration:.6s}
+.dduecard2 .ddlist>.li::after,.dduecard2 .ddlist>.li::before{display:none}
+.dduecard2 small{font-weight:400}
+.ovtag{background:none!important;padding:0!important;margin:0!important;letter-spacing:0!important;text-transform:none!important;font-size:inherit!important;font-weight:600!important;color:#8A5E10!important}

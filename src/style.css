@@ -2071,3 +2071,7 @@ html.c-fade .todo.won .t3in .tick-host.done{opacity:1}
 .oqhint b{color:var(--ink-2);font-weight:600}
 .oquick:focus-within .oqhint{display:block}
 .oquick:focus-within .tags:not([hidden])~.oqhint{display:none}
+
+/* v185 habits: one line per habit */
+.hcnt{font-size:13px;font-weight:600;color:var(--ink-2);white-space:nowrap;margin-right:4px}
+.hdoneb{color:var(--accent-text)}

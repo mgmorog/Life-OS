@@ -1961,3 +1961,31 @@ html.c-fade .todo.won .t3in .tick-host.done{opacity:1}
 .todo.dragging .pring{transition:transform .25s cubic-bezier(.3,1.3,.5,1),box-shadow .25s}
 .todo.dragging .pring:not(.hot){transform:scale(.96)}
 .todo.dragging .pring.hot{transform:scale(1.1);box-shadow:0 0 0 6px color-mix(in srgb,var(--accent) 16%,transparent);border-radius:50%}
+
+/* v169 calm focus sheet: white, half height, one primary action */
+.fvsheet{top:auto!important;max-height:calc(100% - env(safe-area-inset-top,0px) - 40px);background:var(--card)!important;color:var(--ink)!important;align-items:stretch!important;padding:10px 22px calc(18px + env(safe-area-inset-bottom,0px))!important;gap:0}
+.fvsheet .grab{background:var(--line)!important}
+.fvsheet .fvtop{display:flex;justify-content:space-between;align-items:center;min-height:36px}
+.fvsheet .fvx{height:36px;padding:0 4px;background:none;color:var(--ink-2);font-weight:500;font-size:15.5px}
+.fvsheet .fvk{font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;color:var(--accent-text)}
+.fvsheet .fvtitle{display:flex!important;justify-content:flex-start!important;align-items:center;gap:12px;width:100%!important;text-align:left;margin-top:10px;padding:10px 12px 10px 10px;border-radius:18px;background:var(--bg);color:var(--ink)}
+.fvsheet .fvtitle i,.fvsheet .fvlist i{font-style:normal;width:30px;height:30px;border-radius:50%;flex:none;display:grid;place-items:center;border:1.5px solid var(--accent);color:var(--accent-text);font:400 16px/1 var(--display)}
+.fvsheet .fvtitle span{flex:1;min-width:0;font:400 20px/1.25 var(--display)}
+.fvsheet .fvtitle b{color:var(--ink-3);display:grid;flex:none}
+.fvsheet .fvtitle[aria-expanded="true"] b{transform:rotate(180deg)}
+.fvsheet .fvlist{display:flex;flex-direction:column;margin-top:6px}
+.fvsheet .fvlist button{display:flex!important;justify-content:flex-start!important;gap:12px;width:100%!important;min-height:52px;padding:0 12px 0 10px;text-align:left;color:var(--ink);border-bottom:1px solid var(--line);border-radius:0;font-size:15.5px}
+.fvsheet .fvlist button:last-child{border-bottom:0}
+.fvsheet .fvlist span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fvsheet .fvlist small{color:var(--accent-text);font-weight:600;font-size:12px}
+.fvsheet .fvclock{display:flex;flex-direction:column;align-items:center;margin:22px 0 18px;gap:14px}
+.fvsheet .fvring{position:relative;width:176px;height:176px;display:grid;place-items:center}
+.fvsheet .fvring>svg{position:absolute;inset:0;transform:rotate(-90deg)}
+.fvsheet .fvring b{font-size:44px;font-weight:500;letter-spacing:-.02em;color:var(--ink);line-height:1}
+.fvsheet .fvring small{position:absolute;top:calc(50% + 28px);font-size:12.5px;color:var(--ink-3)}
+.fvsheet .fvstep{display:flex;gap:16px}
+.fvsheet .fvstep button{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);color:var(--accent-text);background:var(--card)}
+.fvsheet .fvstep button[disabled]{opacity:.35}
+.fvsheet .fvgo{width:100%!important;height:54px;border-radius:27px;background:var(--accent);color:#fff;font-size:17px;font-weight:700}
+.fvsheet .fvgo:active,.fvsheet .fvdone:active{transform:scale(.98)}
+.fvsheet .fvdone{align-self:center;gap:6px;height:44px;margin-top:6px;padding:0 14px;color:var(--accent-text);font-weight:600;font-size:15px;background:none}

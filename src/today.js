@@ -543,7 +543,7 @@ function replanSheet(tasks,dk){const tk=todayK(),sat=(()=>{const d=today();const
   inst=openSheet({title:tasks.length>1?`Replan ${tasks.length} overdue`:tasks[0].title,left:{label:'Cancel'},right:tasks.length>1?{label:'See all',onclick:()=>{inst.close();const S=App.state;S.taskF=new Set(['overdue']);S.taskTab='all';setTimeout(()=>App.go('tasks'),200);}}:null,build:b=>{b.append(grid(tasks));
     if(tasks.length>1)b.append(el('div',{class:'lbl',style:'margin:18px 4px 8px'},'Or one at a time'),el('div',{class:'list'},tasks.map(t=>el('div',{class:'li',style:'min-height:56px'},el('span',{class:'grow'},el('span',{class:'tt',style:'display:block'},t.title),el('small',{style:'color:var(--now)'},`${daysBetween(t.date,tk)} days overdue`)),el('button',{class:'cpill r',onclick:()=>{inst.close();setTimeout(()=>replanSheet([t],dk),260);}},'Replan')))));}});}
 /* Focus: a sheet that slides up with the next priority, an editable timer (25 min), switch, pause, done */
-function prFocusSheet(dk){const S=App.state;let curId=null,mins=25,tm=null;
+function prFocusSheet(dk){let curId=null,mins=25,tm=null,picking=false;
   const es=()=>t3Get(dk).map(x=>t3Entry(x,dk)).filter(e=>e&&!e.done);
   {const fr=frNow();const l=es();curId=fr&&l.some(e=>e.id===fr.id)?fr.id:(l[0]||{}).id;}
   if(!curId)return;
@@ -551,27 +551,32 @@ function prFocusSheet(dk){const S=App.state;let curId=null,mins=25,tm=null;
   const close=()=>{clearInterval(tm);box.classList.remove('on');scrim.classList.remove('on');setTimeout(()=>{box.remove();scrim.remove();},450);App.refresh();};
   scrim.onclick=close;
   const run=()=>{const fr=frNow();return fr&&fr.id===curId?fr:null;};
-  const draw=()=>{const l=es(),e=l.find(x=>x.id===curId)||get.id(curId)&&t3Entry({id:curId},dk);if(!e){close();return;}const fr=run(),R=112,C=2*Math.PI*R;
-    const secs=fr?frSecs(fr):0,plan=fr?fr.plan:mins,left=Math.max(0,plan*60-secs),p=fr?left/(plan*60):1;
+  const R=78,C=2*Math.PI*R,num=id=>t3Get(dk).findIndex(q=>q.id===id)+1;
+  const draw=()=>{const l=es(),e=l.find(x=>x.id===curId)||(get.id(curId)&&t3Entry({id:curId},dk));if(!e){close();return;}const fr=run();
+    const secs=fr?frSecs(fr):0,plan=fr?fr.plan:mins,left=Math.max(0,plan*60-secs),p=fr?left/(plan*60):1,others=l.filter(x=>x.id!==curId);
+    const head=el('button',{class:'fvtitle'+(others.length?' can':''),'aria-expanded':String(picking),onclick:()=>{if(!others.length)return;picking=!picking;draw();}},
+      el('i',{},String(num(e.id)||'')),el('span',{},e.title),others.length?el('b',{html:ic('chevd',16,2.4)}):null);
+    const body=picking?el('div',{class:'fvlist'},others.map(x=>el('button',{onclick:()=>{curId=x.id;picking=false;draw();}},el('i',{},String(num(x.id))),el('span',{},x.title),frNow()&&frNow().id===x.id?el('small',{},'running'):null)))
+      :el('div',{class:'fvclock'},
+        el('div',{class:'fvring',html:`<svg width="176" height="176" viewBox="0 0 176 176" aria-hidden="true"><circle cx="88" cy="88" r="${R}" fill="none" stroke="var(--line)" stroke-width="6"/><circle id="fv-arc" cx="88" cy="88" r="${R}" fill="none" stroke="var(--accent)" stroke-width="6" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C*(1-p)}" style="transition:stroke-dashoffset 1s linear"/></svg>`},
+          el('b',{id:'fv-t',class:'tnum'},fmtClock(left)),el('small',{},fr?(fr.pausedAt?'paused':'left'):'minutes')),
+        fr?null:el('div',{class:'fvstep'},
+          el('button',{'aria-label':'5 minutes less',disabled:mins<=5?'':null,onclick:()=>{mins=Math.max(5,mins-5);draw();},html:ic('minus',16,2.4)}),
+          el('button',{'aria-label':'5 minutes more',disabled:mins>=180?'':null,onclick:()=>{mins=Math.min(180,mins+5);draw();},html:ic('plus',16,2.4)})));
     box.replaceChildren(...[el('div',{class:'grab','aria-hidden':'true'}),
-      el('div',{class:'ftop'},el('button',{class:'fvx',onclick:close},'Close'),el('span',{class:'fst'},fr?(fr.pausedAt?'Paused':'Focusing'):'Ready')),
-      l.length?el('div',{class:'fpick'},el('span',{class:'fpl'},l.length>1?'Pick a priority':'Your priority'),el('div',{class:'fpr'},l.map(x=>{const n=t3Get(dk).findIndex(q=>q.id===x.id)+1,runOn=frNow()&&frNow().id===x.id;return el('button',{class:(x.id===curId?'on':'')+(runOn?' run':''),onclick:()=>{curId=x.id;draw();}},el('i',{},String(n)),el('span',{},x.title));}))):null,
-      el('div',{class:'fk'},(e.rec&&e.rec.area)||e.area||'Priority'),el('h2',{},e.title),
-      el('div',{class:'fclock',html:`<svg width="240" height="240" viewBox="0 0 240 240" aria-hidden="true"><circle cx="120" cy="120" r="${R}" fill="none" stroke="rgba(255,255,255,.18)" stroke-width="8"/><circle id="fv-arc" cx="120" cy="120" r="${R}" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C*(1-p)}" style="transition:stroke-dashoffset 1s linear"/></svg>`},
-        fr?el('b',{id:'fv-t',class:'tnum'},fmtClock(left)):el('label',{class:'fedit'},el('input',{id:'fv-min',type:'number',inputmode:'numeric',min:'1',max:'180',value:String(mins),'aria-label':'Focus minutes',onchange:ev=>{mins=Math.max(1,Math.min(180,Math.round(+ev.target.value||25)));}}),el('span',{},'min')),
-        el('small',{},fr?'left':'Tap to change')),
-      el('div',{class:'facts'},
-        el('button',{class:'go',onclick:()=>{const fr2=run();if(fr2){pauseFocus();draw();return;}const i=$('#fv-min');if(i)mins=Math.max(1,Math.min(180,Math.round(+i.value||25)));
-          if(frNow())finishFocus({quiet:true});const t=e.kind==='task'?e.rec:null;setSettings({focusRun:{mod:null,id:e.id,title:e.title,area:t?areaOfTask(t):null,start:Date.now(),plan:mins,paused:0,pausedAt:null,buzzed:false}});draw();}},fr?(fr.pausedAt?'Resume':'Pause'):'Start'),
-        el('button',{class:'dn',onclick:()=>{const fr2=run();if(fr2&&e.kind==='task'){finishFocus({done:true,quiet:true});}else{if(fr2)finishFocus({quiet:true});prToggle(e,dk);}
-          setTimeout(()=>{const l2=es().filter(x=>x.id!==e.id);if(l2.length){curId=l2[0].id;draw();toast(`${e.title} done · next up`);}else{close();}},450);}},'Done'))].filter(Boolean));
-    box.querySelector('#fv-min')?.addEventListener('keydown',ev=>{if(ev.key==='Enter')ev.target.blur();});};
+      el('div',{class:'fvtop'},el('button',{class:'fvx',onclick:close},'Close'),el('span',{class:'fvk'},fr?(fr.pausedAt?'Paused':'Focusing'):'Focus')),
+      head,body,
+      picking?null:el('button',{class:'fvgo',onclick:()=>{const fr2=run();if(fr2){pauseFocus();draw();return;}
+          if(frNow())finishFocus({quiet:true});const t=e.kind==='task'?e.rec:null;setSettings({focusRun:{mod:null,id:e.id,title:e.title,area:t?areaOfTask(t):null,start:Date.now(),plan:mins,paused:0,pausedAt:null,buzzed:false}});draw();}},
+        fr?(fr.pausedAt?'Resume':'Pause'):`Start ${mins} min`),
+      picking?null:el('button',{class:'fvdone',onclick:()=>{const fr2=run();if(fr2&&e.kind==='task'){finishFocus({done:true,quiet:true});}else{if(fr2)finishFocus({quiet:true});prToggle(e,dk);}
+          setTimeout(()=>{const l2=es().filter(x=>x.id!==e.id);if(l2.length){curId=l2[0].id;draw();toast(`${e.title} done · next up`);}else{close();}},450);}},el('span',{html:ic('check',15,2.6)}),'Mark done')].filter(Boolean));};
   draw();requestAnimationFrame(()=>{box.classList.add('on');scrim.classList.add('on');});
-  tm=setInterval(()=>{const fr=run(),t=$('#fv-t');if(!fr||!t)return;const left=Math.max(0,fr.plan*60-frSecs(fr));t.textContent=fmtClock(left);const a=$('#fv-arc');if(a){const C=2*Math.PI*112;a.setAttribute('stroke-dashoffset',String(C*(1-left/(fr.plan*60))));}},1000);
+  tm=setInterval(()=>{const fr=run(),t=$('#fv-t');if(!fr||!t)return;const left=Math.max(0,fr.plan*60-frSecs(fr));t.textContent=fmtClock(left);const a=$('#fv-arc');if(a)a.setAttribute('stroke-dashoffset',String(C*(1-left/(fr.plan*60))));},1000);
   /* swipe down to close */
   let y0=null,dy=0;box.addEventListener('pointerdown',ev=>{if(ev.target.closest('button,input,label'))return;y0=ev.clientY;dy=0;box.classList.add('drag');});
   box.addEventListener('pointermove',ev=>{if(y0==null)return;dy=Math.max(0,ev.clientY-y0);box.style.transform=`translateY(${dy}px)`;});
-  const end=()=>{if(y0==null)return;y0=null;box.classList.remove('drag');box.style.transform='';if(dy>120)close();};box.addEventListener('pointerup',end);box.addEventListener('pointercancel',end);}
+  const end=()=>{if(y0==null)return;y0=null;box.classList.remove('drag');box.style.transform='';if(dy>100)close();};box.addEventListener('pointerup',end);box.addEventListener('pointercancel',end);}
 
 /* every habit gets an icon: its own, else one that fits its name, else its area's */
 const HAB_KW=[[/read|book|pages/i,'g:book'],[/workout|gym|lift|push|pull|legs|weights/i,'g:dumbbell'],[/journal|write|writing|morning pages/i,'g:pencil'],[/call|friend|text mom|text dad/i,'g:phone'],[/guitar|piano|music|sing|practice guitar/i,'g:music'],[/meal|cook|eat|veg/i,'g:meal'],[/coffee|tea/i,'g:coffee'],[/water|drink|hydrat/i,'drop'],[/phone after|screen|sleep|bed|night|pm\b/i,'moon'],[/meditat|breath|mindful|pray|gratitude/i,'leaf'],[/run|walk|stretch|yoga|steps|bike|swim/i,'heart'],[/dog|cat|pet/i,'a_pets'],[/spanish|french|language|study|learn|duolingo/i,'a_learn'],[/clean|tidy|dishes|laundry/i,'a_home'],[/save|budget|spend/i,'a_money']];

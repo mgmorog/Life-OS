@@ -1924,3 +1924,40 @@ html.c-fade .todo.won .t3in .tick-host.done{opacity:1}
 .tadd{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;border:1.5px dashed #C3CBC5;color:var(--accent-text);flex:none}
 .tadd:active{transform:scale(.92)}
 .tmore{display:inline-flex;align-items:center;gap:2px;font-size:13.5px;font-weight:600;color:var(--accent-text);height:32px;padding:0 4px}
+
+/* v168 focus sheet: sturdier controls, pick any open priority */
+.fvsheet button{display:inline-flex;align-items:center;justify-content:center;flex:none;width:auto;font-family:inherit;margin:0}
+.fvsheet .ftop{display:flex;justify-content:space-between;align-items:center;width:100%}
+.fvsheet .fvx{height:40px;padding:0 16px;border-radius:20px;background:rgba(255,255,255,.14);font-weight:600;font-size:15px;color:#fff}
+.fvsheet .fpick{display:flex;flex-direction:column;align-items:center;gap:8px;margin-top:18px;width:100%}
+.fvsheet .fpl{font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:600;color:#CFE1D7}
+.fvsheet .fpr{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;max-width:100%}
+.fvsheet .fpr button{height:36px;padding:0 12px 0 5px;gap:7px;border-radius:18px;border:1px solid rgba(255,255,255,.35);background:transparent;color:#fff;font-size:13.5px;font-weight:500;max-width:170px}
+.fvsheet .fpr button i{font-style:normal;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;flex:none;font:500 14px/1 var(--display);background:rgba(255,255,255,.16)}
+.fvsheet .fpr button span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.fvsheet .fpr button.on{background:#fff;color:var(--accent-deep,#2F4A3D);border-color:#fff;font-weight:600}
+.fvsheet .fpr button.on i{background:var(--accent);color:#fff}
+.fvsheet .fpr button.run i{box-shadow:0 0 0 2px #fff inset}
+.fvsheet .facts{display:flex;gap:12px;width:100%;margin-top:auto}
+.fvsheet .facts button{flex:1 1 0;width:auto;height:56px;border-radius:28px;font-size:17px;font-weight:700}
+.fvsheet .fclock>small{left:0;right:0;text-align:center}
+.fvsheet .fedit{justify-content:center}
+.fvsheet .fedit input{width:120px}
+/* overdue sits between + and More */
+.tfoot{gap:10px}.tfoot .tsp{width:32px;flex:none}
+.tfoot .odlink{display:inline-flex;align-items:center;gap:2px;font-size:13px;font-weight:700;color:var(--now);background:color-mix(in srgb,var(--now) 10%,transparent);height:30px;padding:0 9px 0 12px;border-radius:15px}
+.tfoot .odlink:active{opacity:.7}
+
+/* v168 smoother drag onto rings */
+.dragsrc{opacity:.35;transition:opacity .2s}
+.prghost2{position:fixed;left:0;top:0;z-index:80;pointer-events:none;display:flex;align-items:center;gap:8px;height:40px;padding:0 14px 0 10px;border-radius:20px;background:#fff;color:var(--ink);box-shadow:0 14px 34px rgba(20,30,25,.22),0 0 0 1px var(--line);font-size:14.5px;font-weight:600;max-width:240px;will-change:transform;transition:background-color .2s,color .2s,box-shadow .2s}
+.prghost2 .gdot{width:18px;height:18px;border-radius:50%;border:2px solid var(--ink-3);flex:none}
+.prghost2 .gt{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.prghost2 .gh{font-size:12px;font-weight:600;white-space:nowrap;flex:none}
+.prghost2 .gh:empty{display:none}
+.prghost2.on{background:var(--accent);color:#fff;box-shadow:0 14px 34px rgba(46,74,61,.35)}
+.prghost2.on .gdot{border-color:#fff}
+.prghost2.on .gh{opacity:.85}
+.todo.dragging .pring{transition:transform .25s cubic-bezier(.3,1.3,.5,1),box-shadow .25s}
+.todo.dragging .pring:not(.hot){transform:scale(.96)}
+.todo.dragging .pring.hot{transform:scale(1.1);box-shadow:0 0 0 6px color-mix(in srgb,var(--accent) 16%,transparent);border-radius:50%}

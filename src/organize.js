@@ -267,12 +267,14 @@ function viewHabits(root){
       /* grouped by life area: each area is a card with a ring for today, and folds when you tap its name */
       if(!(S.habShut instanceof Set))S.habShut=new Set();
       const L=active.filter(inHA),byA=new Map();L.forEach(h=>{const a=h.area||'Other';if(!byA.has(a))byA.set(a,[]);byA.get(a).push(h);});
-      [...byA.keys()].sort((x,y)=>x==='Other'?1:y==='Other'?-1:x.localeCompare(y)).forEach(a=>{const g=byA.get(a),due=g.filter(h=>counts(h,tk)),dn=due.filter(h=>habitDone(h,tk)).length,shut=S.habShut.has(a);
+      const aKeys=[...byA.keys()].sort((x,y)=>x==='Other'?1:y==='Other'?-1:x.localeCompare(y)),allShut=aKeys.every(a=>S.habShut.has(a));
+      if(aKeys.length>1)page.append(el('div',{class:'hatools'},el('span',{},`${aKeys.length} areas`),el('button',{class:'linkbtn small',onclick:()=>{if(allShut)S.habShut.clear();else aKeys.forEach(a=>S.habShut.add(a));App.refresh();}},el('span',{style:'display:grid',html:ic(allShut?'chevd':'chevu',15,2.2)}),allShut?'Expand all':'Collapse all')));
+      aKeys.forEach(a=>{const g=byA.get(a),due=g.filter(h=>counts(h,tk)),dn=due.filter(h=>habitDone(h,tk)).length,shut=S.habShut.has(a);
         const ord=[...g.filter(h=>!habitDone(h,tk)),...g.filter(h=>habitDone(h,tk))];
         page.append(el('div',{class:'card hacard'+(shut?' shut':'')},
           el('button',{class:'hahead','aria-expanded':String(!shut),onclick:()=>{shut?S.habShut.delete(a):S.habShut.add(a);App.refresh();}},
-            el('span',{class:'ring sm hring',style:`--p:${due.length?dn/due.length*100:0}`},el('span',{},due.length?`${dn}/${due.length}`:'–')),
-            el('b',{},a),el('span',{class:'haic',html:ic(areaIcon(a),15,1.9)}),el('span',{class:'hachev',html:ic('chevd',16,2.2)})),
+            el('span',{class:'ring sm hring'+(due.length&&dn===due.length?' full':''),style:`--p:${due.length?dn/due.length*100:0}`},el('span',{html:ic(areaIcon(a),18,1.9)})),
+            el('span',{class:'hatx'},el('b',{},a),el('small',{},due.length?(dn===due.length?`All ${due.length} done today`:`${dn} of ${due.length} done today`):`${g.length} habit${g.length>1?'s':''}`)),el('span',{class:'hachev',html:ic('chevd',18,2.2)})),
           shut?null:el('div',{class:'habody'},ord.map(oneRow))));});}
   }else{
     const pausedA=paused.filter(inHA);if(pausedA.length){page.append(el('p',{class:'small muted',style:'padding-inline:4px'},'Paused habits stay off Today. Their history is kept, and a daily streak picks up where it stopped.'));

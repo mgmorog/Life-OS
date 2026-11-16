@@ -1799,3 +1799,7 @@ html.c-fade .todo.won .t3in .tick-host.done{opacity:1}
 .todo .progress.rbar>i{transition:width 1.6s cubic-bezier(.25,.8,.25,1)!important}
 @media (prefers-reduced-motion:reduce){.pring,.pfill,.pck,.pnum{transition:none;animation:none!important}}
 .pring .pck,.pring .pnum{grid-area:1/1}.pnum{line-height:1;margin-top:-2px}
+
+/* v160 a little air between the rings and the to-dos below */
+.prings{margin-bottom:22px}
+.prings+.upnext{margin-top:4px}

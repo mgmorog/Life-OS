@@ -258,7 +258,7 @@ function dayCard(dk){
   /* Priorities as three rings; the first one not done sits under them as Up next; everything else folds away */
   const t3=t3on&&get.settings().top3On!==false;
   const todo=el('section',{class:'card daycard todo rcard'+fu},
-    el('div',{class:'bl'},el('span',{class:'lbl'},isToday?'Today':relDay(dk)),total?el('button',{class:'small muted tnum',style:'min-height:28px','aria-pressed':String(!!S.hideDone),'aria-label':S.hideDone?'Show finished items':'Hide finished items',onclick:()=>{S.hideDone=!S.hideDone;App.refresh();}},el('span',{'data-roll':'done'},`${doneN} of ${total} done`),doneN?el('span',{style:'margin-left:6px;color:var(--accent-text);font-weight:600'},S.hideDone?'Show':'Hide'):null):null),
+    el('div',{class:'bl'},el('span',{class:'lbl'},(()=>{const d=isToday?'Today':relDay(dk);return t3?(['Today','Tomorrow','Yesterday'].includes(d)?`${d}’s priorities`:`Priorities · ${d}`):d;})()),total?el('button',{class:'small muted tnum',style:'min-height:28px','aria-pressed':String(!!S.hideDone),'aria-label':S.hideDone?'Show finished items':'Hide finished items',onclick:()=>{S.hideDone=!S.hideDone;App.refresh();}},el('span',{'data-roll':'done'},`${doneN} of ${total} done`),doneN?el('span',{style:'margin-left:6px;color:var(--accent-text);font-weight:600'},S.hideDone?'Show':'Hide'):null):null),
     total?el('div',{class:'progress t3bar rbar'},el('i',{style:`width:${Math.round(doneN/total*100)}%`})):null);
   onSwipe(todo,()=>goDay(addK(S.sel,1)),()=>goDay(addK(S.sel,-1)));
   const W=t3&&t3es.length===T3_MAX&&t3es.every(e=>e.done);
@@ -467,7 +467,7 @@ function priorityRings(dk,es,W){const S=App.state,just=S._prJust;S._prJust=null;
       {label:'Replace',icon:'rep',onclick:()=>{t3Set(dk,l.filter(q=>q.id!==e.id));setTimeout(()=>t3PickSheet(dk,i),200);}},
       {label:'Open',icon:'edit',onclick:()=>openItem(e,dk)},
       {label:'Remove from priorities',icon:'x',danger:true,onclick:()=>{t3Set(dk,l.filter(q=>q.id!==e.id));}}].filter(Boolean));});
-    wrap.append(el('div',{class:'pslot'},b,el('span',{class:'plab pl-'+st},e?e.title:'Add')));}
+    wrap.append(el('div',{class:'pslot'},b,e||es.length?el('span',{class:'plab pl-'+st},e?e.title:''):null));}
   return wrap;}
 function upNext(e,dk,i){const S=App.state,fresh=S._upNext!==e.id;S._upNext=e.id;
   return el('div',{class:'upnext'+(fresh&&S._painted?' in':''),style:`--cx:${[16.5,50,83.5][i]||16.5}%`},

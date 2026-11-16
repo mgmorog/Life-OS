@@ -2016,3 +2016,10 @@ html.c-fade .todo.won .t3in .tick-host.done{opacity:1}
 /* Tasks: the filter header is the only thing that sticks; no drag handles here (no rings to drop on) */
 .page:has(.tstick) .sh2.shstick{position:static}
 .page:has(.tstick) .dgrip{display:none}
+
+/* v175 slimmer add row: no Details label; the + opens the full form */
+.oquick{padding:2px 6px 2px 4px;border-radius:14px;gap:4px}
+.oquick input{min-height:38px;font-size:15.5px}
+.oqplus{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;color:var(--accent-text);flex:none}
+.oqplus:active{background:var(--accent-soft)}
+.oquick .qadd{height:30px}

@@ -531,7 +531,7 @@ function areaItems(dk){if(get.settings().areaDue===false)return[];let rows=[];tr
     const area=p?p[1]:(r.hub||mod);
     return Object.assign({},r,{area,kind:p?p[2]:(r.hub&&mod&&mod!==r.hub?mod:null),rid:p&&!['dprep','drev'].includes(p[0])?String(r.id).slice(p[0].length):null,late:late&&!r.done});});}
 function areaTag(a){return el('span',{class:'atag'},el('span',{style:'display:grid',html:ic(areaIcon(a),13,1.9)}),a);}
-function areaRow(r){const sub=String(r.sub||'').replace(new RegExp('^'+(r.kind||'').replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\s*·\\s*','i'),'');const subT=sub===r.kind?'':sub;
+function areaRow(r){const sub=String(r.sub||'').replace(new RegExp('^'+(r.kind||'').replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\s*·\\s*','i'),'');const subT=(sub===r.kind?'':sub).replace(/(\d+ days?) overdue/i,'$1 late');
   const meta=el('span',{class:'meta'},subT?el('span',{class:r.late?'late':''},subT):null,subT&&r.area?' · ':null,r.area?areaTag(r.area):null,r.kind?el('span',{class:'kt'},` · ${r.kind}`):null);
   const row=el('div',{class:'trow tick-host'+(r.done?' done':''),'data-id':r.rid||''},
     el('span',{class:'tick-hit'},r.tick||el('button',{class:'ddt',style:'width:24px;height:24px;color:var(--accent-text)','aria-label':`Open ${r.title}`,html:ic('chevr',16,2),onclick:r.go})),

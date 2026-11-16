@@ -536,7 +536,11 @@ function areaRow(r){const sub=String(r.sub||'').replace(new RegExp('^'+(r.kind||
   const row=el('div',{class:'trow tick-host'+(r.done?' done':''),'data-id':r.rid||''},
     el('span',{class:'tick-hit'},r.tick||el('button',{class:'ddt',style:'width:24px;height:24px;color:var(--accent-text)','aria-label':`Open ${r.title}`,html:ic('chevr',16,2),onclick:r.go})),
     el('button',{class:'t',onclick:r.go},el('span',{class:'tt'},r.title),meta));
-  const w=el('div',{class:'trow-wrap aitem'+(r.rid?' dragrow':''),'data-id':r.rid||'','data-can':r.rid?'1':'0'},row);if(r.rid)row.append(dGrip());return w;}
+  if(r.rid)row.append(dGrip());
+  /* swipe like your own to-dos: right to finish (when it can be ticked), left to open */
+  const tb=r.tick&&(r.tick.matches&&r.tick.matches('button')?r.tick:r.tick.querySelector&&r.tick.querySelector('button'));
+  const sw=r.done?row:swipeAct(row,{right:tb?{label:'Done',color:'var(--accent)',run:()=>{tb.click();setTimeout(()=>App.refresh(),420);}}:null,left:r.go?{label:'Open',color:'var(--ink-2)',run:()=>{r.go();}}:null});
+  return el('div',{class:'trow-wrap aitem'+(r.rid?' dragrow':''),'data-id':r.rid||'','data-can':r.rid?'1':'0'},sw);}
 function prToggle(e,dk){if(e.kind==='entry'){if(e.tick)e.tick.click();else if(e.go)e.go();setTimeout(()=>App.refresh(),e.tick?420:0);return;}toggleItem(e,dk);App.refresh();}
 /* Replan overdue to-dos: quick choices for all of them, or one at a time below */
 function replanSheet(tasks,dk,ex){ex=ex||{};const tk=todayK(),sat=(()=>{const d=today();const n=(6-d.getDay()+7)%7||7;return addK(tk,n);})(),mon=(()=>{const d=today();const n=(8-d.getDay())%7||7;return addK(tk,n);})();

@@ -2065,3 +2065,9 @@ html.c-fade .todo.won .t3in .tick-host.done{opacity:1}
 .list>.swr+.li,.list>.li+.swr,.list>.swr+.swr{position:relative}
 .list>.swr+.li::before,.list>.li+.swr::before{content:"";position:absolute;top:0;left:16px;right:0;border-top:1px solid var(--line-2);z-index:2}
 .list>.trow-wrap.aitem .sring{z-index:3}
+
+/* v184 add-a-task hint shows while typing is possible */
+.oqhint{display:none;font-size:12px;color:var(--ink-3);padding:0 8px 8px 40px}
+.oqhint b{color:var(--ink-2);font-weight:600}
+.oquick:focus-within .oqhint{display:block}
+.oquick:focus-within .tags:not([hidden])~.oqhint{display:none}

@@ -100,7 +100,7 @@ function viewToday(root){
     el('div',{class:'hd'},
       el('button',{class:'date'+(S.dateDrop?' open':''),'aria-label':'Pick a date','aria-expanded':String(!!S.dateDrop),onclick:()=>dateDrop(),html:`<span>${DOW[sel.getDay()]}, ${MON[sel.getMonth()]} ${sel.getDate()}${sel.getFullYear()!==today().getFullYear()?`, ${sel.getFullYear()}`:''}</span>`+ic('chevd',18,2)}),
       el('div',{class:'icons'},
-        el('button',{class:'iconbtn','aria-label':`Inbox, ${inboxN} ideas`,html:ic('inbox',24)+(inboxN?`<span class="badge" data-roll="inbox">${inboxN}</span>`:''),onclick:()=>App.go('inbox')}),
+        el('button',{class:'iconbtn','aria-label':`Inbox, ${inboxN} ideas`,html:ic('inbox',24)+((inboxN+newVerN())?`<span class="badge" data-roll="inbox">${inboxN+newVerN()}</span>`:''),onclick:()=>App.go('inbox')}),
         el('button',{class:'iconbtn','aria-label':'Share this day',html:ic('share',24),onclick:()=>shareDaySheet(dk)}))),
     S.dateDrop?dateDropEl(dk):null,S.dateDrop?null:weekStrip(dk)));
   if(S.loading&&!recs.size){page.append(el('section',{class:'card',style:'display:grid;gap:12px'},el('div',{class:'skel',style:'height:14px;width:30%'}),el('div',{class:'skel',style:'height:30px;width:70%'}),el('div',{class:'skel',style:'height:200px'})));root.append(page);return;}
@@ -111,7 +111,6 @@ function viewToday(root){
   page.append(alldayRow(dk));
   page.append(...dayCard(dk));
   const rem=reminderCard();if(rem)page.append(rem);
-  if(isToday&&typeof s.seenVer==='number'&&s.seenVer<APP_VER)page.append(el('div',{class:'focus-chip'},el('button',{class:'grow small',style:'text-align:left;min-height:32px',onclick:whatsNew},`What’s new in Life OS ${APP_VER}`),el('button',{class:'fa',onclick:whatsNew},'See ›'),el('button',{class:'iconbtn','aria-label':'Dismiss',style:'width:32px;height:32px',html:ic('x',14,2.2),onclick:()=>setSettings({seenVer:APP_VER})})));
   if(isToday&&s.inboxNudge&&inboxN>=5&&s.nudgeOff!==weekKey(today()))page.append(el('div',{class:'focus-chip'},el('button',{class:'grow small',style:'text-align:left;min-height:32px',onclick:()=>App.go('inbox')},`${inboxN} ideas waiting in your Inbox`),el('button',{class:'fa',onclick:()=>App.go('inbox')},'Sort ›'),el('button',{class:'iconbtn','aria-label':'Dismiss for this week',style:'width:32px;height:32px',html:ic('x',14,2.2),onclick:()=>setSettings({nudgeOff:weekKey(today())})})));
   if(isToday&&s.checkinCard&&sel.getDay()===(s.reviewDay??0)&&s.checkinDone!==dk&&!(s.onboardedAt&&Date.now()-s.onboardedAt<6*864e5))page.append(s.checkinLater===dk?el('button',{class:'focus-chip',onclick:()=>App.go('review')},el('span',{class:'small'},'Weekly review'),el('span',{class:'fa'},'Start ›')):checkinCard(dk));
   if(isToday){const gz=goalPulseCard();if(gz)page.append(gz);const gc=goalCheckCard();if(gc)page.append(gc);const cf=cfg('Health','checkin').f;if(cf.rem&&!checkOn(dk)&&nowMin()>=(tMin(cf.at||'21:00')??1260))page.append(el('button',{class:'focus-chip',onclick:()=>App.go('tool',{hub:'Health',tool:'checkin'})},el('span',{class:'small'},'Daily check-in'),el('span',{class:'fa'},'Log ›')));}

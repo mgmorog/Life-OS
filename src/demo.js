@@ -65,8 +65,9 @@ function demoFill(t,i,r,t0){const f={};const fs=Array.isArray(t.fields)?t.fields
     else if(r()<.6)f[d.id]=pick(['Blue','Large','Weekly','Online','2nd floor','Shared','Annual','Morning']);
   });
   if(t.tpl==='log'&&!f.date)f.date=addK(t0,-Math.floor(r()*30));
+  if(t.id==='trips'){f.date=addK(t0,[-40,6,45,120][i%4]);f.end=addK(f.date,[3,2,5,13][i%4]);f.status=f.date<t0?'Done':'Planned';}
   return f;}
-function loadDemo(){
+function loadDemo(quiet){
   const s0=get.settings();if(s0.demoSnap){toast('The demo is already loaded');return;}
   const snap={};['areas','hubHidden','hubShown','top3','todayPins','areaExtra','areaIcons','introDone','onboardedAt','gsOff','foundationOff'].forEach(k=>snap[k]=s0[k]===undefined?null:JSON.parse(JSON.stringify(s0[k])));
   const r=demoRand(42),t=todayK(),ex={example:true,demo:true},mk=(kind,f)=>create(kind,Object.assign({},ex,f)),pick=a=>a[Math.floor(r()*a.length)];
@@ -85,49 +86,55 @@ function loadDemo(){
     T('Water plants',{date:t,area:'Home',doneDates:done(t)}),T('Submit timesheet',{date:t,area:'Career',doneDates:done(t)}),
     T('This is a deliberately very long task title to see how the card handles wrapping when someone writes a whole sentence instead of a short to-do',{date:t})];
   T('Renew car registration',{date:addK(t,-3),area:'Home',priority:'high'});T('Send thank-you note to Priya',{date:addK(t,-1),area:'Relationships'});T('Return Amazon cables',{date:addK(t,-6),area:'Finances'});
-  for(let i=1;i<=14;i++){const n=1+Math.floor(r()*3);for(let j=0;j<n;j++)T(pick(['Grocery run','Prep slides for staff meeting','Call the bank','Schedule haircut','Review AP aging report','Pay credit card','Plan date night','Update resume bullets','Clean out email','Order contact lenses','Workday config review','1:1 prep','Laundry','Text Grandma Rose']),{date:addK(t,i),area:pick(AR),time:r()<.3?(8+Math.floor(r()*10))*60:null,priority:r()<.15?'high':'normal'});}
+  const TASKS=['Grocery run','Prep slides for staff meeting','Call the bank','Schedule haircut','Review AP aging report','Pay credit card','Plan date night','Update resume bullets','Clean out email','Order contact lenses','Workday config review','1:1 prep','Laundry','Text Grandma Rose','Reconcile grant budget','Approve expense reports','Vacuum','Meal prep','Book vet appointment','Return library books','Water plants','Renew gym membership','Write weekly update','Call Mom','Pick up prescription','Draft board memo','Clean the fridge','Update budget sheet','Fix bike tire','Send invoice'];
+  for(let i=1;i<=30;i++){const n=2+Math.floor(r()*4);for(let j=0;j<n;j++)T(pick(TASKS),{date:addK(t,i),area:pick(AR),time:r()<.3?(8+Math.floor(r()*10))*60:null,priority:r()<.15?'high':'normal',steps:r()<.15?[{id:uid('s'),t:'First step',d:false},{id:uid('s'),t:'Second step',d:false}]:[]});}
   T('Gym',{date:addK(t,-14),time:6*60+30,area:'Health',repeat:{type:'custom',unit:'week',n:1,days:[0,2,4],end:null}});
   T('Take out trash',{date:addK(t,-20),area:'Home',repeat:{type:'custom',unit:'week',n:1,days:[1],end:null}});
   T('Pay rent',{date:addK(t,-40),area:'Finances',repeat:{type:'custom',unit:'month',n:1,end:null},priority:'high'});
   ['Learn to make sourdough','Clean out the closet','Look into a ceramics class','Back up phone photos','Donate old clothes','Fix the squeaky door'].forEach((x,i)=>T(x,{area:pick(AR),deadline:i<2?addK(t,4+i*3):null}));
-  for(let d=1;d<=56;d++){const k=addK(t,-d),n=Math.floor(r()*4);for(let j=0;j<n;j++)T(pick(['Inbox zero','Grant reconciliation','Workout','Meal prep','Reply to emails','Team standup notes','Call Mom','Pay bills']),{date:k,area:pick(AR),doneDates:r()<.95?done(k):{}});}
+  for(let d=1;d<=60;d++){const k=addK(t,-d),n=2+Math.floor(r()*4);for(let j=0;j<n;j++)T(pick(TASKS),{date:k,area:pick(AR),doneDates:r()<.95?done(k):{}});}
   P[1].steps.length&&[0,1,2].forEach(i=>T(['Fix costing allocation rule','Test spend authorization BP','Write release notes'][i],{date:addK(t,i+2),area:'Career',part:P[1].id,doneDates:i===0?done(addK(t,-1)):{}}));
   /* priorities: 3 today (one done), 2 tomorrow */
   const s1=get.settings();const tops=Object.assign({},s1.top3||{});tops[t]=[{id:today[0].id},{id:today[1].id},{id:today[2].id}];tops[addK(t,1)]=[{id:today[3].id},{id:today[5].id}];
-  for(let d=1;d<=14;d++)tops[addK(t,-d)]=[];
+  const byDay={};[...recs.values()].forEach(x=>{if(x.demo&&x.kind==='task'&&x.date)(byDay[x.date]=byDay[x.date]||[]).push(x);});
+  for(let d=-30;d<=7;d++){if(d===0||d===1)continue;const k=addK(t,d),l=(byDay[k]||[]).slice(0,3);if(l.length)tops[k]=l.map(x=>({id:x.id}));}
   setSettings({top3:tops});today[1].doneDates=done(t);put(today[1],{silent:true});
   /* blocks: today (overlap on purpose), this week, repeating */
   const B=(title,date,start,dur,o={})=>mk('block',Object.assign({title,notes:'',date,start,dur,repeat:NR,reminder:null,part:null,area:null,color:'sage',icon:'focus'},o));
   B('Staff meeting',t,9*60,60,{area:'Career',color:'blue'});B('Deep work: grant closeouts',t,10*60+30,120,{area:'Career'});B('Lunch with Alex',t,12*60,60,{area:'Relationships',color:'rose',icon:'meal'});B('Dentist',t,12*60+30,45,{area:'Health',color:'plum'});
   B('Run club',t,18*60,60,{area:'Health',color:'blue',icon:'dumbbell'});B('Late call with Tokyo vendor',t,22*60+30,60,{area:'Career'});
-  for(let i=1;i<=10;i++)B(pick(['Focus block','Workday sprint planning','Coffee with Lee','Haircut','Pottery class','Family dinner','Budget review']),addK(t,i),(8+Math.floor(r()*11))*60,pick([30,45,60,90,120]),{area:pick(AR),color:pick(['sage','blue','rose','plum','clay'])});
+  const BL=['Focus block','Workday sprint planning','Coffee with Lee','Haircut','Pottery class','Family dinner','Budget review','Team standup','Gym','Grant meeting','Lunch','Board prep','Date night','Guitar practice','Errands'];
+  for(let i=-30;i<=30;i++){if(i===0)continue;const d=addK(t,i),wk=[1,2,3,4,5].includes(fromK(d).getDay()),n=wk?2+Math.floor(r()*3):Math.floor(r()*2);for(let j=0;j<n;j++)B(pick(BL),d,(7+Math.floor(r()*13))*60+(r()<.5?30:0),pick([30,45,60,90,120]),{area:pick(AR),color:pick(['sage','blue','rose','plum','clay'])});}
   B('Morning pages',addK(t,-30),6*60,20,{area:'Personal growth',repeat:{type:'custom',unit:'day',n:1,end:null}});
   /* all-day: single, multi-day trip, yearly, holiday, a past one */
   const A=(title,start,end,o={})=>mk('allday',Object.assign({title,notes:'',start,end,repeat:NR,reminder:null,area:null,color:'sage',icon:'cal'},o));
   A('Mom’s birthday',addK(t,2),null,{area:'Relationships',color:'plum',icon:'cake',repeat:{type:'custom',unit:'year',n:1,end:null}});
   A('Chicago weekend',addK(t,5),addK(t,7),{area:'Travel',color:'blue',icon:'plane'});A('Office closed',addK(t,11),null,{area:'Career'});A('Work from home',t,null,{area:'Career'});
+  const nov=k=>{const d=fromK(t);return k(d.getFullYear());};
+  A('Veterans Day',addK(t,-4),null,{color:'blue'});A('Thanksgiving',addK(t,11),null,{color:'clay',icon:'meal',area:'Relationships'});A('Black Friday',addK(t,12),null);A('Workday conference',addK(t,-12),addK(t,-10),{area:'Career',color:'blue'});
+  A('Alex’s birthday',addK(t,-2),null,{area:'Relationships',color:'plum',icon:'cake',repeat:{type:'custom',unit:'year',n:1,end:null}});A('Pay day',addK(t,-14),null,{area:'Finances',repeat:{type:'custom',unit:'week',n:2,end:null}});A('Out of office',addK(t,18),addK(t,22),{area:'Career'});
   A('Japan · spring trip',addK(t,120),addK(t,133),{area:'Travel',color:'clay',icon:'plane'});A('Conference (last week)',addK(t,-9),addK(t,-7),{area:'Career'});
   /* habits: check, count, time; good and bad streaks */
   const H=(title,o)=>{const h=mk('habit',Object.assign({title,notes:'',target:3,dur:30,days:[],area:'Health',color:'blue',icon:'habit',logs:{},sessions:{},startDate:addK(t,-60)},o));const rate=o.rate||.6;for(let d=1;d<=60;d++)if(r()<rate)h.logs[addK(t,-d)]=o.track==='count'?o.goalN+Math.floor(r()*3)-1:true;put(h,{silent:true});return h;};
   H('Workout',{target:4,icon:'dumbbell',rate:.55});H('Read 20 pages',{target:5,area:'Learning',color:'plum',icon:'book',rate:.7});H('Meditate',{target:7,area:'Personal growth',color:'sage',rate:.4,dur:10});
-  H('Drink 8 glasses of water',{target:7,track:'count',goalN:8,rate:.8});H('No phone after 10pm',{target:5,area:'Personal growth',rate:.3});H('Spanish practice',{target:5,area:'Learning',rate:.85,dur:15});H('Call a friend',{target:1,area:'Relationships',color:'rose',rate:.15});
+  H('Drink 8 glasses of water',{target:7,track:'count',goalN:8,rate:.8});H('No phone after 10pm',{target:5,area:'Personal growth',rate:.3});H('Spanish practice',{target:5,area:'Learning',rate:.85,dur:15});H('Call a friend',{target:1,area:'Relationships',color:'rose',rate:.15});H('Stretch',{target:7,rate:.65,dur:10});H('Journal',{target:5,area:'Personal growth',color:'plum',rate:.5,dur:15});H('Practice guitar',{target:3,area:'Recreation',color:'clay',rate:.35});H('Walk the dog',{target:7,area:'Pets',color:'sage',rate:.9});
   /* goals */
   const G=(title,area,dl,steps)=>mk('goal',{title,notes:'',area,deadline:dl,color:pick(['blue','sage','plum']),status:'active',steps:steps.map((x,i)=>({id:uid('s'),t:x,d:i<Math.ceil(steps.length/2)}))});
   G('Run a half marathon','Health',addK(t,150),['Pick a plan','Run 10K','Run 15K','Sign up','Race day']);G('Save $10,000 emergency fund','Finances',addK(t,300),['Open HYSA','Auto-transfer $400','Hit $5K','Hit $10K']);
-  G('Land a Senior Manager role','Career',addK(t,200),['Update LinkedIn','Resume refresh','10 coffee chats','Apply to 5 roles']);G('Read 24 books this year','Learning',addK(t,45),['Q1: 6','Q2: 12','Q3: 18','Q4: 24']);
+  G('Land a Senior Manager role','Career',addK(t,200),['Update LinkedIn','Resume refresh','10 coffee chats','Apply to 5 roles']);G('Read 24 books this year','Learning',addK(t,45),['Q1: 6','Q2: 12','Q3: 18','Q4: 24']);G('Pay off the car loan','Finances',addK(t,400),['Extra $200 a month','Refinance quote','Final payment']);G('Visit Japan','Travel',addK(t,120),['Passport renewed','Flights','Ryokan','Itinerary']);G('Get my CPA-level Excel skills','Career',null,[]);
   /* routines */
   const R=(title,steps,o={})=>{const x=mk('routine',Object.assign({title,notes:'',steps:steps.map(([s,m])=>({id:uid('s'),t:s,min:m,habit:null})),days:[],setTime:null,startDate:addK(t,-30),reminder:null,area:'Personal growth',color:'sage',runs:{}},o));for(let d=1;d<=30;d++)if(r()<.5)x.runs[addK(t,-d)]=true;put(x,{silent:true});};
-  R('Morning routine',[['Make bed',2],['Stretch',10],['Coffee + journal',15],['Review Today',5]],{setTime:6*60+15});R('Shutdown routine',[['Inbox to zero',10],['Plan tomorrow',5],['Close laptop',1]],{area:'Career'});
+  R('Morning routine',[['Make bed',2],['Stretch',10],['Coffee + journal',15],['Review Today',5]],{setTime:6*60+15});R('Sunday reset',[['Laundry',30],['Plan the week',20],['Meal prep',60],['Tidy up',20]],{area:'Home'});R('Evening wind-down',[['Dishes',10],['Read',20],['Lights out',1]],{setTime:22*60});R('Shutdown routine',[['Inbox to zero',10],['Plan tomorrow',5],['Close laptop',1]],{area:'Career'});
   /* lists */
   const Lst=(title,items)=>mk('list',{title,items:items.map((x,i)=>({id:uid('i'),t:x,d:i%4===1}))});
   Lst('Groceries',['Oat milk','Lemons','Coffee beans','Spinach','Chicken thighs','Rice','Greek yogurt','Bananas','Olive oil','Parmesan','Eggs','Sourdough']);Lst('Books to read',['Project Hail Mary','Tomorrow, and Tomorrow, and Tomorrow','Thinking, Fast and Slow']);
-  Lst('Gift ideas',['Candle set','Cookbook','Concert tickets','Plant']);Lst('Packing · Chicago',['Chargers','Running shoes','Jacket','Passport? (no)','Toiletries']);Lst('Empty list',[]);
+  Lst('Gift ideas',['Candle set','Cookbook','Concert tickets','Plant']);Lst('Packing · Chicago',['Chargers','Running shoes','Jacket','Passport? (no)','Toiletries']);Lst('Empty list',[]);Lst('Movies to watch',['Dune: Part Two','Past Lives','Oppenheimer','The Holdovers']);Lst('Restaurants to try',['Toutant','Las Puertas','Oliver’s','Casa Azul','Ballyhoo']);Lst('Home projects',['Paint bedroom','Fix squeaky door','Hang shelves','Caulk the tub','Replace door handles','New blinds','Patch drywall','Organize garage','Clean dryer vent','Install smart thermostat','Re-seal deck','Wash windows']);
   /* inbox ideas */
-  ['Look into a ceramics class','Podcast: Hidden Brain episode on habits','Idea: automate the AP intake form with a Workday web service','Gift for Sam — that vinyl he mentioned','Try the new ramen place on Elmwood','Ask Jordan about the 2027 budget timeline','Read: “Four Thousand Weeks” notes','Fix bathroom fan','https://www.workday.com/en-us/products/grants.html'].forEach((x,i)=>mk('idea',{title:x,notes:'',photos:[],source:null,createdAt:Date.now()-i*3*864e5-(i>6?40*864e5:0)}));
+  ['Look into a ceramics class','Podcast: Hidden Brain episode on habits','Idea: automate the AP intake form with a Workday web service','Gift for Sam — that vinyl he mentioned','Try the new ramen place on Elmwood','Ask Jordan about the 2027 budget timeline','Read: “Four Thousand Weeks” notes','Fix bathroom fan','https://www.workday.com/en-us/products/grants.html','Birthday dinner idea for Mom: Rue Franklin','Look up 529 plans','Try a standing desk at work','Podcast: Acquired on Costco','Recipe: miso salmon','Ask HR about tuition reimbursement','Learn Power BI?','Sign up for the Turkey Trot','Buy snow tires before Dec','Old photo scan project','Write a thank-you to the team'].forEach((x,i)=>mk('idea',{title:x,notes:'',photos:[],source:null,createdAt:Date.now()-i*3*864e5-(i>6?40*864e5:0)}));
   /* every module in every area */
   let n=0;allAreas.forEach(a=>toolsOf(a).forEach(tool=>{if(tool.hide||!Array.isArray(tool.fields))return;
     if(tool.id==='wheel'){for(let i=0;i<4;i++){const sc={};AREAS.forEach(x=>sc[x]=3+Math.floor(r()*8));mk('entry',{hub:a,tool:'wheel',f:{date:addK(t,-i*30),scores:sc}});n++;}return;}
-    if(!tool.fields.length)return;const cnt=3+Math.floor(r()*5);for(let i=0;i<cnt;i++){mk('entry',{hub:a,tool:tool.id,f:demoFill(tool,i,r,t)});n++;}}));
+    if(!tool.fields.length)return;const cnt=5+Math.floor(r()*6);for(let i=0;i<cnt;i++){mk('entry',{hub:a,tool:tool.id,f:demoFill(tool,i,r,t)});n++;}}));
   /* area notes */
   allAreas.forEach(a=>{if(!get.id('area-'+a))put(Object.assign({id:'area-'+a,kind:'areanote',text:pick(['','Focus this quarter: consistency over intensity.','Keep it simple.'])},ex),{silent:true});});
   App.refresh();toast(`Demo loaded: ${n} module entries plus tasks, habits, goals and more`);

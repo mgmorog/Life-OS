@@ -2075,3 +2075,11 @@ html.c-fade .todo.won .t3in .tick-host.done{opacity:1}
 /* v185 habits: one line per habit */
 .hcnt{font-size:13px;font-weight:600;color:var(--ink-2);white-space:nowrap;margin-right:4px}
 .hdoneb{color:var(--accent-text)}
+
+/* v186 habits polish */
+.hcdone{width:30px;height:30px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center;flex:none}
+.chip.hcfull{background:var(--accent-soft,#E6EFEA);color:var(--accent-text);font-weight:600;border-color:transparent}
+.hwhen{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px}
+.hplan{display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 10px;border-radius:14px;background:var(--accent-soft,#E6EFEA);color:var(--accent-text);font-weight:600;font-size:12.5px}
+.li.moving{background:color-mix(in srgb,var(--accent) 7%,var(--card))}
+.fchips,.achips{-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent)}

@@ -53,14 +53,17 @@ function timeSheet(e,dk){
 /* Habit sessions: put a habit on a day (and optionally a time), move a planned session, or take it off */
 function planHabitDay(h,d,time=null){h.sessions=h.sessions||{};const was=clone(h.sessions);h.sessions[d]=Object.assign({},h.sessions[d],{time});put(h);App.refresh();toast(`Planned for ${relDay(d)}`,()=>{h.sessions=was;put(h);App.refresh();},'Undo',{open:App.state.view==='today'&&App.state.sel===d?null:dayDest(d)});}
 function habitPlanSheet(h){
-  let inst;const c=formCtx(()=>{});const tk=todayK();
+  /* one sheet: planned days on top; tap Move on one, then tap its new day on the calendar below */
+  let inst,moving=null;const c=formCtx(()=>{});const tk=todayK();
   inst=openSheet({title:'Plan a session',left:{label:'Close'},build:b=>{
     const draw=()=>{b.innerHTML='';const up=Object.keys(h.sessions||{}).filter(d=>d>=tk).sort();
-      b.append(el('p',{class:'muted'},`${h.title}${h.target?` · ${h.target} times a week`:''}. Pick a day and it shows up on Today then. Press and hold it there to set a time.`));
-      if(up.length)b.append(el('div',{class:'sect'},'Planned'),el('div',{class:'list'},up.map(d=>{const se=h.sessions[d]||{};return el('div',{class:'li',style:'min-height:52px'},el('span',{class:'grow'},el('b',{style:'font-weight:500'},relDay(d)),se.time!=null?el('small',{},fmtT(se.time)):el('small',{},'Any time')),
-        el('button',{class:'chip',onclick:()=>{const mv=openSheet({title:'Move to',build:bb=>bb.append(el('div',{class:'card'},c.calendar(d,nd=>{if(nd&&nd!==d){const x=h.sessions[d];delete h.sessions[d];h.sessions[nd]=x||{time:null};put(h);toast(`Moved to ${relDay(nd)}`);}mv.close();draw();App.refresh();})))});}},'Move'),
-        el('button',{class:'chip',onclick:()=>{const x=h.sessions[d];delete h.sessions[d];put(h);draw();App.refresh();toast('Session removed',()=>{h.sessions[d]=x;put(h);draw();App.refresh();});}},'Remove'));})));
-      b.append(el('div',{class:'sect'},up.length?'Add another':'Pick a day'),el('div',{class:'card'},c.calendar(null,d=>{if(!d)return;if(d<tk){toast('That day has passed');return;}planHabitDay(h,d);draw();},{minK:tk})));};
+      b.append(el('p',{class:'muted small'},'Pick days for this habit. Hold one on Today to set a time.'));
+      if(up.length)b.append(el('div',{class:'sect'},'Planned'),el('div',{class:'list'},up.map(d=>{const se=h.sessions[d]||{},mv=moving===d;return el('div',{class:'li'+(mv?' moving':''),style:'min-height:52px'},el('span',{class:'grow'},el('b',{style:'font-weight:500'},relDay(d)),el('small',{},mv?'Now tap its new day below':se.time!=null?fmtT(se.time):'Any time')),
+        el('button',{class:'chip'+(mv?' on':''),onclick:()=>{moving=mv?null:d;draw();}},mv?'Cancel':'Move'),
+        mv?null:el('button',{class:'chip',onclick:()=>{const x=h.sessions[d];delete h.sessions[d];put(h);draw();App.refresh();toast('Session removed',()=>{h.sessions[d]=x;put(h);draw();App.refresh();});}},'Remove'));})));
+      b.append(el('div',{class:'sect'},moving?`Move ${relDay(moving)} to`:up.length?'Add another':'Pick a day'),el('div',{class:'card'},c.calendar(null,d=>{if(!d)return;if(d<tk){toast('That day has passed');return;}
+        if(moving){if(d!==moving){const x=h.sessions[moving];delete h.sessions[moving];h.sessions[d]=x||{time:null};put(h);toast(`Moved to ${relDay(d)}`);}moving=null;draw();App.refresh();return;}
+        planHabitDay(h,d);draw();},{minK:tk})));};
     draw();}});
 }
 function moveSheet(e,dk){

@@ -100,7 +100,7 @@ function viewToday(root){
     el('div',{class:'hd'},
       el('button',{class:'date'+(S.dateDrop?' open':''),'aria-label':'Pick a date','aria-expanded':String(!!S.dateDrop),onclick:()=>dateDrop(),html:`<span>${DOW[sel.getDay()]}, ${MON[sel.getMonth()]} ${sel.getDate()}${sel.getFullYear()!==today().getFullYear()?`, ${sel.getFullYear()}`:''}</span>`+ic('chevd',18,2)}),
       el('div',{class:'icons'},
-        el('button',{class:'iconbtn','aria-label':`Inbox, ${inboxN} ideas`,html:ic('inbox',24)+((inboxN+newVerN())?`<span class="badge" data-roll="inbox">${inboxN+newVerN()}</span>`:''),onclick:()=>App.go('inbox')}),
+        el('button',{class:'iconbtn','aria-label':`Inbox, ${inboxN} ideas`,html:ic('inbox',24)+(inboxN?`<span class="badge" data-roll="inbox">${inboxN}</span>`:newVerN()?'<span class="badge dot"></span>':''),onclick:()=>App.go('inbox')}),
         el('button',{class:'iconbtn','aria-label':'Share this day',html:ic('share',24),onclick:()=>shareDaySheet(dk)}))),
     S.dateDrop?dateDropEl(dk):null,S.dateDrop?null:weekStrip(dk)));
   if(S.loading&&!recs.size){page.append(el('section',{class:'card',style:'display:grid;gap:12px'},el('div',{class:'skel',style:'height:14px;width:30%'}),el('div',{class:'skel',style:'height:30px;width:70%'}),el('div',{class:'skel',style:'height:200px'})));root.append(page);return;}

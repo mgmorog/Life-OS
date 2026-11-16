@@ -23,7 +23,8 @@ const doneAct={label:'Done',show:()=>true,run:x=>{x.f.last=todayK();put(x);toast
 
 /* small pieces the tool screens are built from */
 const later=()=>setTimeout(()=>App.refresh(),820);
-const lblRow=(t,r)=>el('div',{class:'sh2'},el('span',{class:'lbl'},t),typeof r==='string'?el('span',{class:'small muted'},r):r||null);
+/* section headers stay pinned under the status bar while their section scrolls by */
+const lblRow=(t,r)=>el('div',{class:'sh2 shstick'},el('span',{class:'lbl'},t),typeof r==='string'?el('span',{class:'small muted'},r):r||null);
 const lnk=(label,fn,icon)=>el('button',{class:'linkbtn small',style:'min-height:44px;margin:-8px 0',onclick:fn},icon?el('span',{style:'display:grid',html:ic(icon,16,2)}):null,label);
 const bigN=(v,rest)=>el('p',{class:'bign'},el('span',{class:'serif n'},String(v)),rest?el('span',{class:'muted'},' '+rest):null);
 const pill=(t,c='')=>el('span',{class:'hpill '+c},t);

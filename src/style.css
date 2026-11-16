@@ -2060,3 +2060,8 @@ html.c-fade .todo.won .t3in .tick-host.done{opacity:1}
 .rpnote2{flex:0 0 100%;margin:0 2px 2px;font-size:12.5px;line-height:1.35;color:var(--ink-2)}
 .rpacts .rpmove{flex:1 1 100%}
 .rpseg button{display:flex;align-items:center;justify-content:center}
+/* v181 one divider style between every row in a list, whatever mix of to-dos and life-area items */
+.list>.trow-wrap.aitem{border-bottom:0}
+.list>.swr+.li,.list>.li+.swr,.list>.swr+.swr{position:relative}
+.list>.swr+.li::before,.list>.li+.swr::before{content:"";position:absolute;top:0;left:16px;right:0;border-top:1px solid var(--line-2);z-index:2}
+.list>.trow-wrap.aitem .sring{z-index:3}

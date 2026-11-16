@@ -107,11 +107,11 @@ function listPlay(root,before){
 const ROLLS=new Map();
 /* One counter motion everywhere: the old number rolls up (or down) out of a little window as the new one rolls in */
 function rollNode(n,prev){
-  const txt=n.textContent,m=txt.match(/\d+/);if(!m||!prev||!motionOK()||n.querySelector('.roll-win'))return;const pm=prev.match(/\d+/);if(!pm||pm[0]===m[0]||prev.replace(/\d+/,'#')!==txt.replace(/\d+/,'#'))return;
+  const txt=n._txt??n.textContent,m=txt.match(/\d+/);if(!m||!prev||!motionOK())return;const pm=prev.match(/\d+/);if(!pm||pm[0]===m[0]||prev.replace(/\d+/,'#')!==txt.replace(/\d+/,'#'))return;
   const up=+m[0]>+pm[0],i=m.index,after=txt.slice(i+m[0].length);
   const col=el('span',{class:'roll-col'},el('span',{},up?pm[0]:m[0]),el('span',{},up?m[0]:pm[0]));
-  n.replaceChildren(txt.slice(0,i),el('span',{class:'roll-win'},col),after);
-  col.animate([{transform:`translateY(${up?0:-50}%)`},{transform:`translateY(${up?-50:0}%)`}],{duration:520,easing:SOFT,fill:'forwards'}).onfinish=()=>{if(n.isConnected)n.textContent=txt;};
+  n._txt=txt;n.replaceChildren(txt.slice(0,i),el('span',{class:'roll-win'},col),after);
+  col.animate([{transform:`translateY(${up?0:-50}%)`},{transform:`translateY(${up?-50:0}%)`}],{duration:520,easing:SOFT,fill:'forwards'}).onfinish=()=>{if(n._txt===txt){n.textContent=txt;n._txt=null;}};
   if(n.classList.contains('badge'))n.animate([{transform:'scale(1)'},{transform:'scale(1.3)',offset:.4},{transform:'none'}],{duration:440,easing:SPRING});
 }
 function rollCounts(root,scope){
@@ -744,9 +744,9 @@ function plusFive(){const r=$('.fring');if(!r||!motionOK())return;const a=$('#fr
 const moSwKey=s=>(s.getAttribute('aria-label')||'').replace(/ (on|off)$/,''),moSegKey=g=>[...g.querySelectorAll('.seg-l')].map(x=>x.textContent).join('|');
 function moSnap(sc){return{sc,sw:[...sc.querySelectorAll('.sw')].map(n=>({n,k:moSwKey(n),on:n.classList.contains('on')})),
   seg:[...sc.querySelectorAll('.seg')].map(g=>{const t=g.querySelector('.seg-thumb');return{g,k:moSegKey(g),r:t&&t.getBoundingClientRect()};}),
-  st:[...sc.querySelectorAll('.stepper b,.stp .sv')].map(b=>({b,k:b.dataset.roll||'',t:b.textContent,y:b.getBoundingClientRect().top})),
+  st:[...sc.querySelectorAll('.stepper b,.stp .sv')].map(b=>({b,k:b.dataset.roll||'',t:b._txt??b.textContent,y:b.getBoundingClientRect().top})),
   cr:[...sc.querySelectorAll('.condrow')].map(n=>{const p=n.previousElementSibling,s=p&&p.querySelector('.sw');return{n,t:n.textContent,k:s?moSwKey(s):null};})};}
-function moChanged(S){return S.sw.some(x=>!x.n.isConnected)||S.seg.some(x=>!x.g.isConnected)||S.st.some(x=>!x.b.isConnected||x.b.textContent!==x.t);}
+function moChanged(S){return S.sw.some(x=>!x.n.isConnected)||S.seg.some(x=>!x.g.isConnected)||S.st.some(x=>!x.b.isConnected||(x.b._txt??x.b.textContent)!==x.t);}
 /* restart a CSS transition on a fresh element from the old state, synchronously (before anything paints) */
 function moFlip(n,was,now){if(was===now||!motionOK())return;n.classList.add('nt');n.classList.toggle('on',was);void n.offsetWidth;n.classList.remove('nt');void n.offsetWidth;n.classList.toggle('on',now);}
 function moApply(S){const sc=S.sc.isConnected?S.sc:document;
@@ -755,7 +755,7 @@ function moApply(S){const sc=S.sc.isConnected?S.sc:document;
   const used=new Set();
   sc.querySelectorAll('.seg').forEach(g=>{if(S.seg.some(x=>x.g===g))return;const k=moSegKey(g),o=S.seg.find(x=>!used.has(x)&&!x.g.isConnected&&x.k===k);if(!o||!o.r)return;used.add(o);const t=g.querySelector('.seg-thumb'),r1=t&&t.getBoundingClientRect();if(r1&&Math.abs(r1.left-o.r.left)>1)segGlide(o.r,g);});
   const usedS=new Set();
-  sc.querySelectorAll('.stepper b,.stp .sv').forEach(n=>{let o=S.st.find(x=>x.b===n);if(!o){const k=n.dataset.roll||'',y=n.getBoundingClientRect().top;o=S.st.filter(x=>!usedS.has(x)&&!x.b.isConnected&&x.k===k).sort((a,b)=>Math.abs(a.y-y)-Math.abs(b.y-y))[0];}if(!o)return;usedS.add(o);if(n.textContent!==o.t)rollNode(n,o.t);});
+  sc.querySelectorAll('.stepper b,.stp .sv').forEach(n=>{let o=S.st.find(x=>x.b===n);if(!o){const k=n.dataset.roll||'',y=n.getBoundingClientRect().top;o=S.st.filter(x=>!usedS.has(x)&&!x.b.isConnected&&x.k===k).sort((a,b)=>Math.abs(a.y-y)-Math.abs(b.y-y))[0];}if(!o)return;usedS.add(o);if((n._txt??n.textContent)!==o.t)rollNode(n,o.t);});
   if(!motionOK())return;
   const ease='cubic-bezier(.3,1,.5,1)',nowCr=[...sc.querySelectorAll('.condrow')];
   nowCr.forEach(n=>{if(S.cr.some(x=>x.t===n.textContent))return;const h=n.offsetHeight;n.style.overflow='hidden';n.animate([{opacity:0,height:'0px',paddingTop:'0px',paddingBottom:'0px'},{opacity:1,height:h+'px'}],{duration:320,easing:ease}).onfinish=()=>{n.style.overflow='';};});

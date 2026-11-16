@@ -68,7 +68,6 @@ const PWA={
     }else if(id==='data'){
       const g=group('Account');g.append(el('div',{class:'li',style:'min-height:56px'},el('span',{class:'grow'},el('b',{style:'font-weight:500'},'Signed in'),el('small',{},a.email()||''))),
         el('button',{class:'li',style:'min-height:52px;color:var(--now);font-weight:600',onclick:()=>askConfirm({title:'Sign out?',body:'Your data stays in your account. Unsynced changes on this device are sent first.',yes:'Sign out',no:'Stay signed in',onYes:async()=>{flushAll();await new Promise(r=>setTimeout(r,900));try{localStorage.removeItem(CACHE);}catch(e){}await a.signOut();location.reload();}})},'Sign out'));
-      g.append(setRow('Check for updates',`Version ${APP_VER}`,null,async()=>{const r=await a.checkUpdate(true);if(!r)toast('You have the latest version');}));
     }
   },
 };

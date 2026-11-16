@@ -255,29 +255,33 @@ function dayCard(dk){
   const total=todoAny.length+lateIn.length+due.length+lateDoneL.length+t3es.length,doneN=todoAny.filter(e=>e.done).length+lateDoneL.length+t3es.filter(e=>e.done).length;
   const out=[];
   /* To-do */
-  const t3=t3on?top3Card(dk):null;
-  if(t3){t3.querySelectorAll(':scope>.bl,:scope>.t3bar').forEach(n=>n.remove());}
-  const todo=el('section',{class:'card daycard todo'+(t3?' t3 withT3':'')+fu},
+  /* Priorities as three rings; the first one not done sits under them as Up next; everything else folds away */
+  const t3=t3on&&get.settings().top3On!==false;
+  const todo=el('section',{class:'card daycard todo rcard'+fu},
     el('div',{class:'bl'},el('span',{class:'lbl'},isToday?'Today':relDay(dk)),total?el('button',{class:'small muted tnum',style:'min-height:28px','aria-pressed':String(!!S.hideDone),'aria-label':S.hideDone?'Show finished items':'Hide finished items',onclick:()=>{S.hideDone=!S.hideDone;App.refresh();}},el('span',{'data-roll':'done'},`${doneN} of ${total} done`),doneN?el('span',{style:'margin-left:6px;color:var(--accent-text);font-weight:600'},S.hideDone?'Show':'Hide'):null):null),
-    total?el('div',{class:'progress t3bar'},el('i',{style:`width:${Math.round(doneN/total*100)}%`})):null);
-  if(t3){if(t3.classList.contains('win'))todo.classList.add('win');{const won=t3es.length===T3_MAX&&t3es.every(e=>e.done);if(won){todo.classList.add('won');S._won=dk;}else if(S._won===dk){S._won=null;if(motionOK())todo.classList.add('lose');}}const w=el('div',{class:'t3in'});w.append(...t3.childNodes);
-    w.querySelectorAll('.t3grip').forEach(g=>g.remove());
-    w.querySelectorAll(':scope>.t3row[data-k]').forEach(r=>{const e=t3Entry({id:r.dataset.k.slice(3)},dk);if(!e)return;r.append(dGrip());const nx=r.nextSibling,par=r.parentNode;
-      const sw=!e.done&&['task','habit'].includes(e.kind)?swipeAct(r,{right:{label:'Done',color:'var(--accent)',run:()=>{toggleItem(e,dk);App.refresh();}},left:{label:'Edit',color:'var(--ink)',run:()=>{openItem(e,dk);setTimeout(()=>App.refresh(),260);}}}):r;
-      const d=el('div',{class:'dragrow','data-id':e.id,'data-t3':'1','data-can':'1'});par.insertBefore(d,nx);d.append(sw);});
-    todo.append(el('div',{class:'secl'},'Priorities'),w);}
+    total?el('div',{class:'progress t3bar rbar'},el('i',{style:`width:${Math.round(doneN/total*100)}%`})):null);
   onSwipe(todo,()=>goDay(addK(S.sel,1)),()=>goDay(addK(S.sel,-1)));
-  if(lateList.length>1)todo.append(el('div',{class:'sect-h',style:'margin-top:6px'},el('span',{class:'lbl'},'Carried over'),el('button',{class:'linkbtn small',onclick:()=>{const before=late.map(t=>[t,t.date]);late.forEach(t=>{t.date=tk;t.moves=(t.moves||0)+1;put(t,{silent:true});});App.refresh();toast(`${late.length} moved to today`,()=>{before.forEach(([t,d])=>{t.date=d;put(t,{silent:true});});App.refresh();});}},'Move all to today')));
+  const W=t3&&t3es.length===T3_MAX&&t3es.every(e=>e.done);
+  if(W){if(S._won!==dk&&S._painted)todo.classList.add('win');todo.classList.add('won');S._won=dk;}else if(S._won===dk){S._won=null;if(motionOK())todo.classList.add('lose');}
+  if(t3)todo.append(priorityRings(dk,t3es,W));
+  const nx=t3?t3es.find(e=>!e.done):null;
+  if(W)todo.append(el('p',{class:'wonmsg'},'What mattered most is done.'));
+  else if(nx)todo.append(upNext(nx,dk,t3es.indexOf(nx)));
   const a=el('div',{class:'anytime'});
   lateList.forEach(t=>a.append(anyRow({kind:'task',id:t.id,rec:t,title:t.title,time:null,done:false},t.date,{late:relDay(t.date),target:dk})));
   due.forEach(t=>a.append(anyRow({kind:'task',id:t.id,rec:t,title:t.title,time:null,done:false},t.date||dk,{target:dk})));
   todoAny.filter(e=>!e.done).forEach(e=>a.append(anyRow(e,dk,{target:dk})));
   if(!S.hideDone)todoAny.filter(e=>e.done).forEach(e=>a.append(anyRow(e,dk,{target:dk})));
   if(!S.hideDone)lateDoneL.forEach(t=>a.append(anyRow({kind:'task',id:t.id,rec:t,title:t.title,time:null,done:true},t.date,{late:relDay(t.date),target:dk})));
-  if(t3)a.querySelectorAll(':scope>.trow-wrap').forEach(w=>{const id=w.querySelector('.trow')?.dataset.id;const r=id&&get.id(id);w.classList.add('dragrow');w.dataset.id=id||'';w.dataset.can=r&&r.kind==='task'?'1':'0';const tr=w.querySelector('.trow');if(tr&&w.dataset.can==='1')tr.append(dGrip());});
-  if(a.childNodes.length){if(t3)todo.append(el('div',{class:'secl oth'},'Other'));todo.append(a);}else if(!t3es.length)todo.append(el('p',{class:'sub',style:'margin:6px 0 0'},isPast?'Nothing was left open.':total?'All done. Nice work.':'Nothing to do yet.'));
+  a.querySelectorAll(':scope>.trow-wrap').forEach(w=>{const id=w.querySelector('.trow')?.dataset.id;const r=id&&get.id(id);w.classList.add('dragrow');w.dataset.id=id||'';w.dataset.can=r&&r.kind==='task'?'1':'0';const tr=w.querySelector('.trow');if(tr&&w.dataset.can==='1')tr.append(dGrip());});
+  const nOth=a.querySelectorAll(':scope>.trow-wrap').length;
+  if(a.childNodes.length){
+    S._othOpen=S._othOpen||{};const fold=t3&&t3es.length>0,openO=!fold||S._othOpen[dk];
+    if(fold)todo.append(el('button',{class:'othtog'+(openO?' open':''),'aria-expanded':String(!!openO),onclick:()=>{S._othOpen[dk]=!S._othOpen[dk];App.refresh();}},el('span',{},openO?'Other to-dos':`${nOth} more to-do${nOth===1?'':'s'}`),el('span',{class:'chev',html:ic('chevd',16,2.2)})));
+    if(openO){if(lateList.length>1)todo.append(el('div',{class:'sect-h',style:'margin-top:6px'},el('span',{class:'lbl'},'Carried over'),el('button',{class:'linkbtn small',onclick:()=>{const before=late.map(t=>[t,t.date]);late.forEach(t=>{t.date=tk;t.moves=(t.moves||0)+1;put(t,{silent:true});});App.refresh();toast(`${late.length} moved to today`,()=>{before.forEach(([t,d])=>{t.date=d;put(t,{silent:true});});App.refresh();});}},'Move all to today')));todo.append(a);}
+  }else if(!t3es.length)todo.append(el('p',{class:'sub',style:'margin:6px 0 0'},isPast?'Nothing was left open.':total?'All done. Nice work.':'Nothing to do yet.'));
   if(!isPast||!total)todo.append(el('button',{class:'addrow',onclick:()=>taskSheet(null,{date:dk})},el('span',{style:'display:grid',html:ic('plus',18,2.2)}),'Add a to-do'));
-  if(t3)wireTodayDrag(todo,dk);
+  if(t3)wireRingDrop(todo,dk);
   out.push(todo);
   /* Habits */
   const loose=isToday?get.all('habit').filter(h=>(h.target||0)>habitWeek(h,dk)-(habitDone(h,dk)?1:0)&&!(h.sessions||{})[dk]&&!occursHabit(h,dk)&&!(h.days&&h.days.length)):[];
@@ -446,3 +450,34 @@ function shareDaySheet(dk){
       el('button',{class:'btn line block',onclick:()=>{const flat=document.createElement('canvas');flat.width=c.width;flat.height=c.height;flat.getContext('2d').drawImage(c,0,0);flat.toBlob(async b=>{const buf=new Uint8Array(await b.arrayBuffer());saveFile(base+'.pdf',new Blob([pdfFromJpeg(buf,c.width,c.height)],{type:'application/pdf'}));},'image/jpeg',.92);}},'Save PDF'),copy,ta);
   }}));
 }
+
+/* ---------- Priority rings (v159) ----------
+   Three rings: dashed = empty (tap to pick), outlined = set (tap = done), filled = done (tap again = not done).
+   Press and hold a set ring for: make it up next, replace, remove. Drag a to-do's handle onto a ring to make it a priority. */
+const PR_CK='<svg class="pck" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg>';
+function priorityRings(dk,es,W){const S=App.state,just=S._prJust;S._prJust=null;
+  const wrap=el('div',{class:'prings'});
+  for(let i=0;i<T3_MAX;i++){const e=es[i],st=!e?'empty':e.done?'done':'set',fresh=just&&e&&just.id===e.id?(e.done?' fill-in':' fill-out'):'';
+    const b=el('button',{class:`pring pr-${st}${fresh}`,'data-ring':String(i),'aria-label':e?`Priority ${i+1}: ${e.title}${e.done?', done. Tap to undo':'. Tap to mark done'}`:`Set priority ${i+1}`,
+      onclick:()=>{if(!e){t3PickSheet(dk,i);return;}S._prJust={id:e.id};buzz(e.done?4:10);toggleItem(e,dk);App.refresh();}},
+      el('span',{class:'pfill'}),el('span',{class:'pnum'},String(i+1)),el('span',{html:PR_CK,style:'display:contents'}));
+    if(e)withPress(b,(x,y)=>{const l=t3Get(dk),nx=es.findIndex(q=>!q.done);openMenu(x,y,[
+      {label:e.done?'Mark not done':'Mark done',icon:'check',onclick:()=>{S._prJust={id:e.id};toggleItem(e,dk);App.refresh();}},
+      !e.done&&nx>=0&&nx!==i?{label:'Make it up next',icon:'arrow',onclick:()=>{t3Move(dk,i,nx);}}:null,
+      {label:'Replace',icon:'rep',onclick:()=>{t3Set(dk,l.filter(q=>q.id!==e.id));setTimeout(()=>t3PickSheet(dk,i),200);}},
+      {label:'Open',icon:'edit',onclick:()=>openItem(e,dk)},
+      {label:'Remove from priorities',icon:'x',danger:true,onclick:()=>{t3Set(dk,l.filter(q=>q.id!==e.id));}}].filter(Boolean));});
+    wrap.append(el('div',{class:'pslot'},b,el('span',{class:'plab pl-'+st},e?e.title:'Add')));}
+  return wrap;}
+function upNext(e,dk,i){const S=App.state,fresh=S._upNext!==e.id;S._upNext=e.id;
+  return el('div',{class:'upnext'+(fresh&&S._painted?' in':''),style:`--cx:${[16.5,50,83.5][i]||16.5}%`},
+    el('div',{class:'grow'},el('span',{class:'k'},'Up next'+(e.rec&&e.rec.area?' · '+e.rec.area:'')),el('span',{class:'ft'},e.title)),
+    e.kind==='task'?el('button',{class:'ubtn play','aria-label':`Focus on ${e.title} for 25 minutes`,html:'<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>',onclick:()=>startFocus(e.rec,25)}):null,
+    el('button',{class:'ubtn ok','aria-label':`Mark ${e.title} done`,html:ic('check',20,2.8),onclick:()=>{S._prJust={id:e.id};buzz(10);toggleItem(e,dk);App.refresh();}}));}
+/* drag a to-do's handle onto a ring */
+function wireRingDrop(card,dk){card.addEventListener('pointerdown',ev=>{const g=ev.target.closest('.dgrip');if(!g||!card.contains(g))return;const w=g.closest('.dragrow,.trow-wrap'),id=w&&(w.dataset.id||w.querySelector('.trow')?.dataset.id),r=id&&get.id(id);if(!r)return;
+  ev.preventDefault();ev.stopPropagation();const gh=el('div',{class:'prghost'},r.title);document.body.append(gh);let hot=null;App.dragging=true;buzz(6);
+  const mv=e=>{gh.style.left=e.clientX+'px';gh.style.top=e.clientY+'px';const u=document.elementFromPoint(e.clientX,e.clientY),rg=u&&u.closest('.pring');if(hot&&hot!==rg)hot.classList.remove('hot');if(rg&&rg!==hot)buzz(4);hot=rg;if(rg)rg.classList.add('hot');};
+  const up=()=>{removeEventListener('pointermove',mv,true);removeEventListener('pointerup',up,true);removeEventListener('pointercancel',up,true);gh.remove();App.dragging=false;App._dragEnd=Date.now();
+    if(hot){const i=+hot.dataset.ring,l=t3Get(dk).filter(q=>q.id!==r.id);if(i<l.length)l.splice(i,1,{id:r.id});else l.push({id:r.id});t3Set(dk,l);}else App.refresh();};
+  mv(ev);addEventListener('pointermove',mv,true);addEventListener('pointerup',up,true);addEventListener('pointercancel',up,true);},true);}

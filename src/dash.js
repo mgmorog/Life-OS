@@ -262,7 +262,7 @@ const incIn=ym=>incItems().filter(i=>i.d.slice(0,7)===ym).reduce((a,i)=>a+i.v,0)
 function incNext(x){const t=todayK(),l=incOccur(x,addK(t,70));return l.find(d=>d>=t)||null;}
 function vIncome(page,hub,t){const ym=monthKey(today()),src=ofType(hub,'income','source'),one=ofType(hub,'income','').slice().sort((a,b)=>a.f.date<b.f.date?1:-1),inc=incIn(ym),out=spendSum(ym);
   toolHead(page,hub,t,{sub:'Money coming in'});
-  page.append(el('section',{class:'card'},el('span',{class:'lbl'},`${MONL[today().getMonth()]} so far`),bigN(money0(inc)),el('div',{class:'bl small muted',style:'margin-top:6px'},el('span',{},`${money0(out)} spent`),el('span',{},inc>0?`${Math.round((inc-out)/inc*100)}% kept`:''))));
+  page.append(el('section',{class:'card'},el('span',{class:'lbl'},`${MONL[today().getMonth()]} so far`),bigN(money0(inc)),el('div',{class:'bl small muted',style:'margin-top:6px'},el('span',{},`${money0(out)} spent`),el('span',{},inc>0?(out>inc?`${money0(out-inc)} over`:`${Math.round((inc-out)/inc*100)}% kept`):''))));
   page.append(lblRow('Regular income',lnk('Add',()=>entrySheet(hub,t,null,{type:'source'}),'plus')));
   page.append(src.length?rows(src,x=>{const n=incNext(x);return rowX({t:x.f.what,big:true,on:()=>entrySheet(hub,t,x),s:[x.f.every,n?`Next ${mD(n)}`:null].filter(Boolean).join(' · '),r:el('span',{class:'dfv tnum'},money0(x.f.amount))});}):el('div',{class:'list'},emptyState('No regular income yet','Add your paycheck once. It counts itself on each payday.',el('button',{class:'btn line',onclick:()=>entrySheet(hub,t,null,{type:'source'})},'+ Regular income'))));
   page.append(lblRow('One-time income',lnk('Add',()=>entrySheet(hub,t),'plus')));

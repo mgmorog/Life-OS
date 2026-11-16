@@ -396,7 +396,9 @@ function timeGrid(dk,timed){
   const nowTop=()=>{const t=nowMin()/60*HH+12-g.clientHeight/4,h=Math.max(0,Math.floor((t-12)/HH));return Math.max(0,h*HH+12-16);};
   let jump=null;
   if(isToday){jump=el('button',{class:'nowjump',hidden:true,onclick:()=>g.scrollTo({top:nowTop(),behavior:'smooth'})},'Now');gw.append(jump);}
-  const syncJump=()=>{if(!jump)return;const y=nowMin()/60*HH+12;jump.hidden=y>g.scrollTop&&y<g.scrollTop+g.clientHeight;};
+  /* the Now pill only appears after you scroll the day yourself, never while it opens or glides to now */
+  let touched=false;['touchstart','wheel','pointerdown'].forEach(n=>g.addEventListener(n,()=>{touched=true;},{passive:true}));
+  const syncJump=()=>{if(!jump)return;const y=nowMin()/60*HH+12;jump.hidden=!touched||(y>g.scrollTop&&y<g.scrollTop+g.clientHeight);};
   requestAnimationFrame(()=>{
     if(S._gridTop!=null&&!S._fresh)g.scrollTop=S._gridTop;
     else{const to=isToday?nowTop():Math.max(0,Math.floor((timed[0]?timed[0].time:8*60)/60)*HH+12-16);S._fresh=false;if(S._noGlide){S._noGlide=false;g.scrollTop=to;}else gridGlide(g,gw,to,isToday);}

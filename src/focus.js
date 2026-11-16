@@ -3,6 +3,7 @@ const T3_MAX=3;
 function t3Get(dk){return((get.settings().top3||{})[dk]||[]).filter(x=>get.id(x.id));}
 function t3Set(dk,list){const s=get.settings(),all=Object.assign({},s.top3,{[dk]:list.slice(0,T3_MAX)});const keep={};Object.keys(all).sort().slice(-60).forEach(d=>keep[d]=all[d]);setSettings({top3:keep});}
 function t3Entry(x,dk){const r=get.id(x.id);if(!r)return null;const kind=r.kind;
+  if(kind==='entry'){const it=(dk===todayK()?areaItems(dk):[]).find(q=>q.rid===r.id);return{kind,id:r.id,rec:r,title:it?it.title:(r.f&&r.f.what)||'Item',done:it?it.done:false,time:null,tick:it&&it.tick,go:it?it.go:()=>App.go('tool',{hub:r.hub,tool:r.tool}),area:it&&it.area};}
   const done=kind==='habit'?habitDone(r,dk):kind==='routine'?!!(r.runs||{})[dk]:isDone(r,dk);
   return{kind,id:r.id,rec:r,title:r.title,done,time:kind==='block'?r.start:kind==='task'?r.time:null};}
 const t3AllDone=dk=>{const l=t3Get(dk);return l.length>0&&l.every(x=>{const e=t3Entry(x,dk);return e&&e.done;});};

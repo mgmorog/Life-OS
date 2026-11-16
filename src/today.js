@@ -111,15 +111,17 @@ function viewToday(root){
   page.append(alldayRow(dk));
   page.append(...dayCard(dk));
   const rem=reminderCard();if(rem)page.append(rem);
-  if(isToday&&s.inboxNudge&&inboxN>=5&&s.nudgeOff!==weekKey(today()))page.append(el('div',{class:'focus-chip'},el('button',{class:'grow small',style:'text-align:left;min-height:32px',onclick:()=>App.go('inbox')},`${inboxN} ideas waiting in your Inbox`),el('button',{class:'fa',onclick:()=>App.go('inbox')},'Sort ›'),el('button',{class:'iconbtn','aria-label':'Dismiss for this week',style:'width:32px;height:32px',html:ic('x',14,2.2),onclick:()=>setSettings({nudgeOff:weekKey(today())})})));
+  const look=[];
   if(isToday&&s.checkinCard&&sel.getDay()===(s.reviewDay??0)&&s.checkinDone!==dk&&!(s.onboardedAt&&Date.now()-s.onboardedAt<6*864e5))page.append(s.checkinLater===dk?el('button',{class:'focus-chip',onclick:()=>App.go('review')},el('span',{class:'small'},'Weekly review'),el('span',{class:'fa'},'Start ›')):checkinCard(dk));
   if(isToday){const gz=goalPulseCard();if(gz)page.append(gz);const gc=goalCheckCard();if(gc)page.append(gc);const cf=cfg('Health','checkin').f;if(cf.rem&&!checkOn(dk)&&nowMin()>=(tMin(cf.at||'21:00')??1260))page.append(el('button',{class:'focus-chip',onclick:()=>App.go('tool',{hub:'Health',tool:'checkin'})},el('span',{class:'small'},'Daily check-in'),el('span',{class:'fa'},'Log ›')));}
   {const tc=tripTodayCard(dk);if(tc)page.append(tc);}
-  if(isToday&&s.lessonCard!==false&&!hubHidden('Personal growth').includes('lessons')){const ls=lessonToday();if(ls&&ls.f.kept!==dk&&ls.f.seen!==dk)page.append(el('section',{class:'card res',style:'padding:14px 16px'},el('div',{class:'bl'},el('span',{class:'lbl',style:'color:var(--accent-text)'},'A lesson you wrote'),el('button',{class:'iconbtn','aria-label':'Hide for today',style:'width:32px;height:32px',html:ic('x',14,2.2),onclick:()=>{ls.f.seen=dk;put(ls);}})),el('p',{class:'serif',style:'font-size:20px;line-height:1.25;margin-top:6px'},ls.f.lesson),el('div',{style:'display:flex;gap:8px;margin-top:10px'},el('button',{class:'chip',onclick:()=>{ls.f.kept=dk;put(ls);toast('Kept. You’ll see it again in a few months.');}},'Still true'),el('button',{class:'chip line',onclick:()=>App.go('tool',{hub:'Personal growth',tool:'lessons'})},'All lessons'))));}
+  if(isToday&&s.inboxNudge&&inboxN>=5&&s.nudgeOff!==weekKey(today()))look.push(el('div',{class:'lk'},el('button',{class:'grow',style:'text-align:left;min-height:44px',onclick:()=>App.go('inbox')},`${inboxN} ideas in your Inbox`),el('button',{class:'cpill',onclick:()=>App.go('inbox')},'Sort'),el('button',{class:'iconbtn','aria-label':'Hide for this week',style:'width:36px;height:36px',html:ic('x',14,2.2),onclick:()=>setSettings({nudgeOff:weekKey(today())})})));
+  if(isToday&&s.lessonCard!==false&&!hubHidden('Personal growth').includes('lessons')){const ls=lessonToday();if(ls&&ls.f.kept!==dk&&ls.f.seen!==dk)look.push(el('div',{class:'lk'},el('button',{class:'grow',style:'text-align:left;min-height:44px',onclick:()=>App.go('tool',{hub:'Personal growth',tool:'lessons'})},`Lesson: “${ls.f.lesson}”`),el('button',{class:'cpill',onclick:()=>{ls.f.kept=dk;put(ls);toast('Kept. You’ll see it again in a few months.');}},'Still true'),el('button',{class:'iconbtn','aria-label':'Hide for today',style:'width:36px;height:36px',html:ic('x',14,2.2),onclick:()=>{ls.f.seen=dk;put(ls);}})));}
+  if(look.length)page.append(el('section',{class:'card lookcard'},el('span',{class:'lbl'},'Worth a look'),...look));
   {const pc=pinsCard(dk);if(pc)page.append(pc);}
   if(isToday&&s.areaDue!==false){const ad=areaDueCard(dk);if(ad)page.append(ad);}
   {const wc=waitCard(dk);if(wc)page.append(wc);}
-  if(isToday){const pc=pinnedListsToday();if(pc)page.append(pc);const pl=plateCard(dk);if(pl)page.append(pl);}
+  if(isToday){const pc=pinnedListsToday();if(pc)page.append(pc);}
   const tm=addD(sel,1),tmk=k(tm),td=dayItems(tmk),tl=[...td.allDay,...td.timed,...td.anytime],firstT=td.timed[0];
   page.append(el('section',{class:'card'+(first?' fade-up':''),style:first?'animation-delay:.12s':null},el('button',{class:'tmr',onclick:()=>{const S2=App.state;S2.sel=tmk;S2._fresh=true;S2._gridTop=null;S2._anim=null;S2._noGlide=true;scrollTo(0,0);clearTimeout(App._r);App.render();}},
     el('div',{class:'tile'},el('small',{},DOW[tm.getDay()].slice(0,3).toUpperCase()),el('span',{},String(tm.getDate()))),
@@ -252,13 +254,13 @@ function dayCard(dk){
   const shown=new Set([...late.map(t=>t.id),...allIds,...t3ids]),due=dueExtras(dk,shown);
   const lateDone=isToday?get.all('task').filter(t=>t.date&&t.date<tk&&(!t.repeat||t.repeat.type==='never')&&isDone(t,t.date)&&k(new Date(typeof t.doneDates[t.date]==='number'?t.doneDates[t.date]:0))===tk):[];
   const lateList=late.filter(notT3),lateDoneL=lateDone.filter(notT3);
-  const total=todoAny.length+lateIn.length+due.length+lateDoneL.length+t3es.length,doneN=todoAny.filter(e=>e.done).length+lateDoneL.length+t3es.filter(e=>e.done).length;
+  const total=todoAny.length+due.length+t3es.length,doneN=todoAny.filter(e=>e.done).length+t3es.filter(e=>e.done).length;
   const out=[];
   /* To-do */
   /* Priorities as three rings; the first one not done sits under them as Up next; everything else folds away */
   const t3=t3on&&get.settings().top3On!==false;
   const todo=el('section',{class:'card daycard todo rcard'+fu},
-    el('div',{class:'bl'},el('span',{class:'lbl'},(()=>{const d=isToday?'Today':relDay(dk);return t3?(['Today','Tomorrow','Yesterday'].includes(d)?`${d}’s priorities`:`Priorities · ${d}`):d;})()),total?el('button',{class:'small muted tnum',style:'min-height:28px','aria-pressed':String(!!S.hideDone),'aria-label':S.hideDone?'Show finished items':'Hide finished items',onclick:()=>{S.hideDone=!S.hideDone;App.refresh();}},el('span',{'data-roll':'done'},`${doneN} of ${total} done`),doneN?el('span',{style:'margin-left:6px;color:var(--accent-text);font-weight:600'},S.hideDone?'Show':'Hide'):null):null),
+    el('div',{class:'bl'},el('span',{class:'lbl'},(()=>{const d=isToday?'Today':relDay(dk);return t3?(['Today','Tomorrow','Yesterday'].includes(d)?`${d}’s priorities`:`Priorities · ${d}`):d;})()),total?el('span',{class:'small muted tnum'},el('span',{'data-roll':'done'},`${doneN} of ${total} today`)):null),
     total?el('div',{class:'progress t3bar rbar'},el('i',{style:`width:${Math.round(doneN/total*100)}%`})):null);
   onSwipe(todo,()=>goDay(addK(S.sel,1)),()=>goDay(addK(S.sel,-1)));
   const W=t3&&t3es.length===T3_MAX&&t3es.every(e=>e.done);
@@ -267,20 +269,22 @@ function dayCard(dk){
   const nx=t3?t3es.find(e=>!e.done):null;
   if(W)todo.append(el('p',{class:'wonmsg'},'What mattered most is done.'));
   else if(nx)todo.append(upNext(nx,dk,t3es.indexOf(nx)));
-  const a=el('div',{class:'anytime'});
-  lateList.forEach(t=>a.append(anyRow({kind:'task',id:t.id,rec:t,title:t.title,time:null,done:false},t.date,{late:relDay(t.date),target:dk})));
+  /* everything left over from earlier days is one row: Review or Move all */
+  if(lateList.length)todo.append(el('div',{class:'carryrow'},el('span',{class:'grow'},el('b',{},`${lateList.length} carried over`),el('span',{class:'small muted',style:'display:block'},`Oldest from ${relDay(lateList.reduce((m,t)=>t.date<m?t.date:m,lateList[0].date))}`)),
+    el('button',{class:'cpill',onclick:()=>carrySheet(dk)},'Review'),
+    el('button',{class:'cpill g',onclick:()=>{const before=lateList.map(t=>[t,t.date]);lateList.forEach(t=>{t.date=dk;t.moves=(t.moves||0)+1;put(t,{silent:true});});App.refresh();toast(`${before.length} moved to today`,()=>{before.forEach(([t,d])=>{t.date=d;put(t,{silent:true});});App.refresh();});}},'Move all')));
+  const a=el('div',{class:'anytime'}),dn=el('div',{class:'anytime'});
   due.forEach(t=>a.append(anyRow({kind:'task',id:t.id,rec:t,title:t.title,time:null,done:false},t.date||dk,{target:dk})));
   todoAny.filter(e=>!e.done).forEach(e=>a.append(anyRow(e,dk,{target:dk})));
-  if(!S.hideDone)todoAny.filter(e=>e.done).forEach(e=>a.append(anyRow(e,dk,{target:dk})));
-  if(!S.hideDone)lateDoneL.forEach(t=>a.append(anyRow({kind:'task',id:t.id,rec:t,title:t.title,time:null,done:true},t.date,{late:relDay(t.date),target:dk})));
-  a.querySelectorAll(':scope>.trow-wrap').forEach(w=>{const id=w.querySelector('.trow')?.dataset.id;const r=id&&get.id(id);w.classList.add('dragrow');w.dataset.id=id||'';w.dataset.can=r&&r.kind==='task'?'1':'0';const tr=w.querySelector('.trow');if(tr&&w.dataset.can==='1')tr.append(dGrip());});
-  const nOth=a.querySelectorAll(':scope>.trow-wrap').length;
-  if(a.childNodes.length){
-    S._othOpen=S._othOpen||{};const fold=t3&&t3es.length>0,openO=!fold||S._othOpen[dk];
-    if(fold)todo.append(el('button',{class:'othtog'+(openO?' open':''),'aria-expanded':String(!!openO),onclick:()=>{S._othOpen[dk]=!S._othOpen[dk];App.refresh();}},el('span',{},openO?'Other to-dos':`${nOth} more to-do${nOth===1?'':'s'}`),el('span',{class:'chev',html:ic('chevd',16,2.2)})));
-    if(openO){if(lateList.length>1)todo.append(el('div',{class:'sect-h',style:'margin-top:6px'},el('span',{class:'lbl'},'Carried over'),el('button',{class:'linkbtn small',onclick:()=>{const before=late.map(t=>[t,t.date]);late.forEach(t=>{t.date=tk;t.moves=(t.moves||0)+1;put(t,{silent:true});});App.refresh();toast(`${late.length} moved to today`,()=>{before.forEach(([t,d])=>{t.date=d;put(t,{silent:true});});App.refresh();});}},'Move all to today')));todo.append(a);}
-  }else if(!t3es.length)todo.append(el('p',{class:'sub',style:'margin:6px 0 0'},isPast?'Nothing was left open.':total?'All done. Nice work.':'Nothing to do yet.'));
+  todoAny.filter(e=>e.done).forEach(e=>dn.append(anyRow(e,dk,{target:dk})));
+  lateDoneL.forEach(t=>dn.append(anyRow({kind:'task',id:t.id,rec:t,title:t.title,time:null,done:true},t.date,{late:relDay(t.date),target:dk})));
+  /* every task row, done ones too, gets a handle so it can be dropped on a ring */
+  [a,dn].forEach(box=>box.querySelectorAll(':scope>.trow-wrap').forEach(w=>{const id=w.querySelector('.trow')?.dataset.id;const r=id&&get.id(id);w.classList.add('dragrow');w.dataset.id=id||'';w.dataset.can=r&&r.kind==='task'?'1':'0';const tr=w.querySelector('.trow');if(tr&&w.dataset.can==='1')tr.append(dGrip());}));
+  const nOpen=a.querySelectorAll(':scope>.trow-wrap').length,nDone=dn.querySelectorAll(':scope>.trow-wrap').length;
+  if(nOpen){if(t3)todo.append(el('div',{class:'secl'},`Other today · ${nOpen}`));todo.append(a);}
+  else if(!t3es.length&&!lateList.length)todo.append(el('p',{class:'sub',style:'margin:6px 0 0'},isPast?'Nothing was left open.':total?'All done. Nice work.':'Nothing to do yet.'));
   if(!isPast||!total)todo.append(el('button',{class:'addrow',onclick:()=>taskSheet(null,{date:dk})},el('span',{style:'display:grid',html:ic('plus',18,2.2)}),'Add a to-do'));
+  if(nDone){S._doneOpen=S._doneOpen||{};const op=!!S._doneOpen[dk];todo.append(el('button',{class:'donefold'+(op?' open':''),'aria-expanded':String(op),onclick:()=>{S._doneOpen[dk]=!op;App.refresh();}},el('span',{},`Done · ${nDone}`),el('span',{class:'chev',html:ic('chevd',16,2.2)})));if(op)todo.append(dn);}
   if(t3)wireRingDrop(todo,dk);
   out.push(todo);
   /* Habits */
@@ -302,7 +306,7 @@ function dayCard(dk){
     el('div',{class:'bl'},el('span',{class:'lbl'},'Schedule'),null));
   const rows=el('div',{class:'uplist'});
   upcoming.slice(0,3).forEach(e=>{const during=isToday&&e.time<=nowM;const end=e.time+(e.dur||30);
-    rows.append(el('button',{class:'uprow',style:`--c:${e.color||'var(--accent)'}`,onclick:()=>openItem(e,dk)},el('span',{class:'upt tnum'},fmtS(e.time)),el('span',{class:'upbar'}),el('span',{class:'grow'},el('span',{class:'tt'},e.title),el('span',{class:'meta'},e.kind==='task'?fmtT(e.time):fmtRange(e.time,end),during?el('b',{class:'upnow'},` · ${fmtDurS(end-nowM)} left`):isToday&&e===upcoming[0]?` · in ${fmtDurS(e.time-nowM)}`:''))));});
+    rows.append(el('button',{class:'uprow',style:`--c:${e.color||'var(--accent)'}`,onclick:()=>openItem(e,dk)},el('span',{class:'upt tnum'},fmtS(e.time)),el('span',{class:'upbar'}),el('span',{class:'grow'},el('span',{class:'tt'},e.title),el('span',{class:'meta'},sched.some(f=>f!==e&&f.kind!=='task'&&e.kind!=='task'&&f.time<e.time+(e.dur||30)&&e.time<f.time+(f.dur||30))?el('span',{class:'ovtag',style:'margin:0 6px 0 0'},'Overlaps'):null,e.kind==='task'?fmtT(e.time):fmtRange(e.time,end),during?el('b',{class:'upnow'},` · ${fmtDurS(end-nowM)} left`):isToday&&e===upcoming[0]?` · in ${fmtDurS(e.time-nowM)}`:''))));});
   if(!upcoming.length)rows.append(el('p',{class:'sub',style:'margin:2px 0 0'},sched.length?'Nothing else scheduled today.':isPast?'Nothing was scheduled.':'Nothing scheduled. Open the day to block time.'));
   cu.append(rows);
   cu.append(el('button',{class:'linkbtn small uptoggle','aria-expanded':String(open),onclick:()=>{S.gridOpen=!S.gridOpen;S._gridTop=null;App.refresh();}},open?'Hide full day':`See full day${sched.length?` · ${sched.length} ${sched.length===1?'item':'items'}`:''}`,el('span',{style:`display:grid;transition:transform .25s var(--ease);${open?'transform:rotate(90deg)':''}`,html:ic('chevr',16,2.2)})));
@@ -333,7 +337,7 @@ function anyRow(e,dk,{late,target,addToday}={}){
     move:(x,y)=>{dropPreview(x,y,e.dur||30,0);autoscrollGrid(x,y);},
     drop:(x,y)=>{const t=gridTimeAt(x,y,0,e.dur||30);clearPreview();if(t==null)return;const u=snapItem(e),d=target||S.sel;if(e.kind==='task'&&e.rec.date!==d&&(!e.rec.repeat||e.rec.repeat.type==='never'))e.rec.date=d;setItemTime(e,d,t);App.refresh();toast(`Set for ${fmtT(t)}`,u);}});
   wrap.append(!e.done&&['task','step','habit'].includes(e.kind)&&!(e.kind==='habit'&&e.rec.track&&e.rec.track!=='check')?swipeAct(row,{right:{label:'Done',color:'var(--accent)',run:()=>{toggleItem(e,dk);App.refresh();}},left:{label:'Edit',color:'var(--ink)',run:()=>{openItem(e,target||e.occ||dk);setTimeout(()=>App.refresh(),260);}}}):row);
-  if(steps.length&&S.expanded[e.id]){wrap.append(el('div',{class:'stepsin'},steps.map(st=>{const was=stepDone(e.rec,st,dk);const r=el('div',{class:'stepin tick-host'+(was?' done':'')},el('span',{class:'tick-hit'},tickBtn(was,on=>{setStepDone(e.rec,st,dk,on);put(e.rec,{silent:true});r.classList.toggle('done',on);if(on&&steps.every(x=>stepDone(e.rec,x,dk))&&!isDone(e.rec,dk))toast('All steps done',()=>{toggleItem(e,dk);App.refresh();},'Finish task');else{if(!on)$('#toast').classList.remove('on');setTimeout(()=>App.refresh(),820);}},'Mark step done')),el('span',{class:'grow'},el('span',{class:'tt'},st.t)));return r;})));}
+  if(steps.length&&S.expanded[e.id]){wrap.append(el('div',{class:'stepsin'},steps.map(st=>{const was=stepDone(e.rec,st,dk);const r=el('div',{class:'stepin tick-host'+(was?' done':'')},el('span',{class:'tick-hit'},tickBtn(was,on=>{setStepDone(e.rec,st,dk,on);put(e.rec,{silent:true});r.classList.toggle('done',on);if(on&&steps.every(x=>stepDone(e.rec,x,dk))&&!isDone(e.rec,dk)){setTimeout(()=>{toggleItem(e,dk);App.refresh();toast(`All steps done · ${e.title} finished`,()=>{toggleItem(e,dk);App.refresh();});},420);}else{if(!on)$('#toast').classList.remove('on');setTimeout(()=>App.refresh(),820);}},'Mark step done')),el('span',{class:'grow'},el('span',{class:'tt'},st.t)));return r;})));}
   return wrap;
 }
 function metaOf(e,late,dk){
@@ -473,13 +477,21 @@ function priorityRings(dk,es,W){const S=App.state,just=S._prJust;S._prJust=null;
   return wrap;}
 function upNext(e,dk,i){const S=App.state,fresh=S._upNext!==e.id;S._upNext=e.id;
   return el('div',{class:'upnext'+(fresh&&S._painted?' in':''),style:`--cx:${[16.5,50,83.5][i]||16.5}%`},
-    el('div',{class:'grow'},el('span',{class:'k'},'Up next'+(e.rec&&e.rec.area?' · '+e.rec.area:'')),el('span',{class:'ft'},e.title)),
+    el('div',{class:'grow'},el('span',{class:'k'},'Up next'),el('span',{class:'ft'},e.title),e.rec&&e.rec.area?el('span',{class:'ar'},e.rec.area):null),
     e.kind==='task'?el('button',{class:'ubtn play','aria-label':`Focus on ${e.title} for 25 minutes`,html:'<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>',onclick:()=>startFocus(e.rec,25)}):null,
     el('button',{class:'ubtn ok','aria-label':`Mark ${e.title} done`,html:ic('check',20,2.8),onclick:()=>{S._prJust={id:e.id};buzz(10);toggleItem(e,dk);App.refresh();}}));}
 /* drag a to-do's handle onto a ring */
 function wireRingDrop(card,dk){card.addEventListener('pointerdown',ev=>{const g=ev.target.closest('.dgrip');if(!g||!card.contains(g))return;const w=g.closest('.dragrow,.trow-wrap'),id=w&&(w.dataset.id||w.querySelector('.trow')?.dataset.id),r=id&&get.id(id);if(!r)return;
   ev.preventDefault();ev.stopPropagation();const gh=el('div',{class:'prghost'},r.title);document.body.append(gh);let hot=null;App.dragging=true;buzz(6);
-  const mv=e=>{gh.style.left=e.clientX+'px';gh.style.top=e.clientY+'px';const u=document.elementFromPoint(e.clientX,e.clientY),rg=u&&u.closest('.pring');if(hot&&hot!==rg)hot.classList.remove('hot');if(rg&&rg!==hot)buzz(4);hot=rg;if(rg)rg.classList.add('hot');};
-  const up=()=>{removeEventListener('pointermove',mv,true);removeEventListener('pointerup',up,true);removeEventListener('pointercancel',up,true);gh.remove();App.dragging=false;App._dragEnd=Date.now();
+  let ly=ev.clientY,raf=0;const edge=()=>{if(!gh.isConnected)return;if(ly<120)scrollBy(0,-12);else if(ly>innerHeight-140)scrollBy(0,12);raf=requestAnimationFrame(edge);};raf=requestAnimationFrame(edge);
+  const mv=e=>{ly=e.clientY;const hw=gh.offsetWidth/2+8;gh.style.left=Math.min(innerWidth-hw,Math.max(hw,e.clientX))+'px';gh.style.top=Math.max(70,e.clientY)+'px';const u=document.elementFromPoint(e.clientX,e.clientY),rg=u&&u.closest('.pring');if(hot&&hot!==rg)hot.classList.remove('hot');if(rg&&rg!==hot)buzz(4);hot=rg;if(rg)rg.classList.add('hot');};
+  const up=()=>{cancelAnimationFrame(raf);removeEventListener('pointermove',mv,true);removeEventListener('pointerup',up,true);removeEventListener('pointercancel',up,true);gh.remove();App.dragging=false;App._dragEnd=Date.now();
     if(hot){const i=+hot.dataset.ring,l=t3Get(dk).filter(q=>q.id!==r.id);if(i<l.length)l.splice(i,1,{id:r.id});else l.push({id:r.id});t3Set(dk,l);}else App.refresh();};
   mv(ev);addEventListener('pointermove',mv,true);addEventListener('pointerup',up,true);addEventListener('pointercancel',up,true);},true);}
+
+/* Review what's carried over: send each to today, or let it go (it moves to someday, nothing is deleted) */
+function carrySheet(dk){let inst;const draw=b=>{const late=carried();b.replaceChildren();if(!late.length){inst&&inst.close();return;}
+  b.append(el('p',{class:'small muted',style:'margin:0 4px 10px;text-align:center'},'Move to today, or let go of what no longer matters.'),el('div',{class:'list'},late.map(t=>el('div',{class:'li',style:'min-height:56px'},el('span',{class:'grow'},el('span',{class:'tt',style:'display:block'},t.title),el('small',{style:'color:var(--now)'},`From ${relDay(t.date)}`)),
+    el('button',{class:'cpill',onclick:()=>{const d0=t.date;t.date=dk;t.moves=(t.moves||0)+1;put(t);draw(b);toast('Moved to today',()=>{t.date=d0;put(t);});}},'Today'),
+    el('button',{class:'iconbtn','aria-label':`Let go of ${t.title}`,style:'width:40px;height:40px',html:ic('x',16,2.2),onclick:()=>{const d0=t.date;t.date=null;put(t);draw(b);toast(`Let go · in Someday`,()=>{t.date=d0;put(t);});}})))));};
+  inst=openSheet({title:`${carried().length} carried over`,left:{label:'Done'},build:b=>draw(b)});}

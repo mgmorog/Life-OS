@@ -1803,3 +1803,27 @@ html.c-fade .todo.won .t3in .tick-host.done{opacity:1}
 /* v160 a little air between the rings and the to-dos below */
 .prings{margin-bottom:22px}
 .prings+.upnext{margin-top:4px}
+
+/* v164 improved Today */
+.card.todo{position:relative}
+.card.todo.won{box-shadow:0 0 0 6px rgba(70,107,90,.16),0 12px 32px rgba(70,107,90,.28)}
+.carryrow{display:flex;align-items:center;gap:8px;margin:14px 0 4px;padding:10px 10px 10px 14px;border-radius:14px;background:var(--bg);transition:background .6s}
+.carryrow b{font-weight:600;font-size:14.5px}
+.cpill{height:34px;padding:0 13px;border-radius:999px;font-size:13.5px;font-weight:600;background:var(--card);border:1px solid var(--line);color:var(--ink);flex:none;transition:background .4s,color .4s,border-color .4s}
+.cpill.g{background:var(--accent);color:#fff;border-color:var(--accent)}
+.donefold{display:flex;align-items:center;justify-content:space-between;width:100%;min-height:44px;margin-top:6px;border-top:1px solid var(--line-2);color:var(--ink-2);font-size:12px;font-weight:600;letter-spacing:.12em;text-transform:uppercase}
+.donefold .chev{transition:transform .35s var(--spring)}.donefold.open .chev{transform:rotate(180deg)}
+.upnext .ar{font-size:12px;color:var(--ink-2);margin-top:3px}
+.upnext .k{white-space:nowrap}
+.prghost{border-radius:999px;padding:8px 14px;font-size:14px;font-weight:600;max-width:200px;transform:translate(-50%,-140%)}
+.ovtag{font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#8A5E10;background:rgba(154,106,18,.13);border-radius:6px;padding:2px 6px;margin-left:6px;vertical-align:1px}
+.lookcard{padding:14px 18px}.lookcard .lk{display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--line-2)}.lookcard .lk:last-child{border-bottom:0}
+.lookcard .lk .grow{font-size:15px}
+.dduecard small{color:var(--ink-2)!important}
+.gridin .grid{height:440px}
+/* green card stays readable */
+.todo.won .carryrow{background:rgba(255,255,255,.12)}.todo.won .carryrow .small.muted{color:rgba(255,255,255,.8)}
+.todo.won .cpill{background:transparent;color:#fff;border-color:rgba(255,255,255,.6)}.todo.won .cpill.g{background:#fff;color:var(--accent-deep,#2F4A3D);border-color:#fff}
+.todo.won .donefold,.todo.won .upnext .ar{color:rgba(255,255,255,.8)}.todo.won .donefold{border-color:rgba(255,255,255,.18)}
+.todo.won .trow .meta,.todo.won .trow .small{color:rgba(255,255,255,.8)}
+.todo.won .trow .chip,.todo.won .trow .pilltoday,.todo.won .trow button.sm{background:transparent;color:#fff;border-color:rgba(255,255,255,.6)}

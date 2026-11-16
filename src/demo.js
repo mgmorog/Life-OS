@@ -54,7 +54,7 @@ const DEMO_NOTES=['','Bring the receipt.','Ask about the weekend rate.','This on
 function demoFill(t,i,r,t0){const f={};const fs=Array.isArray(t.fields)?t.fields:[];const bank=DEMO_BANK[t.id]||[];
   const pick=a=>a[Math.floor(r()*a.length)];
   fs.forEach((d,k)=>{const L=(d.label||'').toLowerCase();
-    if(d.id==='what'||(k===0&&(!d.type||d.type==='text')))f[d.id]=bank.length?bank[i%bank.length]:`${capW(t.word||'item')} ${i+1}`;
+    if(d.id==='what'||d.id==='lesson'||(k===0&&(!d.type||d.type==='text'||d.type==='area')))f[d.id]=bank.length?bank[i%bank.length]:`${capW(t.word||'item')} ${i+1}`;
     else if(d.type==='select'&&d.opts&&d.opts.length)f[d.id]=pick(d.opts);
     else if(d.type==='date'){const past=t.tpl==='log'||/last|done|bought|logged|started|when/.test(L);f[d.id]=past?addK(t0,-Math.floor(r()*45)):addK(t0,Math.floor(r()*120)-10);}
     else if(d.type==='number'){if(d.def!=null&&r()<.5)f[d.id]=d.def;else if(/cost|price|amount|budget|\$|balance|paid|value|saved|goal|limit|income|owed/.test(L))f[d.id]=Math.round(r()*r()*2400+12);else if(/min|hour|time/.test(L))f[d.id]=Math.round(r()*80+10);else if(/every/.test(L))f[d.id]=pick([7,14,30,90,180,365]);else f[d.id]=Math.round(r()*9+1);}
@@ -86,7 +86,7 @@ function loadDemo(quiet){
     T('Water plants',{date:t,area:'Home',doneDates:done(t)}),T('Submit timesheet',{date:t,area:'Career',doneDates:done(t)}),
     T('This is a deliberately very long task title to see how the card handles wrapping when someone writes a whole sentence instead of a short to-do',{date:t})];
   T('Renew car registration',{date:addK(t,-3),area:'Home',priority:'high'});T('Send thank-you note to Priya',{date:addK(t,-1),area:'Relationships'});T('Return Amazon cables',{date:addK(t,-6),area:'Finances'});
-  const TASKS=['Grocery run','Prep slides for staff meeting','Call the bank','Schedule haircut','Review AP aging report','Pay credit card','Plan date night','Update resume bullets','Clean out email','Order contact lenses','Workday config review','1:1 prep','Laundry','Text Grandma Rose','Reconcile grant budget','Approve expense reports','Vacuum','Meal prep','Book vet appointment','Return library books','Water plants','Renew gym membership','Write weekly update','Call Mom','Pick up prescription','Draft board memo','Clean the fridge','Update budget sheet','Fix bike tire','Send invoice'];
+  const TASKS=['Grocery run','Prep slides for staff meeting','Call the bank','Schedule haircut','Review AP aging report','Pay credit card','Plan date night','Update resume bullets','Clean out email','Order contact lenses','Workday config review','1:1 prep','Laundry','Text Grandma Rose','Reconcile grant budget','Approve expense reports','Vacuum','Meal prep','Book vet appointment','Return library books','Renew gym membership','Write weekly update','Call Mom','Pick up prescription','Draft board memo','Clean the fridge','Update budget sheet','Fix bike tire','Send invoice'];
   for(let i=1;i<=30;i++){const n=2+Math.floor(r()*4);for(let j=0;j<n;j++)T(pick(TASKS),{date:addK(t,i),area:pick(AR),time:r()<.3?(8+Math.floor(r()*10))*60:null,priority:r()<.15?'high':'normal',steps:r()<.15?[{id:uid('s'),t:'First step',d:false},{id:uid('s'),t:'Second step',d:false}]:[]});}
   T('Gym',{date:addK(t,-14),time:6*60+30,area:'Health',repeat:{type:'custom',unit:'week',n:1,days:[0,2,4],end:null}});
   T('Take out trash',{date:addK(t,-20),area:'Home',repeat:{type:'custom',unit:'week',n:1,days:[1],end:null}});
@@ -116,7 +116,7 @@ function loadDemo(quiet){
   A('Japan · spring trip',addK(t,120),addK(t,133),{area:'Travel',color:'clay',icon:'plane'});A('Conference (last week)',addK(t,-9),addK(t,-7),{area:'Career'});
   /* habits: check, count, time; good and bad streaks */
   const H=(title,o)=>{const h=mk('habit',Object.assign({title,notes:'',target:3,dur:30,days:[],area:'Health',color:'blue',icon:'habit',logs:{},sessions:{},startDate:addK(t,-60)},o));const rate=o.rate||.6;for(let d=1;d<=60;d++)if(r()<rate)h.logs[addK(t,-d)]=o.track==='count'?o.goalN+Math.floor(r()*3)-1:true;put(h,{silent:true});return h;};
-  H('Workout',{target:4,icon:'dumbbell',rate:.55});H('Read 20 pages',{target:5,area:'Learning',color:'plum',icon:'book',rate:.7});H('Meditate',{target:7,area:'Personal growth',color:'sage',rate:.4,dur:10});
+  if(!get.all('habit').some(x=>/workout/i.test(x.title)))H('Workout',{target:4,icon:'dumbbell',rate:.55});H('Read 20 pages',{target:5,area:'Learning',color:'plum',icon:'book',rate:.7});H('Meditate',{target:7,area:'Personal growth',color:'sage',rate:.4,dur:10});
   H('Drink 8 glasses of water',{target:7,track:'count',goalN:8,rate:.8});H('No phone after 10pm',{target:5,area:'Personal growth',rate:.3});H('Spanish practice',{target:5,area:'Learning',rate:.85,dur:15});H('Call a friend',{target:1,area:'Relationships',color:'rose',rate:.15});H('Stretch',{target:7,rate:.65,dur:10});H('Journal',{target:5,area:'Personal growth',color:'plum',rate:.5,dur:15});H('Practice guitar',{target:3,area:'Recreation',color:'clay',rate:.35});H('Walk the dog',{target:7,area:'Pets',color:'sage',rate:.9});
   /* goals */
   const G=(title,area,dl,steps)=>mk('goal',{title,notes:'',area,deadline:dl,color:pick(['blue','sage','plum']),status:'active',steps:steps.map((x,i)=>({id:uid('s'),t:x,d:i<Math.ceil(steps.length/2)}))});
@@ -144,3 +144,6 @@ function clearDemo(){const s=get.settings(),snap=s.demoSnap;
     [...recs.values()].filter(r=>r.demo||(r.example&&snap)).forEach(r=>remove(r.id,{silent:true,hard:true}));
     if(snap){const back={demoSnap:null};Object.keys(snap).forEach(k=>back[k]=snap[k]===null?undefined:snap[k]);const top=Object.assign({},get.settings().top3||{});Object.keys(top).forEach(d=>{top[d]=(top[d]||[]).filter(x=>get.id(x.id));});if(snap.top3==null)back.top3=top;setSettings(back);}
     App.refresh();toast('Demo cleared');}});}
+
+/* refresh an already-loaded demo with the current generator, keeping the original settings snapshot */
+function demoRefresh(){const s=get.settings(),keep=s.demoSnap;if(!keep)return;[...recs.values()].filter(r=>r.demo).forEach(r=>remove(r.id,{silent:true,hard:true}));setSettings({demoSnap:null});loadDemo(true);setSettings({demoSnap:keep,demoVer:2});}

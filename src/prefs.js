@@ -150,7 +150,7 @@ function viewSetPage(root,id){
     g.append(el('button',{class:'qempty addrow',onclick:()=>icalFeedSheet(null)},el('span',{class:'pplus',html:ic('plus',14,2.4)}),'Add a calendar (Google, iCloud, Outlook)'));
     if(fs.length)g.append(el('button',{class:'li',style:'min-height:48px;color:var(--accent-text);font-weight:600',onclick:()=>{Ical.sync(true);toast('Refreshing…');}},'Refresh now'));
     g=group('Life OS in your calendar');g.append(setRow('Show Life OS in Apple or Google Calendar','Your blocks, timed tasks and all-day items',null,()=>App.go('setpage',{id:'calendar'})));
-    if(window.__gReady){g=group('Google account');g.append(el('div',{class:'li',style:'min-height:60px'},el('span',{class:'sq',html:ic('users',20,1.7)}),el('span',{class:'grow'},el('b',{style:'font-weight:500'},'Google Calendar and Contacts'),el('small',{},window.__gReady?'Sign in to add events and see contacts':'Coming soon.'))));}
+
     g=group('Not available in a home-screen app');g.append(el('div',{class:'li',style:'min-height:56px'},el('span',{class:'grow'},el('small',{style:'font-size:14px'},'Apple Contacts, Apple Health, and editing iCloud calendars. Apple doesn’t let web apps reach them. iCloud calendars still come in read-only above.'))));
   }else if(id==='notify'){
     /* every reminder setting in one place */

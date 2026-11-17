@@ -2312,3 +2312,21 @@ html.c-fade .todo.won .t3in .tick-host.done{opacity:1}
 p.qempty{color:var(--ink-3);font-weight:400}
 .list>.qempty,.card>.qempty{background:none}
 .dstats>.dstat:last-child:nth-child(odd){grid-column:1/-1}
+
+/* v207 day circles use the full width; shortcuts sit above them */
+.wdays{grid-template-columns:repeat(7,minmax(0,1fr));gap:8px;justify-items:center}
+.wdays button{width:100%;max-width:46px;height:auto;aspect-ratio:1}
+.daychips .chip{height:34px;font-size:14px}
+.panel.wide .sub{gap:12px}
+.ichip{display:inline-flex;align-items:center;gap:7px}.ichip .cic{display:grid;color:var(--ink-2)}.ichip.on .cic{color:inherit}
+.group>.addrow{border-top:1px solid var(--line-2);padding:0 var(--pad)}
+.stepcard{background:var(--card);border:1px solid var(--line);border-radius:18px;overflow:hidden}.stepcard>.steps{border:0;border-radius:0;background:none}.stepcard>.steps:not(:empty)+.stepadd{border-top:1px solid var(--line-2)}.stepadd{padding:0 16px}
+.pwhy{margin:6px 0 0;color:var(--ink-2);font-size:16px;line-height:1.45;white-space:pre-wrap;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.oempty{margin:4px 6px;display:flex;flex-direction:column;gap:2px;color:var(--ink-2);font-size:15px;line-height:1.45}.oempty b{color:var(--ink);font-weight:600;font-size:16px}
+.secadd{display:inline-flex;align-items:center;gap:6px;align-self:flex-start;min-height:44px;margin:-4px 4px 0}
+
+/* v207 fold reveal */
+.revealin{animation:revealIn .34s var(--ease) both;animation-delay:calc(var(--ri,0)*26ms)}
+@keyframes revealIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.revealin{animation:none}}
+.row:has(>.val>.seg)>.val{grid-column:1/-1}

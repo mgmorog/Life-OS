@@ -14,20 +14,20 @@ const ENERGY=[['low','Low'],['med','Medium'],['high','High']];
 const TPLACE=[['home','Home'],['work','Work'],['out','Out'],['online','Online']];
 const energyName=v=>(ENERGY.find(x=>x[0]===v)||[])[1]||'';
 const placeName=v=>(TPLACE.find(x=>x[0]===v)||[])[1]||'';
-function tagMeta(t){const out=[];if(t.energy)out.push(`${energyName(t.energy)} energy`);if(t.place)out.push(placeName(t.place)==='Out'?'Out and about':`At ${placeName(t.place).toLowerCase()}`.replace('At online','Online'));return out;}
+/* energy and place are no longer asked for, so they're no longer shown */
+function tagMeta(t){return [];}
 function nowPool(){const tk=todayK(),di=dayItems(tk),seen=new Set(),out=[];const add=t=>{if(!t||seen.has(t.id)||!isOpenTask(t)||onHold(t)||blockedBy(t).length)return;seen.add(t.id);out.push(t);};
   di.anytime.concat(di.timed).forEach(e=>{if(e.kind==='task'&&!e.done)add(e.rec);});carried().forEach(add);
-  get.all('task').forEach(t=>{if(!t.date&&(t.energy||t.place||t.priority==='high'||(t.deadline&&t.deadline<=addK(tk,7))))add(t);});return out;}
-function nowPick(S){const pool=nowPool();const sc=t=>{let n=0;if(S.en){if(t.energy===S.en)n+=3;else if(!t.energy)n+=1;else if((S.en==='low'&&t.energy==='high')||(S.en==='high'&&t.energy==='low'))n-=4;else n-=1;}if(S.pl){if(t.place===S.pl)n+=3;else if(!t.place)n+=1;else n-=5;}if(t.priority==='high')n+=2;if(t.deadline&&t.deadline<=addK(todayK(),2))n+=2;if(S.en==='low'&&+t.dur&&+t.dur<=20)n+=1;return n;};
+  get.all('task').forEach(t=>{if(!t.date&&(t.priority==='high'||(t.deadline&&t.deadline<=addK(tk,7))))add(t);});return out;}
+/* the pick ranks by what's pressing: a near deadline, high priority, then how long it has waited */
+function nowPick(S){const pool=nowPool(),tk=todayK();const sc=t=>{let n=0;if(t.deadline){const d=daysBetween(tk,t.deadline);n+=d<=0?6:d<=2?4:d<=7?2:0;}if(t.priority==='high')n+=3;if(t.date&&t.date<tk)n+=Math.min(3,daysBetween(t.date,tk)/3);else if(t.createdAt)n+=Math.min(2,(Date.now()-t.createdAt)/(14*864e5));return n;};
   return pool.map(t=>[t,sc(t)]).filter(x=>x[1]>-3).sort((a,b)=>b[1]-a[1]).slice(0,3).map(x=>x[0]);}
 function nowCard(dk){if(dk!==todayK()||get.settings().nowCard===false)return null;const pool=nowPool();if(pool.length<2)return null;const S=App.state.now=App.state.now||{open:false,en:null,pl:null};
   if(!S.open)return el('button',{class:'focus-chip',onclick:()=>{S.open=true;clearTimeout(App._r);App.render();nowReveal();}},el('span',{class:'small',style:'text-align:left'},'What should I do now?'),el('span',{class:'fa'},'Pick ›'));
   const picks=nowPick(S);
   return el('section',{class:'card nowcard'},el('div',{class:'bl'},el('span',{class:'lbl',style:'color:var(--accent-text)'},'Right now'),el('button',{class:'iconbtn','aria-label':'Close',style:'width:32px;height:32px',html:ic('x',14,2.2),onclick:()=>{S.open=false;App.refresh();}})),
-    el('div',{class:'nowq'},el('span',{class:'small muted'},'Energy'),el('div',{class:'chips'},ENERGY.map(([v,l])=>el('button',{class:'chip'+(S.en===v?' on':''),'data-ck':'en:'+v,'aria-pressed':String(S.en===v),onclick:()=>{S.en=S.en===v?null:v;App.refresh();}},S.en===v?el('span',{class:'chk',html:'<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>'}):null,l)))),
-    el('div',{class:'nowq'},el('span',{class:'small muted'},'Where'),el('div',{class:'chips'},TPLACE.map(([v,l])=>el('button',{class:'chip'+(S.pl===v?' on':''),'data-ck':'pl:'+v,'aria-pressed':String(S.pl===v),onclick:()=>{S.pl=S.pl===v?null:v;App.refresh();}},S.pl===v?el('span',{class:'chk',html:'<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>'}):null,l)))),
     el('div',{class:'list',style:'box-shadow:none;margin-top:4px'},picks.map(t=>el('div',{class:'li',style:'min-height:56px'},el('button',{class:'grow',style:'text-align:left',onclick:()=>openRec(t)},el('span',{class:'tt',style:'font-weight:500'},t.title),el('small',{},joinMeta([t.dur?`~${fmtDurS(planMin(t))}`:null,...tagMeta(t),t.deadline?`Due ${rdl(t.deadline)}`:null].filter(Boolean)))),el('button',{class:'chip on',style:'height:34px','aria-label':`Start focus on ${t.title}`,onclick:()=>startFocus(t)},el('span',{style:'display:grid',html:ic('play',13,2.2)}),'Start')))),
-    picks.length?null:el('p',{class:'small muted'},'Nothing fits that. Try another mix.'));}
+    null);}
 
 /* ---------- focus timer ---------- */
 const frNow=()=>get.settings().focusRun||null;

@@ -2259,3 +2259,36 @@ html.c-fade .todo.won .t3in .tick-host.done{opacity:1}
 .prnl{font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;color:var(--ink-3);flex:none}
 .habody .li.ogr{padding-left:0;padding-right:0;border-radius:0;background:none}
 .habody .li.ogr+.li.ogr{border-top:1px solid var(--line-2)}
+
+/* v203 project/goal/routine/list pages: one card + detail rows */
+.pcard{padding:16px 18px 8px}
+.pchead{display:flex;align-items:center;gap:14px;padding-bottom:6px}
+.pchead .grow{min-width:0;display:flex;flex-direction:column}.pchead b{font-size:17px;font-weight:600}.pchead small{font-size:13.5px;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prow2{display:flex;align-items:center;gap:14px;min-height:52px;border-top:1px solid var(--line-2)}
+.prow2 .t{flex:1;min-width:0;text-align:left}.prow2 .tt{display:block;font-size:16.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prow2.done .tt{color:var(--ink-3);text-decoration:line-through}
+.pcsec{font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;color:var(--ink-3);padding:14px 0 4px}
+.paddrow{display:flex;align-items:center;gap:14px;min-height:52px;border-top:1px solid var(--line-2)}
+.pplus{width:28px;height:28px;border-radius:50%;border:1.6px dashed #C3CBC5;display:grid;place-items:center;color:var(--accent-text);flex:none}
+.paddrow input{flex:1;border:0;outline:0;background:none;font:inherit;font-size:16.5px;min-height:40px}
+.pcard .donefold{border-top:1px solid var(--line)}
+.dlhead{margin:14px 6px -2px;font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;color:var(--ink-2)}
+.dlcard{padding:0 18px}
+.dlrow{display:flex;align-items:center;gap:14px;min-height:54px;width:100%;text-align:left;border-top:1px solid var(--line-2);font-size:16px}
+.dlrow:first-child{border-top:0}
+.dlic{display:grid;color:var(--ink-2);width:22px;flex:none}
+.dlv{color:var(--ink-2);font-size:15px;max-width:45%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dlch{display:grid;color:var(--ink-3)}
+.plinks{display:flex;gap:18px;flex-wrap:wrap;justify-content:center;padding:4px 0}
+
+.rtline{color:var(--ink-2);font-size:14.5px;margin:-8px 2px 2px}
+.rtnum{width:28px;height:28px;border-radius:50%;background:var(--accent-soft,#E6F0EA);color:var(--accent-text);display:grid;place-items:center;font-size:13px;font-weight:700;flex:none}
+.tside{color:var(--ink-3);font-size:13.5px;flex:none}
+.list .lstadd{padding:0 16px;border-top:1px solid var(--line-2)}.list .lstadd:first-child{border-top:0}
+
+.ibrow{min-height:56px}.ibt{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:16.5px}
+.ibpill{flex:none;font-size:12px;font-weight:600;color:var(--ink-2);background:var(--line-2);border-radius:999px;padding:3px 9px}
+.ibage{flex:none;font-size:13px;color:var(--ink-3);min-width:24px;text-align:right}
+.iblink{width:32px;height:32px;border-radius:50%;background:var(--line-2);display:grid;place-items:center;color:var(--ink-2);flex:none}
+.tdcard{padding:20px 20px 16px}.tdcard h2{margin:0;font-size:22px;overflow-wrap:anywhere}
+.tdmore{display:flex;flex-direction:column;gap:12px}.tdmore[hidden]{display:none}

@@ -4,7 +4,7 @@ function stPeriod(st){
   const t=today(),a=st.anchor?fromK(st.anchor):null;
   if(st.mode==='w'){const base=a?weekStartOf(a):weekStartOf(addD(t,t.getDay()===(get.settings().reviewDay??0)?1:0));const s=base,e=addD(s,6);
     const slots=Array.from({length:7},(_,i)=>{const d=addD(s,i),dk=k(d);return{id:dk,a:DOW[d.getDay()].slice(0,3).toUpperCase(),b:String(d.getDate()),label:shortDay(dk),from:dk,to:dk,past:dk<todayK()};});
-    return{key:'w-'+k(s),unit:'day',head:s.getMonth()===e.getMonth()?`${MON[s.getMonth()]} ${s.getDate()}–${e.getDate()}`:`${MON[s.getMonth()]} ${s.getDate()} – ${MON[e.getMonth()]} ${e.getDate()}`,eyebrow:weekKey(t)===k(s)?'This week':weekKey(addD(t,7))===k(s)?'Next week':`${s.getFullYear()} · Week ${isoWeek(s)}`,cap:get.settings().capacity?.full||6,slots,step:d=>k(addD(s,7*d)),commit:'Commit week',doneL:'Week committed',doneS:'Cards wait on each day’s Today page for a time.',hint:'Drag a card onto a day, or tap it then tap a day.'};}
+    return{key:'w-'+k(s),unit:'day',head:s.getMonth()===e.getMonth()?`${mdS(s)}–${e.getDate()}`:`${mdS(s)} – ${mdS(e)}`,eyebrow:weekKey(t)===k(s)?'This week':weekKey(addD(t,7))===k(s)?'Next week':`${s.getFullYear()} · Week ${isoWeek(s)}`,cap:get.settings().capacity?.full||6,slots,step:d=>k(addD(s,7*d)),commit:'Commit week',doneL:'Week committed',doneS:'Cards wait on each day’s Today page for a time.',hint:'Drag a card onto a day, or tap it then tap a day.'};}
   if(st.mode==='m'){const base=a||(t.getDate()>24?new Date(t.getFullYear(),t.getMonth()+1,1):new Date(t.getFullYear(),t.getMonth(),1));const y=base.getFullYear(),m=base.getMonth();
     const slots=weeksOf(y,m).map(w=>{const from=k(w[0]),to=k(w[6]);return{id:from,a:`${MON[w[0].getMonth()]} ${w[0].getDate()}`,b:`to ${w[0].getMonth()===w[6].getMonth()?w[6].getDate():MON[w[6].getMonth()]+' '+w[6].getDate()}`,label:`${MON[w[0].getMonth()]} ${w[0].getDate()}`,from,to,past:to<todayK(),heat:w.map(d=>dayLoad(k(d),false).level)};});
     return{key:'m-'+monthKey(base),unit:'week',head:MONL[m],eyebrow:monthKey(t)===monthKey(base)?'This month':String(y),cap:9,slots,step:d=>k(new Date(y,m+d,1)),commit:'Commit month',doneL:`${MONL[m]} committed`,doneS:'Each week’s cards wait in Week planning.',hint:'Drag steps and tasks onto a week.'};}
@@ -56,9 +56,13 @@ function slotLoad(s,st,cards){
   return n;
 }
 /* Suggest: usual days first, habits spaced out, nothing past a due date, lightest slots win */
-function freeMinutes(dk){const s=get.settings(),d=fromK(dk),isWork=(s.workDays||[]).includes(monIdx(d)),w=s.work||{start:540,end:1020};let awake=[[420,1320]];
-  if(isWork){awake=s.protectEvenings?[[420,w.start]]:[[420,w.start],[w.end,1320]];}
-  let free=awake.reduce((n,[a,b])=>n+Math.max(0,b-a),0);dayItems(dk).timed.forEach(e=>{awake.forEach(([a,b])=>{const o=Math.max(0,Math.min(b,e.time+(e.dur||30))-Math.max(a,e.time));free-=o;});});return Math.max(0,free);}
+/* free time on a day: waking hours minus every shift (and, with Protect evenings, the time after the last shift);
+   a flexible job with no hours yet counts as half the day so Studio doesn't plan on it either way */
+function freeMinutes(dk){const s=get.settings(),sh=shiftsOn(dk);let awake=[[420,1320]];
+  const cut=(a,b)=>{awake=awake.flatMap(([x,y])=>b<=x||a>=y?[[x,y]]:[[x,Math.max(x,a)],[Math.min(y,b),y]]).filter(([x,y])=>y>x);};
+  sh.forEach(x=>{if(x.end>x.start)cut(x.start,x.end);else cut(x.start,1440);});
+  if(s.protectEvenings&&sh.length){const last=Math.max(...sh.map(x=>x.end>x.start?x.end:1440));cut(last,1440);}
+  let free=awake.reduce((n,[a,b])=>n+Math.max(0,b-a),0);if(sh.unknown)free=Math.round(free/2);dayItems(dk).timed.forEach(e=>{awake.forEach(([a,b])=>{const o=Math.max(0,Math.min(b,e.time+(e.dur||30))-Math.max(a,e.time));free-=o;});});return Math.max(0,free);}
 function suggest(cards,P,st,jit=null){
   const load=new Map(P.slots.map(s=>[s.id,slotLoad(s,st,cards)])),open=P.slots.filter(s=>!s.past&&!(st.mode==='w'&&tripBlocked(s.id))),out=[];if(jit)open.forEach(s=>load.set(s.id,load.get(s.id)+jit(s.id)));
   if(!open.length)return out;

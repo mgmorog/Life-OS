@@ -46,7 +46,7 @@ const wkDays=dk=>{const a=weekRange(dk)[0];return Array.from({length:7},(_,i)=>a
 const PAL=['#F1D9C6','#DCE6F0','#E7E0F0','#E1EDE4','#F3E6CF','#DDE7EC','#EFDCE2'];
 const avatar=(name,sz=36)=>{const s=String(name||'?'),h=[...s].reduce((n,c)=>n+c.charCodeAt(0),0);return el('span',{class:'avi',style:`width:${sz}px;height:${sz}px;background:${PAL[h%PAL.length]}`,'aria-hidden':'true'},s[0].toUpperCase());};
 const fmtH=m=>{m=Math.round(m||0);return m<60?`${m}m`:`${Math.floor(m/60)}h ${pad2(m%60)}m`;};
-const mD=d=>{const x=fromK(d);return `${MON[x.getMonth()]} ${x.getDate()}`;};
+const mD=d=>{const x=fromK(d);return `${mdS(x)}`;};
 const nextYearly=d=>{const t=today(),x=fromK(d);let n=new Date(t.getFullYear(),x.getMonth(),x.getDate());if(k(n)<todayK())n=new Date(t.getFullYear()+1,x.getMonth(),x.getDate());return k(n);};
 const seasonOf=d=>['Winter','Winter','Spring','Spring','Spring','Summer','Summer','Summer','Fall','Fall','Fall','Winter'][d.getMonth()];
 const seasonEnd=d=>{const m=d.getMonth(),y=d.getFullYear();const e={Winter:new Date(m===11?y+1:y,1,28),Spring:new Date(y,4,31),Summer:new Date(y,7,31),Fall:new Date(y,10,30)}[seasonOf(d)];return k(e);};

@@ -14,7 +14,7 @@ function calRange(C){const a=fromK(C.anchor);if(C.mode==='quarter'){const q=quar
 function viewCalendar(root){
   const C=calState(),a=fromK(C.anchor),mode=C.mode,y=a.getFullYear(),q=quarterOf(a),qM=[q*3,q*3+1,q*3+2];
   const current=isCurrentFor(mode,a),wS=weekStartOf(a),wE=addD(wS,6);
-  const rangeD=wS.getMonth()===wE.getMonth()?`${MON[wS.getMonth()]} ${wS.getDate()} – ${wE.getDate()}`:`${MON[wS.getMonth()]} ${wS.getDate()} – ${MON[wE.getMonth()]} ${wE.getDate()}`;
+  const rangeD=wS.getMonth()===wE.getMonth()?`${mdS(wS)} – ${wE.getDate()}`:`${mdS(wS)} – ${mdS(wE)}`;
   const thisY=y===today().getFullYear()&&wE.getFullYear()===today().getFullYear(),eyebrow=mode==='quarter'?`${MON[qM[0]]} – ${MON[qM[2]]}${thisY?'':' '+y}`:thisY?'':String(mode==='week'?wE.getFullYear():y);App.state._tcId=null;
   const title=mode==='quarter'?`Q${q+1}`:mode==='month'?MONL[a.getMonth()]:rangeD;
   const miniTitle=mode==='quarter'?`Q${q+1} ${y}`:mode==='month'?`${MONL[a.getMonth()]} ${y}`:`${rangeD}, ${wE.getFullYear()}`;

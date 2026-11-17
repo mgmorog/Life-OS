@@ -10,6 +10,8 @@ const PWA={
       if(q.on&&inQuiet(new Date(fire))){const d=new Date(fire);let t=new Date(d.getFullYear(),d.getMonth(),d.getDate(),Math.floor(q.to/60),q.to%60);if(t.getTime()<fire)t=new Date(t.getTime()+864e5);fire=t.getTime();}
       const when=e.kind==='allday'?(dk===tk?'Today':relDay(dk)):`${dk===tk?'':relDay(dk)+', '}${fmtT(e.time)}`;
       out.push({key,fire_at:new Date(fire).toISOString(),title:e.title,body:m>0&&e.kind!=='allday'?`${when} · ${remLabel(m).replace(' before','')} from now`:when,url:'/#today'});};
+    /* flexible jobs: a reminder at 6 PM, four days before the next period starts */
+    try{const S0=get.settings();if(S0.flexRemind!==false)jobsOf(S0).filter(j=>j.flex).forEach(j=>{const len=j.cycle==='2week'?14:7;[0,1].forEach(n=>{const st=addK(flexStart(j,tk),len*(n+(n?0:1))),m=(S0.flexHours||{})[j.id]||{};if(m['_'+st])return;const d=fromK(addK(st,-4)),fire=new Date(d.getFullYear(),d.getMonth(),d.getDate(),18,0).getTime();if(fire<=now)return;out.push({key:'flex|'+j.id+'|'+st,fire_at:new Date(fire).toISOString(),title:`Add your ${j.name&&j.name!=='Work'?j.name+' ':'work '}hours`,body:`For the week of ${fmtMD(st)}`,url:'/#inbox'});});});}catch(e){}
     for(let i=0;i<=14;i++){const dk=addK(tk,i),d=dayItems(dk);
       [...d.allDay,...d.timed].forEach(e=>{const m=e.rec.reminder;if(m==null||e.done||e.kind==='step'||e.kind==='gcal')return;if(e.kind==='habit'&&(e.rec.tod!=='set'||e.time==null))return;if(e.kind==='allday'&&allDayOccStart(e.rec,dk)!==dk)return;
         push(e,dk,fromK(dk).getTime()+(e.time||0)*6e4,m);});}

@@ -279,7 +279,7 @@ function deleteFlow(rec,occ,inst){
 /* ---------- New time block ---------- */
 function blockSheet(rec,seed={}){
   const isEdit=!!rec;const lateNight=seed.start==null&&App.state.sel===todayK()&&Math.ceil(nowMin()/15)*15>=1440,n=lateNight?0:nextQuarter();
-  const D=isEdit?clone(rec):Object.assign({title:'',notes:'',date:lateNight?addK(todayK(),1):App.state.sel,start:n,dur:60,repeat:{type:'never',end:null},reminder:null,remUnit:'minute',part:null,area:null,color:'sage',icon:null},seed);
+  const D=isEdit?clone(rec):Object.assign({title:'',notes:'',date:lateNight?addK(todayK(),1):App.state.sel,start:n,dur:60,repeat:{type:'never',end:null},reminder:null,remUnit:'minute',part:null,area:null,color:defCol(),icon:null},seed);
   delete D.occ;delete D._after;const occ=isEdit&&seed.occ&&rec.repeat&&rec.repeat.type!=='never'?seed.occ:null;if(occ)D.date=occ;
   let render;
   const inst=formSheet({title:isEdit?'Edit time block':'New time block',addLabel:isEdit?'Save':'Add',D,word:'time block',isEdit,canAdd:()=>!!D.title.trim(),commit:()=>commit(),
@@ -322,7 +322,7 @@ function blockSheet(rec,seed={}){
 /* ---------- New all-day item ---------- */
 function alldaySheet(rec,seed={}){
   const isEdit=!!rec;
-  const D=isEdit?clone(rec):Object.assign({title:'',notes:'',start:App.state.sel,end:null,repeat:{type:'never',end:null},reminder:null,remUnit:'minute',area:null,color:'sage',icon:null},seed);
+  const D=isEdit?clone(rec):Object.assign({title:'',notes:'',start:App.state.sel,end:null,repeat:{type:'never',end:null},reminder:null,remUnit:'minute',area:null,color:defCol(),icon:null},seed);
   delete D.occ;delete D._after;const occ=isEdit&&seed.occ&&rec.repeat&&rec.repeat.type!=='never'?allDayOccStart(rec,seed.occ):null;if(occ){if(D.end)D.end=addK(occ,daysBetween(D.start,D.end));D.start=occ;}
   if(D.reminder!=null&&!D.rem)D.rem=D.reminder>=0?{n:Math.ceil(D.reminder/1440),unit:'day',at:(1440-D.reminder%1440)%1440}:{n:0,unit:'day',at:-D.reminder};
   let render;
@@ -339,7 +339,7 @@ function alldaySheet(rec,seed={}){
         when.append(ctx.row('date','cal',D.end?'First day':'Date',relDay(D.start),{valOn:true}));
         if(ctx.open==='date')when.append(ctx.panel('date','wide',ctx.calendar(D.start,dk=>{if(!dk)return;if(D.end)D.end=addK(dk,daysBetween(D.start,D.end));D.start=dk;ctx.followDate(D,dk);ctx.open=null;render();},{range:D.end?[D.start,D.end]:null})));
         const multi=!!D.end,fe=multi?fromK(D.end):null;
-        when.append(ctx.row('end','ends',multi?'Last day':'Multiple days',null,{expand:false,tap:multi?()=>{ctx.open=ctx.open==='end'?null:'end';render();}:null,trailing:[multi?el('span',{class:'on'},`${MON[fe.getMonth()]} ${fe.getDate()} · ${daysBetween(D.start,D.end)+1} days`):null,ctx.sw(multi,'Multiple days',on=>{if(on){D.end=addK(D.start,2);ctx.open='end';}else{D.end=null;if(ctx.open==='end')ctx.open=null;}render();})]}));
+        when.append(ctx.row('end','ends',multi?'Last day':'Multiple days',null,{expand:false,tap:multi?()=>{ctx.open=ctx.open==='end'?null:'end';render();}:null,trailing:[multi?el('span',{class:'on'},`${mdS(fe)} · ${daysBetween(D.start,D.end)+1} days`):null,ctx.sw(multi,'Multiple days',on=>{if(on){D.end=addK(D.start,2);ctx.open='end';}else{D.end=null;if(ctx.open==='end')ctx.open=null;}render();})]}));
         if(multi&&ctx.open==='end')when.append(ctx.panel('end','wide',el('div',{class:'eyebrow',style:'text-align:center;margin:2px 0 8px'},'Pick the last day'),ctx.calendar(D.end,dk=>{if(!dk)return;D.end=dk===D.start?null:dk;ctx.open=null;render();if(!D.end)toast('Back to a single day');},{minK:D.start,range:[D.start,D.end]})));
         ctx.repeatRows(when,D,()=>D.start,{unit:'year'});
         const hasRem=D.reminder!=null,syncRem=()=>{const r=D.rem;D.reminder=r.n*(r.unit==='week'?7:1)*1440-r.at;};const remText=r=>`${r.n===0?'Day of':`${r.n} ${r.unit}${r.n>1?'s':''}`} · ${fmtT(r.at)}`;

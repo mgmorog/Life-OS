@@ -149,7 +149,7 @@ try {
   /* settings pages */
   await A.page.evaluate(() => window.__lifeos.App.go('setpage', { id: 'data' }));
   ok('Settings shows the account and sign out', await A.page.evaluate(() => /Signed in/.test(document.body.innerText) && /me@example.com/.test(document.body.innerText) && /Sign out/.test(document.body.innerText)));
-  await A.page.evaluate(() => window.__lifeos.App.go('setpage', { id: 'reviews' }));
+  await A.page.evaluate(() => window.__lifeos.App.go('setpage', { id: 'notify' }));
   ok('Settings shows notifications', await A.page.evaluate(() => /Reminders when the app is closed/.test(document.body.innerText) && !/need hosting outside Claude/.test(document.body.innerText)));
   await A.page.screenshot({ path: root + 'test/pwa-notif.png' });
 

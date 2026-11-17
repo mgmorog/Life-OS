@@ -289,6 +289,7 @@ window.lifeosPWA = {
   async setReminders(items) { const { error } = await sb.rpc('set_reminders', { items }); if (error) throw mapErr(error); },
   async setCalFeed(tok, ics) { const { error } = await sb.from('cal_feeds').upsert({ token: tok, user_id: session.user.id, ics, updated_at: new Date().toISOString() }, { onConflict: 'token' }); if (error) throw mapErr(error); },
   async dropCalFeed(tok) { await sb.from('cal_feeds').delete().eq('token', tok); },
+  async fetchIcal(u) { const r = await fetch('/api/ical?u=' + encodeURIComponent(u), { headers: { authorization: 'Bearer ' + (await token()) }, cache: 'no-store' }); if (!r.ok) { let m = 'Couldn’t read that calendar'; try { m = (await r.json()).error || m; } catch (e) {} throw new Error(m); } return r.text(); },
   sb,
 };
 document.documentElement.classList.add('pwa'); if (standalone) document.documentElement.classList.add('standalone');

@@ -69,12 +69,13 @@ function demoFill(t,i,r,t0){const f={};const fs=Array.isArray(t.fields)?t.fields
   return f;}
 function loadDemo(quiet){
   const s0=get.settings();if(s0.demoSnap){toast('The demo is already loaded');return;}
-  const snap={};['areas','hubHidden','hubShown','top3','todayPins','areaExtra','areaIcons','introDone','onboardedAt','gsOff','foundationOff'].forEach(k=>snap[k]=s0[k]===undefined?null:JSON.parse(JSON.stringify(s0[k])));
+  const snap={};['areas','hubHidden','hubShown','top3','todayPins','areaExtra','areaIcons','introDone','onboardedAt','gsOff','foundationOff','jobs'].forEach(k=>snap[k]=s0[k]===undefined?null:JSON.parse(JSON.stringify(s0[k])));
   const r=demoRand(42),t=todayK(),ex={example:true,demo:true},mk=(kind,f)=>create(kind,Object.assign({},ex,f)),pick=a=>a[Math.floor(r()*a.length)];
   const NR={type:'never',end:null},AR=AREAS;
   /* every area on, every module on */
   const allAreas=[...new Set([...AREAS,...OPT_AREAS])];const shown={};allAreas.forEach(a=>shown[a]=toolsOf(a).filter(x=>x.optIn).map(x=>x.id));
   setSettings({areas:allAreas.slice().sort((a,b)=>a.localeCompare(b)),hubHidden:{},hubShown:shown,introDone:true,foundationOff:true,demoSnap:snap,demoVer:6});
+  if(!Array.isArray(s0.jobs)||!s0.jobs.length)setSettings({jobs:[{id:'work',name:'Roswell Park',flex:false,cycle:'week',shifts:[{id:'s1',days:[0,1,2,3],start:8*60+30,end:17*60},{id:'s2',days:[4],start:8*60+30,end:13*60}]}]});
   /* projects first, so tasks can belong to them */
   const projs=[['Kitchen refresh','Home',['Measure the cabinets','Pick a paint color','Order hardware','Paint weekend']],['Q1 Workday release','Career',['Write test scripts','UAT with grant managers','Sign-off from Finance','Go-live checklist','Train AP team']],['Japan trip','Travel',['Book flights','Book Kyoto ryokan','Get JR pass','Pocket wifi']],['Move to the new office','Career',[]],['Garage cleanout (paused)','Home',['Sort donations','Sell the old bike']]];
   const P=projs.map(([title,area,steps],i)=>mk('project',{title,notes:i===1?'Release target is the first week of February. Keep Finance in the loop on every change to costing allocations.':'',area,deadline:i===2?addK(t,120):i===1?addK(t,40):null,color:pick(['sage','clay','blue','plum','rose']),status:'active',paused:i===4,part:null,steps:steps.map((x,j)=>({id:uid('s'),t:x,d:j===0&&i!==3}))}));

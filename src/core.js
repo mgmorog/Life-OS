@@ -111,7 +111,8 @@ const fmtRange=(s,e)=>{const a=fmtT(s),b=fmtT(e);if(get.settings().clock===24)re
 const fmtDur=d=>{const h=Math.floor(d/60),m=d%60;return h&&m?`${h} hr ${m} min`:h?`${h} hr`:`${m} min`;};
 const fmtDurS=d=>{if(!d)return '';const h=Math.floor(d/60),m=d%60;return h&&m?`${h}h ${m}m`:h?`${h}h`:`${m}m`;};
 const daysBetween=(a,b)=>Math.round((fromK(b)-fromK(a))/864e5);
-const shortDay=s=>{const d=fromK(s);return `${DOW[d.getDay()].slice(0,3)}, ${MON[d.getMonth()]} ${d.getDate()}`+(d.getFullYear()!==today().getFullYear()?`, ${d.getFullYear()}`:'');};
+const mdS=d=>get.settings().dateFmt==='dm'?`${d.getDate()} ${MON[d.getMonth()]}`:MON[d.getMonth()]+' '+d.getDate();
+const shortDay=s=>{const d=fromK(s);return `${DOW[d.getDay()].slice(0,3)}, ${mdS(d)}`+(d.getFullYear()!==today().getFullYear()?`, ${d.getFullYear()}`:'');};
 const relDay=s=>{if(!s)return 'No date';const diff=daysBetween(todayK(),s);if(diff===0)return 'Today';if(diff===1)return 'Tomorrow';if(diff===-1)return 'Yesterday';return shortDay(s);};
 const timeAgo=ts=>{const days=daysBetween(k(new Date(ts)),todayK());if(days<=0)return 'Today';if(days===1)return 'Yesterday';if(days<7)return `${days} days ago`;if(days<30)return `${Math.floor(days/7)} wk ago`;return shortDay(k(new Date(ts)));};
 
@@ -220,6 +221,7 @@ function dayItems(dk,{filters=false}={}){
   get.all('habit').forEach(h=>{if(!matchesFilter('habit',h.area,filters))return;const se=(h.sessions||{})[dk];const onDay=se!==undefined||occursHabit(h,dk);if(!onDay)return;if(se===undefined&&!habitDone(h,dk)&&tripPauseHabits(dk))return;const time=se&&se.time!=null?se.time:(h.setTime??null);const e={kind:'habit',id:h.id,rec:h,title:h.title,time,dur:h.dur||30,color:colorHex(h.color),icon:h.icon,area:h.area,done:habitDone(h,dk)};(time!=null?timed:anytime).push(e);});
   get.all('routine').forEach(r=>{if(!matchesFilter('habit',r.area,filters)||!r.days||!r.days.length||!r.days.includes(monIdx(fromK(dk)))||(r.startDate&&dk<r.startDate))return;const mins=(r.steps||[]).reduce((n,s)=>n+(s.min||0),0)||30;const e={kind:'routine',id:r.id,rec:r,title:r.title,time:r.setTime??null,dur:mins,color:colorHex(r.color),area:r.area,done:!!(r.runs&&r.runs[dk])};(e.time!=null?timed:anytime).push(e);});
   if(typeof Gcal!=='undefined')Gcal.on(dk).forEach(e=>{if(!matchesFilter(e.time==null?'allday':'block',null,filters))return;(e.time==null?allDay:timed).push(e);});
+  if(typeof Ical!=='undefined')Ical.on(dk).forEach(e=>{if(!matchesFilter(e.time==null?'allday':'block',null,filters))return;(e.time==null?allDay:timed).push(e);});
   timed.sort((a,b)=>a.time-b.time);
   const pr=e=>e.rec.priority==='high'?0:e.rec.priority==='low'?2:1;anytime.sort((a,b)=>(a.done-b.done)||(pr(a)-pr(b)));
   return{allDay,timed,anytime};
@@ -494,3 +496,37 @@ function revealRows(nodes,key){if(App.state._reveal!==key||typeof motionOK!=='fu
 /* day circles start on the day the week starts (WD and its index stay Monday-first underneath) */
 const wdOrd=()=>{const ws=get.settings().weekStart??1,f=(ws+6)%7;return[0,1,2,3,4,5,6].map(i=>(f+i)%7);};
 const wdMap=fn=>wdOrd().map(i=>fn(WD[i],i));
+
+/* ---------- palettes and light/dark: one accent color drives every green in the app ---------- */
+const PALETTES=[['sage','Sage','#466B5A','sage'],['ocean','Ocean','#3F6A8F','blue'],['plum','Plum','#6B5591','plum'],['clay','Clay','#9A5B3E','clay'],['slate','Slate','#545F70','slate']];
+const hx2rgb=h=>{h=String(h||'').replace('#','');if(h.length===3)h=h.split('').map(c=>c+c).join('');const n=parseInt(h,16);return isNaN(n)||h.length!==6?null:[n>>16&255,n>>8&255,n&255];};
+const rgb2hx=c=>'#'+c.map(v=>Math.max(0,Math.min(255,Math.round(v))).toString(16).padStart(2,'0')).join('').toUpperCase();
+const lum=c=>{const f=v=>{v/=255;return v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4);};return .2126*f(c[0])+.7152*f(c[1])+.0722*f(c[2]);};
+const contrast=(a,b)=>{const x=lum(a),y=lum(b);return(Math.max(x,y)+.05)/(Math.min(x,y)+.05);};
+const mixC=(a,b,t)=>a.map((v,i)=>v+(b[i]-v)*t);
+/* the accent is darkened until white text on it, and it as text on white, both read clearly */
+function safeAccent(h){let c=hx2rgb(h)||hx2rgb('#466B5A');for(let i=0;i<30&&contrast(c,[255,255,255])<4.6;i++)c=mixC(c,[0,0,0],.06);return c;}
+const themeOf=s=>{const p=PALETTES.find(x=>x[0]===(s.palette||'sage'));return p?p[2]:(s.palette==='custom'&&s.customAccent)||'#466B5A';};
+const defCol=()=>{const s=get.settings(),p=PALETTES.find(x=>x[0]===(s.palette||'sage'));return p?p[3]:'sage';};
+function applyTheme(){const s=get.settings(),R=document.documentElement,dark=s.mode==='dark'||(s.mode==='auto'&&matchMedia('(prefers-color-scheme: dark)').matches);
+  R.dataset.mode=dark?'dark':'light';R.dataset.font=s.titleFont||'serif';R.dataset.bg=s.bgTone||'warm';R.dataset.density=s.density||'comfortable';R.dataset.labels=s.tabLabels===false?'off':'on';
+  const a=safeAccent(themeOf(s)),W=[255,255,255],K=[0,0,0],st=R.style,set=(k,c)=>st.setProperty(k,typeof c==='string'?c:rgb2hx(c));
+  const isDefault=(s.palette||'sage')==='sage'&&!dark;
+  if(isDefault){['--accent','--accent-text','--accent-deep','--accent-soft','--h1','--h2','--h3','--h4','--tint-1','--tint-3'].forEach(k=>st.removeProperty(k));}
+  else if(!dark){set('--accent',a);set('--accent-text',mixC(a,K,.1));set('--accent-deep',mixC(a,K,.32));set('--accent-soft',mixC(a,W,.85));set('--tint-1',mixC(a,W,.93));set('--tint-3',mixC(a,W,.75));set('--h1',mixC(a,W,.82));set('--h2',mixC(a,W,.62));set('--h3',mixC(a,W,.4));set('--h4',mixC(a,W,.06));}
+  else{const card=[27,32,30],lift=mixC(a,W,.12);let txt=mixC(a,W,.45);for(let i=0;i<20&&contrast(txt,card)<4.6;i++)txt=mixC(txt,W,.1);
+    set('--accent',lift);set('--accent-text',txt);set('--accent-deep',mixC(a,W,.6));set('--accent-soft',mixC(card,a,.28));set('--tint-1',mixC(card,a,.14));set('--tint-3',mixC(card,a,.4));set('--h1',mixC(card,a,.2));set('--h2',mixC(card,a,.36));set('--h3',mixC(card,a,.55));set('--h4',lift);}
+  const m=document.querySelector('meta[name=theme-color]');if(m)m.setAttribute('content',dark?'#121614':(s.bgTone==='white'?'#FFFFFF':'#F4F4EF'));}
+
+/* ---------- work: jobs and shifts (older single work hours become one job called Work) ---------- */
+function jobsOf(s){if(Array.isArray(s.jobs)&&s.jobs.length)return s.jobs;const w=s.work||{start:540,end:1020};return[{id:'work',name:'Work',flex:false,cycle:'week',shifts:[{id:'s1',days:(s.workDays||[0,1,2,3,4]).slice(),start:w.start,end:w.end}]}];}
+function jobsSummary(s){const J=jobsOf(s),f=J.filter(j=>j.flex).length;if(J.length===1&&!f){const sh=J[0].shifts;return sh.length===1?`${workDaysText(sh[0].days)} · ${fmtT(sh[0].start)} – ${fmtT(sh[0].end)}`:`${sh.length} shifts`;}return[`${J.length} job${J.length>1?'s':''}`,f?`${f} flexible`:null].filter(Boolean).join(' · ');}
+const flexStart=(j,dk)=>{const ws=weekStartOf(fromK(dk));if(j.cycle!=='2week')return k(ws);const ref=weekStartOf(new Date(2026,0,5)),n=Math.round((ws-ref)/(7*864e5));return k(((n%2)+2)%2===0?ws:addD(ws,-7));};
+/* shifts on a day: [{job,start,end}] ; null means a flexible job whose hours aren't in yet */
+function shiftsOn(dk){const s=get.settings(),d=fromK(dk),mi=monIdx(d),out=[];let unknown=false;
+  jobsOf(s).forEach(j=>{if(j.flex){const m=(s.flexHours||{})[j.id]||{};if(m[dk])m[dk].forEach(x=>out.push({job:j.name||'Work',start:x.start,end:x.end}));else if(!m['_'+flexStart(j,dk)])unknown=true;}
+    else j.shifts.forEach(x=>{if(x.days.includes(mi))out.push({job:j.name||'Work',start:x.start,end:x.end});});});
+  out.sort((a,b)=>a.start-b.start);out.unknown=unknown;return out;}
+/* flexible jobs whose next period needs hours (from four days before it starts) */
+function flexDue(){const s=get.settings(),out=[],tk=todayK();if(s.flexRemind===false)return out;jobsOf(s).filter(j=>j.flex).forEach(j=>{const len=j.cycle==='2week'?14:7;let st=flexStart(j,tk);const m=(s.flexHours||{})[j.id]||{};
+  if(m['_'+st]){st=k(addD(fromK(st),len));if(daysBetween(tk,st)>4||m['_'+st])return;}out.push({job:j,from:st,to:k(addD(fromK(st),len-1))});});return out;}

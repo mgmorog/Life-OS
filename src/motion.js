@@ -468,7 +468,7 @@ function stepSwap(dir){daySwap(()=>{clearTimeout(App._r);App.render();scrollTo(0
 
 /* ---------- round 10 ---------- */
 /* A finished goal: the ring swells (core) and a few green petals drift up and fade */
-function petals(ring){if(!motionOK()||!ring||!ring.isConnected)return;const r=ring.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2,cols=['#466B5A','#8FB09E','#BCD0C4'];
+function petals(ring){if(!motionOK()||!ring||!ring.isConnected)return;const r=ring.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2,cols=['var(--accent)','var(--h3)','var(--h2)'];
   for(let k=0;k<14;k++){const p=el('span',{class:'petal','aria-hidden':'true'});Object.assign(p.style,{left:cx-4+(Math.random()-.5)*30+'px',top:cy-6+'px',background:cols[k%3]});document.body.append(p);
     const dx=(Math.random()-.5)*220,dy=-50-Math.random()*100,rot=(Math.random()-.5)*360;
     p.animate([{transform:'translate(0,0) rotate(0)',opacity:0},{opacity:1,offset:.15},{transform:`translate(${dx}px,${dy}px) rotate(${rot}deg)`,opacity:0}],{duration:1300+Math.random()*500,delay:k*25,easing:'cubic-bezier(.2,.7,.3,1)',fill:'forwards'}).onfinish=()=>p.remove();}}

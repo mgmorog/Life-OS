@@ -13,9 +13,9 @@ function obParse(raw){const t=(raw||'').trim();if(!t)return null;const rp=parseR
   return{kind:'task',title,area,date:w.date||null,deadline:w.deadline||null,label:w.date?relDay(w.date):w.deadline?`By ${relDay(w.deadline)}`:'Anytime'};}
 const cap1=s=>s?s.charAt(0).toUpperCase()+s.slice(1):s;
 const OB_KIND={task:'Task',habit:'Habit',block:'Event',allday:'All day'};
-function obCreate(p){if(p.kind==='habit'){const d=p.rp.days;return create('habit',{title:p.title,notes:'',target:d?d.length:(p.rp.target||3),dur:30,days:d||[],howOften:d?'days':'times',tod:p.rp.tod||'anytime',setTime:null,startDate:todayK(),track:'check',goalN:8,unit:'',area:p.area,color:'sage',icon:null,logs:{},sessions:{},part:null,reminder:null,photos:[]});}
-  if(p.kind==='block')return create('block',{title:p.title,notes:'',date:p.date,start:p.start,dur:60,repeat:{type:'never',end:null},reminder:null,part:null,area:p.area,color:'sage',icon:null});
-  if(p.kind==='allday')return create('allday',{title:p.title,notes:'',start:p.date,end:null,repeat:{type:'never',end:null},reminder:null,area:p.area,color:'sage',icon:null});
+function obCreate(p){if(p.kind==='habit'){const d=p.rp.days;return create('habit',{title:p.title,notes:'',target:d?d.length:(p.rp.target||3),dur:30,days:d||[],howOften:d?'days':'times',tod:p.rp.tod||'anytime',setTime:null,startDate:todayK(),track:'check',goalN:8,unit:'',area:p.area,color:defCol(),icon:null,logs:{},sessions:{},part:null,reminder:null,photos:[]});}
+  if(p.kind==='block')return create('block',{title:p.title,notes:'',date:p.date,start:p.start,dur:60,repeat:{type:'never',end:null},reminder:null,part:null,area:p.area,color:defCol(),icon:null});
+  if(p.kind==='allday')return create('allday',{title:p.title,notes:'',start:p.date,end:null,repeat:{type:'never',end:null},reminder:null,area:p.area,color:defCol(),icon:null});
   return newTask(p.title,{date:p.date,deadline:p.deadline,area:p.area});}
 function viewWelcome(root){
   const S=App.state,s=get.settings();

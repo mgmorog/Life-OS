@@ -18,7 +18,7 @@ function habitMeta(h,dk){const v=h.logs&&h.logs[dk];if(h.track==='count')return 
 const TOD=[['anytime','Anytime'],['morning','Morning'],['afternoon','Afternoon'],['evening','Evening'],['set','At a set time']];
 function habitSheet(rec,seed={}){
   const isEdit=!!rec,after=seed.after;
-  const D=isEdit?clone(rec):Object.assign({title:'',notes:'',target:get.settings().defaultHabitTarget||3,dur:30,days:[],tod:'anytime',setTime:null,startDate:todayK(),track:'check',goalN:8,unit:'',area:null,color:'sage',icon:null,logs:{},sessions:{},part:null,reminder:null,remUnit:'minute',photos:[]},seed);delete D.after;
+  const D=isEdit?clone(rec):Object.assign({title:'',notes:'',target:get.settings().defaultHabitTarget||3,dur:30,days:[],tod:'anytime',setTime:null,startDate:todayK(),track:'check',goalN:8,unit:'',area:null,color:defCol(),icon:null,logs:{},sessions:{},part:null,reminder:null,remUnit:'minute',photos:[]},seed);delete D.after;
   D.howOften=D.howOften||((D.days||[]).length?'days':'times');
   let render,nCount=D.track==='count'?D.goalN:8,nTime=D.track==='time'?D.goalN:20;
   const inst=formSheet({title:isEdit?'Edit habit':'New habit',addLabel:isEdit?'Save':'Add',D,word:'habit',isEdit,canAdd:()=>!!D.title.trim(),commit:()=>commit(),build:(body,update,i)=>{
@@ -73,7 +73,7 @@ function lastProgress(r){let t=r.createdAt||0;(r.steps||[]).forEach(s=>{if(s.don
 function focusGoals(){return get.all('goal').filter(g=>g.focus);}
 function setFocus(g,on){if(on&&focusGoals().filter(x=>x.id!==g.id).length>=3){const inst=openSheet({title:'Focus is full',build:b=>{b.append(el('p',{class:'muted'},'Three goals at a time. Swap one out?'),el('div',{class:'list'},focusGoals().map(x=>el('button',{class:'li',style:'min-height:52px',onclick:()=>{x.focus=false;put(x,{silent:true});g.focus=true;put(g);inst.close();}},el('span',{class:'grow'},x.title),el('span',{class:'linkbtn small'},'Swap')))));}});return;}g.focus=on;put(g);}
 function goalSheet(rec,opts={}){
-  const isEdit=!!rec;const D=isEdit?clone(rec):Object.assign({title:'',notes:'',steps:[],area:null,deadline:null,color:'sage',track:'milestones',numStart:0,numTarget:100,numUnit:'',checkIn:'weekly',focus:false,photos:[]},opts.seed||{});D.track=D.track||'milestones';
+  const isEdit=!!rec;const D=isEdit?clone(rec):Object.assign({title:'',notes:'',steps:[],area:null,deadline:null,color:defCol(),track:'milestones',numStart:0,numTarget:100,numUnit:'',checkIn:'weekly',focus:false,photos:[]},opts.seed||{});D.track=D.track||'milestones';
   let render;const inst=formSheet({title:isEdit?'Edit goal':'New goal',addLabel:isEdit?'Save':'Add',D,word:'goal',isEdit,canAdd:()=>!!D.title.trim(),commit:()=>commit(),build:(body,update,i)=>{
     const ctx=formCtx(()=>render());const T=fieldTitle('f-goal-title','Title','What are you working toward?',D.title,v=>{D.title=v;update();},()=>{if(D.title.trim()){commit();inst.close();}});
     const track=el('div',{style:'display:flex;flex-direction:column;gap:10px'}),when=el('div',{class:'group'}),det=el('div',{class:'group'});
@@ -99,7 +99,7 @@ function goalSheet(rec,opts={}){
   return inst;
 }
 function projectSheet(rec,opts={}){
-  const isEdit=!!rec;const D=isEdit?clone(rec):Object.assign({title:'',notes:'',steps:[],area:null,deadline:null,part:null,color:'sage',photos:[]},opts.seed||{});
+  const isEdit=!!rec;const D=isEdit?clone(rec):Object.assign({title:'',notes:'',steps:[],area:null,deadline:null,part:null,color:defCol(),photos:[]},opts.seed||{});
   let render;const inst=formSheet({title:isEdit?'Edit project':'New project',addLabel:isEdit?'Save':'Add',D,word:'project',isEdit,canAdd:()=>!!D.title.trim(),commit:()=>commit(),build:(body,update,i)=>{
     const mineP=isEdit?[]:userTpls().filter(t=>t.kind==='project');if(mineP.length)body.append(el('div',{class:'sect'},'Your templates'),el('div',{class:'chips',style:'margin-bottom:12px'},mineP.map(t=>tplChip(t,()=>{inst.close();addTemplate(t);}))));
     const ctx=formCtx(()=>render());const T=fieldTitle('f-project-title','Title','What are you taking on?',D.title,v=>{D.title=v;update();},()=>{if(D.title.trim()){commit();inst.close();}});
@@ -164,7 +164,7 @@ function sectionSheet(t){let v=t.section||'',inst;inst=openSheet({title:'Section
 /* ---------- Routines ---------- */
 const RT_TEMPLATES=[['Morning',[['Water and stretch',5],['Shower and dress',15],['Breakfast',15],['Look over Today',5]]],['Wind down',[['Set out tomorrow',5],['Tidy up',10],['Read',20]]],['Workout',[['Warm up',5],['Main set',30],['Cool down',5]]],['Weekly reset',[['Empty Inbox',10],['Check next week',5],['Clear kitchen and desk',15],['Plan in Studio',15]]],['Focus block',[['Clear your desk',2],['Pick one thing',3],['Deep work',45],['Note what’s next',5]]]];
 function routineSheet(rec,{seed=null}={}){
-  const isEdit=!!rec;const D=isEdit?clone(rec):Object.assign({title:'',notes:'',steps:[{id:uid('s'),t:'',min:5,habit:null}],days:[],setTime:null,startDate:todayK(),reminder:null,remUnit:'minute',area:null,color:'sage'},seed||{});
+  const isEdit=!!rec;const D=isEdit?clone(rec):Object.assign({title:'',notes:'',steps:[{id:uid('s'),t:'',min:5,habit:null}],days:[],setTime:null,startDate:todayK(),reminder:null,remUnit:'minute',area:null,color:defCol()},seed||{});
   let render;const inst=formSheet({title:isEdit?'Edit routine':'New routine',addLabel:isEdit?'Save':'Add',D,word:'routine',isEdit,canAdd:()=>!!D.title.trim(),commit:()=>{D.title=D.title.trim();D.steps=D.steps.filter(s=>s.t.trim()).map(s=>{delete s._more;return s;});if(isEdit){Object.assign(rec,D);put(rec);}else{const r=create('routine',D);setTimeout(()=>App.go('routine',{id:r.id}),350);}toast('Saved');},build:(body,update,i)=>{
     const ctx=formCtx(()=>render());const T=fieldTitle('f-rt-title','Title','Morning, shutdown, reset…',D.title,v=>{D.title=v;update();});
     const box=el('div',{class:'group'}),rhythm=el('div',{class:'group'}),det=el('div',{class:'group'});const habits=get.all('habit');

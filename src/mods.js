@@ -210,7 +210,7 @@ function delMod(hub,t){const l=entries(hub,t.id),on=toolOn(hub,t.id);
 /* ---------- Settings › Modules ---------- */
 function viewModules(root){const page=el('div',{class:'page'}),{mine,extra}=modAreas(),onN=mine.reduce((n,a)=>n+toolsOf(a).filter(t=>toolOn(a,t.id)).length,0);
   const S=App.state,mf=S.modF||'all',keep=(a,t)=>!t.hide&&(mf==='all'||(mf==='on')===!!toolOn(a,t.id));
-  page.append(pageHead('Modules',`${onN} on · Turning one off deletes nothing`,{back:'Settings',to:'prefs',icon:'grid'}));
+  page.append(pageHead('Modules',`${onN} on`,{back:'Settings',to:'prefs',icon:'grid'}));
   page.append(el('button',{class:'otidy',onclick:()=>modSheet(null)},el('span',{class:'oric',html:ic('plus',20,2)}),el('span',{class:'grow'},el('b',{},'Build your own module')),el('span',{class:'chev',html:ic('chevr',16,2)})));
   page.append(el('div',{class:'chips',style:'margin:2px 0 4px'},[['all','All'],['on','On'],['off','Off']].map(([v,n])=>el('button',{class:'chip'+(mf===v?' on':''),'aria-pressed':String(mf===v),onclick:()=>{S.modF=v;App.refresh();}},n))));
   const modRow=(a,t)=>{const on=toolOn(a,t.id),n=entries(a,t.id).length,r=el('div',{class:'li modrow',style:'min-height:56px'},el('span',{class:'sq',style:on?null:'opacity:.5',html:ic(t.icon||'grid',20,1.7)}),el('button',{class:'grow',style:'text-align:left',onclick:()=>on?App.go('tool',{hub:a,tool:t.id}):turnOnTool(a,t,{go:true})},el('b',{style:'font-weight:600'},t.name,t.custom?el('span',{class:'hpill',style:'margin-left:6px;background:var(--accent-soft);color:var(--accent-deep)'},'Yours'):null)),

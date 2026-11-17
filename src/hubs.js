@@ -24,10 +24,11 @@ const doneAct={label:'Done',show:()=>true,run:x=>{x.f.last=todayK();put(x);toast
 /* small pieces the tool screens are built from */
 const later=()=>setTimeout(()=>App.refresh(),820);
 /* section headers stay pinned under the status bar while their section scrolls by */
-const lblRow=(t,r)=>el('div',{class:'sh2 shstick'},el('span',{class:'lbl'},t),typeof r==='string'?el('span',{class:'small muted'},r):r||null);
+const lblRow=(t,r)=>el('div',{class:'sh2 shstick'},el('span',{class:'lbl'},t),typeof r==='string'?(/^\d+$/.test(r.trim())?null:el('span',{class:'small muted'},r)):typeof r==='number'?null:r||null);
 const lnk=(label,fn,icon)=>el('button',{class:'linkbtn small',style:'min-height:44px;margin:-8px 0',onclick:fn},icon?el('span',{style:'display:grid',html:ic(icon,16,2)}):null,label);
 const bigN=(v,rest)=>el('p',{class:'bign'},el('span',{class:'serif n'},String(v)),rest?el('span',{class:'muted'},' '+rest):null);
-const pill=(t,c='')=>el('span',{class:'hpill '+c},t);
+/* "all is well" labels say nothing; only a status that needs attention gets a pill */
+const pill=(t,c='')=>/^(On track|On pace|Up to date|All good)$/.test(t)?null:el('span',{class:'hpill '+c},t);
 const AMBER='#D9A441',RUST='#C76A2E';
 const meter=(f,{c,mark,tall}={})=>el('div',{class:'hmeter'+(tall?' tall':'')},el('i',{style:`width:${Math.max(0,Math.min(100,(f||0)*100))}%${c?`;background:${c}`:''}`}),mark!=null?el('b',{style:`left:${mark*100}%`}):null);
 const paceC=f=>f>=1?RUST:f>=.75?AMBER:null;
@@ -49,7 +50,9 @@ const seasonOf=d=>['Winter','Winter','Spring','Spring','Spring','Summer','Summer
 const seasonEnd=d=>{const m=d.getMonth(),y=d.getFullYear();const e={Winter:new Date(m===11?y+1:y,1,28),Spring:new Date(y,4,31),Summer:new Date(y,7,31),Fall:new Date(y,10,30)}[seasonOf(d)];return k(e);};
 const everyWord=n=>({1:'Daily',7:'Weekly',14:'Every 2 weeks',30:'Monthly',60:'Every 2 months',90:'Every 3 months',180:'Every 6 months',365:'Yearly'}[+n]||(+n%365===0?`Every ${+n/365} years`:+n%30===0?`Every ${+n/30} months`:+n%7===0?`Every ${+n/7} weeks`:`Every ${n} days`));
 const stepper=(val,lo,hi,step,on,fmt=v=>v)=>el('span',{class:'stp'},el('button',{'aria-label':'Lower',html:ic('minus',16,2),onclick:()=>on(Math.max(lo,val-step))}),el('span',{class:'sv tnum'},String(fmt(val))),el('button',{'aria-label':'Raise',html:ic('plus',16,2),onclick:()=>on(Math.min(hi,val+step))}));
-const toolHead=(page,hub,t,{sub,actions}={})=>page.append(pageHead(t.name,sub||null,{back:hub,to:'area',icon:t.icon,actions:actions||plusB(t.word,()=>entrySheet(hub,t))}));
+/* a module's line under its title earns its place only with a real figure: taglines and bare counts of what's listed below are left out */
+const toolSub=s=>typeof s!=='string'?s:(!/\d/.test(s)||/^\d+ [A-Za-z]+(?: [A-Za-z]+)?\.?$/.test(s.trim()))?null:s;
+const toolHead=(page,hub,t,{sub,actions}={})=>page.append(pageHead(t.name,toolSub(sub)||null,{back:hub,to:'area',icon:t.icon,actions:actions||plusB(t.word,()=>entrySheet(hub,t))}));
 const plusB=(word,fn)=>el('button',{class:'iconbtn green','aria-label':`New ${word}`,html:ic('plus',22,2),onclick:fn});
 const moreB=(label,fn)=>el('button',{class:'iconbtn green','aria-label':label,html:sv('<circle cx="5" cy="12" r="1.8" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.8" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.8" fill="currentColor" stroke="none"/>',22),onclick:fn});
 const seedHub=name=>{App.state.params=Object.assign(App.state.params||{},{name});};
@@ -145,7 +148,7 @@ const HUBS={
 const toolOf=(hub,id)=>toolsOf(hub).find(t=>t.id===id);
 function viewAreas(root){
   const page=el('div',{class:'page'}),areas=get.settings().areas||AREAS;
-  page.append(pageHead('Life Areas',null,{icon:'heart',actions:el('button',{class:'iconbtn green','aria-label':'Manage life areas',html:ic('gear',22),onclick:()=>App.go('setpage',{id:'areas'})})}));
+  page.append(pageHead('Life areas',null,{icon:'heart',actions:el('button',{class:'iconbtn green','aria-label':'Manage life areas',html:ic('gear',22),onclick:()=>App.go('setpage',{id:'areas'})})}));
   const S=App.state,used=a=>{const c=areaRecords(a);return c.tasks.length+c.habits.length+c.goals.length+c.projects.length+c.resources.length>0||get.all('entry').some(x=>x.hub===a&&!isCfg(x))||toolsOf(a).some(t=>!t.hide&&toolOn(a,t.id));};
   const quiet=areas.filter(a=>!used(a)),shown=S.areasAll?areas:areas.filter(used);
   page.append(el('div',{class:'list'},shown.map(a=>{const c=areaRecords(a),n=c.tasks.length+c.habits.length+c.goals.length+c.projects.length+get.all('entry').filter(x=>x.hub===a&&!isCfg(x)).length;return el('button',{class:'li',style:'min-height:60px',onclick:()=>App.go('area',{name:a})},el('span',{class:'sq',html:ic(areaIcon(a),20,1.7)}),el('span',{class:'grow'},el('b',{style:'font-size:17px'},a),null),el('span',{class:'chev',html:ic('chevr',16,2)}));})));
@@ -222,5 +225,8 @@ function wheelSheet(hub,t,rec){const areas=(get.settings().areas||AREAS),D=rec?c
 function viewTool(root,hub,id){
   const t=toolOf(hub,id);if(!t){App.back('areas');return;}const page=el('div',{class:'page'});
   App.state.params=Object.assign({},App.state.params,{name:hub});
-  if(toolFresh(hub,t))toolIntroPage(page,hub,t);else{t.view(page,hub,t);try{toolPageMenu(page,hub,t);}catch(e){console.warn(e);}const an=toolAfterNote(hub,t);if(an){const h=page.firstElementChild;if(h)h.after(an);else page.prepend(an);}}root.append(page);
+  if(toolFresh(hub,t))toolIntroPage(page,hub,t);else{t.view(page,hub,t);dedupeSub(page);try{toolPageMenu(page,hub,t);}catch(e){console.warn(e);}const an=toolAfterNote(hub,t);if(an){const h=page.firstElementChild;if(h)h.after(an);else page.prepend(an);}}root.append(page);
 }
+
+/* a module's line under its title goes when every figure in it is shown again on the page below */
+function dedupeSub(page){const h=page.querySelector('header'),sub=h&&h.querySelector(':scope>.small.muted');if(!sub)return;const nums=(sub.textContent.match(/[$€£]?\d[\d,.]*/g)||[]);if(!nums.length)return;const rest=' '+[...page.children].filter(x=>x!==h).slice(0,2).map(x=>x.textContent).join(' ')+' ';if(nums.every(n=>new RegExp('(^|[^\\d.,])'+n.replace(/[$.]/g,'\\$&')+'(?![\\d,])').test(rest)))sub.remove();}

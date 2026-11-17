@@ -8,7 +8,8 @@ const PLACES={
 const backBtn=(label='More',to='more')=>el('button',{class:'back',onclick:()=>App.back(to),html:ic('chevl',20,2.2)+esc(label)});
 /* module pages show their icon beside the title, the same icon used for them in lists, so the two are learned together */
 const titleIc=i=>el('span',{class:'tic','aria-hidden':'true',html:ic(i,22,1.8)});
-const withIc=(i,h)=>i?el('div',{class:'tirow'},titleIc(i),h):h;
+/* page titles stand on their own; the icon tile beside them only repeated the name */
+const withIc=(i,h)=>h;
 function pageHead(title,sub,{back='More',to='more',actions=null,icon=null}={}){return el('header',{},el('div',{class:'pghead'},backBtn(back,to),actions?el('div',{style:'display:flex;gap:2px;align-items:center'},actions):null),withIc(icon,el('h1',{class:'pgtitle',style:'margin-top:4px'},title)),sub?el('div',{class:'small muted',style:'margin-top:4px'},sub):null);}
 function placeCount(id){
   const tk=todayK();
@@ -41,8 +42,10 @@ function viewMore(root){
   if(absent.length)page.append(el('div',{class:'lbl'},'Main views'),el('div',{class:'list'},absent.map(x=>el('button',{class:'li',style:'min-height:56px',onclick:()=>App.go(x)},el('span',{class:'sq',html:ic(PLACES[x].i,20,1.7)}),el('span',{class:'grow'},el('b',{},PLACES[x].n)),el('span',{class:'chev',html:ic('chevr',16,2)})))));
   const row=(i,n,s,on)=>el('button',{class:'li',style:'min-height:60px',onclick:on},el('span',{class:'sq',html:ic(i,20,1.7)}),el('span',{class:'grow'},el('b',{style:'font-size:17px'},n)),el('span',{class:'chev',html:ic('chevr',18,2)}));
   const place=id=>row(PLACES[id].i,PLACES[id].n,null,()=>App.go(id));
-  page.append(el('div',{class:'lbl'},'Organize'),el('div',{class:'list'},['inbox','tasks','habits','routines','projects','goals','lists'].map(place)),
-    el('div',{class:'lbl'},'Life'),el('div',{class:'list'},row('heart','Life Areas',null,()=>App.go('areas')),place('reviews')),
+  /* anything pinned above isn't listed a second time below */
+  const pinS=new Set(S.pinned||[]),orgL=['inbox','tasks','habits','routines','projects','goals','lists'].filter(x=>!pinS.has(x));
+  page.append(orgL.length?el('div',{class:'lbl'},'Organize'):null,orgL.length?el('div',{class:'list'},orgL.map(place)):null,
+    el('div',{class:'lbl'},'Life'),el('div',{class:'list'},...[pinS.has('areas')?null:row('heart','Life areas',null,()=>App.go('areas')),pinS.has('reviews')?null:place('reviews')]),
     el('div',{class:'lbl'},'Kept'),el('div',{class:'list'},
     row('image','Photos',null,()=>App.go('photos')),
     row('archive','Archive',null,()=>App.go('archive')),

@@ -13,7 +13,7 @@ export const ORDER = ['core', 'sheets', 'capture', 'today', 'calendar', 'studio'
 const read = p => readFileSync(root + p, 'utf8');
 const css0 = read('src/style.css');
 const js0 = ORDER.map(n => read(`src/${n}.js`) + '\n').join('');
-const wrapped = `(()=>{\n${js0}\nwindow.__lifeos={App,recs,get,store,dayItems,put,create,remove,todayK,toolOf,hubHidden,loadDemo:typeof loadDemo==="function"?loadDemo:null};\n})();\n`;
+const wrapped = `(()=>{\n${js0}\nwindow.__lifeos={App,recs,get,store,dayItems,put,create,remove,todayK,toolOf,hubHidden,loadDemo:typeof loadDemo==="function"?loadDemo:null,toolsOf:typeof toolsOf==="function"?toolsOf:null};\n})();\n`;
 const FONTS = 'https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500&family=Figtree:wght@400;500;600;700&display=swap';
 const BODY = `<div class="mini" id="mini" aria-hidden="true"></div>
 <main id="view"></main>

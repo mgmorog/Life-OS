@@ -2224,3 +2224,25 @@ html.c-fade .todo.won .t3in .tick-host.done{opacity:1}
 .focus-link{display:inline-flex;align-items:center;gap:6px;justify-self:start;align-self:flex-start;height:32px;padding:0 4px;font-size:14px;font-weight:600;color:var(--accent-text)}
 .cal-compact .wd-row{margin-top:4px}
 .dpanel .chips .chip{height:34px;font-size:14px}
+
+/* v201 trips: tinted days, one name line, countdown card, week band */
+:root{--trip:#4A6E9C;--trip-soft:#E4EBF4}
+.heat.tripday{box-shadow:0 0 0 2.5px var(--trip) inset}
+.heat.tripday.today{box-shadow:0 0 0 2.5px var(--trip) inset,0 0 0 4.5px var(--ink) inset}
+.heat.tripfirst::before{content:"";position:absolute;left:6px;bottom:6px;width:13px;height:13px;background:var(--trip);-webkit-mask:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2.4" stroke-linejoin="round"><path d="M3 13l18-8-6 16-3-7z"/></svg>') center/contain no-repeat;mask:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2.4" stroke-linejoin="round"><path d="M3 13l18-8-6 16-3-7z"/></svg>') center/contain no-repeat}
+.heat.l3.tripfirst::before,.heat.l4.tripfirst::before{background:#fff}
+.heat.tripfirst .adbars{display:none}
+.heat-row.hasband{padding-bottom:0}
+.dband{display:none!important}
+.tripname{display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;color:var(--trip);margin:-1px 4px 2px;min-height:22px;text-align:left}
+.tripname i{width:8px;height:8px;border-radius:50%;background:var(--trip);flex:none}
+.tripcd{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:var(--card);border:1.5px solid var(--trip-soft);border-radius:22px;padding:14px 16px}
+.tcic{width:46px;height:46px;border-radius:50%;background:var(--trip-soft);color:var(--trip);display:grid;place-items:center;flex:none}
+.tripcd .grow{min-width:0;display:flex;flex-direction:column}
+.tripcd small{font-size:11px;letter-spacing:.12em;font-weight:700;color:var(--trip)}
+.tripcd b{font:400 21px/1.15 var(--display);color:var(--ink)}
+.tripcd .grow>span:not(.tcbar){font-size:13px;color:var(--ink-2)}
+.tcbar{height:5px;border-radius:3px;background:var(--line-2);margin-top:8px;overflow:hidden;display:block}.tcbar i{display:block;height:100%;background:var(--trip);border-radius:3px}
+.tripcd .chev{color:var(--ink-3);display:grid}
+.dwk{display:inline-flex!important;align-items:center;gap:6px;align-self:flex-start;height:28px;min-height:28px!important;padding:0 10px;border-radius:9px;background:var(--trip-soft);color:var(--trip)!important;font-size:13px;margin-bottom:2px}
+.dtile.tripd{background:var(--trip)!important;color:#fff!important}

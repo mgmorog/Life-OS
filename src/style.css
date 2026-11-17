@@ -2306,3 +2306,9 @@ html.c-fade .todo.won .t3in .tick-host.done{opacity:1}
 .dledit{color:var(--accent-text);font-weight:500}.dledit .dlic{color:var(--accent-text)}
 .wkdaily{margin:0 4px 10px;font-size:14px;color:var(--ink-2)}.wkdaily b{color:var(--ink);font-weight:600}
 .sh2+.list{margin-top:-8px}
+
+/* v206 compact empty rows in modules */
+.qempty{display:flex;align-items:center;gap:12px;width:100%;min-height:54px;padding:0 16px;text-align:left;font-size:16px;color:var(--accent-text);font-weight:500}
+p.qempty{color:var(--ink-3);font-weight:400}
+.list>.qempty,.card>.qempty{background:none}
+.dstats>.dstat:last-child:nth-child(odd){grid-column:1/-1}

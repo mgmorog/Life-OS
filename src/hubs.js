@@ -24,7 +24,9 @@ const doneAct={label:'Done',show:()=>true,run:x=>{x.f.last=todayK();put(x);toast
 /* small pieces the tool screens are built from */
 const later=()=>setTimeout(()=>App.refresh(),820);
 /* section headers stay pinned under the status bar while their section scrolls by */
-const lblRow=(t,r)=>el('div',{class:'sh2 shstick'},el('span',{class:'lbl'},t),typeof r==='string'?(/^\d+$/.test(r.trim())?null:el('span',{class:'small muted'},r)):typeof r==='number'?null:r||null);
+/* a section label's right side keeps actions and real figures; hints ("Bars fill until…") and bare counts ("2 dates") go */
+const lblQuiet=r=>{const x=r.trim();return !/\d/.test(x)||/^\d+( [A-Za-z]+){0,2}$/.test(x);};
+const lblRow=(t,r)=>el('div',{class:'sh2 shstick'},el('span',{class:'lbl'},t),typeof r==='string'?(lblQuiet(r)?null:el('span',{class:'small muted'},r)):typeof r==='number'?null:r||null);
 const lnk=(label,fn,icon)=>el('button',{class:'linkbtn small',style:'min-height:44px;margin:-8px 0',onclick:fn},icon?el('span',{style:'display:grid',html:ic(icon,16,2)}):null,label);
 const bigN=(v,rest)=>el('p',{class:'bign'},el('span',{class:'serif n'},String(v)),rest?el('span',{class:'muted'},' '+rest):null);
 /* "all is well" labels say nothing; only a status that needs attention gets a pill */
@@ -225,8 +227,18 @@ function wheelSheet(hub,t,rec){const areas=(get.settings().areas||AREAS),D=rec?c
 function viewTool(root,hub,id){
   const t=toolOf(hub,id);if(!t){App.back('areas');return;}const page=el('div',{class:'page'});
   App.state.params=Object.assign({},App.state.params,{name:hub});
-  if(toolFresh(hub,t))toolIntroPage(page,hub,t);else{t.view(page,hub,t);dedupeSub(page);try{toolPageMenu(page,hub,t);}catch(e){console.warn(e);}const an=toolAfterNote(hub,t);if(an){const h=page.firstElementChild;if(h)h.after(an);else page.prepend(an);}}root.append(page);
+  if(toolFresh(hub,t))toolIntroPage(page,hub,t);else{t.view(page,hub,t);dedupeSub(page);quietTool(page);try{toolPageMenu(page,hub,t);}catch(e){console.warn(e);}const an=toolAfterNote(hub,t);if(an){const h=page.firstElementChild;if(h)h.after(an);else page.prepend(an);}}root.append(page);
 }
 
 /* a module's line under its title goes when every figure in it is shown again on the page below */
 function dedupeSub(page){const h=page.querySelector('header'),sub=h&&h.querySelector(':scope>.small.muted');if(!sub)return;const nums=(sub.textContent.match(/[$€£]?\d[\d,.]*/g)||[]);if(!nums.length)return;const rest=' '+[...page.children].filter(x=>x!==h).slice(0,2).map(x=>x.textContent).join(' ')+' ';if(nums.every(n=>new RegExp('(^|[^\\d.,])'+n.replace(/[$.]/g,'\\$&')+'(?![\\d,])').test(rest)))sub.remove();}
+
+/* one quiet pass over every module page:
+   empty sections become a single add row, one-time hints go, and a label with nothing under it goes too */
+function quietTool(page){
+  page.querySelectorAll('.empty').forEach(e=>{const b=e.querySelector('button'),t=(e.querySelector('b')||{}).textContent||'';
+    const n=b?el('button',{class:'qempty',onclick:()=>b.click()},el('span',{class:'pplus',html:ic('plus',14,2.4)}),b.textContent.replace(/^\+\s*/,'').trim()):el('p',{class:'qempty muted'},t);e.replaceWith(n);});
+  [...page.children].forEach(x=>{if(x.matches('p.small.muted,p.muted,div.small.muted')&&!/\d/.test(x.textContent)&&!x.querySelector('button,a,input'))x.remove();});
+  [...page.children].forEach(x=>{if(x.matches('.sh2')&&x.nextElementSibling&&x.nextElementSibling.querySelector(':scope>.qempty,:scope.qempty')){const a=x.querySelector(':scope>button,:scope>.linkbtn');if(a&&x.children.length>1)a.remove();}});
+  [...page.children].forEach(x=>{if(!x.matches('.sh2,.lbl,.sect'))return;const nx=x.nextElementSibling;if(!nx||nx.matches('.sh2,.lbl,.sect'))x.remove();});
+}

@@ -74,7 +74,7 @@ function loadDemo(quiet){
   const NR={type:'never',end:null},AR=AREAS;
   /* every area on, every module on */
   const allAreas=[...new Set([...AREAS,...OPT_AREAS])];const shown={};allAreas.forEach(a=>shown[a]=toolsOf(a).filter(x=>x.optIn).map(x=>x.id));
-  setSettings({areas:allAreas.slice().sort((a,b)=>a.localeCompare(b)),hubHidden:{},hubShown:shown,introDone:true,foundationOff:true,demoSnap:snap,demoVer:5});
+  setSettings({areas:allAreas.slice().sort((a,b)=>a.localeCompare(b)),hubHidden:{},hubShown:shown,introDone:true,foundationOff:true,demoSnap:snap,demoVer:6});
   /* projects first, so tasks can belong to them */
   const projs=[['Kitchen refresh','Home',['Measure the cabinets','Pick a paint color','Order hardware','Paint weekend']],['Q1 Workday release','Career',['Write test scripts','UAT with grant managers','Sign-off from Finance','Go-live checklist','Train AP team']],['Japan trip','Travel',['Book flights','Book Kyoto ryokan','Get JR pass','Pocket wifi']],['Move to the new office','Career',[]],['Garage cleanout (paused)','Home',['Sort donations','Sell the old bike']]];
   const P=projs.map(([title,area,steps],i)=>mk('project',{title,notes:i===1?'Release target is the first week of February. Keep Finance in the loop on every change to costing allocations.':'',area,deadline:i===2?addK(t,120):i===1?addK(t,40):null,color:pick(['sage','clay','blue','plum','rose']),status:'active',paused:i===4,part:null,steps:steps.map((x,j)=>({id:uid('s'),t:x,d:j===0&&i!==3}))}));
@@ -110,7 +110,7 @@ function loadDemo(quiet){
   /* all-day: single, multi-day trip, yearly, holiday, a past one */
   const A=(title,start,end,o={})=>mk('allday',Object.assign({title,notes:'',start,end,repeat:NR,reminder:null,area:null,color:'sage',icon:'cal'},o));
   A('Mom’s birthday',addK(t,2),null,{area:'Relationships',color:'plum',icon:'cake',repeat:{type:'custom',unit:'year',n:1,end:null}});
-  A('Chicago weekend',addK(t,5),addK(t,7),{area:'Travel',color:'blue',icon:'plane'});A('Office closed',addK(t,11),null,{area:'Career'});A('Work from home',t,null,{area:'Career'});
+  A('Office closed',addK(t,11),null,{area:'Career'});A('Work from home',t,null,{area:'Career'});
   const nov=k=>{const d=fromK(t);return k(d.getFullYear());};
   A('Veterans Day',addK(t,-4),null,{color:'blue'});A('Thanksgiving',addK(t,11),null,{color:'clay',icon:'meal',area:'Relationships'});A('Black Friday',addK(t,12),null);A('Workday conference',addK(t,-12),addK(t,-10),{area:'Career',color:'blue'});
   A('Alex’s birthday',addK(t,-2),null,{area:'Relationships',color:'plum',icon:'cake',repeat:{type:'custom',unit:'year',n:1,end:null}});A('Pay day',addK(t,-14),null,{area:'Finances',repeat:{type:'custom',unit:'week',n:2,end:null}});A('Out of office',addK(t,18),addK(t,22),{area:'Career'});
@@ -147,4 +147,4 @@ function clearDemo(){const s=get.settings(),snap=s.demoSnap;
     App.refresh();toast('Demo cleared');}});}
 
 /* refresh an already-loaded demo with the current generator, keeping the original settings snapshot */
-function demoRefresh(){const s=get.settings(),keep=s.demoSnap;if(!keep)return;[...recs.values()].filter(r=>r.demo).forEach(r=>remove(r.id,{silent:true,hard:true}));setSettings({demoSnap:null});loadDemo(true);setSettings({demoSnap:keep,demoVer:5});}
+function demoRefresh(){const s=get.settings(),keep=s.demoSnap;if(!keep)return;[...recs.values()].filter(r=>r.demo).forEach(r=>remove(r.id,{silent:true,hard:true}));setSettings({demoSnap:null});loadDemo(true);setSettings({demoSnap:keep,demoVer:6});}

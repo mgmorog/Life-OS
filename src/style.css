@@ -2216,3 +2216,11 @@ html.c-fade .todo.won .t3in .tick-host.done{opacity:1}
 .mtchip{display:inline-flex;align-items:center;gap:6px;height:38px;padding:0 13px 0 11px;border-radius:19px;background:var(--chip);font-size:14.5px;font-weight:500;color:var(--ink);transition:transform .15s}
 .mtchip span{color:var(--accent-text)}
 .mtchip:active{transform:scale(.96)}
+
+/* v200 calendar */
+.heat .adbars{left:8px!important;top:auto!important;bottom:8px!important}
+.heat .adbars i{width:6px!important;height:6px!important}
+.heat.l4 .adbars i,.heat.l3 .adbars i{box-shadow:0 0 0 1.5px rgba(255,255,255,.9)}
+.focus-link{display:inline-flex;align-items:center;gap:6px;justify-self:start;align-self:flex-start;height:32px;padding:0 4px;font-size:14px;font-weight:600;color:var(--accent-text)}
+.cal-compact .wd-row{margin-top:4px}
+.dpanel .chips .chip{height:34px;font-size:14px}

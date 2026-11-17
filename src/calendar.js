@@ -29,7 +29,7 @@ function viewCalendar(root){
     el('div',{style:'margin-top:6px'},modeSeg())));
   const compact=el('div',{class:'cal-compact',id:'cal-compact'},el('div',{class:'cc-in'},
     el('div',{class:'cal-title',style:'min-height:44px'},el('button',{class:'tbtn cc-title','aria-label':`Choose ${mode}`,onclick:e=>pickPeriod(e.currentTarget.getBoundingClientRect()),html:`<span>${esc(miniTitle)}</span>`+ic('chevd',16,2)}),el('span',{style:'display:flex;align-items:center;gap:2px'},pill(),arrows())),
-    modeSeg(),mode!=='week'?el('div',{class:'wd-row'},wdLabels().map(l=>el('span',{},l))):null));
+    modeSeg(),mode==='month'?el('div',{class:'wd-row'},wdLabels().map(l=>el('span',{},l))):null));
   const body=el('div',{class:'page '+(C.anim||''),id:'cal-body'});C.anim=null;
   const fk=mode==='quarter'?`q-${y}-${q}`:mode==='month'?`m-${monthKey(a)}`:`w-${weekKey(a)}`;
   body.append(focusChip(fk,mode==='quarter'?`Q${q+1} FOCUS`:mode==='month'?`${MONL[a.getMonth()].toUpperCase()} FOCUS`:'WEEK FOCUS',mode,calRange(C)));
@@ -45,7 +45,7 @@ function focusRec(fk){return get.id('focus-'+fk);}
 /* Bars count goal steps finished in this period, out of those finished here plus those still open */
 function focusChip(fk,label,mode,range){
   const f=focusRec(fk),areas=f?f.areas||[]:[];
-  if(!areas.length)return el('button',{class:'focus-chip',onclick:()=>focusSheet(fk,label)},el('span',{style:'display:flex;gap:10px;align-items:center;min-width:0'},el('span',{class:'fl'},label),el('span',{class:'fv clip'},'None yet')),el('span',{class:'fa'},'+ Choose'));
+  if(!areas.length)return el('button',{class:'focus-link',onclick:()=>focusSheet(fk,label)},el('span',{style:'display:grid',html:ic('plus',14,2.4)}),`Set a ${label.replace(/ FOCUS$/,'').replace(/^WEEK$/,'week').replace(/^([A-Z]+)$/,(m)=>m[0]+m.slice(1).toLowerCase())} focus`);
   const steps=allSteps(),inRange=s=>{if(!s.doneAt)return false;const d=k(new Date(s.doneAt));return d>=range[0]&&d<=range[1];};
   return el('div',{class:'bars'},
     el('div',{style:'display:flex;justify-content:space-between;align-items:center'},el('button',{class:'fl eyebrow',style:'font-size:11px',onclick:()=>focusSheet(fk,label)},label+' · Edit'),el('button',{class:'linkbtn small',onclick:()=>{App.state.studio=Object.assign(App.state.studio||{},{mode:mode==='quarter'?'q':mode==='month'?'m':'w',anchor:range[0]});App.go('studio');}},'Plan in Studio ›')),
@@ -92,7 +92,7 @@ function quarterBody(body,y,months,C){
     if(inQ&&!C.showEarlier)weeks=weeks.filter(w=>k(w[0])>=curW);
     if(!weeks.length)return;
     const sec=el('section',{},el('button',{class:'m-head',onclick:()=>{const gr=sec.querySelector('.qgrid'),r0=gr&&gr.getBoundingClientRect();C.mode='month';C.anchor=k(new Date(y,m,1));const t=today();C.sel=(t.getFullYear()===y&&t.getMonth()===m)?tk:k(new Date(y,m,1));calCommit();zoomGrid(r0);}},MONL[m],el('span',{class:'m-go',html:ic('chevr',14,2.4)})));
-    if(firstShown){sec.append(el('div',{class:'wd-row',style:'margin:0 0 8px'},wdLabels().map(l=>el('span',{},l))));firstShown=false;}
+    sec.append(el('div',{class:'wd-row',style:'margin:0 0 8px'},wdLabels().map(l=>el('span',{},l))));firstShown=false;
     const grid=el('div',{class:'qgrid',style:'display:grid;gap:6px'});
     weeks.forEach(w=>{const row=el('div',{class:'heat-row'+(k(w[0])===curW?' curwk':'')});w.forEach(d=>row.append(heatCell(d,{month:m,tk,C,showSel:false,onTap:()=>{C.mode='week';C.anchor=k(d);C.sel=k(d);C.weekOpen=k(d);calCommit();}})));tripBand(row,w);grid.append(row);});
     sec.append(grid);body.append(sec);
@@ -139,9 +139,9 @@ function dayPanel(dk){
   const{allDay,timed,anytime}=dayItems(dk,{filters:true}),items=[...timed,...anytime],tk=todayK(),past=dk<tk;
   const c=el('div',{class:'card dpanel',style:'padding:16px 18px'},
     el('div',{style:'display:flex;align-items:baseline;justify-content:space-between;gap:8px'},el('span',{class:'eyebrow',style:'font-size:11px'},shortDay(dk).toUpperCase()+(dk===tk?' · TODAY':'')),el('button',{class:'linkbtn small',onclick:()=>{App.state.sel=dk;App.state._fresh=true;App.go('today');}},'Open in Today ›')),
-    el('div',{class:'serif',style:'font-size:26px;line-height:1.2;margin-top:2px'},items.length||allDay.length?`${items.length+allDay.length} planned`:emptyDayHead(dk)));
+    el('div',{class:'serif',style:'font-size:22px;line-height:1.2;margin-top:2px'},(()=>{const nT=items.filter(e=>e.kind!=='habit').length,nH=items.length-nT;return items.length||allDay.length?[nT?`${nT} planned`:'Nothing planned',nH?` · ${nH} habit${nH>1?'s':''}`:''].join(''):emptyDayHead(dk);})()));
   if(allDay.length){const a=allDayChips(allDay,dk);a.style.marginTop='10px';c.append(a);}
-  if(items.length){const lst=el('div',{style:'margin-top:10px'});items.slice(0,3).forEach(e=>lst.append(dayLine(e,dk)));if(items.length>3)lst.append(el('button',{class:'linkbtn small',onclick:()=>{App.state.sel=dk;App.state._fresh=true;App.go('today');}},`+${items.length-3} more`));c.append(lst);}
+  if(items.length){const lst=el('div',{style:'margin-top:10px'});const iT=items.filter(e=>e.kind!=='habit');iT.slice(0,3).forEach(e=>lst.append(dayLine(e,dk)));if(iT.length>3)lst.append(el('button',{class:'linkbtn small',onclick:()=>{App.state.sel=dk;App.state._fresh=true;App.go('today');}},`+${iT.length-3} more`));c.append(lst);}
   const ch=addChips(dk);ch.style.marginTop='12px';c.append(ch);
   return c;
 }

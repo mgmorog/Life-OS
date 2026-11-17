@@ -254,8 +254,8 @@ function setStepDone(r,st,dk,on){if(r.repeat&&r.repeat.type!=='never'){r.stepDon
 function isOpenTask(t){if(!t.date)return !(t.doneDates&&Object.keys(t.doneDates).length);return (!t.repeat||t.repeat.type==='never')?!isDone(t,t.date):true;}
 /* heat level 0-4 */
 function dayLoad(dk,filters=true){const{allDay,timed,anytime}=dayItems(dk,{filters});const c=get.settings().capacity||DEFAULT_SETTINGS.capacity;const wk=[0,6].includes(fromK(dk).getDay())&&c.lightWeekends?.5:1;
-  if(c.mode==='hours'){const mins=timed.reduce((n,e)=>n+(e.dur||30),0);return{value:mins/60,level:levelOf(mins/60,(c.hours||8)*wk),allDay};}
-  const n=timed.length+anytime.length;return{value:n,level:levelOf(n,(c.full||6)*wk),allDay};}
+  if(c.mode==='hours'){const mins=timed.filter(e=>e.kind!=='habit').reduce((n,e)=>n+(e.dur||30),0);return{value:mins/60,level:levelOf(mins/60,(c.hours||8)*wk),allDay};}
+  /* habits repeat every day, so they don't make a day look busier */const n=timed.filter(e=>e.kind!=='habit').length+anytime.filter(e=>e.kind!=='habit').length;return{value:n,level:levelOf(n,(c.full||6)*wk),allDay};}
 function levelOf(v,full){if(v<=0)return 0;const r=v/Math.max(full,.5);return r>=1?4:r>=.66?3:r>=.33?2:1;}
 
 /* ---------- small shared UI ---------- */

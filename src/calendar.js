@@ -15,7 +15,7 @@ function viewCalendar(root){
   const C=calState(),a=fromK(C.anchor),mode=C.mode,y=a.getFullYear(),q=quarterOf(a),qM=[q*3,q*3+1,q*3+2];
   const current=isCurrentFor(mode,a),wS=weekStartOf(a),wE=addD(wS,6);
   const rangeD=wS.getMonth()===wE.getMonth()?`${MON[wS.getMonth()]} ${wS.getDate()} – ${wE.getDate()}`:`${MON[wS.getMonth()]} ${wS.getDate()} – ${MON[wE.getMonth()]} ${wE.getDate()}`;
-  const eyebrow=mode==='quarter'?`${MON[qM[0]]} – ${MON[qM[2]]} ${y}`:mode==='month'?String(y):`${wE.getFullYear()} · Week ${isoWeek(wS)}`;
+  const thisY=y===today().getFullYear()&&wE.getFullYear()===today().getFullYear(),eyebrow=mode==='quarter'?`${MON[qM[0]]} – ${MON[qM[2]]}${thisY?'':' '+y}`:thisY?'':String(mode==='week'?wE.getFullYear():y);App.state._tcId=null;
   const title=mode==='quarter'?`Q${q+1}`:mode==='month'?MONL[a.getMonth()]:rangeD;
   const miniTitle=mode==='quarter'?`Q${q+1} ${y}`:mode==='month'?`${MONL[a.getMonth()]} ${y}`:`${rangeD}, ${wE.getFullYear()}`;
   const f=get.settings().filters||{},filtered=(f.areas&&f.areas.length)||Object.values(f.types||{}).some(v=>v===false);
@@ -24,7 +24,7 @@ function viewCalendar(root){
   const pill=()=>!current?el('button',{class:'pill-today',onclick:calNow},'Today'):null;
   const page=el('div',{class:'page'});
   page.append(el('header',{class:'cal-h',id:'cal-h'},
-    el('div',{class:'cal-eyebrow'},el('span',{class:'eyebrow'},eyebrow),pill()),
+    eyebrow||!current?el('div',{class:'cal-eyebrow'},eyebrow?el('span',{class:'eyebrow'},eyebrow):el('span'),pill()):null,
     el('div',{class:'cal-title'},el('button',{class:'tbtn'+(mode==='week'?' mid':''),'aria-label':`Choose ${mode}`,onclick:e=>pickPeriod(e.currentTarget.getBoundingClientRect()),html:`<span>${esc(title)}</span>`+ic('chevd',18,2)}),arrows()),
     el('div',{style:'margin-top:6px'},modeSeg())));
   const compact=el('div',{class:'cal-compact',id:'cal-compact'},el('div',{class:'cc-in'},
@@ -98,21 +98,23 @@ function quarterBody(body,y,months,C){
     weeks.forEach(w=>{const row=el('div',{class:'heat-row'+(k(w[0])===curW?' curwk':'')});w.forEach(d=>row.append(heatCell(d,{month:m,tk,C,showSel:false,onTap:()=>{C.mode='week';C.anchor=k(d);C.sel=k(d);C.weekOpen=k(d);calCommit();}})));grid.append(row);{const tl=tripBand(row,w);if(tl)grid.append(tl);}});
     sec.append(grid);body.append(sec);
   });
-  body.append(heatKey());
 }
 function monthBody(body,a,C){
   const tk=todayK(),y=a.getFullYear(),m=a.getMonth(),grid=el('div',{id:'month-grid',style:'display:grid;gap:6px'});
   const selK=C.sel&&monthKey(fromK(C.sel))===monthKey(a)?C.sel:null;weeksOf(y,m).forEach(w=>{const row=el('div',{class:'heat-row'+(selK&&w.some(d=>k(d)===selK)?' selwk':'')});w.forEach(d=>row.append(heatCell(d,{month:m,tk,C,bars:true,onTap:(dk,out)=>{if(out){C.anim=dk>C.anchor?'slide-l':'slide-r';C.anchor=dk;}else if(C.sel&&dk!==C.sel)panelOut(dk>C.sel?1:-1);C.sel=dk;App.refresh();}})));grid.append(row);{const tl=tripBand(row,w);if(tl)grid.append(tl);}});
-  body.append(el('div',{class:'wd-row',style:'margin:0 0 -6px'},wdLabels().map(l=>el('span',{},l))),grid,heatKey(),dayPanel(C.sel&&monthKey(fromK(C.sel))===monthKey(a)?C.sel:k(new Date(y,m,1))));
+  body.append(el('div',{class:'wd-row',style:'margin:0 0 -6px'},wdLabels().map(l=>el('span',{},l))),grid,dayPanel(C.sel&&monthKey(fromK(C.sel))===monthKey(a)?C.sel:k(new Date(y,m,1))));
 }
 function dayLine(e,dk){
   const row=el('div',{class:'dayline tick-host'+(e.done?' done':'')},e.kind==='gcal'?null:el('span',{class:'tick-hit'},tickBtn(e.done,on=>{row.classList.toggle('done',on);toggleItem(e,dk);setTimeout(()=>App.refresh(),820);})),el('span',{class:'tm'},e.time!=null?fmtT(e.time):'Anytime'),el('button',{class:'grow clip',style:'text-align:left;min-height:44px',onclick:()=>openItem(e,dk)},el('span',{class:'tt'},e.title)));
   calGestures(row,e,dk);return row;
 }
 function allDayChips(allDay,dk){return el('div',{class:'allday-row',style:'margin-top:0'},allDay.map(e=>{const b=el('button',{class:'adchip',style:`--c:${e.color}`,html:(e.icon?glyph(e.icon,16,2):'')+`<span>${esc(e.title)}</span>`,onclick:()=>openItem(e,dk)});calGestures(b,e,dk);return b;}));}
-const addChips=(dk,inline)=>el('div',{class:'chips'},el('button',{class:'chip',onclick:e=>inline?wkAdd(e.currentTarget,dk):taskSheet(null,{date:dk})},'+ Task'),el('button',{class:'chip',onclick:()=>blockSheet(null,{date:dk,start:9*60})},'+ Time block'),el('button',{class:'chip',onclick:()=>alldaySheet(null,{start:dk})},'+ All-day'));
+const addChips=(dk,inline)=>el('div',{class:'chips'},el('button',{class:'chip',onclick:e=>{const b=e.currentTarget,r=b.getBoundingClientRect();openMenu(r.left,r.bottom+4,[{label:'Task',icon:'task',onclick:()=>inline?wkAdd(b,dk):taskSheet(null,{date:dk})},{label:'Time block',icon:'time',onclick:()=>blockSheet(null,{date:dk,start:9*60})},{label:'All-day',icon:'cal',onclick:()=>alldaySheet(null,{start:dk})}]);}},'+ Add'));
 function weekBody(body,start,C){
   const tk=todayK(),list=el('div',{});
+  /* anything on every day of the week is said once at the top, not seven times */
+  const ids7=[...Array(7)].map((_,i)=>{const x=dayItems(k(addD(start,i)),{filters:true});return new Set([...x.timed,...x.anytime].map(e=>e.rec&&e.rec.id).filter(Boolean));}),daily=[...ids7[0]].filter(id=>ids7.every(s=>s.has(id)));
+  if(daily.length){const nm=daily.map(id=>get.id(id)).filter(Boolean).map(r=>r.title);if(nm.length)list.append(el('p',{class:'wkdaily'},el('b',{},'Every day'),` ${andList(nm)}`));}
   for(let i=0;i<7;i++){const d=addD(start,i),dk=k(d),{allDay,timed,anytime}=dayItems(dk,{filters:true}),L=dayLoad(dk),items=[...timed,...anytime],past=dk<tk,empty=!items.length&&!allDay.length,open=C.weekOpen===dk;
     const toggle=()=>{C.weekOpen=open?null:dk;C.sel=dk;App.refresh();};
     const main=el('div',{class:'wkitems'}),trW=tripOn(dk);if(trW)main.append(el('button',{class:'dwk',onclick:ev=>{ev.stopPropagation();tripGo(trW);}},el('span',{style:'display:grid',html:ic('plane',13,2.2)}),`${trW.f.what} · Day ${daysBetween(trW.f.date,dk)+1} of ${tripDays(trW)}`));
@@ -122,13 +124,13 @@ function weekBody(body,start,C){
       main.append(addChips(dk,true),el('button',{class:'linkbtn small',style:'justify-self:start',onclick:()=>{App.state.sel=dk;App.state._fresh=true;App.go('today');}},'Open in Today ›'));
     }else{
       {const adS=allDay.filter(e=>!(e.rec&&e.rec.tripId));if(adS.length)main.append(el('span',{style:'display:flex;gap:4px;flex-wrap:wrap'},adS.slice(0,3).map(e=>{const c=el('span',{class:'minichip',style:`--c:${e.color}`},e.title);calGestures(c,e,dk);return c;})));}
-      items.slice(0,3).forEach(e=>{const r=el('span',{class:'it'},el('time',{},e.time!=null?fmtT(e.time):'Anytime'),el('span',{},e.title));calGestures(r,e,dk);main.append(r);});
-      if(items.length>3)main.append(el('span',{class:'ph'},`+${items.length-3} more`));
+      const pv=items.filter(e=>!(e.rec&&daily.includes(e.rec.id)));pv.slice(0,3).forEach(e=>{const r=el('span',{class:'it'},el('time',{},e.time!=null?fmtT(e.time):'Anytime'),el('span',{},e.title));calGestures(r,e,dk);main.append(r);});
+      if(pv.length>3)main.append(el('span',{class:'ph'},`+${pv.length-3} more`));
       if(empty&&!trW)main.append(el('span',{class:'ph'+(dk===tk?' plan':'')},dk===tk?'Tap to plan':past?'':'Nothing planned'));
     }
     const r=el('div',{class:'wkrow'+(empty&&!open&&!trW?' slim':'')+(open?' sel open':'')+(trW?' wkaway':''),'data-slot':dk,onclick:ev=>{if(ev.target.closest('button,.dayline,.adchip'))return;toggle();}},
       el('button',{class:'dtile '+(L.level?'l'+L.level+' ':'')+(past?'past ':'')+(dk===tk?'today ':'')+(trW?'tripd':''),'aria-label':shortDay(dk),'aria-expanded':String(open),'aria-current':dk===tk?'date':null,onclick:toggle},el('small',{},DOW[d.getDay()].slice(0,3).toUpperCase()),el('b',{},String(d.getDate()))),
-      main,el('button',{class:'chev'+(open?' open':''),style:'align-self:center;min-width:32px;min-height:44px;place-items:center',tabindex:-1,'aria-hidden':'true',html:ic('chevr',16,2),onclick:toggle}));
+      main);
     onPress(r,(x,y)=>dayMenu(dk,x,y),'.it,.minichip,.dayline,.adchip,.chip,.linkbtn');
     list.append(r);
   }

@@ -468,3 +468,12 @@ function animateFills(root,S){
 const flipKey=n=>{const t=n.querySelector('.tt,b');return t?t.textContent:null;};
 function flipSnapshot(root){const m=new Map();root.querySelectorAll('.tick-host').forEach(n=>{const key=flipKey(n);if(key)m.set(key,n.getBoundingClientRect().top);});return m;}
 function flipPlay(root,before){if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;root.querySelectorAll('.tick-host').forEach(n=>{const key=flipKey(n);if(!key||!n.animate)return;if(!before.has(key)){n.animate([{opacity:0},{opacity:getComputedStyle(n).opacity}],{duration:260,easing:'ease-out'});return;}const d=before.get(key)-n.getBoundingClientRect().top;if(Math.abs(d)>1)n.animate([{transform:`translateY(${d}px)`},{transform:'none'}],{duration:340,easing:'cubic-bezier(.22,.9,.3,1)'});});}
+
+/* page titles step down in size as they get longer, and stop at three lines, so a long name never takes over the page */
+function fitTitle(h){const n=(h.textContent||'').trim().length;h.classList.remove('tm','tl','tx');if(n>60)h.classList.add('tx');else if(n>34)h.classList.add('tl');else if(n>18)h.classList.add('tm');if(n>18){h.title=h.textContent.trim();}}
+/* long lists show their first rows and one quiet "Show N more" row; the choice lasts until the app is closed */
+function capRows(nodes,key,n=8){const S=App.state;S._more=S._more||{};if(nodes.length<=n+2||S._more[key])return nodes;const rest=nodes.length-n;return[...nodes.slice(0,n),el('button',{class:'showmore',onclick:()=>{S._more[key]=true;App.refresh();}},el('span',{},`Show ${rest} more`),el('span',{class:'chev',html:ic('chevd',15,2.2)}))];}
+/* the short date at the right end of a row: red when it has passed, a weekday this week, otherwise "Mar 4" */
+function sideDay(dk){const tk=todayK(),n=daysBetween(tk,dk);if(n<0)return el('span',{class:'tside olate'},n===-1?'Yesterday':`${-n} days late`);return el('span',{class:'tside'},n<2?relDay(dk):n<7?DOW[fromK(dk).getDay()].slice(0,3):fmtMD(dk));}
+/* the last row of a Details card: one way in to change everything else */
+function editRow(fn,label='Edit details'){return el('button',{class:'dlrow dledit',onclick:fn},el('span',{class:'dlic',html:ic('edit',18,1.9)}),el('span',{class:'grow'},label),el('span',{class:'dlch',html:ic('chevr',15,2.2)}));}

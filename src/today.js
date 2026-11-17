@@ -258,7 +258,7 @@ function dayCard(dk){
   const FOCUSBTN=nx0?el('button',{class:'prfocus2'+(foc?' on':''),'aria-label':foc?'Focusing — open timer':'Focus',onclick:()=>prFocusSheet(dk),html:ic('play',13,2.6)}):null;
   const todo=el('section',{class:'card daycard todo rcard'+fu},
     el('div',{class:'bl'},el('span',{class:'lbl'},(()=>{const d=isToday?'Today':relDay(dk);return t3?(['Today','Tomorrow','Yesterday'].includes(d)?`${d}’s priorities`:`Priorities · ${d}`):d;})()),el('span',{class:'blr'},total?el('span',{class:'small muted tnum'},el('span',{'data-roll':'done'},doneN>=total?'All done':`${total-doneN} left`)):null,FOCUSBTN)),
-    total?el('div',{class:'progress t3bar rbar'},el('i',{style:`width:${Math.round(doneN/total*100)}%`})):null);
+);
   onSwipe(todo,()=>goDay(addK(S.sel,1)),()=>goDay(addK(S.sel,-1)));
   const W=t3&&t3es.length===T3_MAX&&t3es.every(e=>e.done);
   if(W){if(S._won!==dk&&S._painted)todo.classList.add('win');todo.classList.add('won');S._won=dk;}else if(S._won===dk){S._won=null;if(motionOK())todo.classList.add('lose');}
@@ -311,10 +311,10 @@ function dayCard(dk){
   const cu=el('section',{class:'card upcard'+fu},el('div',{class:'bl'},el('span',{class:'lbl'},'Schedule')));
   const rows=el('div',{class:'uplist'});
   upcoming.slice(0,3).forEach(e=>{const during=isToday&&e.time<=nowM;const end=e.time+(e.dur||30);
-    rows.append(el('button',{class:'uprow',style:`--c:${e.color||'var(--accent)'}`,onclick:()=>openItem(e,dk)},el('span',{class:'upt tnum'},fmtS(e.time)),el('span',{class:'upbar'}),el('span',{class:'grow'},el('span',{class:'tt'},e.title),el('span',{class:'meta'},sched.some(f=>f!==e&&f.kind!=='task'&&e.kind!=='task'&&f.time<e.time+(e.dur||30)&&e.time<f.time+(f.dur||30))?el('span',{class:'ovtag'},'Overlaps · '):null,e.kind==='task'?fmtT(e.time):fmtRange(e.time,end),during?el('b',{class:'upnow'},` · ${fmtDurS(end-nowM)} left`):isToday&&e===upcoming[0]?` · in ${fmtDurS(e.time-nowM)}`:''))));});
+    rows.append(el('button',{class:'uprow',style:`--c:${e.color||'var(--accent)'}`,onclick:()=>openItem(e,dk)},el('span',{class:'upt tnum'},fmtS(e.time)),el('span',{class:'upbar'}),el('span',{class:'grow'},el('span',{class:'tt'},e.title),el('span',{class:'meta'},sched.some(f=>f!==e&&f.kind!=='task'&&e.kind!=='task'&&f.time<e.time+(e.dur||30)&&e.time<f.time+(f.dur||30))?el('span',{class:'ovtag'},'Overlaps · '):null,e.kind==='task'?'':`Until ${fmtT(end)}`,during?el('b',{class:'upnow'},` · ${fmtDurS(end-nowM)} left`):isToday&&e===upcoming[0]?` · in ${fmtDurS(e.time-nowM)}`:''))));});
   if(!upcoming.length)rows.append(el('p',{class:'sub',style:'margin:2px 0 0'},sched.length?'Nothing else scheduled today.':isPast?'Nothing was scheduled.':'Nothing scheduled. Open the day to block time.'));
   cu.append(rows);
-  cu.append(el('button',{class:'linkbtn small uptoggle','aria-expanded':String(open),onclick:()=>{S.gridOpen=!S.gridOpen;S._gridTop=null;App.refresh();}},open?'Hide full day':`See full day${sched.length?` · ${sched.length} ${sched.length===1?'item':'items'}`:''}`,el('span',{style:`display:grid;transition:transform .25s var(--ease);${open?'transform:rotate(90deg)':''}`,html:ic('chevr',16,2.2)})));
+  cu.append(el('button',{class:'linkbtn small uptoggle','aria-expanded':String(open),onclick:()=>{S.gridOpen=!S.gridOpen;S._gridTop=null;App.refresh();}},open?'Hide full day':'See full day',el('span',{style:`display:grid;transition:transform .25s var(--ease);${open?'transform:rotate(90deg)':''}`,html:ic('chevr',16,2.2)})));
   if(open){const gw=el('div',{class:'gridin'});gw.append(timeGrid(dk,timed));cu.append(gw);}
   todo.append(...doneEls);
   out.push(cu);
@@ -552,7 +552,7 @@ function areaItems(dk){if(get.settings().areaDue===false)return[];let rows=[];tr
     return Object.assign({},r,{area,kind:p?p[2]:(r.hub&&mod&&mod!==r.hub?mod:null),rid:p&&!['dprep','drev'].includes(p[0])?String(r.id).slice(p[0].length):null,late:late&&!r.done});});}
 function areaTag(a){return el('span',{class:'atag'},el('span',{style:'display:grid',html:ic(areaIcon(a),13,1.9)}),a);}
 function areaRow(r,slim){const sub=String(r.sub||'').replace(new RegExp('^'+(r.kind||'').replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\s*·\\s*','i'),'');const subT=(sub===r.kind?'':sub).replace(/(\d+ days?) overdue/i,'$1 late');
-  const meta=el('span',{class:'meta'},subT?el('span',{class:r.late?'late':''},subT):null,subT&&r.area?' · ':null,r.area?areaTag(r.area):null,r.kind?el('span',{class:'kt'},` · ${r.kind}`):null);
+  const meta=subT?el('span',{class:'meta'},subT):null;
   const row=el('div',{class:'trow tick-host'+(r.done?' done':''),'data-id':r.rid||''},
     r.tick?el('span',{class:'tick-hit'},r.tick):el('span',{class:'tick-hit aiopen','aria-hidden':'true',html:ic(areaIcon(r.area||''),15,2)}),
     el('button',{class:'t',onclick:r.go},el('span',{class:'tt'},r.title),slim?null:meta),

@@ -9,7 +9,7 @@ const backBtn=(label='More',to='more')=>el('button',{class:'back',onclick:()=>Ap
 /* module pages show their icon beside the title, the same icon used for them in lists, so the two are learned together */
 const titleIc=i=>el('span',{class:'tic','aria-hidden':'true',html:ic(i,22,1.8)});
 const withIc=(i,h)=>i?el('div',{class:'tirow'},titleIc(i),h):h;
-function pageHead(title,sub,{back='More',to='more',actions=null,icon=null}={}){return el('header',{},el('div',{class:'pghead'},backBtn(back,to),actions?el('div',{style:'display:flex;gap:2px;align-items:center'},actions):null),withIc(icon,el('h1',{class:'pgtitle',style:'margin-top:4px'+(String(title).length>13?`;font-size:${Math.min(40,Math.floor(300/(.5*String(title).length)))}px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis`:'')},title)),sub?el('div',{class:'small muted',style:'margin-top:4px'},sub):null);}
+function pageHead(title,sub,{back='More',to='more',actions=null,icon=null}={}){return el('header',{},el('div',{class:'pghead'},backBtn(back,to),actions?el('div',{style:'display:flex;gap:2px;align-items:center'},actions):null),withIc(icon,el('h1',{class:'pgtitle',style:'margin-top:4px'},title)),sub?el('div',{class:'small muted',style:'margin-top:4px'},sub):null);}
 function placeCount(id){
   const tk=todayK();
   switch(id){

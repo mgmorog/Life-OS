@@ -2246,3 +2246,16 @@ html.c-fade .todo.won .t3in .tick-host.done{opacity:1}
 .tripcd .chev{color:var(--ink-3);display:grid}
 .dwk{display:inline-flex!important;align-items:center;gap:6px;align-self:flex-start;height:28px;min-height:28px!important;padding:0 10px;border-radius:9px;background:var(--trip-soft);color:var(--trip)!important;font-size:13px;margin-bottom:2px}
 .dtile.tripd{background:var(--trip)!important;color:#fff!important}
+
+/* v202 organize pages share one look */
+#view .page>.oadd{height:46px;border-radius:14px}
+.prwrap{padding:12px 0 6px;border-top:1px solid var(--line-2)}
+.prwrap:first-child{border-top:0}
+.prow{display:flex;flex-direction:column;gap:6px;width:100%;text-align:left}
+.prtop{display:flex;align-items:baseline;gap:10px}.prtop b{flex:1;min-width:0;font-weight:600;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prow .ometa{font-size:12.5px;color:var(--ink-2)}
+.prnext{display:flex;align-items:center;gap:12px;margin-top:6px;min-height:44px}
+.prnext .tt{font-size:15px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prnl{font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;color:var(--ink-3);flex:none}
+.habody .li.ogr{padding-left:0;padding-right:0;border-radius:0;background:none}
+.habody .li.ogr+.li.ogr{border-top:1px solid var(--line-2)}

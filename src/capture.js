@@ -128,7 +128,14 @@ function kbTurnRow(sheet,go){
 }
 function turnGrid(on,{compact=false,suggest=null}={}){return el('div',{class:'saveas'+(compact?' compact':'')},TURN.map(([id,icon,n,s])=>el('button',{class:'tl'+(suggest===id?' sug':''),'data-k':id,html:ic(icon,compact?20:22,1.75)+`<b>${n}</b>`+(compact?'':`<small>${s}</small>`),onclick:()=>on(id)})));}
 /* the same idea can land in any life area tool */
-function moreTurn(on,getP,done){return el('button',{class:'linkbtn small',style:'justify-self:start;min-height:36px',onclick:()=>{const inst=openSheet({title:'Save it somewhere else',build:b=>{(get.settings().areas||AREAS).forEach(hub=>{const ts=toolsOf(hub).filter(t=>!t.wheel&&t.id!=='checkin'&&toolOn(hub,t.id));if(!ts.length)return;b.append(el('div',{class:'sect'},hub),el('div',{class:'chips'},ts.map(t=>el('button',{class:'chip',onclick:()=>{inst.close();entrySheet(hub,t,null,{seed:getP(),after:done});}},t.word[0].toUpperCase()+t.word.slice(1)))));});}});}},'More… career win, trip, book and others');}
+function moreTurn(on,getP,done){return el('button',{class:'linkbtn small',style:'justify-self:start;min-height:36px',onclick:()=>{const inst=openSheet({title:'Save it somewhere else',build:b=>{b.classList.add('mtsheet');
+  /* one card per life area; each choice shows its module's icon, and generic or repeated words use the module name instead */
+  const cap=w=>w[0].toUpperCase()+w.slice(1);
+  (get.settings().areas||AREAS).slice().sort((x,y)=>x.localeCompare(y)).forEach(hub=>{const ts=toolsOf(hub).filter(t=>!t.wheel&&t.id!=='checkin'&&toolOn(hub,t.id));if(!ts.length)return;
+    const cnt={};ts.forEach(t=>{cnt[t.word]=(cnt[t.word]||0)+1;});
+    const lab=t=>/^(entry|item|note|record|log)$/i.test(t.word)||cnt[t.word]>1?t.name:cap(t.word);
+    b.append(el('section',{class:'card mtcard'},el('div',{class:'mthead'},el('span',{class:'mtic',html:ic(areaIcon(hub),17,1.9)}),el('b',{},hub),el('small',{},`${ts.length}`)),
+      el('div',{class:'mtchips'},ts.map(t=>el('button',{class:'mtchip',onclick:()=>{inst.close();entrySheet(hub,t,null,{seed:getP(),after:done});}},el('span',{style:'display:grid',html:ic(t.icon||'list',15,1.9)}),lab(t))))));});}});}},'More… career win, trip, book and others');}
 function routeInto(kind,p,done){
   const notes=p.notes||'',raw=p.title&&p.title!=='Unnamed Idea'?p.title:'',base=p.createdAt?new Date(p.createdAt):new Date(),photos=p.photos||[];
   const after=()=>done&&done(),W=parseWhen(raw,base),t=W.title;

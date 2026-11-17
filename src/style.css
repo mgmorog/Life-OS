@@ -2176,7 +2176,7 @@ html.c-fade .todo.won .t3in .tick-host.done{opacity:1}
 .panel.wide .hexrow input[type=text]{height:38px;width:104px;font-size:15px}
 
 /* v196 separate cards, slim rows that fold away, open-only items look different from tickable ones */
-.fcard{padding:16px 18px 12px}
+.fcard{padding:16px 20px 12px}
 .fcard .fhabs{margin:6px -18px 0}
 .ftm{padding:6px 16px}
 .ftmrow{display:flex;align-items:center;gap:14px;width:100%;min-height:58px;text-align:left}
@@ -2197,3 +2197,10 @@ html.c-fade .todo.won .t3in .tick-host.done{opacity:1}
 .esheet .field input[type=date],.esheet .field input[type=number],.esheet .field select{text-align:left;font-size:16.5px;min-height:28px}
 .esheet .field input[type=date]::-webkit-date-and-time-value{text-align:left}
 .esheet .field textarea{min-height:28px}
+
+/* v197 snappier ticks */
+.todo.feed .tick{transition:background-color .14s ease,border-color .14s ease,transform .22s cubic-bezier(.3,1.5,.5,1)}
+.todo.feed .trow.done .tt{transition:color .14s;color:var(--ink-3)}
+/* habit rings on Today: icon in the habit's color; done = filled in its color with a white check */
+.fhab .hring-in{color:var(--c,var(--accent-text));border-radius:50%;transition:background-color .2s ease,color .2s ease}
+.fhab.done .hring-in{background:var(--c,var(--accent));color:#fff;transform:scale(.86)}

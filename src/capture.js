@@ -134,7 +134,7 @@ function moreTurn(on,getP,done){return el('button',{class:'linkbtn small',style:
   (get.settings().areas||AREAS).slice().sort((x,y)=>x.localeCompare(y)).forEach(hub=>{const ts=toolsOf(hub).filter(t=>!t.wheel&&t.id!=='checkin'&&toolOn(hub,t.id));if(!ts.length)return;
     const cnt={};ts.forEach(t=>{cnt[t.word]=(cnt[t.word]||0)+1;});
     const lab=t=>/^(entry|item|note|record|log)$/i.test(t.word)||cnt[t.word]>1?t.name:cap(t.word);
-    b.append(el('section',{class:'card mtcard'},el('div',{class:'mthead'},el('span',{class:'mtic',html:ic(areaIcon(hub),17,1.9)}),el('b',{},hub),el('small',{},`${ts.length}`)),
+    b.append(el('section',{class:'card mtcard'},el('div',{class:'mthead'},el('span',{class:'mtic',html:ic(areaIcon(hub),17,1.9)}),el('b',{},hub)),
       el('div',{class:'mtchips'},ts.map(t=>el('button',{class:'mtchip',onclick:()=>{inst.close();entrySheet(hub,t,null,{seed:getP(),after:done});}},el('span',{style:'display:grid',html:ic(t.icon||'list',15,1.9)}),lab(t))))));});}});}},'More… career win, trip, book and others');}
 function routeInto(kind,p,done){
   const notes=p.notes||'',raw=p.title&&p.title!=='Unnamed Idea'?p.title:'',base=p.createdAt?new Date(p.createdAt):new Date(),photos=p.photos||[];

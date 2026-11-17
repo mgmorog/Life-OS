@@ -2330,3 +2330,7 @@ p.qempty{color:var(--ink-3);font-weight:400}
 @keyframes revealIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){.revealin{animation:none}}
 .row:has(>.val>.seg)>.val{grid-column:1/-1}
+.secl.tdiv{border-top:1px solid var(--line-2);padding-top:14px;margin-top:6px}
+/* v208 section labels with a link sit as close to their cards as plain labels; the link keeps a full tap target */
+.sh2 .linkbtn,.sh2>button{min-height:44px;margin-block:-8px}
+.pinh{margin:14px 4px 4px}

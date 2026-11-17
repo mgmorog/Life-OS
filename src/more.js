@@ -36,7 +36,7 @@ function viewMore(root){
   page.append(el('div',{class:'pghead'},el('h1',{class:'pgtitle',style:'font-size:54px;font-weight:400'},'More'),el('button',{class:'iconbtn green','aria-label':'Settings',html:ic('gear',24),onclick:()=>App.go('prefs')})));
   page.append(el('button',{class:'searchbox',style:'color:var(--ink-3);width:100%;flex:none',onclick:e=>{searchFrom(e.currentTarget);App.state.qType='All';App.go('search');},html:ic('search',20,2)+'<span>Search everything</span>'}));
   const PE=!!App.state.pinEdit;
-  page.append(el('div',{class:'pghead'},el('span',{class:'lbl'},'Pinned'),el('span',{style:'display:flex;gap:4px'},PE?el('button',{class:'linkbtn',onclick:editPins},'Add'):null,el('button',{class:'linkbtn',onclick:()=>{App.state.pinEdit=!PE;App.refresh();}},PE?'Done':'Edit'))));
+  page.append(el('div',{class:'sh2 pinh'},el('span',{class:'lbl'},'Pinned'),el('span',{style:'display:flex;gap:4px'},PE?el('button',{class:'linkbtn',onclick:editPins},'Add'):null,el('button',{class:'linkbtn',onclick:()=>{App.state.pinEdit=!PE;App.refresh();}},PE?'Done':'Edit'))));
   page.append(el('div',{class:'pins'+(PE?' edit':'')},(S.pinned||[]).map(id=>{const p=pinInfo(id);if(!p)return null;return pinDrag(el('button',{class:'ptile','data-pin':id,'aria-label':p.n,onclick:()=>{if(App.state.pinEdit)return;p.go();}},PE?el('span',{class:'pin-x',role:'button','aria-label':`Unpin ${p.n}`,onclick:e=>{e.stopPropagation();setSettings({pinned:(get.settings().pinned||[]).filter(x=>x!==id)});}},'−'):null,el('span',{class:'ic',html:ic(p.i,22,1.7)}),el('span',{class:'clip',style:'max-width:100%'},p.n)));})));
   const absent=['today','studio','calendar'].filter(x=>!(S.nav||[]).includes(x));
   if(absent.length)page.append(el('div',{class:'lbl'},'Main views'),el('div',{class:'list'},absent.map(x=>el('button',{class:'li',style:'min-height:56px',onclick:()=>App.go(x)},el('span',{class:'sq',html:ic(PLACES[x].i,20,1.7)}),el('span',{class:'grow'},el('b',{},PLACES[x].n)),el('span',{class:'chev',html:ic('chevr',16,2)})))));
@@ -150,8 +150,11 @@ function viewReviews(root){
   const page=el('div',{class:'page'}),list=get.all('review').sort((a,b)=>b.createdAt-a.createdAt);
   const rd=get.settings().reviewDay??0,cw=k(today().getDay()===rd?weekStartOf(today()):addD(weekStartOf(today()),-7)),doneW=list.find(r=>(r.period||'week')==='week'&&r.week===cw),lastW=list.find(r=>(r.period||'week')==='week');
   const stk=(()=>{const ws=new Set(list.filter(r=>(r.period||'week')==='week').map(r=>r.week));let n=0,w=doneW?cw:k(addD(fromK(cw),-7));while(ws.has(w)){n++;w=k(addD(fromK(w),-7));}return n;})();
-  page.append(pageHead('Reviews',(doneW?`This week’s review is done`:`Weekly review due ${DOW[rd]}${lastW?` · last one ${relDay(k(new Date(lastW.createdAt)))}`:''}`)+(stk>1?` · ${stk} weeks in a row`:''),{back:'More',to:'more',icon:'clip'}));
-  page.append(el('button',{class:doneW?'btn line block':'btn primary block',onclick:()=>App.go('review')},doneW?'Review this week again':'Start weekly review'),el('div',{style:'display:flex;gap:8px'},el('button',{class:'btn line',style:'flex:1',onclick:()=>App.go('review',{period:'month'})},'Monthly'),el('button',{class:'btn line',style:'flex:1',onclick:()=>App.go('review',{period:'quarter'})},'Quarterly')));
+  page.append(pageHead('Reviews',get.settings().weeklyReview===false?null:(doneW?`This week’s review is done`:`Weekly review due ${DOW[rd]}${lastW?` · last one ${relDay(k(new Date(lastW.createdAt)))}`:''}`)+(stk>1?` · ${stk} weeks in a row`:''),{back:'More',to:'more',icon:'clip'}));
+  const wkOn=get.settings().weeklyReview!==false;
+  if(wkOn)page.append(el('button',{class:doneW?'btn line block':'btn primary block',onclick:()=>App.go('review')},doneW?'Review this week again':'Start weekly review'));
+  page.append(el('div',{style:'display:flex;gap:8px'},el('button',{class:wkOn?'btn line':'btn primary',style:'flex:1',onclick:()=>App.go('review',{period:'month'})},'Monthly'),el('button',{class:'btn line',style:'flex:1',onclick:()=>App.go('review',{period:'quarter'})},'Quarterly')));
+  {const pr=pendingReviews();if(pr.length)page.append(pendingCard(pr));}
   {const sc=scorecardCard();if(sc)page.append(sc);}
   {const tmp=el('div');viewInsights(tmp);const ip=tmp.firstChild;if(ip){ip.firstChild&&ip.firstChild.remove();[...ip.children].forEach(c=>{if(c.querySelector&&c.querySelector('.empty'))c.remove();});if(ip.children.length)page.append(el('div',{class:'lbl'},'Insights'),...ip.children);}}
   page.append(monthLetterCard());
@@ -160,9 +163,10 @@ function viewReviews(root){
   root.append(page);
 }
 function viewReview(root){
-  const S=App.state,per=(App.state.params||{}).period||'week';
+  const S=App.state,P0=App.state.params||{},per=P0.period||'week';
   const last=weekStartOf(today()),ws=today().getDay()===(get.settings().reviewDay??0)?last:addD(last,-7),t0=today();
-  const a=per==='month'?k(new Date(t0.getFullYear(),t0.getMonth(),1)):per==='quarter'?k(new Date(t0.getFullYear(),quarterOf(t0)*3,1)):k(ws),b=per==='week'?k(addD(ws,6)):todayK();
+  /* a catch-up review opens on its own period (params.at) */
+  const a=P0.at||(per==='month'?k(new Date(t0.getFullYear(),t0.getMonth(),1)):per==='quarter'?k(new Date(t0.getFullYear(),quarterOf(t0)*3,1)):k(ws)),b=P0.at?rvEnd(per,P0.at):per==='week'?k(addD(ws,6)):todayK();
   if(!S.rv||S.rv.per!==per||S.rv.a!==a){let d=null;try{d=JSON.parse(localStorage.getItem('lo-rv-draft')||'null');}catch(e){}S.rv=d&&d.per===per&&d.a===a?d:{i:0,wins:'',blocks:'',next:'',per,a};S.rvAll=false;if(d&&d.per===per&&d.a===a&&(d.wins||d.blocks||d.next))setTimeout(()=>toast('Picked up where you left off'),300);}
   const R=S.rv,keep=()=>{try{localStorage.setItem('lo-rv-draft',JSON.stringify(R));}catch(e){}};
   const stats=weekStats(a,b);
@@ -406,3 +410,18 @@ function loadExamples(){
   mk('list',{title:'Packing (example)',items:[{id:uid('i'),t:'Chargers',d:false},{id:uid('i'),t:'Running shoes',d:true}]});
   setSettings({introDone:true});toast('Examples loaded');
 }
+
+/* ---------- catch-up reviews: every weekly, monthly and quarterly review not done yet,
+   from the first week you actually used the app; each can be skipped ---------- */
+function rvEnd(per,a){const d=fromK(a);return per==='week'?k(addD(d,6)):per==='month'?k(new Date(d.getFullYear(),d.getMonth()+1,0)):k(new Date(d.getFullYear(),d.getMonth()+3,0));}
+function rvFirstActive(){let t=Infinity;['task','habit','goal','project','routine','idea','entry','list','block','review'].forEach(kd=>get.all(kd).forEach(r=>{if(r.createdAt&&r.createdAt<t)t=r.createdAt;}));return t===Infinity?null:new Date(t);}
+function pendingReviews(){const s=get.settings(),f=rvFirstActive();if(!f)return[];const done=new Set(get.all('review').map(r=>(r.period||'week')+':'+r.week)),skip=new Set(s.rvSkip||[]),out=[],tk=todayK();
+  const add=(per,a)=>{const id=per+':'+a;if(done.has(id)||skip.has(id))return;if(rvEnd(per,a)>=tk)return;out.push({per,a,id});};
+  if(s.weeklyReview!==false){let w=weekStartOf(f);for(let n=0;n<520&&k(w)<tk;n++,w=addD(w,7))add('week',k(w));}
+  if(s.monthlyReview){let m=new Date(f.getFullYear(),f.getMonth(),1);for(let n=0;n<120&&k(m)<tk;n++,m=new Date(m.getFullYear(),m.getMonth()+1,1))add('month',k(m));}
+  if(s.quarterlyReview){let q=new Date(f.getFullYear(),quarterOf(f)*3,1);for(let n=0;n<40&&k(q)<tk;n++,q=new Date(q.getFullYear(),q.getMonth()+3,1))add('quarter',k(q));}
+  return out.sort((x,y)=>x.a<y.a?1:-1);}
+const rvLabel=x=>{const d=fromK(x.a);return x.per==='week'?`Week of ${shortDay(x.a)}`:x.per==='month'?`${MONL[d.getMonth()]} ${d.getFullYear()}`:`Q${quarterOf(d)+1} ${d.getFullYear()}`;};
+function skipReviews(ids){const s=get.settings(),was=s.rvSkip||[];setSettings({rvSkip:[...new Set([...was,...ids])]});App.refresh();toast(ids.length>1?`${ids.length} reviews skipped`:'Review skipped',()=>{setSettings({rvSkip:was});App.refresh();});}
+function pendingCard(pr){const old=pr.filter(x=>x.a<k(addD(today(),-31)));
+  return el('div',{},lblRow('Pending',old.length>2?lnk('Skip all older than a month',()=>skipReviews(old.map(x=>x.id))):null),el('div',{class:'list'},capRows(pr.map(x=>el('div',{class:'li',style:'min-height:56px'},el('button',{class:'grow',style:'text-align:left',onclick:()=>App.go('review',{period:x.per,at:x.a})},el('b',{style:'font-weight:500'},rvLabel(x)),el('small',{},x.per==='week'?'Weekly review':x.per==='month'?'Monthly review':'Quarterly review')),el('button',{class:'linkbtn small',style:'min-height:44px',onclick:()=>skipReviews([x.id])},'Skip'))),'rvp',4)));}

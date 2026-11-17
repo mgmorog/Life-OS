@@ -97,7 +97,10 @@ const today=()=>{const n=new Date();return new Date(n.getFullYear(),n.getMonth()
 const todayK=()=>k(today());
 const monIdx=d=>(d.getDay()+6)%7;
 const nowMin=()=>{const d=new Date();return d.getHours()*60+d.getMinutes();};
+/* a change of week start applies from the next week on; earlier weeks keep the start they had (settings.wsHist) */
+const wsAt=d=>{const s=get.settings(),h=s.wsHist||[],key=k(d);let ws=null;for(const x of h)if(x.from<=key)ws=x.ws;else if(ws==null)ws=x.prev;return ws??(s.weekStart??1);};
 const weekStartOf=d=>{const ws=get.settings().weekStart??1;const diff=(d.getDay()-ws+7)%7;return addD(d,-diff);};
+const habWeekStart=d=>{const ws=wsAt(d);return addD(d,-((d.getDay()-ws+7)%7));};
 const weekKey=d=>k(weekStartOf(d));
 const monthKey=d=>`${d.getFullYear()}-${pad2(d.getMonth()+1)}`;
 const quarterOf=d=>Math.floor(d.getMonth()/3);
@@ -226,7 +229,7 @@ function spill(dk){const prev=addK(dk,-1),out=[];get.all('block').forEach(r=>{if
 const occursHabit=(h,dk)=>(h.days&&h.days.length)?(h.days.includes(monIdx(fromK(dk)))&&(!h.startDate||dk>=h.startDate)):false;
 function weekRange(dk){const s=weekStartOf(fromK(dk));return[k(s),k(addD(s,6))];}
 const habitDone=(h,dk)=>{const v=h.logs&&h.logs[dk];if(!v)return false;return h.track==='count'||h.track==='time'?(v===true||v>=(h.goalN||1)):true;};
-function habitWeek(h,dk){const[a,b]=weekRange(dk);let n=0;for(const d in(h.logs||{}))if(d>=a&&d<=b&&habitDone(h,d))n++;return n;}
+function habitWeek(h,dk){const s0=habWeekStart(fromK(dk)),a=k(s0),b=k(addD(s0,6));let n=0;for(const d in(h.logs||{}))if(d>=a&&d<=b&&habitDone(h,d))n++;return n;}
 function habitPlanned(h,dk){const[a,b]=weekRange(dk);let n=0;for(const d in(h.sessions||{}))if(d>=a&&d<=b)n++;return n;}
 /* finishing a task ticks whatever steps are still open, and un-finishing puts back only those */
 function setTaskDone(r,dk,on,opts){return goalPulseAround(r,on,()=>setTaskDoneRaw(r,dk,on,opts));}
@@ -488,3 +491,6 @@ function areaChipIc(a){return el('span',{class:'cic','aria-hidden':'true',html:i
 function whyLine(t){return el('p',{class:'pwhy'},...linkText(t));}
 /* folds open with the same calm motion as the sheets: the rows that just appeared slide in, one after another */
 function revealRows(nodes,key){if(App.state._reveal!==key||typeof motionOK!=='function'||!motionOK())return nodes;nodes.forEach((n,i)=>{if(n&&n.classList){n.classList.add('revealin');n.style.setProperty('--ri',String(Math.min(i,10)));}});return nodes;}
+/* day circles start on the day the week starts (WD and its index stay Monday-first underneath) */
+const wdOrd=()=>{const ws=get.settings().weekStart??1,f=(ws+6)%7;return[0,1,2,3,4,5,6].map(i=>(f+i)%7);};
+const wdMap=fn=>wdOrd().map(i=>fn(WD[i],i));

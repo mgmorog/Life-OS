@@ -66,7 +66,7 @@ const PWA={
           {label:'Turn off and make a new link',icon:'x',danger:true,onclick:()=>askConfirm({title:'Stop this calendar link?',body:'Calendars subscribed with the old link stop updating.',yes:'Make a new link',no:'Keep it',onYes:async()=>{const old=s.icsToken;await a.dropCalFeed(old).catch(()=>{});setSettings({icsToken:null,icsAdded:false});toast('Link turned off. Delete Life OS in the Calendar app, then add it again here.');this.afterChange();}})}])));
         page.append(el('p',{class:'small muted',style:'padding:0 4px'},'Read-only. Changes in Life OS show up the next time your phone refreshes the calendar.'));}
     }else if(id==='data'){
-      const g=group('Account');g.append(el('div',{class:'li',style:'min-height:56px'},el('span',{class:'grow'},el('b',{style:'font-weight:500'},'Signed in'),el('small',{},a.email()||''))),
+      const g=group('Account');window.__acctG=g;g.append(el('div',{class:'li',style:'min-height:56px'},el('span',{class:'grow'},el('b',{style:'font-weight:500'},'Signed in'),el('small',{},a.email()||''))),
         el('button',{class:'li',style:'min-height:52px;color:var(--now);font-weight:600',onclick:()=>askConfirm({title:'Sign out?',body:'Your data stays in your account. Unsynced changes on this device are sent first.',yes:'Sign out',no:'Stay signed in',onYes:async()=>{flushAll();await new Promise(r=>setTimeout(r,900));try{localStorage.removeItem(CACHE);}catch(e){}await a.signOut();location.reload();}})},'Sign out'));
     }
   },

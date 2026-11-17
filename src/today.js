@@ -16,6 +16,7 @@ function itemMenu(e,dk,x,y){
     movable&&e.kind==='task'?{label:'Move to next week',icon:'arrow',onclick:()=>{const u=snapItem(e),d=k(addD(weekStartOf(today()),7));moveItemDay(e,occDay,d);toast(`Moved to ${relDay(d)}`,u);}}:null,
     {label:'Move to another day',icon:'cal',onclick:()=>moveSheet(e,occDay)},
     e.time!=null&&e.kind!=='block'?{label:'Remove the time',icon:'x',onclick:()=>{const u=snapItem(e);setItemTime(e,dk,null);App.refresh();toast('Time removed',u);}}:null,
+    (e.kind==='task'||e.kind==='entry')&&!e.done&&!t3Get(dk).some(q=>q.id===r.id)?{label:'Make it a priority',icon:'target',onclick:()=>{const l=t3Get(dk);if(l.length>=T3_MAX){toast('Three priorities is the limit. Remove one first.');return;}t3Set(dk,[...l,{id:r.id}]);buzz(12);toast('Added to priorities',()=>t3Set(dk,t3Get(dk).filter(q=>q.id!==r.id)));}}:null,
     e.kind==='task'?{label:r.priority==='high'?'Remove high priority':'Mark high priority',icon:'flag',onclick:()=>{const was=r.priority;r.priority=was==='high'?'normal':'high';put(r);toast(r.priority==='high'?'Marked high priority':'Priority cleared',()=>{r.priority=was;put(r);});}}:null,
     e.kind==='task'&&!e.done?{label:frNow()&&frNow().id===r.id?'Back to the timer':'Start focus',icon:'play',onclick:()=>startFocus(r)}:null,
     e.kind==='task'&&r.part&&(get.id(r.part)||{}).kind==='project'?{label:'Waits for…',icon:'layers',onclick:()=>depSheet(r)}:null,
@@ -115,7 +116,7 @@ function viewToday(root){
   page.append(...dayCard(dk));
   const rem=reminderCard();if(rem)page.append(rem);
   const look=[];
-  if(isToday&&s.checkinCard&&sel.getDay()===(s.reviewDay??0)&&s.checkinDone!==dk&&!(s.onboardedAt&&Date.now()-s.onboardedAt<6*864e5))page.append(s.checkinLater===dk?el('button',{class:'focus-chip',onclick:()=>App.go('review')},el('span',{class:'small'},'Weekly review'),el('span',{class:'fa'},'Start ›')):checkinCard(dk));
+  if(isToday&&s.checkinCard&&reviewPeriod(dk)&&sel.getDay()===(s.reviewDay??0)&&s.checkinDone!==dk&&!(s.onboardedAt&&Date.now()-s.onboardedAt<6*864e5))page.append(s.checkinLater===dk?el('button',{class:'focus-chip',onclick:()=>App.go('review')},el('span',{class:'small'},'Weekly review'),el('span',{class:'fa'},'Start ›')):checkinCard(dk));
   if(isToday){const gz=goalPulseCard();if(gz)page.append(gz);const gc=goalCheckCard();if(gc)page.append(gc);const cf=cfg('Health','checkin').f;if(cf.rem&&!checkOn(dk)&&nowMin()>=(tMin(cf.at||'21:00')??1260))page.append(el('button',{class:'focus-chip',onclick:()=>App.go('tool',{hub:'Health',tool:'checkin'})},el('span',{class:'small'},'Daily check-in'),el('span',{class:'fa'},'Log ›')));}
   {const tc=tripTodayCard(dk);if(tc)page.append(tc);}
   {const pc=pinsCard(dk);if(pc)page.append(pc);}
@@ -283,7 +284,9 @@ function dayCard(dk){
   /* every row, done ones and area items too, gets a handle so it can be dropped on a ring */
   [a,dn].forEach(box=>box.querySelectorAll(':scope>.trow-wrap').forEach(w=>{if(w.classList.contains('aitem'))return;const id=w.querySelector('.trow')?.dataset.id;const r=id&&get.id(id);w.classList.add('dragrow');w.dataset.id=id||'';w.dataset.can=r&&r.kind==='task'?'1':'0';}));
   const nDone=dn.querySelectorAll(':scope>.trow-wrap').length;
-  if(shownC.length){if(t3)todo.append(el('div',{class:'secl'},'Also today'));todo.append(a);}
+  /* a thin line and a Tasks label keep the rings and the list apart */
+  if(t3&&(shownC.length||!t3es.length||nLate))todo.append(el('div',{class:'secl tdiv'},'Tasks'));
+  if(shownC.length)todo.append(a);
   if(!shownC.length&&!t3es.length&&!nLate)todo.append(el('p',{class:'sub',style:'margin:6px 0 0'},isPast?'Nothing was left open.':total?'All done. Nice work.':'Nothing to do yet.'));
   const canAdd=!isPast||!total;
   if(more>0||canAdd||odBtn)todo.append(el('div',{class:'tfoot'},canAdd?el('button',{class:'tadd','aria-label':'Add a to-do',onclick:()=>taskSheet(null,{date:dk}),html:ic('plus',16,2.4)}):el('span',{class:'tsp'}),odBtn||el('span',{class:'tsp'}),
@@ -440,7 +443,7 @@ function timeGrid(dk,timed){
   return gw;
 }
 function tickNow(){const n=$('#now');if(!n)return;const m=nowMin();n.style.top=`${m/60*HH+12}px`;const p=$('#nowpill');if(p)p.textContent=fmtS(m);$$('.hr').forEach(r=>{const l=r.querySelector('.lbl2');if(l)l.style.opacity=Math.abs(r.dataset.h*60-m)/60*HH<20?0:1;});}
-function reviewPeriod(dk){const d=fromK(dk),s=get.settings(),lastOfMonth=addD(d,7).getMonth()!==d.getMonth();if(!lastOfMonth)return 'week';if(s.quarterlyReview&&d.getMonth()%3===2)return 'quarter';return s.monthlyReview?'month':'week';}
+function reviewPeriod(dk){const d=fromK(dk),s=get.settings(),wk=s.weeklyReview!==false?'week':null,lastOfMonth=addD(d,7).getMonth()!==d.getMonth();if(!lastOfMonth)return wk;if(s.quarterlyReview&&d.getMonth()%3===2)return 'quarter';return s.monthlyReview?'month':wk;}
 function introCard(){return el('section',{class:'card fade-up'},el('div',{class:'eyebrow'},'Welcome'),el('h2',{},'Set up your foundation'),el('p',{class:'sub'},'Tell Life OS how you live, or look around with example data first. Examples are marked and can be cleared in one tap.'),
   el('div',{class:'btnrow'},el('button',{class:'btn primary',onclick:()=>App.go('foundation')},'Start'),el('button',{class:'btn text',onclick:()=>{loadExamples();}},'Load examples')));}
 function checkinCard(dk){return el('section',{class:'card'},el('div',{class:'eyebrow'},'Weekly check-in'),el('h2',{},reviewPeriod(dk)==='week'?`${DOW[fromK(dk).getDay()]} check-in`:reviewPeriod(dk)==='month'?'Monthly review':'Quarterly review'),el('p',{class:'sub'},reviewPeriod(dk)==='week'?'Look back at this week, then plan the next one.':`Look back at this ${reviewPeriod(dk)}, then plan what comes next.`),

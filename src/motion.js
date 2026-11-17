@@ -648,7 +648,7 @@ function wkAdd(btn,dk,quiet){const host=btn.closest('.wkitems');if(!host)return;
   btn.closest('.chips').after(f);if(!quiet&&motionOK()){const h=f.offsetHeight;f.animate([{height:'0px',opacity:0},{height:h+'px',opacity:1}],{duration:300,easing:SOFT});}inp.focus({preventScroll:true});}
 /* repeat days: picking a preset fills (or clears) the day circles one after another */
 function wdFill(was,now){if(!motionOK())return;const bs=$$('.sheet.on .wdays button');if(bs.length!==7)return;let k=0;
-  bs.forEach((b,i)=>{const a=was.includes(i),z=now.includes(i);if(a===z)return;b.classList.toggle('on',a);const d=k++*55;setTimeout(()=>{b.classList.toggle('on',z);if(z)b.animate([{transform:'scale(.8)'},{transform:'scale(1.12)',offset:.6},{transform:'none'}],{duration:340,easing:SPRING});},d);});}
+  bs.forEach((b,j)=>{const i=wdOrd()[j],a=was.includes(i),z=now.includes(i);if(a===z)return;b.classList.toggle('on',a);const d=k++*55;setTimeout(()=>{b.classList.toggle('on',z);if(z)b.animate([{transform:'scale(.8)'},{transform:'scale(1.12)',offset:.6},{transform:'none'}],{duration:340,easing:SPRING});},d);});}
 
 /* ---------- round 17 ---------- */
 /* habit history: a marked day fills from the middle out; unmarking drains it back */
@@ -680,12 +680,12 @@ function dateDropEl(dk){
   const draw=(dir,scroll)=>{
     yr.textContent=String(ym.y);
     chips.replaceChildren(...list.map(x=>{const on=x.y===ym.y&&x.m===ym.m;const b=el('button',{class:'dp-chip'+(on?' on':''),role:'tab','aria-selected':on?'true':'false',onclick:()=>{const d=(x.y-ym.y)*12+(x.m-ym.m);if(!d)return;ym={y:x.y,m:x.m};draw(d>0?1:-1,true);}},(x.m===0&&x.y!==ym.y?MON[x.m]+' ’'+String(x.y).slice(2):MON[x.m]));return b;}));
-    const first=new Date(ym.y,ym.m,1),start=addD(first,-monIdx(first)),cells=[];
+    const first=new Date(ym.y,ym.m,1),start=weekStartOf(first),cells=[];
     const weeks=Math.ceil((monIdx(first)+new Date(ym.y,ym.m+1,0).getDate())/7);
     for(let i=0;i<weeks*7;i++){const d=addD(start,i),key=k(d),inM=d.getMonth()===ym.m;
       cells.push(el('button',{class:'dp-d'+(inM?'':' out')+(key===dk?' sel':'')+(key===tK?' today':''),'aria-label':`${DOW[d.getDay()]}, ${MONL[d.getMonth()]} ${d.getDate()}`,'aria-current':key===dk?'date':null,onclick:()=>close(key)},String(d.getDate()),inM&&has(key)?el('i',{'aria-hidden':'true'}):null));}
     const body=el('div',{class:'dp-days'},...cells);
-    grid.replaceChildren(el('div',{class:'dp-wd','aria-hidden':'true'},...WD.map(w=>el('span',{},w))),body);
+    grid.replaceChildren(el('div',{class:'dp-wd','aria-hidden':'true'},...wdMap(w=>el('span',{},w))),body);
     if(dir&&motionOK())body.animate([{opacity:0,transform:`translateX(${dir*24}px)`},{opacity:1,transform:'none'}],{duration:300,easing:EASE});
     const on=chips.querySelector('.on');if(on)requestAnimationFrame(()=>{const L=on.offsetLeft-(chips.clientWidth-on.offsetWidth)/2;if(scroll&&motionOK())chips.scrollTo({left:L,behavior:'smooth'});else chips.scrollLeft=L;});
   };

@@ -126,7 +126,7 @@ function weekBody(body,start,C){
       {const adS=allDay.filter(e=>!(e.rec&&e.rec.tripId));if(adS.length)main.append(el('span',{style:'display:flex;gap:4px;flex-wrap:wrap'},adS.slice(0,3).map(e=>{const c=el('span',{class:'minichip',style:`--c:${e.color}`},e.title);calGestures(c,e,dk);return c;})));}
       const pv=items.filter(e=>!(e.rec&&daily.includes(e.rec.id)));pv.slice(0,3).forEach(e=>{const r=el('span',{class:'it'},el('time',{},e.time!=null?fmtT(e.time):'Anytime'),el('span',{},e.title));calGestures(r,e,dk);main.append(r);});
       if(pv.length>3)main.append(el('span',{class:'ph'},`+${pv.length-3} more`));
-      if(empty&&!trW)main.append(el('span',{class:'ph'+(dk===tk?' plan':'')},dk===tk?'Tap to plan':past?'':'Nothing planned'));
+      if(empty&&!trW)main.append(el('span',{class:'ph'+(past?'':' plan')},past?'':'Tap to plan'));
     }
     const r=el('div',{class:'wkrow'+(empty&&!open&&!trW?' slim':'')+(open?' sel open':'')+(trW?' wkaway':''),'data-slot':dk,onclick:ev=>{if(ev.target.closest('button,.dayline,.adchip'))return;toggle();}},
       el('button',{class:'dtile '+(L.level?'l'+L.level+' ':'')+(past?'past ':'')+(dk===tk?'today ':'')+(trW?'tripd':''),'aria-label':shortDay(dk),'aria-expanded':String(open),'aria-current':dk===tk?'date':null,onclick:toggle},el('small',{},DOW[d.getDay()].slice(0,3).toUpperCase()),el('b',{},String(d.getDate()))),

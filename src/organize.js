@@ -62,6 +62,8 @@ function viewInbox(root){
   if(S.inboxTab==='Photos'&&!withPh.length)S.inboxTab='All';
   const shown=sorted.filter(i=>S.inboxTab==='All'||(i.photos||[]).length),page=el('div',{class:'page'});
   page.append(orgHead('Inbox',all.length?`${all.length} to organize`:'',{type:'Ideas',sort:()=>all.length>1?[{label:S.inboxSort==='old'?'Show newest first':'Show oldest first',icon:'sort',onclick:()=>{S.inboxSort=S.inboxSort==='old'?'new':'old';App.refresh();toast(S.inboxSort==='old'?'Oldest first':'Newest first');}}]:[],menu:()=>[all.length>1?{label:'Select ideas',icon:'check',onclick:()=>{S.ideaSel=new Set();App.refresh();}}:null,(()=>{const old=all.filter(i=>Date.now()-(i.createdAt||0)>60*864e5);return old.length?{label:`Clear ${old.length} older than 60 days`,icon:'trash',danger:true,onclick:()=>askConfirm({title:`Clear ${old.length} old idea${old.length>1?'s':''}?`,body:'They stay in Recently deleted for 30 days.',yes:'Clear',no:'Keep them',onYes:()=>{const cs=old.map(clone);old.forEach(i=>remove(i.id,{silent:true}));App.refresh();toast(`${old.length} cleared`,()=>{cs.forEach(c=>put(c,{silent:true}));App.refresh();});}})}:null;})()]}));
+  /* pending reviews and other things the app asks of you sit pinned on top; they aren't ideas, so Tidy up never counts them */
+  {const pr=typeof pendingReviews==='function'?pendingReviews():[];if(pr.length)page.append(el('button',{class:'otidy sysrow',onclick:()=>App.go('reviews')},el('span',{class:'oric',html:ic('clip',20)}),el('span',{class:'grow'},el('b',{},pr.length===1?`${rvLabel(pr[0])} review to catch up on`:`${pr.length} reviews to catch up on`)),el('span',{class:'chev',html:ic('chevr',16,2)})));}
   page.append(el('div',{class:'ocap'},el('button',{class:'ocapt',onclick:()=>captureSheet(null)},"What's on your mind?"),el('button',{class:'ocapp','aria-label':'Capture a photo',html:ic('image',20),onclick:()=>captureSheet(null,{photo:true})})));
   {const wn=whatsNewCard();if(wn)page.append(wn);}
   const wasN=S._inboxN||0;S._inboxN=all.length;
@@ -157,7 +159,7 @@ function viewTasks(root){
   const note=areaNote('task');if(note)page.append(note);
   
   const sec=(label,list,row0,cls)=>{if(!list.length)return;const row=S.taskSel?(t=>selRow(t)):row0;
-    if(S.taskGroup){if(label)page.append(el('div',{class:'sh2 shstick'},el('span',{class:'lbl '+(cls||'')},`${label} · ${list.length}`)));byArea(list).forEach(([a,g])=>page.append(el('div',{class:'ogroup'},a),el('div',{class:'list'},g.map(t=>row(t,true)))));return;}
+    if(S.taskGroup){if(label)page.append(el('div',{class:'sh2 shstick'},el('span',{class:'lbl '+(cls||'')},`${label} · ${list.length}`)));byArea(list).forEach(([a,g])=>page.append(el('div',{class:'ogroup ichip'},a&&a!=='No area'?areaChipIc(a):null,a),el('div',{class:'list'},g.map(t=>row(t,true)))));return;}
     if(label)page.append(el('div',{class:'sh2 shstick'},el('span',{class:'lbl '+(cls||'')},`${label} · ${list.length}`)));page.append(el('div',{class:'list'},list.map(t=>row(t,false))));};
   if(S.taskTab==='waiting'){waitTab(page);
   }else if(S.taskTab==='hold'){

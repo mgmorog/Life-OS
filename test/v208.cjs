@@ -1,0 +1,12 @@
+const {chromium}=require('playwright');const fs=require('fs');const OUT='/home/claude/v208';fs.mkdirSync(OUT,{recursive:true});
+(async()=>{const b=await chromium.launch();const p=await (await b.newContext({viewport:{width:390,height:844},deviceScaleFactor:1,hasTouch:true,isMobile:true})).newPage();const errs=[];p.on('pageerror',e=>errs.push(e.message));
+await p.goto('file://'+process.cwd()+'/test/page.html');await p.waitForTimeout(400);
+const go=async(v,a)=>{await p.evaluate(([v,a])=>window.__lifeos.App.go(v,a),[v,a]);await p.waitForTimeout(350);};
+const shot=async n=>{await p.evaluate(()=>{const t=document.querySelector('#toast');if(t)t.style.display='none';});await p.screenshot({path:`${OUT}/${n}.png`,fullPage:true});};
+await go('today');await shot('today-empty');
+await p.evaluate(()=>window.__lifeos.loadDemo(true));await p.waitForTimeout(300);
+await p.evaluate(()=>{const L=window.__lifeos;L.put(Object.assign({},L.get.settings(),{monthlyReview:true,weekStart:0}),{silent:true});const t=L.get.all('task')[0];t.createdAt=Date.now()-70*864e5;L.put(t,{silent:true});});
+await go('today');await shot('today');await go('calendar');await shot('cal');await go('more');await shot('more');await go('reviews');await shot('reviews');await go('inbox');await shot('inbox');
+await go('setpage',{id:'areas'});await shot('areas');await go('modules',{area:'Career'});await shot('career');await go('setpage',{id:'reviews'});await shot('set-reviews');await go('setpage',{id:'planning'});await shot('planning');await go('setpage',{id:'data'});await shot('data');
+await go('tasks');await p.evaluate(()=>{window.__lifeos.App.state.taskGroup=true;window.__lifeos.App.refresh();});await p.waitForTimeout(300);await shot('tasks-group');
+console.log(errs.length+' errors '+JSON.stringify(errs).slice(0,400));await b.close();})();

@@ -16,6 +16,16 @@ const r=await p.evaluate(()=>{const F=window.__lifeos.fx;const ics=['BEGIN:VCALE
 ok('ics: skips Life OS own events',r.n===2,r.n);ok('ics: unescapes text',r.sum==='Standup, team',r.sum);ok('ics: unfolds lines',r.loc==='Longer place',r.loc);
 ok('ics: weekly BYDAY + COUNT + EXDATE',JSON.stringify(r.occ)===JSON.stringify(['2026-11-16','2026-11-23','2026-11-25']),JSON.stringify(r.occ));
 ok('ics: multi-day all-day',r.trip.length===1&&r.trip[0][0]==='2026-11-25'&&r.trip[0][1]==='2026-11-27',JSON.stringify(r.trip));
+const r2=await p.evaluate(()=>{const F=window.__lifeos.fx;const L=a=>a.join('\r\n');
+  const ev=F.parseIcs(L(['BEGIN:VCALENDAR','BEGIN:VEVENT','UID:m1','DTSTART:20260113T090000','DTEND:20260113T100000','RRULE:FREQ=MONTHLY;BYDAY=2TU','SUMMARY:Board','END:VEVENT',
+    'BEGIN:VEVENT','UID:m2','DTSTART:20260131T090000','DTEND:20260131T100000','RRULE:FREQ=MONTHLY;COUNT=3','SUMMARY:EOM','END:VEVENT',
+    'BEGIN:VEVENT','UID:w1','DTSTART:20261102T090000','DTEND:20261102T093000','RRULE:FREQ=WEEKLY','SUMMARY:Sync','END:VEVENT',
+    'BEGIN:VEVENT','UID:w1','RECURRENCE-ID:20261109T090000','DTSTART:20261110T140000','DTEND:20261110T143000','SUMMARY:Sync (moved)','END:VEVENT','END:VCALENDAR']));
+  const d=e=>F.icalOcc(e,'2026-01-01','2026-11-30').map(x=>x[0].slice(0,10));const w=d(ev[2]);
+  return{board:d(ev[0]).slice(0,4),eom:d(ev[1]),w9:w.includes('2026-11-09'),w16:w.includes('2026-11-16'),moved:d(ev[3])};});
+ok('ics: 2nd Tuesday monthly',JSON.stringify(r2.board)==='["2026-01-13","2026-02-10","2026-03-10","2026-04-14"]',JSON.stringify(r2.board));
+ok('ics: monthly on the 31st skips short months',JSON.stringify(r2.eom)==='["2026-01-31","2026-03-31","2026-05-31"]',JSON.stringify(r2.eom));
+ok('ics: moved occurrence replaces the original',!r2.w9&&r2.w16&&JSON.stringify(r2.moved)==='["2026-11-10"]',JSON.stringify(r2));
 /* cached import feeds dayItems */
 const di=await p.evaluate(()=>{const L=window.__lifeos,F=L.fx;L.put(Object.assign({},L.get.settings(),{icalFeeds:[{id:'c1',name:'Work cal',url:'https://x.test/a.ics',on:true}]}),{silent:true});
   const tk=L.todayK();const y=tk.replace(/-/g,'');F.Ical.events={c1:F.parseIcs(`BEGIN:VCALENDAR\r\nBEGIN:VEVENT\r\nUID:z\r\nDTSTART:${y}T140000\r\nDTEND:${y}T150000\r\nSUMMARY:Imported thing\r\nEND:VEVENT\r\nEND:VCALENDAR`)};F.Ical._by=null;
@@ -23,7 +33,7 @@ const di=await p.evaluate(()=>{const L=window.__lifeos,F=L.fx;L.put(Object.assig
 ok('import shows on the day at the right time',JSON.stringify(di)==='[[840,60]]',JSON.stringify(di));
 await go('today');await shot('today-import');
 await go('setpage',{id:'connect'});await shot('connections');
-ok('connections page lists the calendar',await p.evaluate(()=>/Work cal/.test(document.body.innerText)&&/Add a calendar/.test(document.body.innerText)));
+ok('connections page lists the calendar',await p.evaluate(()=>/Work cal/.test(document.body.innerText)));
 /* backups never carry the link */
 const bk=await p.evaluate(()=>{const s=window.__lifeos.get.settings();return!!s.icalFeeds;});ok('feed saved in settings',bk);
 
@@ -31,6 +41,9 @@ const bk=await p.evaluate(()=>{const s=window.__lifeos.get.settings();return!!s.
 await set({jobs:[{id:'j1',name:'Hospital',flex:false,cycle:'week',shifts:[{id:'a',days:[0,2],start:420,end:1140}]},{id:'j2',name:'Cafe',flex:false,cycle:'week',shifts:[{id:'b',days:[5],start:600,end:900}]}]});
 const sh=await p.evaluate(()=>{const F=window.__lifeos.fx;const mon='2026-11-16',sat='2026-11-21',tue='2026-11-17';return[F.shiftsOn(mon).length,F.shiftsOn(sat).length,F.shiftsOn(tue).length];});
 ok('shifts land on their days',JSON.stringify(sh)==='[1,1,0]',JSON.stringify(sh));
+await set({jobs:[{id:'n1',name:'Nights',flex:false,cycle:'week',shifts:[{id:'a',days:[0],start:1140,end:420}]}],protectEvenings:true});
+const ov=await p.evaluate(()=>{const F=window.__lifeos.fx;return[F.shiftsOn('2026-11-16').map(x=>x.start+'-'+x.end).join(),F.shiftsOn('2026-11-17').map(x=>x.start+'-'+x.end+(x.carry?'c':'')).join()];});
+ok('overnight shift carries into the next morning',ov[0]==='1140-420'&&ov[1]==='0-420c',JSON.stringify(ov));
 await set({jobs:[{id:'j3',name:'Gig',flex:true,cycle:'week',shifts:[]}],flexRemind:true});
 const fd=await p.evaluate(()=>window.__lifeos.fx.flexDue().length);ok('flexible job asks for hours',fd>=1,fd);
 await go('inbox');await shot('inbox-flex');

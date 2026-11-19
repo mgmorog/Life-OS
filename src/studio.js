@@ -61,7 +61,7 @@ function slotLoad(s,st,cards){
 function freeMinutes(dk){const s=get.settings(),sh=shiftsOn(dk);let awake=[[420,1320]];
   const cut=(a,b)=>{awake=awake.flatMap(([x,y])=>b<=x||a>=y?[[x,y]]:[[x,Math.max(x,a)],[Math.min(y,b),y]]).filter(([x,y])=>y>x);};
   sh.forEach(x=>{if(x.end>x.start)cut(x.start,x.end);else cut(x.start,1440);});
-  if(s.protectEvenings&&sh.length){const last=Math.max(...sh.map(x=>x.end>x.start?x.end:1440));cut(last,1440);}
+  if(s.protectEvenings&&sh.some(x=>!x.carry)){const last=Math.max(...sh.filter(x=>!x.carry).map(x=>x.end>x.start?x.end:1440));cut(last,1440);}
   let free=awake.reduce((n,[a,b])=>n+Math.max(0,b-a),0);if(sh.unknown)free=Math.round(free/2);dayItems(dk).timed.forEach(e=>{awake.forEach(([a,b])=>{const o=Math.max(0,Math.min(b,e.time+(e.dur||30))-Math.max(a,e.time));free-=o;});});return Math.max(0,free);}
 function suggest(cards,P,st,jit=null){
   const load=new Map(P.slots.map(s=>[s.id,slotLoad(s,st,cards)])),open=P.slots.filter(s=>!s.past&&!(st.mode==='w'&&tripBlocked(s.id))),out=[];if(jit)open.forEach(s=>load.set(s.id,load.get(s.id)+jit(s.id)));

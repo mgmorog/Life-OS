@@ -525,7 +525,9 @@ const flexStart=(j,dk)=>{const ws=weekStartOf(fromK(dk));if(j.cycle!=='2week')re
 /* shifts on a day: [{job,start,end}] ; null means a flexible job whose hours aren't in yet */
 function shiftsOn(dk){const s=get.settings(),d=fromK(dk),mi=monIdx(d),out=[];let unknown=false;
   jobsOf(s).forEach(j=>{if(j.flex){const m=(s.flexHours||{})[j.id]||{};if(m[dk])m[dk].forEach(x=>out.push({job:j.name||'Work',start:x.start,end:x.end}));else if(!m['_'+flexStart(j,dk)])unknown=true;}
-    else j.shifts.forEach(x=>{if(x.days.includes(mi))out.push({job:j.name||'Work',start:x.start,end:x.end});});});
+    else{const pm=(mi+6)%7;j.shifts.forEach(x=>{if(x.days.includes(mi))out.push({job:j.name||'Work',start:x.start,end:x.end});
+      /* an overnight shift from yesterday runs into this morning */
+      if(x.end<x.start&&x.end>0&&x.days.includes(pm))out.push({job:j.name||'Work',start:0,end:x.end,carry:true});});}});
   out.sort((a,b)=>a.start-b.start);out.unknown=unknown;return out;}
 /* flexible jobs whose next period needs hours (from four days before it starts) */
 function flexDue(){const s=get.settings(),out=[],tk=todayK();if(s.flexRemind===false)return out;jobsOf(s).filter(j=>j.flex).forEach(j=>{const len=j.cycle==='2week'?14:7;let st=flexStart(j,tk);const m=(s.flexHours||{})[j.id]||{};

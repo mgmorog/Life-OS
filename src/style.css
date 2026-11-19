@@ -2365,3 +2365,31 @@ p.qempty{color:var(--ink-3);font-weight:400}
 input[type=color]{width:40px;height:40px;border:0;border-radius:50%;padding:0;background:none}
 .upwork{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--ink-2);padding:2px 0 8px;text-align:left}.upwork.due{color:var(--accent-text);font-weight:600}
 .shiftband{position:absolute;left:52px;right:0;background:repeating-linear-gradient(135deg,var(--tint-1) 0 6px,transparent 6px 12px);border-left:2px solid var(--h2);pointer-events:none;z-index:0;border-radius:0 6px 6px 0}.shiftband span{position:absolute;right:8px;top:4px;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+/* v210 dark-mode sweep: soft fills that were still literal light colors */
+:root[data-mode=dark]{--trip:#8FB2DE;--trip-soft:#24303D}
+:root[data-mode=dark] .slot.past{background:var(--n1)}
+:root[data-mode=dark] .slot.over{background:var(--n2)}
+:root[data-mode=dark] .fchip.red:not(.on){color:var(--now)}
+:root[data-mode=dark] .fchip.red.on{background:var(--now);border-color:var(--now);color:#1B201E}
+:root[data-mode=dark] .odrow,:root[data-mode=dark] .donebar.warn,:root[data-mode=dark] .grid30 .miss{background:var(--warn-soft);color:var(--now)}
+:root[data-mode=dark] .why{background:var(--n2);color:var(--ink-2)}
+:root[data-mode=dark] .inl{background:var(--n1)}
+:root[data-mode=dark] .onext{background:var(--n1)}
+:root[data-mode=dark] .skel{background:linear-gradient(90deg,var(--line-2),var(--n4),var(--line-2));background-size:200% 100%}
+@media(hover:hover){:root[data-mode=dark] button.li:hover,:root[data-mode=dark] a.li:hover{background:var(--n1)}}
+:root[data-mode=dark] .hico.anniv,:root[data-mode=dark] .hico.mile,:root[data-mode=dark] .gst.s2,:root[data-mode=dark] .nb.sty.t-w,:root[data-mode=dark] .nb.sty.t-f,:root[data-mode=dark] .resli .rk-edit,:root[data-mode=dark] .resli .rk-image{background:var(--n4);color:var(--ink)}
+:root[data-mode=dark] .heat:not(.l4) .hn{color:var(--ink)}
+:root[data-mode=dark] .heat.l1,:root[data-mode=dark] .heat.l2,:root[data-mode=dark] .heat.l3{color:var(--ink)}
+/* Working hours sheet */
+.jobg{background:var(--card);border-radius:18px;margin:0 0 14px;overflow:hidden;box-shadow:var(--shadow-1)}
+.jobhd{display:flex;align-items:center;gap:8px;padding:10px 8px 6px var(--pad)}
+.jobname{flex:1;min-width:0;border:0;outline:0;background:none;font:400 22px var(--display);color:var(--ink);padding:6px 0}
+.jobname::placeholder{color:var(--ink-3)}
+.jobhd .iconbtn{width:44px;height:44px;flex:none;display:grid;place-items:center;border-radius:50%;color:var(--ink-3)}
+.jobseg{padding:4px var(--pad) 12px}
+.jobseg .seg{width:100%}
+.shiftb{padding:6px var(--pad) 10px;border-top:1px solid var(--line-2)}
+.jobseg+.shiftb{border-top:0}
+.shifthd{display:flex;align-items:center;justify-content:space-between;min-height:36px}
+.shifthd .lbl3{margin:0}
+.shifthd .linkbtn{color:var(--ink-3);font-weight:500;min-height:44px;padding:0 4px}

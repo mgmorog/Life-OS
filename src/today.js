@@ -314,7 +314,7 @@ function dayCard(dk){
   const cu=el('section',{class:'card upcard'+fu},el('div',{class:'bl'},el('span',{class:'lbl'},'Schedule')));
   const rows=el('div',{class:'uplist'});
   /* work: one quiet line for the day's shifts, or a nudge to add flexible hours */
-  {const sh=shiftsOn(dk),fl=isToday?flexDue():[];if(sh.length)rows.append(el('div',{class:'upwork'},el('span',{style:'display:grid',html:glyph('brief',15,2)}),el('span',{},`At ${sh.length===1?(sh[0].job==='Work'?'work':sh[0].job):'work'} · `+sh.map(x=>`${fmtT(x.start)}–${fmtT(x.end)}`).join(', '))));
+  {const sh=shiftsOn(dk),fl=isToday?flexDue():[];if(sh.length)rows.append(el('div',{class:'upwork'},el('span',{style:'display:grid',html:glyph('brief',15,2)}),el('span',{},`At ${sh.length===1?(sh[0].job==='Work'?'work':sh[0].job):'work'} · `+sh.map(x=>x.carry?`until ${fmtT(x.end)}`:`${fmtT(x.start)}–${fmtT(x.end)}`).join(', '))));
    fl.forEach(f=>rows.append(el('button',{class:'upwork due',onclick:()=>flexWeekSheet(f.job.id,f.from)},el('span',{style:'display:grid',html:ic('plus',15,2.2)}),el('span',{},`Add your ${f.job.name&&f.job.name!=='Work'?f.job.name+' ':'work '}hours for ${mdS(fromK(f.from))}–${mdS(fromK(f.to))}`))));}
   upcoming.slice(0,3).forEach(e=>{const during=isToday&&e.time<=nowM;const end=e.time+(e.dur||30);
     rows.append(el('button',{class:'uprow',style:`--c:${e.color||'var(--accent)'}`,onclick:()=>openItem(e,dk)},el('span',{class:'upt tnum'},fmtS(e.time)),el('span',{class:'upbar'}),el('span',{class:'grow'},el('span',{class:'tt'},e.title),el('span',{class:'meta'},sched.some(f=>f!==e&&f.kind!=='task'&&e.kind!=='task'&&f.time<e.time+(e.dur||30)&&e.time<f.time+(f.dur||30))?el('span',{class:'ovtag'},'Overlaps · '):null,e.kind==='task'?'':`Until ${fmtT(end)}`,during?el('b',{class:'upnow'},` · ${fmtDurS(end-nowM)} left`):isToday&&e===upcoming[0]?` · in ${fmtDurS(e.time-nowM)}`:''))));});
@@ -487,7 +487,7 @@ function shareDaySheet(dk){
     const c=dayCanvas(dk),base=`Life-OS-${dk}`;
     const img=el('img',{alt:`Preview of ${shortDay(dk)}`,style:'width:100%;border-radius:16px;border:1px solid var(--line);display:block',src:c.toDataURL('image/png')});
     const copy=el('button',{class:'btn quiet block',onclick:async e=>{const t=dayText(dk),btn=e.currentTarget;try{await navigator.clipboard.writeText(t);toast('Copied');doneMorph(btn);}catch(e){ta.hidden=false;ta.value=t;ta.select();toast('Select the text below to copy it');}}},'Copy as text');
-    const ta=el('textarea',{id:'share-text',hidden:true,rows:6,style:'width:100%;border:1px solid var(--line);border-radius:12px;padding:10px;background:#fff'});
+    const ta=el('textarea',{id:'share-text',hidden:true,rows:6,style:'width:100%;border:1px solid var(--line);border-radius:12px;padding:10px;background:var(--card);color:var(--ink)'});
     body.append(img,el('button',{class:'btn primary block',onclick:()=>c.toBlob(b=>saveFile(base+'.png',b),'image/png')},'Save image'),
       el('button',{class:'btn line block',onclick:()=>{const flat=document.createElement('canvas');flat.width=c.width;flat.height=c.height;flat.getContext('2d').drawImage(c,0,0);flat.toBlob(async b=>{const buf=new Uint8Array(await b.arrayBuffer());saveFile(base+'.pdf',new Blob([pdfFromJpeg(buf,c.width,c.height)],{type:'application/pdf'}));},'image/jpeg',.92);}},'Save PDF'),copy,ta);
   }}));

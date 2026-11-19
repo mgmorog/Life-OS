@@ -42,6 +42,7 @@ const DEMO_BANK={
   outings:['Niagara Falls day trip','Art museum','Bills game','Farmers market'],hobbies:['Guitar','Photography','Pottery'],
   queue:['Severance','The Bear','Dune: Part Two','Shōgun'],restaurants:['Oliver’s','Toutant','Las Puertas','Ted’s Hot Dogs'],
   collections:['Vinyl','Wine','Sneakers'],tickets:['Hamilton','Bills vs. Dolphins','Taylor Swift'],bucket:['See the northern lights','Run a marathon','Visit all national parks'],
+  compass:['Honesty','Health first','Family time','Craft','Curiosity'],
   experiments:['No phone before 9','Cold showers','Walking 1:1s'],lessons:['Ask for help earlier','Write things down'],
   journal:['Morning pages','Gratitude','Weekly reflection'],decisions:['Take the promotion','Lease vs buy car'],commonplace:['“The obstacle is the way.”','Hofstadter’s law'],letters:['To me in 2030'],
   renewals:['Driver’s license','Passport','Car registration','Amazon Prime'],documents:['Birth certificate','Lease','Car title'],
@@ -50,21 +51,36 @@ const DEMO_BANK={
   petcare:['Heartworm pill','Vet checkup','Flea treatment'],walks:['Morning walk','Park loop'],
   volunteer:['Food bank shift','Habitat build'],giving:['Red Cross','Local food bank'],faith:['Sunday service','Evening prayer']
 };
+/* hand-written fields where random ones would read as nonsense (matched to DEMO_BANK by position) */
+const DEMO_F={
+  compass:[{note:'Say the hard thing kindly.'},{note:'Sleep and movement before extra work.'},{note:'Dinner together, phones away.'},{note:'Do the job well even when no one checks.'},{note:'Learn one new thing a week.'}],
+  sleep:[{bed:'23:10',wake:'06:45',rested:'OK',what:''},{bed:'00:30',wake:'08:30',rested:'Rested',what:''},{bed:'01:15',wake:'06:40',rested:'Tired',what:''}],
+  records:[{status:'Vaccine',val:'Walgreens'},{status:'Lab result',val:'All in range'},{status:'Doctor',val:'Dr. Lee · new glasses'},{status:'Vaccine',val:'Good until 2034'}],
+  symptoms:[{sev:'Moderate',trig:'Screen time',took:'Ibuprofen'},{sev:'Mild',trig:'Long drive',took:'Stretched'},{sev:'Mild',trig:'Pollen',took:'Allergy spray'}],
+  skin:[{what:'Gentle cleanser',status:'Both',step:'Cleanser'},{what:'Vitamin C serum',status:'Morning',step:'Serum'},{what:'SPF 50',status:'Morning',step:'Sunscreen'}],
+  groom:[{who:'Jordan',cost:35},{who:'',cost:''},{who:'Sam',cost:45}],
+  checkin:[{e:'Good',water:6,sleep:8},{e:'OK',water:4,sleep:7},{e:'Low',water:3,sleep:6}],
+  cycle:[{kind:'Period started',flow:'Medium'}],
+  prep:[{servings:6,left:3,where:'Fridge'},{servings:8,left:5,where:'Freezer'},{servings:4,left:2,where:'Fridge'},{servings:4,left:4,where:'Freezer'},{servings:6,left:6,where:'Freezer'}],
+};
 const DEMO_NOTES=['','Bring the receipt.','Ask about the weekend rate.','This one keeps slipping — do it first thing.','Compare with last year before deciding. Check the folder in Drive called “Archive 2025” and the email from October.'];
 function demoFill(t,i,r,t0){const f={};const fs=Array.isArray(t.fields)?t.fields:[];const bank=DEMO_BANK[t.id]||[];
   const pick=a=>a[Math.floor(r()*a.length)];
   fs.forEach((d,k)=>{const L=(d.label||'').toLowerCase();
     if(d.id==='what'||d.id==='lesson'||(k===0&&(!d.type||d.type==='text'||d.type==='area')))f[d.id]=bank.length?bank[i%bank.length]:`${capW(t.word||'item')} ${i+1}`;
-    else if(d.type==='select'&&d.opts&&d.opts.length)f[d.id]=pick(d.opts);
-    else if(d.type==='date'){const past=t.tpl==='log'||/last|done|bought|logged|started|when|opened|since|joined|issued|purchased|earned/.test(L);f[d.id]=past?addK(t0,-Math.floor(r()*45)):addK(t0,Math.floor(r()*120)-10);}
-    else if(d.type==='number'){if(d.def!=null&&r()<.5)f[d.id]=d.def;else if(/cost|price|amount|budget|\$|balance|paid|value|saved|goal|limit|income|owed/.test(L))f[d.id]=Math.round(r()*r()*2400+12);else if(/min|hour|time/.test(L))f[d.id]=Math.round(r()*80+10);else if(/every/.test(L))f[d.id]=pick([7,14,30,90,180,365]);else f[d.id]=Math.round(r()*9+1);}
+    else if(d.type==='select'&&d.opts){const os=typeof d.opts==='function'?d.opts():d.opts;if(os&&os.length)f[d.id]=pick(os.slice(0,Math.max(1,os.length-1)));}
+    else if(d.type==='date'){const past=!/next|due|book|by when|by date|expire|ends|exam|renew|replace|eat by|use by|good to|until|deadline|plan|trial|return by|warranty/.test(L);f[d.id]=past?addK(t0,-Math.floor(r()*40)):addK(t0,3+Math.floor(r()*75));}
+    else if(d.type==='number'){if(d.def!=null&&r()<.5)f[d.id]=d.def;else if(/level|1–5|1-5/.test(L))f[d.id]=1+Math.floor(r()*5);else if(/^pages$/.test(L))f[d.id]=180+Math.floor(r()*300);else if(/on page/.test(L))f[d.id]=20+Math.floor(r()*150);else if(/cost|price|amount|budget|\$|balance|paid|value|saved|goal|target|limit|income|owed|month/.test(L))f[d.id]=/balance|value|saved|goal|target|income|limit|owed|budget/.test(L)?Math.round(r()*9000+1500):Math.round(r()*r()*140+8);else if(/hours/.test(L))f[d.id]=6+Math.round(r()*3);else if(/min|time/.test(L))f[d.id]=Math.round(r()*50+10);else if(/every/.test(L))f[d.id]=pick([7,14,30,90,180,365]);else f[d.id]=Math.round(r()*9+1);}
     else if(d.type==='time')f[d.id]=pick(['07:00','08:30','12:15','17:45','20:00']);
     else if(d.type==='area')f[d.id]=pick(DEMO_NOTES);
     else if(/who|with|person|name|contact/.test(L))f[d.id]=pick(['Sam','Alex','Mom','Priya','Jordan']);
     else if(/where|place|store|location|city/.test(L))f[d.id]=pick(['Buffalo','Elmwood Ave','Wegmans','Downtown','Online']);
-    else if(r()<.6)f[d.id]=pick(['Blue','Large','Weekly','Online','2nd floor','Shared','Annual','Morning']);
   });
   if(t.tpl==='log'&&!f.date)f.date=addK(t0,-Math.floor(r()*30));
+  if(t.t&&f.t==null)f.t=t.t;
+  if(f.left!=null&&f.servings!=null&&+f.left>+f.servings)f.left=f.servings;if(f.saved!=null&&f.target&&+f.saved>=+f.target)f.saved=Math.round(f.target*(.2+r()*.6));if(f.monthly!=null&&f.target)f.monthly=Math.round(f.target/12);
+  if(t.statuses&&t.statuses.length)f.status=t.statuses[i%Math.max(1,t.statuses.length-1)];
+  const o=(DEMO_F[t.id]||[])[i];if(o)Object.assign(f,typeof o==='function'?o(t0):o);
   if(t.id==='trips'){f.date=addK(t0,[-40,6,45,120][i%4]);f.end=addK(f.date,[3,2,5,13][i%4]);f.status=f.date<t0?'Done':'Planned';}
   return f;}
 function loadDemo(quiet){

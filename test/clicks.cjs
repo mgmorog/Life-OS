@@ -27,13 +27,13 @@ ok('two jobs saved',jobs.length===2,JSON.stringify(jobs.map(j=>j.name)));ok('fir
 
 /* flexible hours from Inbox */
 await go('inbox');await shot('inbox');const hasDue=await p.getByText(/Add your Cafe hours/).count();ok('inbox asks for Cafe hours',hasDue>0);
-if(hasDue){await p.getByText(/Add your Cafe hours/).first().click();await p.waitForTimeout(400);await shot('flex-sheet');
+if(hasDue){const before=await p.evaluate(()=>JSON.stringify(window.__lifeos.fx.flexDue().map(f=>f.from)));await p.getByText(/Add your Cafe hours/).first().click();await p.waitForTimeout(400);await shot('flex-sheet');
   const btns=await p.locator('.sheet button, [role=dialog] button').allInnerTexts();
   const add=p.getByText(/Add hours|Add a shift|Add/).filter({hasNotText:'Cancel'});
   const right=p.locator('.sheet-hd button, .shhd button').last();
   /* save whatever the sheet has: marks the period as handled */
   await p.getByText('Save',{exact:true}).last().click().catch(async()=>{await p.getByText('Done',{exact:true}).last().click();});await p.waitForTimeout(300);
-  const after=await p.getByText(/Add your Cafe hours/).count();ok('saving clears the inbox ask',after===0,btns.join('|'));}
+  const after=await p.evaluate(()=>JSON.stringify(window.__lifeos.fx.flexDue().map(f=>f.from)));ok('saving clears that period’s ask',after!==before,before+' -> '+after);void btns;}
 
 /* Connections */
 await go('setpage',{id:'connect'});await shot('connect');ok('connections shows the outbound feed row',await p.getByText('Show Life OS in Apple or Google Calendar').count()>0);

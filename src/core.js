@@ -542,8 +542,8 @@ function applyTheme(){const s=get.settings(),R=document.documentElement,dark=s.m
   R.dataset.mode=dark?'dark':'light';R.dataset.font=s.titleFont||'serif';R.dataset.bg=s.bgTone||'warm';R.dataset.density=s.density||'comfortable';R.dataset.labels=s.tabLabels===false?'off':'on';
   const a=safeAccent(themeOf(s)),W=[255,255,255],K=[0,0,0],st=R.style,set=(k,c)=>st.setProperty(k,typeof c==='string'?c:rgb2hx(c));
   const isDefault=(s.palette||'sage')==='sage'&&!dark;
-  if(isDefault){['--accent','--accent-text','--accent-deep','--accent-soft','--h1','--h2','--h3','--h4','--tint-1','--tint-3'].forEach(k=>st.removeProperty(k));}
-  else if(!dark){set('--accent',a);set('--accent-text',mixC(a,K,.1));set('--accent-deep',mixC(a,K,.32));set('--accent-soft',mixC(a,W,.85));set('--tint-1',mixC(a,W,.93));set('--tint-3',mixC(a,W,.75));set('--h1',mixC(a,W,.82));set('--h2',mixC(a,W,.62));set('--h3',mixC(a,W,.4));set('--h4',mixC(a,W,.06));}
+  if(isDefault){['--accent','--accent-text','--accent-deep','--accent-soft','--accent-wash','--accent-mid','--h1','--h2','--h3','--h4','--tint-1','--tint-3'].forEach(k=>st.removeProperty(k));}
+  else if(!dark){set('--accent',a);set('--accent-wash',mixC(a,W,.9));set('--accent-mid',mixC(a,W,.5));set('--accent-text',mixC(a,K,.1));set('--accent-deep',mixC(a,K,.32));set('--accent-soft',mixC(a,W,.85));set('--tint-1',mixC(a,W,.93));set('--tint-3',mixC(a,W,.75));set('--h1',mixC(a,W,.82));set('--h2',mixC(a,W,.62));set('--h3',mixC(a,W,.4));set('--h4',mixC(a,W,.06));}
   else{const card=[27,32,30],lift=mixC(a,W,.12);let txt=mixC(a,W,.45);for(let i=0;i<20&&contrast(txt,card)<4.6;i++)txt=mixC(txt,W,.1);
     set('--accent',lift);set('--accent-text',txt);set('--accent-deep',mixC(a,W,.6));set('--accent-soft',mixC(card,a,.28));set('--tint-1',mixC(card,a,.14));set('--tint-3',mixC(card,a,.4));set('--h1',mixC(card,a,.2));set('--h2',mixC(card,a,.36));set('--h3',mixC(card,a,.55));set('--h4',lift);}
   const m=document.querySelector('meta[name=theme-color]');if(m)m.setAttribute('content',dark?'#121614':(s.bgTone==='white'?'#FFFFFF':'#F4F4EF'));}

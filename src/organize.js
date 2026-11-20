@@ -13,11 +13,13 @@ function orgHead(title,sub,{type,menu,menuLabel,sort}={}){
 }
 const addBar=(label,aria,fn)=>el('button',{class:'oadd','aria-label':aria,onclick:fn},el('span',{style:'display:grid',html:ic('plus',20,2)}),label);
 const areasIn=list=>[...new Set(list.map(r=>r.area).filter(Boolean))].sort();
+/* one filter row: the life-area filter is a menu at the end, not a second row of chips */
+function areaMenuChip(sel,areas){if(areas.length<2)return null;const lab=!sel.size?'Area':sel.size===1?[...sel][0]:`${sel.size} areas`;
+  return el('button',{class:'fchip amenu'+(sel.size?' on':''),'aria-haspopup':'menu',onclick:e=>{const r=e.currentTarget.getBoundingClientRect();openMenu(r.left,r.bottom+4,[{label:'All areas',icon:sel.size?null:'check',onclick:()=>{sel.clear();App.refresh();}},...areas.map(a=>({label:a,icon:sel.has(a)?'check':areaIcon(a),onclick:()=>{sel.has(a)?sel.delete(a):(sel.clear(),sel.add(a));App.refresh();}}))]);}},lab,el('span',{style:'display:grid',html:ic('chevd',14,2.2)}));}
 function viewsRow(items,val,on,key,pool){
   /* one header for every organize page: view chips, then area chips (tap to add, tap again to remove; none = all) */
   const S=App.state;if(!(S['af'+key] instanceof Set))S['af'+key]=new Set();const sel=S['af'+key],areas=areasIn(pool);
-  return el('div',{class:'tstick'},el('div',{class:'fchips'},items.map(([v,l,n])=>el('button',{class:'fchip'+(val===v?' on':''),'aria-pressed':String(val===v),onclick:()=>on(v)},l,n?el('span',{class:'n'},String(n)):null))),
-    areas.length>1?el('div',{class:'achips'},el('button',{class:'achip'+(!sel.size?' on':''),onclick:()=>{sel.clear();App.refresh();}},'All areas'),areas.map(a=>el('button',{class:'achip'+(sel.has(a)?' on':''),onclick:()=>{sel.has(a)?sel.delete(a):sel.add(a);App.refresh();}},el('span',{style:'display:grid',html:ic(areaIcon(a),13,1.9)}),a))):null);
+  return el('div',{class:'tstick'},el('div',{class:'fchips'},items.map(([v,l,n])=>el('button',{class:'fchip'+(val===v?' on':''),'aria-pressed':String(val===v),onclick:()=>on(v)},l)),areaMenuChip(sel,areas)));
 }
 function areaOnly(list,key){const S=App.state,cur=S['af'+key];if(!(cur instanceof Set)||!cur.size)return list;return list.filter(r=>cur.has(r.area));}
 const areaNote=()=>null;
@@ -155,8 +157,9 @@ function viewTasks(root){
   const wk=addK(tk,7),cnt={overdue:late.length+AIt.filter(r=>r.late).length,today:todayOpen.length+AIt.filter(r=>!r.late&&!r.done).length,week:upcoming.filter(([,d])=>d<=wk).length,anytime:anytime.length};
   const fchip=(k,l,n,cls='')=>el('button',{class:'fchip'+cls+(k==='all'?(!S.taskF.size&&S.taskTab==='all'?' on':''):['waiting','done','hold'].includes(k)?(S.taskTab===k?' on':''):(S.taskTab==='all'&&S.taskF.has(k)?' on':'')),'aria-pressed':'false',onclick:()=>{if(k==='all'){S.taskF.clear();S.taskTab='all';}else if(['waiting','done','hold'].includes(k)){S.taskTab=S.taskTab===k?'all':k;S.taskF.clear();}else{S.taskTab='all';S.taskF.has(k)?S.taskF.delete(k):S.taskF.add(k);}App.refresh();}},l,n!=null?el('span',{class:'n'},String(n)):null);
   page.append(el('div',{class:'tstick'},
-    el('div',{class:'fchips'},fchip('all','All',all.filter(isOpenTask).length+AIt.filter(r=>!r.done).length),fchip('overdue','Overdue',cnt.overdue,' red'),fchip('today','Today',cnt.today),fchip('week','Next 7 days',cnt.week),fchip('anytime','Anytime',cnt.anytime),get.all('wait').length||S.taskTab==='waiting'?fchip('waiting','Waiting',null):null,held||S.taskTab==='hold'?fchip('hold','On hold',held):null,fchip('done','Done',null)),
-    areaSet.length?el('div',{class:'achips'},el('button',{class:'achip'+(!S.taskA.size?' on':''),onclick:()=>{S.taskA.clear();App.refresh();}},'All areas'),areaSet.map(a=>el('button',{class:'achip'+(S.taskA.has(a)?' on':''),'aria-pressed':String(S.taskA.has(a)),onclick:()=>{S.taskA.has(a)?S.taskA.delete(a):S.taskA.add(a);App.refresh();}},el('span',{style:'display:grid',html:ic(areaIcon(a),13,1.9)}),a))):null));
+    el('div',{class:'fchips'},fchip('all','All',null),fchip('overdue','Overdue',null,cnt.overdue?' red':''),fchip('today','Today',null),fchip('week','Next 7',null),areaMenuChip(S.taskA,areaSet),
+      (()=>{const views=[['anytime','Anytime'],get.all('wait').length||S.taskTab==='waiting'?['waiting','Waiting']:null,held||S.taskTab==='hold'?['hold','On hold']:null,['done','Done']].filter(Boolean),cur=views.find(([k])=>k==='anytime'?S.taskF.has('anytime'):S.taskTab===k);
+        return el('button',{class:'fchip amenu'+(cur?' on':''),'aria-haspopup':'menu',onclick:e=>{const r=e.currentTarget.getBoundingClientRect();openMenu(r.left,r.bottom+4,views.map(([k,l])=>({label:l,icon:(cur&&cur[0]===k)?'check':null,onclick:()=>{if(k==='anytime'){S.taskTab='all';S.taskF.has(k)?S.taskF.delete(k):(S.taskF.clear(),S.taskF.add(k));}else{S.taskTab=S.taskTab===k?'all':k;S.taskF.clear();}App.refresh();}})));}},cur?cur[1]:'More',el('span',{style:'display:grid',html:ic('chevd',14,2.2)}));})())));
   const note=areaNote('task');if(note)page.append(note);
   
   const sec=(label,list,row0,cls)=>{if(!list.length)return;const row=S.taskSel?(t=>selRow(t)):row0;
@@ -248,8 +251,7 @@ function viewHabits(root){
   /* filters work like Tasks: All is the default; tap Today or Paused to add it, tap again to take it off */
   const tdN=active.filter(h=>counts(h,tk)&&!habitDone(h,tk)).length;
   const vchip=(k,l,n)=>el('button',{class:'fchip'+(S.habF.has(k)?' on':''),'aria-pressed':String(S.habF.has(k)),onclick:()=>{S.habF.has(k)?S.habF.delete(k):S.habF.add(k);App.refresh();}},l,n!=null?el('span',{class:'n'},String(n)):null);
-  page.append(el('div',{class:'tstick'},el('div',{class:'fchips'},el('button',{class:'fchip'+(!S.habF.size?' on':''),onclick:()=>{S.habF.clear();App.refresh();}},'All',el('span',{class:'n'},String(active.length))),tdN&&tdN<active.length?vchip('today','Today',tdN):null,paused.length||S.habF.has('paused')?vchip('paused','Paused',paused.length):null),
-    hAreas.length>1?el('div',{class:'achips'},el('button',{class:'achip'+(!S.habA.size?' on':''),onclick:()=>{S.habA.clear();App.refresh();}},'All areas'),hAreas.map(a=>el('button',{class:'achip'+(S.habA.has(a)?' on':''),onclick:()=>{S.habA.has(a)?S.habA.delete(a):S.habA.add(a);App.refresh();}},el('span',{style:'display:grid',html:ic(areaIcon(a),13,1.9)}),a))):null));
+  page.append(el('div',{class:'tstick'},el('div',{class:'fchips'},el('button',{class:'fchip'+(!S.habF.size?' on':''),onclick:()=>{S.habF.clear();App.refresh();}},'All'),tdN&&tdN<active.length?vchip('today','Today',null):null,paused.length||S.habF.has('paused')?vchip('paused','Paused',null):null,areaMenuChip(S.habA,hAreas))));
   const note=areaNote('hab');if(note)page.append(note);
   const views=S.habF.size?['today','paused'].filter(v=>S.habF.has(v)):['all'];
   for(const T of views){if(views.length>1)page.append(el('div',{class:'sh2',style:'margin-top:14px'},el('span',{class:'lbl',style:'font-size:13px'},T==='today'?'Today':'Paused')));

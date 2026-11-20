@@ -111,9 +111,10 @@ function viewToday(root){
   const s=get.settings();
   {const fc=focusRunChip();if(fc)page.append(fc);}
   if(!s.introDone&&!recs.size)page.append(introCard());
-  if(isToday){const gc=gsCard();if(gc)page.append(gc);const pe=planEveCard(dk);if(pe)page.append(pe);}
-  page.append(alldayRow(dk));
+  if(isToday){const gc=gsCard();if(gc)page.append(gc);}
+  {const ad=alldayRow(dk);if(ad)page.append(ad);}
   page.append(...dayCard(dk));
+  if(isToday){const pe=planEveCard(dk);if(pe)page.append(pe);}
   const rem=reminderCard();if(rem)page.append(rem);
   const look=[];
   if(isToday&&s.checkinCard&&reviewPeriod(dk)&&sel.getDay()===(s.reviewDay??0)&&s.checkinDone!==dk&&!(s.onboardedAt&&Date.now()-s.onboardedAt<6*864e5))page.append(s.checkinLater===dk?el('button',{class:'focus-chip',onclick:()=>App.go('review')},el('span',{class:'small'},'Weekly review'),el('span',{class:'fa'},'Start ›')):checkinCard(dk));
@@ -130,7 +131,7 @@ function weekStrip(dk){
   const sel=fromK(dk),start=weekStartOf(sel),tk=todayK();
   const strip=el('div',{class:'weekstrip',id:'week-strip','aria-label':'Choose a day'});
   [-7,0,7].forEach(off=>{const pg=el('div',{class:'wkpage'});for(let i=0;i<7;i++){const x=addD(start,off+i),xk=k(x),has=dayItems(xk),any=has.timed.length+has.anytime.length+has.allDay.length;
-    pg.append(el('button',{class:(xk===dk?'sel ':'')+(xk===tk?'today ':'')+(any?'has':''),'aria-label':shortDay(xk),'aria-current':xk===dk?'date':null,onclick:()=>{if(strip._moved)return;goDay(xk);}},el('span',{class:'dl'},DOW[x.getDay()].slice(0,3).toUpperCase()),el('span',{class:'dn'},String(x.getDate()))));}strip.append(pg);});
+    pg.append(el('button',{class:(xk===dk?'sel ':'')+(xk===tk?'today ':'')+(any?'has':''),'aria-label':shortDay(xk),'aria-current':xk===dk?'date':null,onclick:()=>{if(strip._moved)return;goDay(xk);}},el('span',{class:'dl'},DOW[x.getDay()][0]),el('span',{class:'dn'},String(x.getDate())),el('span',{class:'dd','aria-hidden':'true'},'•'.repeat(any>=7?3:any>=3?2:any?1:0))));}strip.append(pg);});
   requestAnimationFrame(()=>{strip.scrollLeft=strip.clientWidth;strip._ready=true;});
   let t;strip.addEventListener('scroll',()=>{if(!strip._ready||strip._drag)return;clearTimeout(t);t=setTimeout(()=>{if(!strip.isConnected)return;const w=strip.clientWidth;if(!w)return;const p=Math.round(strip.scrollLeft/w);if((p!==0&&p!==2)||Math.abs(strip.scrollLeft-p*w)>2)return;goDay(addK(App.state.sel,p===0?-7:7));},110);},{passive:true});
   // mouse: drag the strip the way a finger does
@@ -233,10 +234,9 @@ function habTile(e,dk,loose){
   return card;
 }
 function alldayRow(dk){
-  const{allDay}=dayItems(dk);const show=allDay.filter(e=>!(e.rec&&e.rec.tripId));
-  const r=el('div',{class:'allday-row top'},show.map(e=>{const b=el('button',{class:'adchip',style:`--c:${e.color}`,html:(e.icon?glyph(e.icon,16,2):'')+`<span>${esc(e.title)}</span>`,onclick:()=>openItem(e,dk)});onPress(b,(x,y)=>itemMenu(e,dk,x,y));return b;}),
-    el('button',{class:'adadd'+(show.length?' ic-only':''),'aria-label':'Add an all-day item',onclick:()=>alldaySheet(null,{start:dk})},el('span',{style:'display:grid',html:ic('plus',14,2.4)}),show.length?null:'All-day'));
-  return r;
+  const{allDay}=dayItems(dk);const show=allDay.filter(e=>!(e.rec&&e.rec.tripId));if(!show.length)return null;
+  const b=el('button',{class:'adline',onclick:()=>show.length===1?openItem(show[0],dk):menuAt(show.map(e=>({label:e.title,icon:'cal',onclick:()=>openItem(e,dk)})))},el('span',{class:'adk'},'All day'),...show.map(e=>el('span',{},e.title)));
+  if(show.length===1)onPress(b,(x,y)=>itemMenu(show[0],dk,x,y));return b;
 }
 function dayCard(dk){
   const S=App.state,tk=todayK(),isToday=dk===tk,isPast=dk<tk,first=!S._painted,fu=first?' fade-up':'';
@@ -509,7 +509,7 @@ function priorityRings(dk,es,W){const S=App.state,just=S._prJust;S._prJust=null;
       {label:'Replace',icon:'rep',onclick:()=>{t3Set(dk,l.filter(q=>q.id!==e.id));setTimeout(()=>t3PickSheet(dk,i),200);}},
       {label:'Open',icon:'edit',onclick:()=>e.kind==='entry'?(e.go&&e.go()):openItem(e,dk)},
       {label:'Remove from priorities',icon:'x',danger:true,onclick:()=>{t3Set(dk,l.filter(q=>q.id!==e.id));}}].filter(Boolean));});
-    wrap.append(el('div',{class:'pslot'},b,e||es.length?el('span',{class:'plab pl-'+st},e?e.title:''):null));}
+    wrap.append(el('div',{class:'pslot'},b,el('button',{class:'plab pl-'+st,onclick:()=>{if(!e){t3PickSheet(dk,i);return;}e.kind==='entry'?(e.go&&e.go()):openItem(e,dk);}},e?e.title:'Choose a priority')));}
   return wrap;}
 function upNext(e,dk,i){const S=App.state,fresh=S._upNext!==e.id;S._upNext=e.id;
   return el('div',{class:'upnext'+(fresh&&S._painted?' in':''),style:`--cx:${[16.5,50,83.5][i]||16.5}%`},
@@ -526,7 +526,7 @@ function wireRingDrop(card,dk){card.addEventListener('pointerdown',ev=>{const g=
   let hot=null,ly=ev.clientY,lx=ev.clientX,raf=0,gx=ev.clientX,gy=ev.clientY;
   const place=()=>{gh.style.transform=`translate3d(${gx}px,${gy}px,0) translate(-50%,-150%)`;};
   const rings=()=>[...card.querySelectorAll('.pring')].map(n=>{const b=n.getBoundingClientRect();return{n,x:b.left+b.width/2,y:b.top+b.height/2,r:b.width/2};});
-  const pick=()=>{let best=null,bd=1e9;rings().forEach(q=>{const d=Math.hypot(q.x-lx,q.y-(ly-30));if(d<q.r+46&&d<bd){bd=d;best=q.n;}});return best;};
+  const pick=()=>{let best=null;card.querySelectorAll('.pslot').forEach(sl=>{const b=sl.getBoundingClientRect(),y=ly-30;if(y>=b.top-8&&y<=b.bottom+8)best=sl.querySelector('.pring');});return best;};
   const label=n=>{if(!n)return '';const i=+n.dataset.ring,l=t3Get(dk);return l[i]&&l[i].id!==r.id?`Replace #${i+1}`:`Make #${i+1}`;};
   const loop=()=>{if(!gh.isConnected)return;
     const top=hdr+70,bot=innerHeight-140;if(ly<top)scrollBy(0,-Math.min(16,(top-ly)/5+3));else if(ly>bot)scrollBy(0,Math.min(16,(ly-bot)/5+3));

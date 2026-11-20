@@ -32,7 +32,8 @@ function viewCalendar(root){
     modeSeg(),mode==='month'?el('div',{class:'wd-row'},wdLabels().map(l=>el('span',{},l))):null));
   const body=el('div',{class:'page '+(C.anim||''),id:'cal-body'});C.anim=null;
   const fk=mode==='quarter'?`q-${y}-${q}`:mode==='month'?`m-${monthKey(a)}`:`w-${weekKey(a)}`;
-  body.append(focusChip(fk,mode==='quarter'?`Q${q+1} FOCUS`:mode==='month'?`${MONL[a.getMonth()].toUpperCase()} FOCUS`:'WEEK FOCUS',mode,calRange(C)));
+  /* focus is set in Studio; Calendar only shows it, as one quiet line, once it exists */
+  {const fr=focusRec(fk),ar=fr?fr.areas||[]:[],rg=calRange(C);if(ar.length)body.append(el('button',{class:'focus-quiet',onclick:()=>{App.state.studio=Object.assign(App.state.studio||{},{mode:mode==='quarter'?'q':mode==='month'?'m':'w',anchor:rg[0]});App.go('studio');}},el('span',{class:'k'},mode==='quarter'?`Q${q+1} focus`:mode==='month'?`${MONL[a.getMonth()]} focus`:'Week focus'),el('span',{},ar.join(', '))));}
   if(mode!=='week'){const tc=tripCountdown(calRange(C));if(tc)body.append(tc);}
   if(mode==='quarter')quarterBody(body,y,qM,C);else if(mode==='month')monthBody(body,a,C);else weekBody(body,wS,C);
   dragSwipe(body,()=>calStep(1),()=>calStep(-1));

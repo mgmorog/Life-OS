@@ -305,11 +305,13 @@ function openSheet({title,full=false,left,right,build,onClose,tryClose,raw=false
   let head=null;
   if(title!==undefined&&!raw){
     const lb=el('button',{class:'l',onclick:()=>left&&left.onclick?left.onclick():requestClose()},left?left.label:'Close');
-    const rb=right?el('button',{class:'r',disabled:right.disabled,onclick:right.onclick},right.label):el('span');
-    head=el('div',{class:'shead'},lb,el('h2',{},title),rb);inst.rightBtn=rb;inst.titleEl=head.children[1];
-    sheet.append(head);
+    /* a form's Save lives at the bottom, within thumb reach; Cancel stays top left */
+    const formy=right&&/^(Save|Add|Create|Done|Update|Log|Set|Keep|Plan it|Book it|Start)$/i.test(String(right.label||'').trim());
+    const rb=right?el('button',{class:formy?'btn primary block sfoot-btn':'r',disabled:right.disabled,onclick:right.onclick},right.label):el('span');
+    head=el('div',{class:'shead'},lb,el('h2',{},title),formy?el('span',{class:'r'}):rb);inst.rightBtn=rb;inst.titleEl=head.children[1];
+    sheet.append(head);inst._foot=formy?el('div',{class:'sfoot'},rb):null;
   }
-  sheet.append(body);
+  sheet.append(body);if(inst._foot)sheet.append(inst._foot);
   $('#layers').append(scrim,sheet);
   const pop=anchor&&innerWidth>=900;
   inst.place=()=>{if(!pop)return;const w=380,h=sheet.offsetHeight;sheet.style.left=Math.max(12,Math.min(anchor.left,innerWidth-w-12))+'px';sheet.style.top=Math.max(12,Math.min(anchor.bottom+6,innerHeight-h-12))+'px';};

@@ -32,7 +32,7 @@ function top3Card(dk){const s=get.settings();if(s.top3On===false)return null;con
 /* weekly review line */
 function t3WeekLine(a,b){const t3=get.settings().top3||{};let days=0,hit=0;for(let d=a;d<=b;d=addK(d,1)){if((t3[d]||[]).length){days++;if(t3AllDone(d))hit++;}}return days?`Top 3: all done on ${hit} of ${days} day${days>1?'s':''} you set them`:null;}
 /* ---------- Evening: plan tomorrow ---------- */
-function planEveCard(dk){const s=get.settings();if(s.planEve===false||dk!==todayK()||nowMin()<(s.planAt??1140)||(s.planDone||{})[dk])return null;
+function planEveCard(dk){const s=get.settings();if(s.planEve===false||dk!==todayK()||nowMin()<(s.planAt??1080)||(s.planDone||{})[dk])return null;
   const left=planLeftovers(dk).length;
   return el('section',{class:'card res pe'},el('div',{class:'bl'},el('span',{class:'lbl',style:'color:var(--accent-text)'},'Plan tomorrow'),),el('p',{class:'serif',style:'font-size:20px;line-height:1.25;margin:4px 0 10px'},left?`${left} left from today. Pick tomorrow’s top 3.`:'Today’s clear. Pick tomorrow’s top 3.'),
     el('div',{style:'display:flex;gap:8px'},btnP('Plan it',()=>planTomorrowSheet(dk),{style:'flex:1'}),btnL('Not tonight',()=>{setSettings({planDone:planMark(dk,'skip')});})));}

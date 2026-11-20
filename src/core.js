@@ -306,7 +306,7 @@ function openSheet({title,full=false,left,right,build,onClose,tryClose,raw=false
   if(title!==undefined&&!raw){
     const lb=el('button',{class:'l',onclick:()=>left&&left.onclick?left.onclick():requestClose()},left?left.label:'Close');
     /* a form's Save lives at the bottom, within thumb reach; Cancel stays top left */
-    const formy=right&&/^(Save|Add|Create|Done|Update|Log|Set|Keep|Plan it|Book it|Start)$/i.test(String(right.label||'').trim());
+    const formy=right&&(/^(Save|Add|Create|Done|Update|Log|Set|Keep|Plan it|Book it|Start)$/i.test(String(right.label||'').trim())||right.foot);
     const rb=right?el('button',{class:formy?'btn primary block sfoot-btn':'r',disabled:right.disabled,onclick:right.onclick},right.label):el('span');
     head=el('div',{class:'shead'},lb,el('h2',{},title),formy?el('span',{class:'r'}):rb);inst.rightBtn=rb;inst.titleEl=head.children[1];
     sheet.append(head);inst._foot=formy?el('div',{class:'sfoot'},rb):null;

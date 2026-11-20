@@ -187,7 +187,7 @@ function formSheet({title,addLabel,D,build,commit,canAdd,word,isEdit,onDelete,de
   const baseline=JSON.stringify(D);let inst;
   const dirtyNow=()=>JSON.stringify(D)!==baseline;
   const update=()=>{if(inst&&inst.rightBtn){const off=!canAdd();inst.rightBtn.classList.toggle('off',off);inst.rightBtn.setAttribute('aria-disabled',String(off));}};
-  inst=openSheet({title,full:true,left:{label:'Cancel'},right:{label:addLabel,onclick:()=>{if(!canAdd()){const t=inst.body.querySelector('.big');if(t)t.focus();return;}if(inst.body.querySelector('.photo.loading')){toast('Your photo is still uploading.');return;}delete D.lookTouched;if(commit()!==false)inst.close();}},
+  inst=openSheet({title,full:true,left:{label:'Cancel'},right:{label:addLabel,foot:true,onclick:()=>{if(!canAdd()){const t=inst.body.querySelector('.big');if(t)t.focus();return;}if(inst.body.querySelector('.photo.loading')){toast('Your photo is still uploading.');return;}delete D.lookTouched;if(commit()!==false)inst.close();}},
     tryClose:()=>{if(dirtyNow()&&dirtyClose){dirtyClose(()=>inst.close());return false;}if(dirtyNow()){askConfirm({title:isEdit?'Discard your changes?':`Discard this ${word}?`,body:isEdit?`The ${word} will stay as it was.`:"What you've entered won't be saved.",onYes:()=>inst.close()});return false;}return true;},
     build:(body,i)=>{inst=i;build(body,update,i);update();
       /* tapping anywhere else in the form puts the keyboard away */

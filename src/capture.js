@@ -44,7 +44,8 @@ function parseRepeat(text){
 }
 /* Quick capture's reading of a line: dates and times (parseWhen), a time range or length, ! for important, #area,
    and any words the person chose to keep as plain text. hits are what it picked up, for the chips. */
-function capRead(text,keep=[],base=new Date()){let s=' '+(text||'')+' ';const hits=[];let hi=false,area=null,dur=null,range=null;
+function capRead(text,keep=[],base=new Date(),guess=false){let s=' '+(text||'')+' ';const hits=[];let hi=false,area=null,dur=null,range=null,remind=false;
+  s=s.replace(/^\s*(remind me to|don[’']?t forget to|remember to)\s+/i,m=>{remind=true;hits.push({k:'rem',s:m.trim(),label:'Reminder'});return ' ';});
   (keep||[]).forEach((w,i)=>{if(w&&s.includes(w))s=s.replace(w,`\u0002${i}\u0003`);});
   s=s.replace(/(^|\s)!{1,3}(?=\s|$)/,m=>{hi=true;hits.push({k:'hi',s:m.trim(),label:'Important'});return ' ';});
   s=s.replace(/(^|\s)#([A-Za-z][\w-]*)/,(m,sp,tag)=>{const t=tag.toLowerCase().replace(/[-_]/g,''),a=(get.settings().areas||AREAS).find(x=>x.toLowerCase().replace(/\s/g,'').startsWith(t));if(a){area=a;hits.push({k:'area',s:m.trim(),label:a});return ' ';}return m;});
@@ -54,18 +55,45 @@ function capRead(text,keep=[],base=new Date()){let s=' '+(text||'')+' ';const hi
   const w=parseWhen(s.replace(/\s+/g,' ').trim(),base);
   w.hits.forEach(h=>hits.push(Object.assign(h,{label:h.k==='time'?fmtT(w.time):w.deadline?`Due ${relDay(w.deadline)}`:relDay(w.date)})));
   if(range){w.time=range.start;dur=dur||range.dur;if(!w.date&&!w.deadline){const cur=base.getHours()*60+base.getMinutes();const d0=new Date(base.getFullYear(),base.getMonth(),base.getDate());w.date=k(range.start>cur?d0:addD(d0,1));}}
+  if(guess&&!area){const g=capArea(String(w.title||'').replace(/\u0002(\d+)\u0003/g,(z,i)=>keep[+i]));if(g){area=g;hits.push({k:'area',s:null,guess:true,label:g});}}
   const back=x=>String(x||'').replace(/\u0002(\d+)\u0003/g,(z,i)=>keep[+i]).replace(/\s+/g,' ').trim();
   const bits=[];if(w.date)bits.push(relDay(w.date));if(w.time!=null)bits.push(fmtT(w.time));if(w.deadline)bits.push(`Due ${relDay(w.deadline)}`);
-  return{title:back(w.title),date:w.date,time:w.time,deadline:w.deadline,dur,hi,area,hits,label:bits.join(', '),raw:back(s)};}
+  return{title:back(w.title).replace(/^./,c=>c.toUpperCase()),date:w.date,time:w.time,deadline:w.deadline,dur,hi,area,remind,hits,label:bits.join(', '),raw:back(s)};}
 /* "milk to groceries", "batteries on the Packing list" */
 function capList(t){const m=(t||'').trim().match(/^(.+?)\s+(?:to|on)\s+(?:the\s+|my\s+)?(.+?)(?:\s+list)?$/i);if(!m)return null;const n=m[2].toLowerCase();const l=get.all('list').find(x=>x.title.toLowerCase()===n||x.title.toLowerCase()===n+' list');return l?{list:l,item:m[1].trim()}:null;}
 const CAP_TASK=/^(call|email|e-mail|text|message|pay|buy|book|order|schedule|renew|cancel|send|reply|return|pick up|drop off|submit|sign|mail)\b/i;
+/* which life area a line belongs to: plain words first, then where similar things went before */
+const AREA_KW=[[/\b(dentist|doctor|dr\.?|gym|workout|run|pharmacy|meds|prescription|therapy|therapist|physio|yoga|vitamins?|checkup|eye exam)\b/i,'Health'],[/\b(invoice|bill|bills|rent|mortgage|bank|taxes?|budget|insurance|401k|ira|paycheck|venmo|refund|credit card)\b/i,'Finances'],[/\b(workday|manager|team|boss|resume|linkedin|interview|grant|audit|1:1|one on one|performance review|report)\b/i,'Career'],[/\b(laundry|dishes|vacuum|plumber|groceries|trash|lawn|furnace|filter|repair|clean)\b/i,'Home'],[/\b(mom|dad|grandma|grandpa|sister|brother|friend|birthday|anniversary|date night|wedding)\b/i,'Relationships'],[/\b(flight|hotel|trip|passport|airbnb|packing)\b/i,'Travel'],[/\b(course|class|lesson|study|book club|spanish|learn)\b/i,'Learning']];
+const STOPW=new Set('the a an and or to for of on in at with my your call email text buy pay book get make send'.split(' '));
+function capArea(t){const on=new Set(get.settings().areas||AREAS);const hit=AREA_KW.find(([r,a])=>on.has(a)&&r.test(t));if(hit)return hit[1];
+  const words=(t||'').toLowerCase().split(/\W+/).filter(w=>w.length>3&&!STOPW.has(w));if(!words.length)return null;const n={};
+  get.all('task',{archived:true}).slice(-400).forEach(x=>{const a=x.area||areaOfTask(x);if(!a||!on.has(a))return;const tw=(x.title||'').toLowerCase();if(words.some(w=>new RegExp(`\\b${w}\\b`).test(tw)))n[a]=(n[a]||0)+1;});
+  const best=Object.entries(n).sort((a,b)=>b[1]-a[1])[0];return best&&best[1]>=2?best[0]:null;}
+/* chores and bills that repeat: "pay rent every month on the 1st", "water plants every Sunday" */
+const CHORE=/^(pay|water|clean|take out|put out|renew|change|replace|vacuum|mow|wash|feed|empty|refill|check|backup|back up|file|submit|send|order|charge|scrub|dust|do laundry|laundry|trash|recycling)\b/i;
+const HABITW=/\b(run|running|read|reading|meditat\w*|stretch\w*|journal\w*|walk|workout|exercise|practice|study|yoga|floss|drink|gym|lift|pray|sleep)\b/i;
+function capRepeat(t){const s=(t||'').toLowerCase();let rp=null,date=null,m,lab='',strip=[];
+  if((m=s.match(/\b(?:every|each)\s+month\s+on\s+the\s+(\d{1,2})(?:st|nd|rd|th)?\b|\bmonthly\s+on\s+the\s+(\d{1,2})(?:st|nd|rd|th)?\b|\b(?:every|each|on\s+the)\s+(\d{1,2})(?:st|nd|rd|th)\s*(?:of\s+(?:the|every|each)\s+month)?\b/))){const d=+(m[1]||m[2]||m[3]);if(d>=1&&d<=31){const t0=today();let x=new Date(t0.getFullYear(),t0.getMonth(),d);if(x<t0)x=new Date(t0.getFullYear(),t0.getMonth()+1,d);rp={type:'custom',unit:'month',n:1,end:null};date=k(x);lab=`Monthly on the ${d}${[,'st','nd','rd'][d%10>3||Math.floor(d%100/10)===1?0:d%10]||'th'}`;strip.push(m[0]);}}
+  else if((m=s.match(/\b(?:every|each)\s+month\b|\bmonthly\b/))){rp={type:'custom',unit:'month',n:1,end:null};lab='Monthly';strip.push(m[0]);}
+  else if((m=s.match(/\b(?:every|each)\s+year\b|\byearly\b|\bannually\b/))){rp={type:'custom',unit:'year',n:1,end:null};lab='Yearly';strip.push(m[0]);}
+  else if((m=s.match(/\bevery\s+(two|2|other)\s+weeks?\b|\bbiweekly\b/))){rp={type:'custom',unit:'week',n:2,end:null};lab='Every 2 weeks';strip.push(m[0]);}
+  else{const r=parseRepeat(t);if(r&&r.days){if(r.days.length===7){rp={type:'custom',unit:'day',n:1,end:null};lab='Every day';}else{rp={type:'custom',unit:'week',n:1,days:r.days,end:null};lab=r.days.length===1?`Every ${DOW[(r.days[0]+1)%7]}`:r.days.length===5?'Weekdays':'Weekends';const t0=today();for(let i=0;i<7;i++){const x=addD(t0,i);if(r.days.includes(monIdx(x))){date=k(x);break;}}}return{repeat:rp,date:date||todayK(),title:r.title,label:lab};}
+    if(r&&r.target===1){rp={type:'custom',unit:'week',n:1,end:null};lab='Weekly';return{repeat:rp,date:todayK(),title:r.title,label:lab};}}
+  if(!rp)return null;let title=t;strip.forEach(x=>{title=title.replace(new RegExp(x.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'i'),' ');});return{repeat:rp,date:date||todayK(),title:title.replace(/\s+/g,' ').trim(),label:lab};}
+/* the same thing already waiting somewhere */
+function capDupe(t){const n=(t||'').trim().toLowerCase();if(n.length<3)return null;
+  const tk=get.all('task').find(x=>isOpenTask(x)&&(x.title||'').trim().toLowerCase()===n);if(tk)return{label:`Already planned: ${tk.title}${tk.date?` · ${relDay(tk.date)}`:''}`,open:()=>taskSheet(tk)};
+  for(const l of get.all('list')){const it=(l.items||[]).find(i=>!i.d&&(i.t||'').trim().toLowerCase()===n);if(it)return{label:`Already on ${l.title}`,open:()=>App.go('list',{id:l.id})};}
+  const idea=get.all('idea').find(x=>(x.title||'').trim().toLowerCase()===n);if(idea)return{label:'Already in your Inbox',open:()=>captureSheet(idea)};return null;}
+const CAP_EX=['Try “Milk to groceries”','Try “Call Sam Fri 3pm #work”','Try “Gym 6–7pm”','Try “Pay rent every month on the 1st”','Try “Remind me to email Pat tomorrow”','Try “Run 3 times a week”','Try “Book flights by Dec 1 !”'];
 /* A best guess at what an idea is. Returns null when there's no good reason to guess. */
 const eventStart=t=>/\bdinner|drinks\b/i.test(t)?19*60:/\b(lunch|brunch)\b/i.test(t)?12*60:null;
 function suggestKind(title,notes,base,keep=[]){
   const t=(title||'').trim(),all=t+' '+(notes||'');if(!t&&!(notes||'').trim())return null;
   if(URL_RE.test(all))return{kind:'resource',why:'Link'};
-  const rp=parseRepeat(t);if(rp)return{kind:'habit',why:rp.days?(rp.days.length===7?'Every day':rp.days.length===1?`Every ${DOW[(rp.days[0]+1)%7]}`:rp.days.length===5?'Weekdays':'Weekends'):rp.target===1?'Once a week':`${rp.target} times a week`};
+  if(/^\s*(remind me to|don[’']?t forget to|remember to)\b/i.test(t)){const w0=capRead(t,keep,base);return{kind:'task',why:w0.label};}
+  const crp=CHORE.test(t)&&!HABITW.test(t)?capRepeat(t):null;if(crp)return{kind:'task',rep:crp,why:crp.label};
+  const rp=parseRepeat(t);if(rp)return{kind:'habit',rp,why:rp.days?(rp.days.length===7?'Every day':rp.days.length===1?`Every ${DOW[(rp.days[0]+1)%7]}`:rp.days.length===5?'Weekdays':'Weekends'):rp.target===1?'Once a week':`${rp.target} times a week`};
   const lm=capList(t);if(lm)return{kind:'list',why:lm.item,list:lm.list,item:lm.item};
   const w=capRead(t,keep,base);
   if(/\b(birthday|anniversary|holiday|vacation|day off|time off|graduation)\b/i.test(t)&&(w.date||w.deadline)&&w.time==null)return{kind:'allday',why:w.label};
@@ -84,7 +112,7 @@ function markTurn(id){try{const u=turnUse();u.n=u.n||{};u.n[id]=(u.n[id]||0)+1;u
 function topTurns(){const n=(turnUse().n)||{},def=['task','list','habit','goal'];return TURN.map(x=>x[0]).sort((a,b)=>((n[b]||0)-(n[a]||0))||((def.indexOf(a)+1||9)-(def.indexOf(b)+1||9))).slice(0,4);}
 const kindName=id=>(TURN.find(x=>x[0]===id)||[])[2]||'';
 /* the capture hint reads as an action: "Make it a task" */
-const addIt=g=>g.kind==='list'?`Add to ${g.list.title}`:g.kind==='task'?'Add task':g.kind==='block'?'Add time block':g.kind==='allday'?'Add all-day item':makeIt(g.kind);
+const addIt=g=>g.kind==='list'?`Add to ${g.list.title}`:g.kind==='task'?(g.rep?'Add repeating task':'Add task'):g.kind==='habit'?'Add habit':g.kind==='block'?'Add time block':g.kind==='allday'?'Add all-day item':makeIt(g.kind);
 const makeIt=k=>{const n=k==='allday'?'all-day item':kindName(k).toLowerCase();return `Make it ${/^[aeiou]/.test(n)?'an':'a'} ${n}`;};
 const DRAFT='lifeos-capture-draft';
 const readDraft=()=>{try{return JSON.parse(localStorage.getItem(DRAFT)||'null');}catch(e){return null;}};
@@ -102,53 +130,59 @@ function saveCapture(D,from){
 function captureSheet(rec,{from=null,photo=false}={}){
   const isEdit=!!rec;
   const D=isEdit?clone(rec):{title:'',notes:'',photos:[],source:from};D.photos=D.photos||[];D.keep=D.keep||[];
-  let inst,ph,T,notesBox,hint,chips,saved=0,multi=false,showNotes=isEdit,showPh=isEdit;
+  let inst,ph,T,notesBox,hint,chips,dupe,ex,sess,saved=[],multi=false,showNotes=isEdit&&!!(D.notes||'').trim(),showPh=isEdit&&!!D.photos.length;D.noArea=false;
+  const rd=()=>capRead(D.title,D.keep,base,!D.noArea);
   const busy=()=>!!(ph&&ph._busy&&ph._busy());
   const can=()=>!busy()&&!!(D.title.trim()||D.notes.trim()||D.photos.length);
   const base=isEdit&&rec.createdAt?new Date(rec.createdAt):new Date();
   const clean=()=>({title:D.title,notes:D.notes,photos:D.photos,source:D.source});
-  const commit=()=>{if(isEdit){tidyIdea(D);delete D.keep;Object.assign(rec,D);put(rec);toast('Saved');}else{const x=clean();saveCapture(x,from);writeDraft(null);}};
+  const commit=()=>{if(isEdit){tidyIdea(D);delete D.keep;delete D.noArea;Object.assign(rec,D);put(rec);toast('Saved');}else{const x=clean();saveCapture(x,from);writeDraft(null);}};
   const lines=()=>[D.title,...D.notes.split('\n')].map(x=>x.replace(/^([-•*]|\d+[.)])\s+/,'').trim()).filter(Boolean);
-  const done=()=>{writeDraft(null);inst.close();};
+  const done=()=>{if(isEdit)remove(rec.id,{silent:true});else writeDraft(null);inst.close();};
   /* one tap: make the thing right away; the toast offers Undo and Edit */
-  const quick=g=>{if(busy()){toast('Your photo is still uploading.');return;}const r=capRead(D.title,D.keep,base),title=r.title||D.title.trim(),notes=D.notes,photos=D.photos;let made=null,edit=null,msg='';
+  const quick=g=>{if(busy()){toast('Your photo is still uploading.');return;}const r=rd(),title=r.title||D.title.trim(),notes=D.notes,photos=D.photos;let made=null,edit=null,msg='';
     if(g.kind==='list'){const l=g.list;l.items=l.items||[];const it={id:uid('i'),t:g.item,d:false,photos};l.items.push(it);put(l);markTurn('list');done();toast(`Added to ${l.title}`,()=>{l.items=l.items.filter(x=>x!==it);put(l);},'Undo',{open:dest('list',{id:l.id}),force:true});return;}
-    if(g.kind==='task'){made=newTask(title,{notes,photos,date:r.date,time:r.time??null,deadline:r.deadline||null,reminder:r.time!=null?0:null,remUnit:'minute',priority:r.hi?'high':'normal',area:r.area||null,color:defCol()});edit=()=>taskSheet(made);msg=r.date?`Added to ${relDay(r.date)}`:'Task added';}
+    if(g.kind==='task'&&g.rep){const t2=capRead(g.rep.title,[],base).title||g.rep.title;made=newTask(t2,{notes,photos,date:g.rep.date,repeat:g.rep.repeat,area:r.area||null,color:defCol()});edit=()=>taskSheet(made);msg=`Repeating task added · ${g.rep.label}`;}
+    else if(g.kind==='task'){let tm=r.time??null,dt=r.date;if(r.remind&&tm==null&&(dt||r.deadline)){tm=540;dt=dt||r.deadline;}made=newTask(title,{notes,photos,date:dt,time:tm,deadline:r.deadline&&!(r.remind&&!r.date)?r.deadline:null,reminder:tm!=null?0:null,remUnit:'minute',priority:r.hi?'high':'normal',area:r.area||null,color:defCol()});edit=()=>taskSheet(made);msg=dt?`Added to ${relDay(dt)}${r.remind&&tm!=null?` · reminder at ${fmtT(tm)}`:''}`:'Task added';}
+    else if(g.kind==='habit'&&g.rp){const rp=g.rp,ttl=(rp.title||title).replace(/^./,c=>c.toUpperCase()),kw=(typeof HAB_KW!=='undefined'?HAB_KW:[]).find(([re])=>re.test(ttl));made=create('habit',{title:ttl,notes,target:rp.days?rp.days.length:(rp.target||3),dur:30,days:rp.days||[],howOften:rp.days?'days':'times',tod:rp.tod||'anytime',setTime:null,startDate:todayK(),track:'check',goalN:8,unit:'',area:r.area||null,color:defCol(),icon:kw?kw[1]:null,logs:{},sessions:{},part:null,reminder:null,photos});edit=()=>App.go('habit',{id:made.id});msg=`Habit added · ${g.why}`;}
     else if(g.kind==='block'){const st=r.time!=null?r.time:eventStart(D.title);if(st==null){go('block');return;}made=create('block',{title,notes,date:r.date||todayK(),start:st,dur:r.dur||60,repeat:{type:'never',end:null},reminder:null,remUnit:'minute',part:null,area:r.area||null,color:defCol(),icon:null,photos});edit=()=>blockSheet(made);msg=`Time block added for ${relDay(made.date)}`;}
     else if(g.kind==='allday'&&(r.date||r.deadline)){made=create('allday',{title,notes,start:r.date||r.deadline,end:null,repeat:{type:'never',end:null},reminder:null,remUnit:'minute',area:r.area||null,color:defCol(),icon:null,photos});edit=()=>alldaySheet(made);msg=`Added to ${relDay(made.start)}`;}
     else{go(g.kind);return;}
     markTurn(g.kind);done();App.refresh();toast(msg,()=>{remove(made.id,{hard:true});App.refresh();},'Undo',{edit,force:true});};
   const multiMake=asTasks=>{const ls=lines();const made=ls.map(x=>asTasks?newTask(x.slice(0,120),{date:todayK(),color:defCol()}):create('idea',{title:x.slice(0,120),notes:'',photos:[],source:from||null}));done();App.refresh();toast(asTasks?`${made.length} tasks added for today`:`${made.length} ideas saved`,()=>{made.forEach(r=>remove(r.id,{hard:true}));App.refresh();},'Undo',{force:true});};
-  const drawChips=()=>{if(!chips)return;chips.innerHTML='';const r=D.title.trim()?capRead(D.title,D.keep,base):null;const hs=r?r.hits:[];chips.hidden=!hs.length||isEdit;
-    hs.forEach(h=>chips.append(el('span',{class:'capchip'},h.label,el('button',{'aria-label':`Keep “${h.s}” as words`,html:ic('x',12,2.4),onclick:()=>{D.keep.push(h.s);touched();T.input.focus({preventScroll:true});}}))));};
-  const refreshHint=()=>{drawChips();hint.innerHTML='';
+  const drawChips=()=>{if(!chips)return;chips.innerHTML='';const r=D.title.trim()?rd():null;const hs=r?r.hits:[];chips.hidden=!hs.length;
+    hs.forEach(h=>chips.append(el('span',{class:'capchip'},h.label,el('button',{'aria-label':`Keep “${h.s}” as words`,html:ic('x',12,2.4),onclick:()=>{if(h.guess)D.noArea=true;else D.keep.push(h.s);touched();T.input.focus({preventScroll:true});}}))));};
+  const refreshHint=()=>{drawChips();hint.innerHTML='';if(ex)ex.hidden=!!(D.title.trim()||D.notes.trim());
+    if(dupe){const dd=D.title.trim()&&!multi?capDupe(rd().title||D.title):null;dupe.innerHTML='';dupe.hidden=!dd||(isEdit&&dd.label==='Already in your Inbox');if(dd)dupe.append(el('span',{class:'grow'},dd.label),el('button',{class:'linkbtn small',onclick:dd.open},'Open'));}
     if(!isEdit&&multi&&lines().length>=2){const n=lines().length;hint.hidden=false;hint.append(el('div',{class:'caphint2'},el('button',{class:'caphint-b',onclick:()=>multiMake(false)},el('span',{class:'k',html:ic('inbox',16,2)}),el('span',{class:'grow'},`Save as ${n} ideas`)),el('button',{class:'linkbtn small',onclick:()=>multiMake(true)},`Add ${n} tasks for today`)));return;}
     const q=!isEdit&&!D.notes.trim()&&!(D.photos||[]).length?quickLog(D.title):null;if(q){hint.hidden=false;hint.append(el('button',{class:'caphint-b ql',onclick:()=>{q.run();done();}},el('span',{class:'k',html:ic('check',16,2.2)}),el('span',{class:'grow'},q.label),el('span',{class:'qlgo'},'Log it')));return;}
     const g=suggestKind(D.title,D.notes,base,D.keep);hint.hidden=!g;if(!g)return;
-    const one=!isEdit&&['task','block','allday','list'].includes(g.kind);const why=g.kind==='list'?g.item:(g.why||'').replace(/^.*?(\d+ times a week|Every .*|Weekdays|Weekends|Once a week)$/,'$1');
-    hint.append(el('button',{class:'caphint-b',onclick:()=>one?quick(g):go(g.kind)},el('span',{class:'k',html:ic((TURN.find(x=>x[0]===g.kind)||[])[1],16,2)}),el('span',{class:'grow'},one?addIt(g):makeIt(g.kind),why&&!(one&&g.kind!=='list')?el('span',{class:'cwhy'},` · ${why}`):null),el('span',{class:'chev',html:ic(one?'check':'chevr',14,2.4)})));};
+    const one=['task','block','allday','list'].includes(g.kind)||(g.kind==='habit'&&!!g.rp);const why=g.kind==='list'?g.item:g.kind==='habit'||g.rep?g.why:(g.why||'').replace(/^.*?(\d+ times a week|Every .*|Weekdays|Weekends|Once a week)$/,'$1');
+    hint.append(el('button',{class:'caphint-b',onclick:()=>one?quick(g):go(g.kind)},el('span',{class:'k',html:ic((TURN.find(x=>x[0]===g.kind)||[])[1],16,2)}),el('span',{class:'grow'},one?addIt(g):makeIt(g.kind),why&&!(one&&!['list','habit'].includes(g.kind)&&!g.rep)?el('span',{class:'cwhy'},` · ${why}`):null),el('span',{class:'chev',html:ic(one?'check':'chevr',14,2.4)})));};
   const go=kind=>{if(busy()){toast('Your photo is still uploading.');return;}markTurn(kind);const r=capRead(D.title,D.keep,base);const payload={title:D.title.trim(),notes:D.notes,photos:D.photos,createdAt:isEdit?rec.createdAt:Date.now(),keep:D.keep};routeInto(kind,payload,()=>{if(isEdit)remove(rec.id);else writeDraft(null);inst.close();});};
+  const drawSess=()=>{if(!sess)return;sess.innerHTML='';sess.hidden=!saved.length;if(saved.length)sess.append(el('span',{},'Saved: '),...saved.slice().reverse().slice(0,6).flatMap((r,i)=>[i?', ':'',el('button',{class:'capsessb',onclick:()=>{const x=get.id(r.id);if(!x){toast('Already sorted');return;}x.kind==='task'?taskSheet(x):captureSheet(x);}},r.title)]));};
   const touched=()=>{writeDraft(isEdit?null:D);inst&&inst.rightBtn&&update_();if(notesBox)notesBox.hidden=!(showNotes||D.notes.trim());if(ph)ph.hidden=!(showPh||D.photos.length);refreshHint();};
   let update_=()=>{};
-  const saveNext=()=>{if(!can()){T.input.focus();return;}saveCapture(clean(),from);writeDraft(null);saved++;D.title='';D.notes='';D.photos=[];D.keep=[];multi=false;showNotes=false;showPh=false;T.input.value='';T.input._size();const nt=$('#f-cap-notes');if(nt){nt.value='';nt.style.height='';}ph._redraw();touched();inst.titleEl.textContent=`Quick capture · ${saved} saved`;T.input.focus({preventScroll:true});};
-  inst=formSheet({title:isEdit?'Edit idea':'Quick capture',addLabel:'Save',D,word:'idea',isEdit,canAdd:can,commit,
+  const saveNext=()=>{if(!can()){T.input.focus();return;}const sr=saveCapture(clean(),from);writeDraft(null);if(sr&&sr.id)saved.push(sr);drawSess();D.title='';D.notes='';D.photos=[];D.keep=[];multi=false;showNotes=false;showPh=false;T.input.value='';T.input._size();const nt=$('#f-cap-notes');if(nt){nt.value='';nt.style.height='';}ph._redraw();touched();T.input.focus({preventScroll:true});};
+  inst=formSheet({title:isEdit?'Idea':'Quick capture',addLabel:isEdit?'Save':get.settings().captureTo==='today'?'Add to Today':'Save to Inbox',D,word:'idea',isEdit,canAdd:can,commit,
     /* closing without Save keeps the text as a draft for next time */
     dirtyClose:isEdit?null:close=>{writeDraft(D);close();},
     build:(body,update)=>{update_=update;
       const draft=!isEdit&&readDraft();if(draft){D.title=draft.title||'';D.notes=draft.notes||'';D.photos=draft.photos||[];if(D.notes)showNotes=true;}
-      T=fieldTitle('f-cap-title',isEdit?'Idea':'',"What's on your mind?",D.title,v=>{D.title=v;D.keep=D.keep.filter(w=>v.includes(w));if(!v.trim())multi=false;touched();},()=>{if(isEdit){if(can()){commit();inst.close();}return;}saveNext();});
-      if(!isEdit)T.wrap.classList.add('capone');
+      T=fieldTitle('f-cap-title','',"What's on your mind?",D.title,v=>{D.title=v;D.keep=D.keep.filter(w=>v.includes(w));if(!v.trim())multi=false;touched();},()=>{if(isEdit){if(can()){commit();inst.close();}return;}saveNext();});
+      T.wrap.classList.add('capone');
       notesBox=fieldNotes('f-cap-notes','Notes','Details or a link',D.notes,v=>{D.notes=v;touched();},{rows:1,min:26});
       ph=photosEditor(D,{compact:true,onChange:touched});hint=el('div',{class:'caphint',hidden:true});chips=el('div',{class:'capchips',hidden:true});
-      const extras=isEdit?null:el('div',{class:'capx'},
+      dupe=el('div',{class:'capdupe',hidden:true});sess=el('div',{class:'capsess',hidden:true});ex=isEdit?null:el('p',{class:'capex'},CAP_EX[Math.floor(Math.random()*CAP_EX.length)]);
+      const extras=el('div',{class:'capx'},
         el('button',{class:'capxb',onclick:()=>{showNotes=true;touched();const n=$('#f-cap-notes');if(n)n.focus();}},el('span',{style:'display:grid',html:ic('edit',15,2)}),'Note'),
         el('button',{class:'capxb',onclick:()=>{showPh=true;touched();const pi=ph.querySelector('input[type=file]');if(pi)pi.click();}},el('span',{style:'display:grid',html:ic('image',15,2)}),'Photo'));
       const top=topTurns(),row=el('div',{class:'capturn'},top.map(id=>{const t=TURN.find(x=>x[0]===id);return el('button',{class:'chip','data-k':id,onclick:()=>go(id)},el('span',{style:'display:grid',html:ic(t[1],15,2)}),t[2]);}),
         moreTurn(go,()=>({title:D.title.trim(),notes:D.notes,photos:D.photos}),()=>{if(isEdit)remove(rec.id);else writeDraft(null);inst.close();},top));
       const smart=smartButton(D,()=>ph&&ph._files?ph._files():[],made=>{if(isEdit)remove(rec.id,{silent:true});else writeDraft(null);inst.close();App.refresh();toast(`${made.length} added`,()=>{made.forEach(r=>remove(r.id,{silent:true,hard:true}));if(isEdit)put(rec);App.refresh();});});
-      body.append(T.wrap,chips,hint,extras,notesBox,ph,smart,el('div',{class:'sect'},isEdit?'Or turn into':'Or save as'),row);
+      body.append(T.wrap,ex,chips,dupe,hint,sess,extras,notesBox,ph,smart,el('div',{class:'sect'},isEdit?'Or turn into':'Or save as'),row);
       if(!isEdit)body.closest('.sheet').classList.add('pinned');
-      kbTurnRow(body.closest('.sheet'),go);
+      kbTurnRow(body.closest('.sheet'),go,top,()=>{const m=body.querySelector('.capmore');if(m)m.click();});
       if(draft&&(draft.title||draft.notes))body.prepend(el('div',{class:'note good',role:'status',html:ic('undo',16,2)+'<span>Picked up where you left off.</span>'}));
       if(isEdit){const u=(`${D.title} ${D.notes}`.match(URL_RE)||[])[0];if(u)body.insertBefore(el('a',{class:'btn line block',href:/^www\./i.test(u)?'https://'+u:u,target:'_blank',rel:'noopener'},'Open link'),row.previousSibling);
         body.append(el('button',{class:'delete',onclick:()=>{const c=clone(rec);remove(rec.id);inst.close();toast('Idea deleted',()=>put(c));}},'Delete idea'));}
@@ -164,8 +198,9 @@ function captureSheet(rec,{from=null,photo=false}={}){
 const TURN=[['task','task','Task','One action to finish'],['block','hour','Time block','Set aside the time'],['allday','cal','All-day','A date to remember'],['habit','habit','Habit','Something you repeat'],['goal','target','Goal','An outcome to work toward'],['project','project','Project','A bigger effort with steps'],['list','list','List item','Add to a list'],['resource','books','Resource','Keep it for reference']];
 /* A row of types that rides on top of the keyboard. It lives outside the sheet and is placed from the visible
    part of the screen (visualViewport), because on iPhone the keyboard's height can't be read reliably from the page. */
-function kbTurnRow(sheet,go){
-  const row=el('div',{class:'kbturn',role:'group','aria-label':'Save as'},TURN.map(([id,icon,n])=>el('button',{onpointerdown:e=>e.preventDefault(),onclick:()=>go(id)},el('span',{html:ic(icon,16,2)}),n)));
+function kbTurnRow(sheet,go,top=null,more=null){
+  const ts=top?top.map(id=>TURN.find(x=>x[0]===id)).filter(Boolean):TURN;
+  const row=el('div',{class:'kbturn',role:'group','aria-label':'Save as'},ts.map(([id,icon,n])=>el('button',{onpointerdown:e=>e.preventDefault(),onclick:()=>go(id)},el('span',{html:ic(icon,16,2)}),n)),more?el('button',{onpointerdown:e=>e.preventDefault(),onclick:more},el('span',{html:ic('plus',16,2)}),'More'):null);
   const v=window.visualViewport;if(!v||!isTouch())return;let maxH=Math.max(innerHeight,v.height),lastSig='',movedAt=0;
   row.style.zIndex=String((parseInt(sheet.style.zIndex)||41)+1);$('#layers').append(row);
   const place=()=>{if(!sheet.isConnected||!sheet.classList.contains('on')&&sheet._wasOn){stop();return;}if(sheet.classList.contains('on'))sheet._wasOn=true;

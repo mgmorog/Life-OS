@@ -12,6 +12,7 @@ function calStep(dir){
 function calNow(){const C=calState();C.anchor=todayK();C.sel=todayK();C.weekOpen=null;calCommit();}
 function calRange(C){const a=fromK(C.anchor);if(C.mode==='quarter'){const q=quarterOf(a),y=a.getFullYear();return[k(new Date(y,q*3,1)),k(new Date(y,q*3+3,0))];}if(C.mode==='month')return[k(new Date(a.getFullYear(),a.getMonth(),1)),k(new Date(a.getFullYear(),a.getMonth()+1,0))];const s=weekStartOf(a);return[k(s),k(addD(s,6))];}
 function viewCalendar(root){
+  if(App.state.loading&&!recs.size){root.append(tabSkeleton('calendar'));return;}
   const C=calState(),a=fromK(C.anchor),mode=C.mode,y=a.getFullYear(),q=quarterOf(a),qM=[q*3,q*3+1,q*3+2];
   const current=isCurrentFor(mode,a),wS=weekStartOf(a),wE=addD(wS,6);
   const rangeD=wS.getMonth()===wE.getMonth()?`${mdS(wS)} – ${wE.getDate()}`:`${mdS(wS)} – ${mdS(wE)}`;

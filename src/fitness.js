@@ -40,7 +40,7 @@ function exercisePicker(onPick){let q='',inst;
       if(f&&!names.some(n=>n.toLowerCase()===f)){const nm=q.trim().replace(/^./,c=>c.toUpperCase());list.append(el('div',{class:'list'},el('button',{class:'li',style:'min-height:56px;width:100%;text-align:left',onclick:()=>{inst.close();muscleSheet(nm,()=>onPick(nm));}},el('span',{class:'ib',html:ic('plus',18,2.2)}),el('span',{class:'grow'},el('b',{style:'font-weight:600'},`Add “${nm}”`),el('small',{},'A new exercise. You’ll pick its muscles next.')))));}
       const by={};hits.forEach(n=>{const g=exInfo(n).p||'Other';(by[g]=by[g]||[]).push(n);});
       [...MUSCLES,'Other'].forEach(g=>{if(!by[g])return;list.append(el('div',{class:'sect'},g),el('div',{class:'list'},by[g].sort().map(n=>{const i=exInfo(n);return el('button',{class:'li',style:'min-height:52px;width:100%;text-align:left',onclick:()=>pick(n)},el('span',{class:'grow'},el('b',{style:'font-weight:500'},n),i.s&&i.s.length?el('small',{},`Also ${i.s.join(', ')}`):null));})));});
-      if(!hits.length&&!f)list.append(el('p',{class:'muted'},'No exercises yet.'));};
+      if(!hits.length&&!f)list.append(emptySm('No exercises yet','Type a name above to add your first one.'));};
     b.append(el('label',{class:'field'},el('span',{class:'eyebrow'},'Exercise'),el('input',{id:'f-ex-q',type:'search',placeholder:'Search, or name a new one',autocomplete:'off',oninput:e=>{q=e.target.value;paint();}})),list);paint();}});}
 
 /* ---------- routine editor: exercises, sets (type, reps, weight), rest, supersets ---------- */

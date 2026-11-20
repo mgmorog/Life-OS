@@ -132,7 +132,7 @@ function viewToday(root){
   if(innerWidth>=1100){const kids=[...page.children],up=kids.find(n=>n.classList&&n.classList.contains('upcard'));if(up&&kids.length>2){const L=el('div',{class:'tcol'}),R=el('div',{class:'tcol tcol-r'});kids.slice(1).forEach(n=>(n===up?R:L).append(n));page.classList.add('today-wide');page.append(el('div',{class:'tcols'},L,R));}}
   root.append(page);
   S._painted=true;S._anim=null;
-  const mini=$('#mini');mini.textContent=`${mdS(sel)}`;mini.onclick=()=>scrollTo({top:0,behavior:'smooth'});
+  const mini=$('#mini');mini._pg=null;mini.textContent=`${mdS(sel)}`;mini.onclick=()=>scrollTo({top:0,behavior:'smooth'});
 }
 /* the one thing happening now or next, under the date */
 /* free time left today, counted like Studio: waking hours, minus work and meetings, from now on */
@@ -702,3 +702,16 @@ function todaySkeleton(){const bar=(w,h=12)=>el('div',{class:'skel',style:`heigh
     card('To-do',[line('70%'),line('52%'),line('60%')]),
     el('div',{class:'sk-habits','aria-hidden':'true'},[0,1,2,3].map(()=>el('div',{class:'sk-hab'},el('span',{class:'sk-ring'}),bar('70%',10)))),
     card('Coming up',[line('58%'),line('44%')])];}
+
+/* v229 · Calendar, Studio and More load the same way as Today: their own outlines, then your data fades in once */
+function tabSkeleton(kind){const bar=(w,h=12,x='')=>el('div',{class:'skel',style:`height:${h}px;width:${w};${x}`});
+  const page=el('div',{class:'page','aria-busy':'true'},el('span',{class:'sr-only',role:'status'},'Loading'));
+  const title={calendar:'Calendar',studio:'Studio',more:'More'}[kind];
+  page.append(el('div',{class:'pghead'},el('h1',{class:'pgtitle'},title)));
+  if(kind==='calendar'){page.append(el('div',{class:'sk-seg'},bar('100%',38,'border-radius:12px')),
+    el('section',{class:'card sk-card'},bar('30%',14),el('div',{class:'sk-grid'},Array.from({length:35},()=>el('span',{class:'sk-dot'})))));}
+  else if(kind==='studio'){page.append(el('div',{class:'sk-habits'},[0,1,2].map(()=>el('div',{class:'sk-hab',style:'width:150px;height:84px'},bar('70%',10),bar('45%',10)))),
+    ...[0,1,2,3].map(()=>el('section',{class:'card sk-card'},bar('24%',10),el('div',{class:'sk-row'},el('span',{class:'sk-tick'}),bar('62%')))));}
+  else{page.append(bar('100%',46,'border-radius:12px'),el('div',{class:'sk-pins'},[0,1,2,3].map(()=>el('span',{class:'sk-ring',style:'width:52px;height:52px;border-width:0;background:var(--line-2)'}))),
+    el('section',{class:'card sk-card'},...[0,1,2,3].map(()=>el('div',{class:'sk-row'},el('span',{class:'sk-tick',style:'border-radius:12px'}),bar('50%')))));}
+  return page;}

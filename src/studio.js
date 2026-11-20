@@ -114,6 +114,7 @@ function stNeedMin(placed){return placed.filter(c=>c.type!=='habit').reduce((n,c
 function stSpan(from,to){let ev=0,td=0,fr=0,n=0;const ad=[];for(let d=from;d<=to;d=addK(d,1)){const x=dayItems(d);ev+=x.timed.filter(e=>e.kind==='block'||e.kind==='gcal').length;td+=x.timed.concat(x.anytime).filter(e=>e.kind==='task'&&!e.done).length;x.allDay.forEach(e=>{if(!ad.includes(e.title))ad.push(e.title);});if(d>=todayK()){fr+=freeMinutes(d);n++;}}return{ev,td,fr,n,ad};}
 function stFreeLine(dk){const f=freeMinutes(dk);return f<60?['Full','full']:[`${fmtDurS(f)} free`,''];}
 function viewStudio(root){
+  if(App.state.loading&&!recs.size){root.append(tabSkeleton('studio'));return;}
   const st=stState(),P=stPeriod(st),cards=stCards(st,P),planRec=get.id('plan-'+P.key),committed=planRec&&planRec.committed,s=get.settings();
   document.body.classList.remove('has-commit');const cbar=$('#commitbar');if(cbar)cbar.hidden=true;
   const page=el('div',{class:'page studio2'});

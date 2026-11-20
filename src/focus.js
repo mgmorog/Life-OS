@@ -18,7 +18,7 @@ function t3PickSheet(dk,slot){const cur=t3Get(dk),inst=openSheet({title:`Pick #$
   const choose=r=>{const l=t3Get(dk).filter(x=>x.id!==r.id);l.splice(slot,0,{id:r.id});t3Set(dk,l);inst.close();};
   const c=t3Candidates(dk,cur.map(x=>x.id));
   b.append(el('div',{class:'ob-add',style:'margin-bottom:14px'},inp,el('button',{class:'btn primary','aria-label':'Add it',html:ic('plus',20,2.4),onclick:()=>{if(inp.value.trim())choose(newTask(inp.value.trim(),{date:dk}));else inp.focus();}})));
-  b.append(c.length?el('div',{class:'list'},c.map(({r,why})=>el('button',{class:'li',style:'width:100%;text-align:left;min-height:54px',onclick:()=>choose(r)},el('span',{class:'grow'},el('span',{class:'tt'},r.title),el('small',{},why))))):el('p',{class:'muted'},'Nothing planned yet. Type what matters most above.'));}});}
+  b.append(c.length?el('div',{class:'list'},c.map(({r,why})=>el('button',{class:'li',style:'width:100%;text-align:left;min-height:54px',onclick:()=>choose(r)},el('span',{class:'grow'},el('span',{class:'tt'},r.title),el('small',{},why))))):emptySm('Nothing planned yet','Type what matters most above.'));}});}
 function top3Card(dk){const s=get.settings();if(s.top3On===false)return null;const l=t3Get(dk),start=(s.startAt||{})[dk];
   const es=l.map(x=>t3Entry(x,dk)).filter(Boolean),n=es.filter(e=>e.done).length;
   const slots=es.length?es.map((e,i)=>{

@@ -333,9 +333,19 @@ function openSheet({title,full=false,left,right,build,onClose,tryClose,raw=false
   scrim.addEventListener('click',()=>requestClose());
   sheetStack.push(inst);lockScroll(true);
   // swipe down to close, from the grab bar or the header
-  const dragZone=e=>{if(e.button!=null&&e.button!==0)return;if(e.target.closest('button'))return;const y0=e.clientY;let dy=0,mv,up;sheet.classList.add('nodrag');
-    scrim.style.transition='none';mv=ev=>{const raw=ev.clientY-y0;dy=Math.max(0,raw);const d=raw>0?raw:raw*.15;sheet.style.transform=`translate3d(0,${d}px,0)`;scrim.style.opacity=String(Math.max(0,1-dy/(sheet.offsetHeight||400)));};
-    up=()=>{removeEventListener('pointermove',mv);removeEventListener('pointerup',up);removeEventListener('pointercancel',up);sheet.classList.remove('nodrag');sheet.style.transform='';scrim.style.transition='';scrim.style.opacity='';if(dy>110)requestClose();};
+  /* v229 · detents: a sheet that opens at its natural height can be dragged up to full height and back down again; dragging further down closes it */
+  const fullH=()=>(window.visualViewport?visualViewport.height:innerHeight)-44;
+  const toH=(h,after)=>{sheet.style.transition='height .42s var(--spring),transform var(--dur-base) var(--ease)';sheet.style.maxHeight='none';sheet.style.height=h+'px';setTimeout(()=>{sheet.style.transition='';after&&after();},440);};
+  const dragZone=e=>{if(e.button!=null&&e.button!==0)return;if(e.target.closest('button'))return;const y0=e.clientY;let dy=0,raw=0,mv,up;sheet.classList.add('nodrag');
+    const isFull=sheet.classList.contains('full'),canGrow=!isFull&&!sheet.classList.contains('pop'),h0=sheet.offsetHeight,F=fullH(),natH=sheet._natH||0;
+    scrim.style.transition='none';mv=ev=>{raw=ev.clientY-y0;dy=Math.max(0,raw);
+      if(raw<0&&canGrow&&F>h0+40){sheet.style.transition='none';sheet.style.maxHeight='none';sheet.style.height=Math.min(F,h0-raw)+'px';sheet.style.transform='';return;}
+      const d=raw>0?raw:raw*.15;sheet.style.transform=`translate3d(0,${d}px,0)`;scrim.style.opacity=String(Math.max(0,1-dy/(sheet.offsetHeight||400)));};
+    up=()=>{removeEventListener('pointermove',mv);removeEventListener('pointerup',up);removeEventListener('pointercancel',up);sheet.classList.remove('nodrag');scrim.style.transition='';scrim.style.opacity='';
+      if(raw<0&&canGrow&&F>h0+40){if(-raw>70){sheet._natH=h0;buzz&&buzz(6);toH(F,()=>{sheet.classList.add('full');sheet.style.height='';sheet.style.maxHeight='';});}else toH(h0,()=>{sheet.style.height='';sheet.style.maxHeight='';});return;}
+      sheet.style.transform='';
+      if(isFull&&natH&&dy>90&&dy<h0*.55){sheet.style.height=h0+'px';sheet.style.maxHeight='none';sheet.classList.remove('full');sheet._natH=0;buzz&&buzz(6);requestAnimationFrame(()=>toH(natH,()=>{sheet.style.height='';sheet.style.maxHeight='';}));return;}
+      if(dy>110)requestClose();};
     addEventListener('pointermove',mv);addEventListener('pointerup',up);addEventListener('pointercancel',up);};
   if(innerWidth<900){grab.addEventListener('pointerdown',dragZone);head&&head.addEventListener('pointerdown',dragZone);}
   function requestClose(){if(tryClose&&tryClose()===false)return;close();}
@@ -429,6 +439,8 @@ function draggable(node,{label,start,move,drop,hold,filter,ghost:useGhost=true,c
 }
 const clearPreviewSafe=()=>{const p=document.getElementById('drop-prev');p&&p.remove();};
 const EMPTY_ART='<svg class="eart" width="72" height="56" viewBox="0 0 88 70" aria-hidden="true"><path d="M53 60H24a10 10 0 0 1-10-10V20a10 10 0 0 1 10-10h40a10 10 0 0 1 10 10v19"/><path d="M26 28h36M26 40h22"/><circle cx="66" cy="52" r="11"/><path d="M61.2 52.2l3.3 3.3 6.3-6.8"/></svg>';
+/* v229 · the compact form of the same empty state, for spots inside cards and sheets */
+function emptySm(title,text,action){const n=emptyState(title,text,action);n.classList.add('sm');return n;}
 function emptyState(title,text,action){const art=document.createElement('span');art.innerHTML=EMPTY_ART;return el('div',{class:'empty'},art.firstChild,el('b',{},title),text?el('div',{},text):null,action||null);}
 /* ---------- smooth transitions ----------
    vt(update,{dir}) runs a DOM update inside a View Transition when the browser has one

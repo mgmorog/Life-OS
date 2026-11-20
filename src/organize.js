@@ -170,7 +170,7 @@ function viewTasks(root){
   }else if(S.taskTab==='hold'){
     /* to-dos in paused projects, grouped by project, with a way to resume each one */
     const hl=get.all('task').filter(t=>isOpenTask(t)&&onHold(t)&&(!S.taskA.size||S.taskA.has(t.area||areaOfTask(t))));const byP=new Map();hl.forEach(t=>{const pid=t.part;if(!byP.has(pid))byP.set(pid,[]);byP.get(pid).push(t);});
-    if(!byP.size)page.append(el('p',{class:'sub',style:'padding:8px 6px'},'Nothing on hold.'));
+    if(!byP.size)page.append(emptySm('Nothing on hold','Tasks waiting on another task or a project step show up here.'));
     byP.forEach((l,pid)=>{const pr=get.id(pid);page.append(el('div',{class:'sh2'},el('span',{class:'lbl'},pr?pr.title:'Project'),el('button',{class:'linkbtn small',onclick:()=>{pr.paused=false;put(pr,{silent:true});App.refresh();toast(`${pr.title} resumed`,()=>{pr.paused=true;put(pr,{silent:true});App.refresh();});}},'Resume')),
       el('div',{class:'list'},l.map(t=>taskRow(t,t.date||tk))));});
   }else if(S.taskTab==='all'){

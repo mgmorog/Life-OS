@@ -173,3 +173,29 @@ let _ac=null;function chime(){if(get.settings().chime===false)return;try{_ac=_ac
 
 /* a quiet loading note for anything that takes a moment */
 function busyNote(msg){const n=el('div',{class:'busynote',role:'status','aria-live':'polite'},el('i',{class:'spin','aria-hidden':'true'}),el('span',{},msg));const t=setTimeout(()=>document.body.append(n),150);return()=>{clearTimeout(t);n.classList.add('out');setTimeout(()=>n.remove(),200);};}
+
+/* ---------- v212 module merges ----------
+   Four modules were near-copies of others. Their entries move once, on every device, into the module
+   that already does the job; the old module disappears from the catalog. Idempotent: an entry is moved
+   by changing its tool, so a second pass finds nothing left to move. */
+const MERGES=[['Career','certs','skills'],['Learning','curric','paths'],['Home','roomspecs','info'],['Personal growth','commonplace','lessons']];
+(()=>{const T=(h,id)=>(HUBS[h]?HUBS[h].tools:[]).find(t=>t.id===id);
+  /* Home info gets a Rooms tab */
+  const info=T('Home','info');if(info){info.types=info.types||{};info.types.room={word:'room',photos:true,fields:[F('what','Room'),F('floor','Floor','select',{opts:['Main','Upstairs','Downstairs','Outside']}),F('dims','Dimensions'),F('paint','Paint color and finish'),F('windows','Window sizes'),F('rug','Rug size'),F('filter','Filter types'),F('bulbs','Bulb types'),F('note','Anything else')]};}
+  /* Paths and Lessons keep the extra detail the merged modules had */
+  const pa=T('Learning','paths');if(pa&&!pa.fields.some(f=>f.id==='why'))pa.fields.splice(1,0,F('why','Why it matters (optional)'));
+  const le=T('Personal growth','lessons');if(le&&!le.fields.some(f=>f.id==='kind'))le.fields.splice(1,0,F('kind','Kind','select',{opts:['Lesson','Quote','Idea']}));
+  /* the old modules leave the catalog */
+  MERGES.forEach(([h,from])=>{if(HUBS[h])HUBS[h].tools=HUBS[h].tools.filter(t=>t.id!==from);});})();
+function mergeModules(){const moved=[];
+  get.all('entry').forEach(x=>{const m=MERGES.find(([h,from])=>x.hub===h&&x.tool===from);if(!m)return;const f=Object.assign({},x.f),[h,from,to]=m;let nf;
+    if(from==='certs'){const got=(f.log||[]).reduce((n,e)=>n+(+e.n||0),0);nf={t:'cert',what:f.what,state:f.status==='Planned'?'Studying':'Held',renew:f.renew||'',cneed:f.need||'',cgot:got||'',note:[f.org?`Issued by ${f.org}`:null,f.status==='Lapsed'?'Lapsed':null,f.note].filter(Boolean).join(' · '),log:f.log||[]};}
+    else if(from==='curric'){const steps=String(f.res||'').split('\n').map(s=>s.trim()).filter(Boolean);nf=f.status==='Want to learn'&&!steps.length?{t:'interest',what:f.what}:{what:f.what,why:f.why||'',note:[...steps,...(f.note?[f.note]:[])].join('\n'),cur:f.status==='Done'?steps.length:0};}
+    else if(from==='roomspecs')nf={t:'room',what:f.what,floor:f.status||'Main',dims:f.dims||'',paint:f.paint||'',windows:f.windows||'',rug:f.rug||'',filter:f.filter||'',bulbs:f.bulbs||'',note:f.note||'',photos:f.photos||[]};
+    else if(from==='commonplace')nf={lesson:f.what,kind:f.status==='Note'||f.status==='Idea'?'Idea':'Quote',from:f.src||'',area:'Unsorted',why:f.note||'',date:f.date||k(new Date(x.createdAt||Date.now()))};
+    x.tool=to;x.f=nf;put(x,{silent:true});moved.push(h+'|'+from);});
+  /* anyone who had an old module on now has its new home on, and stale pins go */
+  const s=get.settings(),hid=Object.assign({},s.hubHidden||{}),pins=(s.todayPins||[]).filter(p=>!MERGES.some(([h,from])=>p===`${h}|${from}`));let ch=pins.length!==(s.todayPins||[]).length;
+  MERGES.forEach(([h,from,to])=>{const off=hid[h]||[];if(moved.includes(h+'|'+from)&&off.includes(to)){hid[h]=off.filter(i=>i!==to);ch=true;}});
+  if(ch||!s.merged212)setSettings({hubHidden:hid,todayPins:pins,merged212:true});
+  return moved.length;}

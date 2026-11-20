@@ -27,16 +27,16 @@ const DEMO_BANK={
   info:['Wi-Fi password','Paint color · living room','Landlord contact','Trash day'],
   vehicle:['Oil change','Tire rotation','Inspection','Registration renewal'],
   pantry:['Frozen dumplings','Ground beef','Pesto','Chicken stock'],improve:['Paint the bedroom','New kitchen faucet','Build bookshelf'],
-  roomspecs:['Living room','Bedroom','Office'],inventory:['TV','Laptop','Bike','Couch'],plants:['Monstera','Snake plant','Basil'],moving:['Book movers','Change address','Pack kitchen'],
+  inventory:['TV','Laptop','Bike','Couch'],plants:['Monstera','Snake plant','Basil'],moving:['Book movers','Change address','Pack kitchen'],
   people:['Sam Rivera','Alex Chen','Mom','Dad','Jordan (work)','Priya Patel','Grandma Rose'],
   dates:['Mom’s birthday','Anniversary','Alex’s birthday','Dad’s birthday'],gifts:['Candle set for Mom','Book for Alex','Concert tickets'],
   events:['Friendsgiving','Sam’s 30th','Holiday party'],datenights:['Cooking class','Jazz bar','Picnic at Delaware Park'],cards:['Holiday cards','Thank-you · Priya'],sharewish:['Birthday list','Holiday list'],
   wins:['Closed out 1,600 grants migration','Got promoted to Manager','Presented to the board','Cut PO turnaround to 2 weeks'],
   oneonones:['Jordan','Taylor','Morgan','Casey'],skills:['Workday reporting','SQL','Public speaking','Excel modeling'],
-  jobs:['Senior Manager · Workday','Process Improvement Lead','Grants Systems Analyst'],certs:['Workday Pro','CRA'],
+  jobs:['Senior Manager · Workday','Process Improvement Lead','Grants Systems Analyst'],
   sidebiz:['Logo for Starring Buffalo','Consulting call'],network:['Coffee with Lee','Alumni mixer'],perfprep:['Q4 self-review'],interview:['Tell me about a time…','Biggest failure'],
   reading:['Atomic Habits','The Body Keeps the Score','Project Hail Mary','Four Thousand Weeks'],courses:['SQL for Analysts','Workday Adaptive'],
-  review:['Spanish verbs','Workday terms'],paths:['Learn SQL','Run a half marathon'],lang:['Spanish','Duolingo streak'],curric:['Economics','Stoicism'],
+  review:['Spanish verbs','Workday terms'],paths:['Learn SQL','Run a half marathon'],lang:['Spanish','Duolingo streak'],
   trips:['Japan · spring','Chicago weekend','Outer Banks','Toronto'],packing:['Beach weekend','Work trip','Ski trip'],docs:['Passport','Global Entry','Travel insurance'],
   points:['Delta SkyMiles','Marriott Bonvoy','Chase Sapphire'],places:['Tokyo','Lisbon','Montreal','Nashville'],
   outings:['Niagara Falls day trip','Art museum','Bills game','Farmers market'],hobbies:['Guitar','Photography','Pottery'],
@@ -44,7 +44,7 @@ const DEMO_BANK={
   collections:['Vinyl','Wine','Sneakers'],tickets:['Hamilton','Bills vs. Dolphins','Taylor Swift'],bucket:['See the northern lights','Run a marathon','Visit all national parks'],
   compass:['Honesty','Health first','Family time','Craft','Curiosity'],
   experiments:['No phone before 9','Cold showers','Walking 1:1s'],lessons:['Ask for help earlier','Write things down'],
-  journal:['Morning pages','Gratitude','Weekly reflection'],decisions:['Take the promotion','Lease vs buy car'],commonplace:['“The obstacle is the way.”','Hofstadter’s law'],letters:['To me in 2030'],
+  journal:['Morning pages','Gratitude','Weekly reflection'],decisions:['Take the promotion','Lease vs buy car'],letters:['To me in 2030'],
   renewals:['Driver’s license','Passport','Car registration','Amazon Prime'],documents:['Birth certificate','Lease','Car title'],
   accounts:['M&T Bank','Fidelity','Verizon'],insurance:['Renters','Auto','Health'],emergency:['Emergency contacts'],estate:['Will','Beneficiaries'],
   school:['Soccer practice','Parent-teacher night'],familyinfo:['Shoe sizes','Allergies'],allowance:['Weekly allowance'],
@@ -153,6 +153,11 @@ function loadDemo(quiet){
   let n=0;allAreas.forEach(a=>toolsOf(a).forEach(tool=>{if(tool.hide||!Array.isArray(tool.fields))return;
     if(tool.id==='wheel'){for(let i=0;i<4;i++){const sc={};AREAS.forEach(x=>sc[x]=3+Math.floor(r()*8));mk('entry',{hub:a,tool:'wheel',f:{date:addK(t,-i*30),scores:sc}});n++;}return;}
     if(!tool.fields.length)return;const bk=DEMO_BANK[tool.id]||[],cnt=bk.length?Math.min(bk.length,3+Math.floor(r()*4)):5+Math.floor(r()*6);/* one entry per example name: never the same item twice */for(let i=0;i<cnt;i++){mk('entry',{hub:a,tool:tool.id,f:demoFill(tool,i,r,t)});n++;}}));
+  /* merged modules: certifications in Skills, rooms in Home info, quotes in Lessons, a subject in Paths */
+  [{hub:'Career',tool:'skills',f:{t:'cert',what:'Workday Pro Grants',state:'Held',renew:addK(t,200),cneed:10,cgot:4,note:'Issued by Workday'}},{hub:'Career',tool:'skills',f:{t:'cert',what:'CRA',state:'Held',renew:addK(t,410),cneed:80,cgot:35,note:''}},
+   {hub:'Home',tool:'info',f:{t:'room',what:'Living room',floor:'Main',dims:'14 × 16 ft',paint:'Swiss Coffee, eggshell',rug:'8 × 10',bulbs:'A19 2700K'}},{hub:'Home',tool:'info',f:{t:'room',what:'Bedroom',floor:'Upstairs',dims:'12 × 13 ft',paint:'Pale Oak, matte',windows:'34 × 60 in'}},
+   {hub:'Personal growth',tool:'lessons',f:{lesson:'The obstacle is the way.',kind:'Quote',from:'Marcus Aurelius',area:'Unsorted',date:addK(t,-20)}},
+   {hub:'Learning',tool:'paths',f:{what:'Systems thinking',why:'Better process design at work',note:'Book: Thinking in Systems\nVideo: Donella Meadows lecture\nPractice: map the AP intake loop',cur:1}}].forEach(o=>{mk('entry',o);n++;});
   /* area notes */
   allAreas.forEach(a=>{if(!get.id('area-'+a))put(Object.assign({id:'area-'+a,kind:'areanote',text:pick(['','Focus this quarter: consistency over intensity.','Keep it simple.'])},ex),{silent:true});});
   App.refresh();toast(`Demo loaded: ${n} module entries plus tasks, habits, goals and more`);

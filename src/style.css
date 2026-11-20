@@ -2535,3 +2535,18 @@ input[type=color]{width:40px;height:40px;border:0;border-radius:50%;padding:0;ba
 /* choosing a priority reads as an action */
 .plab.pl-empty{color:var(--accent-text)!important;font-weight:500}
 .todo.feed .trow .tt{white-space:normal!important;display:-webkit-box!important;-webkit-line-clamp:2!important;-webkit-box-orient:vertical;overflow:hidden}
+/* ===== v217 Today ===== */
+.nextline{flex-direction:column;align-items:flex-start;gap:0;margin-top:6px;min-height:0}
+.nextline .nl1{font-size:15px;color:var(--ink);line-height:1.3}
+.nextline .nl1 b{color:var(--accent-text);font-weight:600}
+.nextline .nl2{font-size:13px;color:var(--ink-3)}
+.fromareas{font-size:13px;font-weight:600;color:var(--ink-3);padding:12px 0 2px;border-top:1px solid var(--line-2);margin-top:4px}
+.uprow.gone{opacity:.45}
+.uprow.nextup .tt{font-weight:600}
+.uprow.nextup{background:var(--accent-soft);border-radius:12px;margin-inline:-8px;padding-inline:8px}
+.pslot.focusing{box-shadow:inset 3px 0 0 var(--accent);padding-left:10px;border-radius:2px}
+.prfocus3.on{display:flex;gap:12px;align-items:center}
+.habdone{display:flex;align-items:center;gap:4px;min-height:40px;margin-top:4px;font-size:14px;color:var(--ink-3)}
+.fresh3{padding:6px 0 4px}
+.trow .tside{color:var(--ink-3);font-size:13px}
+.uprow.gone .ovtag{display:none}

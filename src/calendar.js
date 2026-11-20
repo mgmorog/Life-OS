@@ -24,8 +24,8 @@ function viewCalendar(root){
   const pill=()=>!current?el('button',{class:'pill-today',onclick:calNow},'Today'):null;
   const page=el('div',{class:'page'});
   page.append(el('header',{class:'cal-h',id:'cal-h'},
-    eyebrow||!current?el('div',{class:'cal-eyebrow'},eyebrow?el('span',{class:'eyebrow'},eyebrow):el('span'),pill()):null,
     el('div',{class:'cal-title'},el('button',{class:'tbtn'+(mode==='week'?' mid':''),'aria-label':`Choose ${mode}`,onclick:e=>pickPeriod(e.currentTarget.getBoundingClientRect()),html:`<span>${esc(title)}</span>`+ic('chevd',18,2)}),arrows()),
+    eyebrow||!current?el('div',{class:'cal-eyebrow hq'},eyebrow?el('span',{class:'hquiet'},eyebrow):el('span'),pill()):null,
     el('div',{style:'margin-top:6px'},modeSeg())));
   const compact=el('div',{class:'cal-compact',id:'cal-compact'},el('div',{class:'cc-in'},
     el('div',{class:'cal-title',style:'min-height:44px'},el('button',{class:'tbtn cc-title','aria-label':`Choose ${mode}`,onclick:e=>pickPeriod(e.currentTarget.getBoundingClientRect()),html:`<span>${esc(miniTitle)}</span>`+ic('chevd',16,2)}),el('span',{style:'display:flex;align-items:center;gap:2px'},pill(),arrows())),

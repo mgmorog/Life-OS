@@ -1,0 +1,7 @@
+const {chromium}=require('playwright');(async()=>{const out=process.argv[2];require('fs').mkdirSync(out,{recursive:true});const b=await chromium.launch();const p=await (await b.newContext({viewport:{width:390,height:844}})).newPage();const errs=[];p.on('pageerror',e=>errs.push(e.message));
+await p.goto('file://'+process.cwd()+'/test/page.html');await p.waitForTimeout(300);await p.evaluate(()=>window.__lifeos.loadDemo(true));await p.waitForTimeout(300);
+const go=async(v,a)=>{await p.evaluate(([v,a])=>window.__lifeos.App.go(v,a),[v,a]);await p.waitForTimeout(700);};
+const shot=async n=>{await p.evaluate(()=>{const t=document.querySelector('#toast');if(t)t.style.display='none';});await p.screenshot({path:`${out}/${n}.png`});};
+for(const [v,a,n] of [['today',null,'today'],['calendar',null,'cal'],['studio',null,'studio'],['more',{},'more'],['tasks',{},'tasks'],['tool',{hub:'Finances',tool:'bills'},'bills'],['tool',{hub:'Relationships',tool:'people'},'people'],['tool',{hub:'Travel',tool:'docs'},'docs'],['area',{name:'Health'},'health'],['prefs',{},'settings'],['modules',null,'modules'],['tool',{hub:'Health',tool:'workouts'},'workouts']]){await go(v,a);await shot(n);}
+await go('today');const f=await p.$('#fab');const bx=await f.boundingBox();await p.mouse.move(bx.x+bx.width/2,bx.y+bx.height/2);await p.mouse.down();await p.waitForTimeout(700);await p.mouse.up();await p.waitForTimeout(300);await shot('fabmenu');
+console.log(errs);await b.close();})();

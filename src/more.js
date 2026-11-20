@@ -33,7 +33,7 @@ const KINDI={task:'task',block:'hour',allday:'cal',habit:'habit',goal:'target',p
 function openRec(r){switch(r.kind){case 'task':taskSheet(r);break;case 'block':blockSheet(r);break;case 'allday':alldaySheet(r);break;case 'habit':App.go('habit',{id:r.id});break;case 'goal':App.go('plan',{id:r.id});break;case 'project':App.go('plan',{id:r.id});break;case 'routine':App.go('routine',{id:r.id});break;case 'list':App.go('list',{id:r.id});break;case 'idea':captureSheet(r);break;case 'resource':resourceSheet(r);break;case 'wait':waitSheet(r);break;}noteRecent(r);}
 function viewMore(root){
   const S=get.settings(),page=el('div',{class:'page'});
-  page.append(el('div',{class:'pghead'},el('h1',{class:'pgtitle',style:'font-size:54px;font-weight:400'},'More'),el('button',{class:'iconbtn green','aria-label':'Settings',html:ic('gear',24),onclick:()=>App.go('prefs')})));
+  page.append(el('div',{class:'pghead'},el('h1',{class:'pgtitle'},'More'),el('button',{class:'iconbtn green','aria-label':'Settings',html:ic('gear',24),onclick:()=>App.go('prefs')})));
   page.append(el('button',{class:'searchbox',style:'color:var(--ink-3);width:100%;flex:none',onclick:e=>{searchFrom(e.currentTarget);App.state.qType='All';App.go('search');},html:ic('search',20,2)+'<span>Search everything</span>'}));
   const PE=!!App.state.pinEdit;
   page.append(el('div',{class:'sh2 pinh'},el('span',{class:'lbl'},'Pinned'),el('span',{style:'display:flex;gap:4px'},PE?el('button',{class:'linkbtn',onclick:editPins},'Add'):null,el('button',{class:'linkbtn',onclick:()=>{App.state.pinEdit=!PE;App.refresh();}},PE?'Done':'Edit'))));
@@ -358,7 +358,7 @@ function viewArchive(root){
   root.append(page);
 }
 /* Settings */
-function setRow(label,sub,val,on){return el('button',{class:'li',style:'min-height:56px',onclick:on},el('span',{class:'grow'},el('b',{style:'font-weight:500'},label),sub?el('small',{},sub):null),val?el('span',{class:'small muted','data-roll':'sr:'+label},val):null,el('span',{class:'chev',html:ic('chevr',16,2)}));}
+function setRow(label,sub,val,on){return el('button',{class:'li',style:'min-height:56px',onclick:on},el('span',{class:'grow'},el('b',{style:'font-weight:500'},label),sub?el('small',{},sub):null),val?el('span',{class:'small muted','data-roll':'sr:'+label},val):null,/App\.go|setpage/.test(String(on))?el('span',{class:'chev',html:ic('chevr',16,2)}):null);}
 function pickOne(title,opts,val,on){const inst=openSheet({title,build:b=>b.append(el('div',{class:'list'},opts.map(([v,l])=>el('button',{class:'li',style:'min-height:52px','aria-pressed':String(v===val),onclick:()=>{on(v);inst.close();}},el('span',{class:'grow'},l),v===val?el('span',{style:'color:var(--accent-text);display:grid',html:ic('check',18,2.6)}):null))))});}
 function navSheet(){const s=get.settings();orderSheet({title:'Bottom bar',init:s.nav||[],max:3,exact:true,word:'chosen',limit:'Three is the limit. Remove one to add another.',info:id=>PLACES[id],groups:[['Places',['today','studio','calendar','inbox','tasks','habits','goals','projects','routines','lists','reviews','areas']]],onDone:D=>setSettings({nav:D})});}
 function areasSheet(){

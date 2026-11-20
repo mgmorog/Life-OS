@@ -93,7 +93,7 @@ function certLog(x){askFields({title:`Credits for ${x.f.what}`,req:false,fields:
 HUBS.Career.tools.push(tplTool({id:'certs',name:'Certifications',icon:'star',word:'certification',tpl:'collection',optIn:true,whatLabel:'Certification',statuses:['Active','Planned','Lapsed'],extra:[F('need','Credits needed to renew','number',{blank:true}),F('renew','Renewal deadline','date',{blank:true}),F('org','Issued by')],
   dueKey:'renew',dueWord:'Renew by',dueWin:60,calTitle:x=>`Renew ${x.f.what}`,addLabel:'Add a certification',
   say:'Credits earned toward each renewal, the deadline and the pace you need.',
-  subX:x=>{const p=certPace(x);return [p.need?`${p.got} of ${p.need} credits`:`${p.got} credits`,x.f.renew?`renew by ${mD(x.f.renew)} ${x.f.renew.slice(0,4)}`:null].filter(Boolean).join(' · ');},
+  subX:x=>{const p=certPace(x);return [p.need?`${p.got} of ${p.need} credits`:`${p.got} credits`,x.f.renew?`renew by ${shortDay(x.f.renew)}`:null].filter(Boolean).join(' · ');},
   rowR:x=>smallBtn('+ Credits',()=>certLog(x),`Log credits for ${x.f.what}`),
   head:null}));
 

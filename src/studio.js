@@ -87,50 +87,78 @@ function suggest(cards,P,st,jit=null){
 }
 function habitPattern(h,P){const s=P.slots[0].id;const out=[];for(let i=-7;i<0;i++){const dk=addK(s,i);if((h.sessions||{})[dk]||(h.logs||{})[dk])out.push(monIdx(fromK(dk)));}return out;}
 function repeatLast(P,st,cards){const made=[];cards.filter(c=>c.type==='habit').forEach(c=>{habitPattern(c.rec,P).forEach(i=>{const s=P.slots.find(x=>monIdx(fromK(x.id))===i&&!x.past);if(s&&!c.placedIn.includes(s.id))made.push({card:c,slot:s.id,why:'Same day as last week'});});});return made;}
+/* ---------- Studio (v213): what needs a day, then the week. Tap a card, tap a day. ---------- */
+/* why a card is on the list, best first; anything else waits in the backlog */
+function stRank(c,P,st){const end=P.slots[P.slots.length-1].to;
+  if(c.tag==='Carried over')return[0,'Carried over'];
+  if(c.due&&c.due<=addK(end,st.mode==='w'?7:14))return[1,c.due<todayK()?'Overdue':`Due ${relDay(c.due)}`];
+  if(c.type==='task'&&c.rec.priority==='high')return[2,'High priority'];
+  if(c.type==='task'&&(c.rec.planWeek===P.slots[0].id||(st.mode!=='w'&&c.rec.planMonth===P.key.slice(2))))return[3,`For this ${st.mode==='w'?'week':'month'}`];
+  if(c.type==='habit')return[(+c.rec.target||1)>=7?99:6,''];
+  if(c.type==='step')return[4,'Next step'];
+  return[9,''];}
+function stFreeLine(dk){const f=freeMinutes(dk);return f<60?['Full','full']:[`${fmtDurS(f)} free`,''];}
 function viewStudio(root){
-  const st=stState(),P=stPeriod(st);const cards=stCards(st,P);
-  const planRec=get.id('plan-'+P.key);const committed=planRec&&planRec.committed;
-  const page=el('div',{class:'page studio-w'});
-  const go=d=>{st.anchor=P.step(d);st.selCard=null;st.ghosts=[];App.refresh();};
+  const st=stState(),P=stPeriod(st),cards=stCards(st,P),planRec=get.id('plan-'+P.key),committed=planRec&&planRec.committed,s=get.settings();
+  document.body.classList.remove('has-commit');const cbar=$('#commitbar');if(cbar)cbar.hidden=true;
+  const page=el('div',{class:'page studio2'});
+  const go=d=>{st.anchor=P.step(d);st.selCard=null;st.ghosts=[];st.open=null;App.refresh();};
+  const menu=e=>openMenu(e.clientX,e.clientY,[st.mode==='w'&&!P.slots.every(x=>x.past)?{label:'Copy last week’s plan',icon:'rep',onclick:()=>copyLastWeek(P)}:null,{label:'New task, habit or goal',icon:'plus',onclick:()=>newCardSheet(st,P)},committed?{label:'Replan',icon:'edit',onclick:()=>{planRec.committed=false;put(planRec);}}:null].filter(Boolean));
   page.append(el('header',{},
-    el('div',{class:'cal-eyebrow'},el('span',{class:'eyebrow'},`Studio · ${P.eyebrow}`),committed?el('span',{class:'pill-today'},'Committed'):null),
-    el('div',{class:'cal-title'},el('h1',{class:'serif',style:'font-size:36px;line-height:1.05;letter-spacing:-.01em'},P.head),el('div',{class:'arrows'},el('button',{class:'iconbtn green','aria-label':'Previous','html':ic('chevl',20,2),onclick:()=>go(-1)}),el('button',{class:'iconbtn green','aria-label':'Next',html:ic('chevr',20,2),onclick:()=>go(1)}))),
-    el('div',{style:'margin-top:6px'},seg([['q','Quarter'],['m','Month'],['w','Week']],st.mode,v=>{st.mode=v;st.anchor=null;st.selCard=null;st.ghosts=[];App.refresh();}))));
-  const s=get.settings();
-  if(st.mode==='w'&&today().getDay()===(s.reviewDay??0)&&s.checkinDone!==todayK())page.append(el('button',{class:'focus-chip',onclick:()=>checkinSheet(P,st,cards)},el('span',{style:'display:flex;gap:10px;align-items:center'},el('span',{class:'fl'},'CHECK-IN'),el('span',{class:'fv'},'Plan the week ahead')),el('span',{class:'fa'},'Start')));
-  const fk=st.mode==='q'?P.key.replace('q-','q-').replace(/^q-(\d+)-Q(\d)/,(m,y,q)=>`q-${y}-${q-1}`):P.key;
+    el('div',{class:'cal-title'},el('h1',{class:'serif',style:'font-size:34px;line-height:1.05;letter-spacing:-.01em;margin:0'},P.head),el('div',{class:'arrows'},el('button',{class:'iconbtn green','aria-label':'Previous',html:ic('chevl',20,2),onclick:()=>go(-1)}),el('button',{class:'iconbtn green','aria-label':'Next',html:ic('chevr',20,2),onclick:()=>go(1)}),moreB('Studio options',menu))),
+    el('span',{class:'hquiet'},P.eyebrow),
+    el('div',{style:'margin-top:10px'},seg([['w','Week'],['m','Month'],['q','Quarter']],st.mode,v=>{st.mode=v;st.anchor=null;st.selCard=null;st.ghosts=[];st.open=null;App.refresh();}))));
+  const fk=st.mode==='q'?P.key.replace(/^q-(\d+)-Q(\d)/,(m,y,q)=>`q-${y}-${q-1}`):P.key;
   page.append(focusChip(fk,st.mode==='q'?`${P.head.split(' ')[0]} FOCUS`:st.mode==='m'?`${P.head.toUpperCase()} FOCUS`:'WEEK FOCUS',st.mode==='q'?'quarter':st.mode==='m'?'month':'week',st.mode==='m'?[`${P.key.slice(2)}-01`,k(new Date(+P.key.slice(2,6),+P.key.slice(7),0))]:[P.slots[0].from,P.slots[P.slots.length-1].to]));
   if(st.only){const o=get.id(st.only);if(!o)st.only=null;else page.append(el('div',{class:'focus-chip'},el('span',{class:'grow small',style:'text-align:left'},`Showing ${o.title} only`),el('button',{class:'fa',onclick:()=>{st.only=null;App.refresh();}},'Show all')));}
-  if(st.mode==='w'&&!st.only&&!P.slots.every(s=>s.past)&&P.slots.some(sl=>{const pv=addK(sl.id,-7);return get.all('habit').some(h=>(h.sessions||{})[pv])||get.all('block').some(b=>b.date===pv&&(!b.repeat||b.repeat.type==='never'));}))page.append(el('button',{class:'linkbtn small',style:'align-self:flex-start;min-height:40px',onclick:()=>copyLastWeek(P)},'Copy last week’s plan'));
   studioExtras(page,st,P);
-  const dockCards=cards.filter(c=>c.q>0&&!st.ghosts.some(g=>g.card.id===c.id&&(c.type!=='habit'||st.ghosts.filter(x=>x.card.id===c.id).length>=c.q)));
-  const left=dockCards.reduce((n,c)=>n+c.q,0);
-  if(st.mode==='w'&&!P.slots.every(s=>s.past))page.append(el('button',{class:'otidy',onclick:()=>App.go('planweek',{anchor:P.slots[0].id})},el('span',{class:'oric',html:ic('spark',20)}),el('span',{class:'grow'},el('b',{},'Plan my week'),el('small',{},'See a full plan, then change or keep it')),el('span',{class:'chev',html:ic('chevr',16,2)})));
-  // dock
-  const dockHead=el('div',{style:'display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap'},
-    el('span',{},el('b',{class:'serif',style:'font-size:22px'},'To plan'),el('span',{class:'muted small',style:'margin-left:8px'},left?`${left} left`:'')),
-    el('span',{style:'display:flex;gap:6px'},
-      st.ghosts.length?[el('button',{class:'chip sm',style:'height:32px',onclick:()=>{st.ghosts=[];App.refresh();}},'Clear'),el('button',{class:'chip on',style:'height:32px',onclick:()=>{const n=st.ghosts.length;const made=st.ghosts;made.forEach(g=>placeCard(g.card,g.slot,st));st.ghosts=[];App.refresh();toast(`${n} placed`,()=>{made.forEach(g=>unplaceCard(g.card,g.slot,st));App.refresh();});}},'Keep all')]:
-      left&&get.settings().suggestOn?el('button',{class:'chip',style:'height:32px',onclick:()=>{arcMark();st.ghosts=suggest(cards,P,st);if(!st.ghosts.length)toast(`No open ${P.unit}s left to fill`);App.refresh();}},el('span',{style:'display:grid',html:ic('spark',15,2)}),'Suggest'):null,
-      el('button',{class:'chip',style:'height:32px','aria-label':'New card',onclick:()=>newCardSheet(st,P)},'+ New')));
-  const dock=el('div',{class:'dock'+(st.selCard?' has':''),id:'st-dock','data-rail':'1'});
-  dockCards.forEach(c=>dock.append(cardEl(c,st,P)));
-  if(!dockCards.length&&!st.ghosts.length)dock.append(el('div',{class:'muted small',style:'padding:10px 0'},cards.length?'Everything has a place.':st.mode==='w'?'Add habits, tasks, goals or projects and they will show up here.':'Add goal or project steps and they will show up here.'));
-  const dockW=el('div',{class:'dockwrap'},dockHead,el('div',{class:'small muted',style:'margin-top:2px'},st.selCard?`Now tap the ${P.unit} for “${(cards.find(c=>c.id===st.selCard)||{}).t||''}”.`:P.hint),dock);
-  // slots
-  const slots=el('div',{class:'slots'});
-  P.slots.forEach(sl=>slots.append(slotEl(sl,st,P,cards)));
-  page.append(el('div',{class:'studio-cols'},dockW,slots));
+  const allPast=P.slots.every(x=>x.past);
+  /* ---- what needs a day ---- */
+  const ghostIds=new Set(st.ghosts.map(g=>g.card.id));
+  const need=cards.filter(c=>c.q>0&&!(ghostIds.has(c.id)&&(c.type!=='habit'||st.ghosts.filter(g=>g.card.id===c.id).length>=c.q))).map(c=>({c,r:stRank(c,P,st)})).sort((a,b)=>a.r[0]-b.r[0]||((a.c.due||'9')<(b.c.due||'9')?-1:1));
+  const need2=need.filter(x=>x.r[0]<99),top=need2.filter(x=>x.r[0]<9),back=need2.filter(x=>x.r[0]>=9&&x.r[0]<99),showBack=!!st.showBack;
+  if(!allPast){
+    if(st.ghosts.length)page.append(el('div',{class:'stghost'},el('span',{class:'grow'},el('b',{},`${st.ghosts.length} suggested`),el('small',{},'Shown in your week below, dashed')),el('button',{class:'btn quiet sm',onclick:()=>{st.ghosts=[];App.refresh();}},'Clear'),el('button',{class:'btn primary sm',onclick:()=>{const n=st.ghosts.length,made=st.ghosts;made.forEach(g=>placeCard(g.card,g.slot,st));st.ghosts=[];App.refresh();toast(`${n} placed`,()=>{made.forEach(g=>unplaceCard(g.card,g.slot,st));App.refresh();});}},'Keep all')));
+    page.append(lblRow(`Needs a ${P.unit}${need2.length?` · ${need2.length}`:''}`,need2.length&&!st.ghosts.length&&s.suggestOn!==false?lnk(`Fill my ${st.mode==='w'?'week':st.mode==='m'?'month':'quarter'}`,()=>{arcMark();st.ghosts=suggest(cards.filter(c=>stRank(c,P,st)[0]<9),P,st);if(!st.ghosts.length)toast(`No open ${P.unit}s left to fill`);App.refresh();},'spark'):null));
+    const list=el('div',{class:'list stneed',id:'st-dock','data-rail':'1'});
+    const shown=[...top,...(showBack||!top.length?back:[])];
+    shown.slice(0,showBack?400:12).forEach(({c,r})=>list.append(stRow(c,r[1],st,P)));
+    if(!need2.length)list.append(el('p',{class:'qempty muted'},cards.length?`Everything has a ${P.unit}.`:'Nothing waiting. New tasks, habits and goal steps show up here.'));
+    if(back.length&&top.length)list.append(el('button',{class:'addset muted',onclick:()=>{st.showBack=!showBack;App.refresh();}},showBack?'Hide the backlog':`Backlog · ${back.length} more without a date`));
+    else if(!showBack&&top.length>12)list.append(el('button',{class:'addset muted',onclick:()=>{st.showBack=true;App.refresh();}},`Show ${top.length-12} more`));
+    page.append(list);}
+  /* ---- the period ---- */
+  page.append(lblRow(st.mode==='w'?'Your week':st.mode==='m'?'Weeks':'Months'));
+  const box=el('div',{class:'stslots'});P.slots.forEach(sl=>box.append(slotRow(sl,st,P,cards)));page.append(box);
   studioBudget(page,st,P);
+  /* ---- done ---- */
+  if(!allPast)page.append(committed?el('p',{class:'small muted',style:'text-align:center;margin-top:6px'},`${P.doneL}. `,el('button',{class:'linkbtn small',onclick:()=>{planRec.committed=false;put(planRec);}},'Replan')):el('button',{class:'btn line block',style:'margin-top:4px',onclick:()=>reviewSheet(P,st,cards)},'Done planning'));
   root.append(page);
-  // commit bar
-  const placedN=cards.reduce((n,c)=>n+c.placedIn.length,0),total=placedN+left;
-  document.body.classList.add('has-commit');
-  $('#commitbar').hidden=false;
-  const cb=$('#commitbar');cb.innerHTML='';
-  cb.append(el('div',{class:'in'},committed?el('span',{class:'grow'},el('b',{style:'display:block;font-weight:600'},P.doneL),el('span',{class:'small muted'},P.doneS)):el('span',{class:'small muted'},total?`${placedN} of ${total} placed`:'Nothing to place yet'),
-    committed?el('button',{class:'btn quiet',onclick:()=>{planRec.committed=false;put(planRec);}},'Replan'):el('button',{class:'btn primary',onclick:()=>reviewSheet(P,st,cards)},P.commit)));
 }
+/* one card in Needs a day: tap to open its day circles, tap a circle to place it */
+function stRow(c,why,st,P){const open=st.open===c.id;
+  const head=el('button',{class:'strow-h','aria-expanded':String(open),onclick:()=>{st.open=open?null:c.id;App.refresh();}},el('i',{class:'stdot',style:`background:${c.c}`}),el('span',{class:'grow'},el('b',{},c.t),el('small',{class:/Overdue|Carried/.test(why)?'late':null},[why,c.type==='habit'?c.src:(/^Due /.test(why)&&/^Due /.test(c.m||'')?String(c.m).split(' · ').slice(1).join(' · '):c.m)].filter(Boolean).join(' · '))),c.q>1?el('span',{class:'stq'},`×${c.q}`):null);
+  const n=el('div',{class:'li strow'+(open?' open':''),'data-cid':c.id},head);
+  if(open){n.append(el('div',{class:'stpick'},P.slots.map(sl=>{const done=c.placedIn.includes(sl.id),late=c.due&&sl.from>c.due;return el('button',{class:'stc'+(done?' on':'')+(late?' late':''),disabled:sl.past||(done&&c.type!=='habit')||null,'aria-label':`${sl.label}${done?', placed':''}`,onclick:()=>{if(done){unplaceCard(c,sl.id,st);App.refresh();return;}st.open=c.type==='habit'&&c.q>1?c.id:null;doPlace(c,sl.id,st,P,sl);}},el('b',{},st.mode==='w'?sl.a[0]:st.mode==='m'?String(fromK(sl.from).getDate()):sl.a.slice(0,3)),st.mode==='w'?el('small',{},sl.b):null);})),
+    el('div',{class:'stacts'},el('button',{class:'linkbtn small',onclick:()=>{if(c.type==='habit')App.go('habit',{id:c.rec.id});else if(c.type==='task')taskSheet(c.rec);else App.go('plan',{id:c.rec.id});}},'Open'),c.type==='task'&&st.mode==='w'?el('button',{class:'linkbtn small',onclick:()=>{c.rec.planWeek=addK(P.slots[0].id,7);put(c.rec);toast('Moved to next week',()=>{c.rec.planWeek=null;put(c.rec);});}},'Next week'):null));}
+  draggable(head,{label:c.t,pull:true,move:(x,y)=>hoverSlot(x,y),drop:(x,y)=>{const id=hoverSlot(x,y);clearHover();if(id&&id!=='rail'){const sl=P.slots.find(z=>z.id===id);doPlace(c,id,st,P,sl);}}});
+  return n;}
+/* one day (or week, or month): what you placed, what's fixed in one line, and how much room is left */
+function slotRow(sl,st,P,cards){
+  let placed=cards.filter(c=>c.placedIn.includes(sl.id)),ghosts=st.ghosts.filter(g=>g.slot===sl.id),isToday=st.mode==='w'&&sl.id===todayK();
+  if(sl.past&&!placed.length)return el('div',{class:'stslot past','data-slot':sl.id},el('div',{class:'stslot-h'},el('b',{},st.mode==='w'?`${sl.a.slice(0,1)+sl.a.slice(1).toLowerCase()} ${sl.b}`:sl.label),el('small',{},'Passed')));
+  let fixed='';if(st.mode==='w'){const d=dayItems(sl.id),busy=d.timed.filter(e=>e.kind==='block'||e.kind==='gcal'),ad=d.allDay.map(e=>e.title);fixed=[ad[0]||null,busy.length?dCount(busy.length,'commitment'):null].filter(Boolean).join(' · ');}
+  const [fr,frc]=st.mode==='w'&&!sl.past?stFreeLine(sl.id):[placed.length?`${placed.length} placed`:'',''];
+  const node=el('section',{class:'stslot'+(isToday?' istoday':'')+(sl.past?' past':''),'data-slot':sl.id},
+    el('div',{class:'stslot-h'},el('b',{},st.mode==='w'?`${sl.a.slice(0,1)+sl.a.slice(1).toLowerCase()} ${sl.b}`:st.mode==='m'?`${sl.a} – ${sl.b.replace(/^to /,'')}`:sl.a),el('small',{class:frc==='full'?'late':null},fr),sl.past?null:el('button',{class:'iconbtn green',style:'width:36px;height:36px;margin-right:-8px','aria-label':`Add to ${sl.label}`,html:ic('plus',18,2),onclick:()=>st.mode==='w'?commitmentSheet(sl,st):newCardSheet(st,P)})),
+    fixed?el('p',{class:'stfixed'},fixed):null);
+  const hab=placed.filter(c=>c.type==='habit');placed=placed.filter(c=>c.type!=='habit');
+  if(hab.length)node.append(el('p',{class:'stfixed'},hab.length>2?`${hab.length} habits: ${hab.slice(0,2).map(c=>c.t).join(', ')}…`:hab.map(c=>c.t).join(', ')));
+  if(placed.length||ghosts.length){const it=el('div',{class:'stitems'});
+    placed.forEach(c=>{const n=el('button',{class:'stpl',style:`--c:${c.c}`,onclick:()=>placedSheet(c,sl,st,P)},el('span',{class:'clip'},c.t));draggable(n,{label:c.t,move:(x,y)=>hoverSlot(x,y),drop:(x,y)=>{const id=hoverSlot(x,y);clearHover();if(!id||id===sl.id)return;if(id==='rail'){unplaceCard(c,sl.id,st);App.refresh();toast('Back in Needs a day',()=>{placeCard(c,sl.id,st);App.refresh();});return;}const to=P.slots.find(z=>z.id===id);if(to&&to.past){toast('That day has passed');return;}unplaceCard(c,sl.id,st);placeCard(c,id,st);App.refresh();toast(`Moved to ${to.label}`);}});it.append(n);});
+    ghosts.forEach(g=>it.append(el('button',{class:'stpl ghost',style:`--c:${g.card.c}`,onclick:()=>toast(g.why)},el('span',{class:'clip'},g.card.t))));
+    node.append(it);}
+  return node;}
 function cardEl(c,st,P){
   const n=el('div',{class:'scard'+(st.selCard===c.id?' sel':''),'data-cid':c.id,style:`--c:${c.c}`,role:'button',tabindex:0,'aria-label':`${c.t}. Select, then choose a ${P.unit}.`,onclick:()=>{st.selCard=st.selCard===c.id?null:c.id;App.refresh();},onkeydown:e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();st.selCard=st.selCard===c.id?null:c.id;App.refresh();}}},
     el('span',{class:'k'},({habit:'HABIT',task:'TASK',step:'STEP'})[c.type]),el('span',{class:'n'},c.t),c.m||c.src||c.tag?el('span',{class:'m'},[c.tag,c.m,c.type==='habit'?c.src:''].filter(Boolean).join(' · ')):null,c.q>1?el('span',{class:'q'},`×${c.q}`):null);
@@ -175,13 +203,13 @@ function slotEl(sl,st,P,cards){
   return node;
 }
 function commitmentSheet(sl,st){
-  const dk=sl.from;
+  const dk=sl.from;menuAt([{label:'Time block',icon:'hour',onclick:()=>blockSheet(null,{date:dk,start:9*60})},{label:'All-day item',icon:'cal',onclick:()=>alldaySheet(null,{start:dk})},{label:'Task',icon:'task',onclick:()=>taskSheet(null,{date:dk})}]);return;
   const inst=openSheet({title:'Add a commitment',build:body=>{body.append(el('p',{class:'muted'},`Something fixed on ${st.mode==='w'?sl.label:'or around '+sl.label}. Plans work around it.`),el('div',{class:'list'},
     el('button',{class:'li',onclick:()=>{inst.close();blockSheet(null,{date:dk,start:9*60});}},el('span',{class:'sq',html:ic('hour',20)}),el('span',{class:'grow'},el('b',{},'Time block'),el('small',{},'A meeting, appointment or fixed time'))),
     el('button',{class:'li',onclick:()=>{inst.close();alldaySheet(null,{start:dk});}},el('span',{class:'sq',html:ic('cal',20)}),el('span',{class:'grow'},el('b',{},'All-day item'),el('small',{},'A birthday, trip or day off'))),
     el('button',{class:'li',onclick:()=>{inst.close();taskSheet(null,{date:dk});}},el('span',{class:'sq',html:ic('task',20)}),el('span',{class:'grow'},el('b',{},'Task'),el('small',{},'Something that needs doing that day')))));}});
 }
-function newCardSheet(st,P){
+function newCardSheet(st,P){menuAt(st.mode==='w'?[{label:'Task',icon:'task',onclick:()=>taskSheet(null,{date:null,planWeek:P.slots[0].id})},{label:'Habit',icon:'habit',onclick:()=>habitSheet(null)},{label:'Goal',icon:'target',onclick:()=>goalSheet(null)},{label:'Project',icon:'project',onclick:()=>projectSheet(null)}]:[{label:'Goal',icon:'target',onclick:()=>goalSheet(null)},{label:'Project',icon:'project',onclick:()=>projectSheet(null)},{label:'Task with a deadline',icon:'task',onclick:()=>taskSheet(null,{date:null,deadline:P.slots[P.slots.length-1].to})}]);return;
   if(st.mode==='w'){const inst=openSheet({title:'New card',build:body=>{body.append(el('div',{class:'list'},
     el('button',{class:'li',onclick:()=>{inst.close();taskSheet(null,{date:null,planWeek:P.slots[0].id});}},el('span',{class:'sq',html:ic('task',20)}),el('span',{class:'grow'},el('b',{},'Task'),el('small',{},'One action to finish'))),
     el('button',{class:'li',onclick:()=>{inst.close();habitSheet(null);}},el('span',{class:'sq',html:ic('habit',20)}),el('span',{class:'grow'},el('b',{},'Habit'),el('small',{},'Something you repeat each week'))),

@@ -2393,3 +2393,71 @@ input[type=color]{width:40px;height:40px;border:0;border-radius:50%;padding:0;ba
 .shifthd{display:flex;align-items:center;justify-content:space-between;min-height:36px}
 .shifthd .lbl3{margin:0}
 .shifthd .linkbtn{color:var(--ink-3);font-weight:500;min-height:44px;padding:0 4px}
+/* ===== Studio v213 ===== */
+.studio2 .cal-eyebrow{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.stghost{display:flex;align-items:center;gap:8px;padding:12px 14px;border-radius:16px;background:var(--accent-soft)}
+.stghost b{display:block;font-weight:600}.stghost small{display:block;color:var(--ink-2);font-size:12.5px}
+.stneed .strow{display:block;padding:0}
+.strow-h{display:flex;align-items:center;gap:12px;width:100%;min-height:56px;padding:8px 14px;text-align:left}
+.strow-h b{display:block;font-weight:600;line-height:1.3}.strow-h small{display:block;color:var(--ink-3);font-size:13px;margin-top:1px}
+.strow-h small.late{color:var(--now)}
+.stdot{flex:none;width:10px;height:10px;border-radius:50%}
+.stq{flex:none;font-size:13px;font-weight:600;color:var(--ink-2)}
+.strow.open{background:var(--n1)}
+.stpick{display:flex;gap:6px;padding:2px 14px 10px 36px;flex-wrap:wrap}
+.stc{width:40px;height:40px;border-radius:50%;background:var(--card);border:1.5px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1;transition:background .18s,border-color .18s,transform .18s}
+.stc b{font-size:13px;font-weight:600}.stc small{font-size:10px;color:var(--ink-3);margin-top:1px}
+.stc.on{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}.stc.on small{color:inherit;opacity:.8}
+.stc.late:not(.on){border-style:dashed}
+.stc:disabled{opacity:.35}
+.stc:not(:disabled):active{transform:scale(.92)}
+.stacts{display:flex;gap:14px;padding:0 14px 8px 36px}
+.stslots{display:flex;flex-direction:column;gap:8px}
+.stslot{background:var(--card);border-radius:16px;padding:6px 14px 10px;box-shadow:var(--shadow-1);transition:box-shadow .18s,background .18s}
+.stslot.istoday{box-shadow:inset 0 0 0 1.5px var(--accent),var(--shadow-1)}
+.stslot.over{background:var(--accent-soft)}
+.stslot.past{background:none;box-shadow:none;padding-block:4px;opacity:.6}
+.stslot-h{display:flex;align-items:center;gap:10px;min-height:40px}
+.stslot-h b{font-weight:600;font-size:15px}.stslot-h small{flex:1;color:var(--ink-3);font-size:13px}
+.stslot-h small.late{color:var(--now)}
+.stfixed{margin:-6px 0 4px;font-size:13px;color:var(--ink-3)}
+.stitems{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.stpl{max-width:100%;display:inline-flex;align-items:center;height:32px;padding:0 12px;border-radius:999px;background:color-mix(in srgb,var(--c) 14%,var(--card));border:1px solid color-mix(in srgb,var(--c) 30%,transparent);font-size:13.5px;font-weight:500}
+.stpl.ghost{background:none;border-style:dashed;color:var(--ink-2)}
+.stpick{padding-left:14px;gap:5px;flex-wrap:nowrap}
+.stc{width:38px;height:38px;flex:none}
+.stacts{padding-left:14px}
+/* ===== v214 one UI system ===== */
+/* 1. one header: 34px serif titles everywhere */
+.pgtitle{font-size:34px}.pgtitle.tm{font-size:30px}.pgtitle.tl{font-size:26px}.pgtitle.tx{font-size:22px}
+.hd .date,.cal-title .tbtn{font-size:34px}.cal-title .tbtn.mid{font-size:28px}
+.hquiet{display:block;font-size:14px;color:var(--ink-2);margin-top:2px}
+/* 2. two row heights, 16px insets */
+.list>.li,.list>button.li,.list>a.li{min-height:52px!important}
+.list>.li:has(small),.list>button.li:has(small),.list>a.li:has(small){min-height:64px!important}
+.list>.li:not([style*="padding"]){padding-inline:16px}
+/* 3. three buttons: filled green once, outline on rows, green text for links */
+.btn.quiet{background:var(--card);border:1px solid var(--line);color:var(--ink)}
+.li .btn.primary,.list .btn.primary,.dfact .btn.primary{background:var(--card);border:1px solid var(--line);color:var(--accent-text)}
+.li button.chip:not([aria-pressed]):not(.on),.dfact button.chip:not([aria-pressed]):not(.on),.chips:not(:has([aria-pressed],.on))>button.chip,.li .chips>button.chip.on:not([aria-pressed]){background:var(--card);border:1px solid var(--line);color:var(--accent-text);font-weight:600;font-size:14px;height:34px}
+/* 4. status as text, not pills, inside rows */
+.li span.hpill,.dfact span.hpill,.strow span.hpill,.row span.hpill{background:none;border:0;padding:0;height:auto;font-size:13px;font-weight:500;color:var(--ink-3)}
+.li span.hpill.warn,.dfact span.hpill.warn,.row span.hpill.warn{color:var(--now)}
+/* 6. circle icon wells, one size */
+.sq,.ib,.oric{width:36px;height:36px;border-radius:50%}
+.sq svg,.ib svg,.oric svg{width:18px;height:18px}
+/* 7. the + sits in the bar */
+.fab{width:48px;height:48px;margin-top:0;box-shadow:none}
+/* 9. quiet section labels */
+.lbl,.secl,.eyebrow{font-size:15px;font-weight:600;letter-spacing:0;text-transform:none;color:var(--ink-2)}
+.field .eyebrow,.field>span.eyebrow{font-size:13px}
+.card .lbl,.mhead .lbl{font-size:13px}
+/* 10. one stat card: three numbers across at most, no rings */
+.mhead .mkv:nth-of-type(n+4){display:none}
+.cal-eyebrow.hq{min-height:24px;margin-top:-2px}
+.cal-h .cal-eyebrow.hq .hquiet{margin:0}
+/* labels everywhere read in sentence case */
+.sect,.secl,.daycard .bl .lbl,.habcard .bl .lbl,.upcard .bl .lbl,.upnext .k,.panel.wide .lbl3,.prnl,.pcsec,.dlhead,.st.hd{text-transform:none;letter-spacing:0;font-size:14px;font-weight:600}
+.secl{font-size:15px}
+.lbl,.eyebrow{text-transform:none!important;letter-spacing:0!important}
+.donefold{text-transform:none!important;letter-spacing:0!important}

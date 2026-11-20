@@ -26,7 +26,8 @@ const later=()=>setTimeout(()=>App.refresh(),820);
 /* section headers stay pinned under the status bar while their section scrolls by */
 /* a section label's right side keeps actions and real figures; hints ("Bars fill until…") and bare counts ("2 dates") go */
 const lblQuiet=r=>{const x=r.trim();return !/\d/.test(x)||/^\d+( [A-Za-z]+){0,2}$/.test(x);};
-const lblRow=(t,r)=>el('div',{class:'sh2 shstick'},el('span',{class:'lbl'},t),typeof r==='string'?(lblQuiet(r)?null:el('span',{class:'small muted'},r)):typeof r==='number'?null:r||null);
+const lblClean=t=>typeof t!=='string'||/overdue|late|due/i.test(t)?t:t.replace(/ · \d+( of \d+)?( (left|more|planned|saved|ideas?|items?|portions?|dates?|done))?$/i,'');
+const lblRow=(t,r)=>el('div',{class:'sh2 shstick'},el('span',{class:'lbl'},lblClean(t)),typeof r==='string'?(lblQuiet(r)?null:el('span',{class:'small muted'},r)):typeof r==='number'?null:r||null);
 const lnk=(label,fn,icon)=>el('button',{class:'linkbtn small',style:'min-height:44px;margin:-8px 0',onclick:fn},icon?el('span',{style:'display:grid',html:ic(icon,16,2)}):null,label);
 const bigN=(v,rest)=>el('p',{class:'bign'},el('span',{class:'serif n'},String(v)),rest?el('span',{class:'muted'},' '+rest):null);
 /* "all is well" labels say nothing; only a status that needs attention gets a pill */
@@ -204,7 +205,7 @@ function chainEnter(body){const ins=[...body.querySelectorAll('input:not([type=d
 function fieldDefaults(fields,D){fields.forEach(f=>{if(D[f.id]!==undefined)return;if(f.def!=null)D[f.id]=f.def;else if(f.type==='select')D[f.id]=optsOf(f)[0];else if(f.type==='date'&&f.id!=='last'&&!f.blank)D[f.id]=todayK();});return D;}
 function askFields({title,fields,D={},save,addLabel='Save',word='change',isEdit=true,req=true}){fieldDefaults(fields,D);const titleF=fields.find(f=>f.type==='text'||f.type==='area');const can=()=>!req||!titleF||!!String(D[titleF.id]??'').trim();
   return formSheet({title,addLabel,D,word,isEdit,canAdd:can,commit:()=>save(D),build:(body,update)=>{renderFields(body,fields,D,update);}});}
-function pickSheet(title,opts,on){const inst=openSheet({title,left:{label:'Cancel'},build:b=>b.append(el('div',{class:'list'},opts.map(([v,l,s])=>el('button',{class:'li',style:'min-height:54px',onclick:()=>{inst.close();on(v);}},el('span',{class:'grow'},el('b',{style:'font-weight:500'},l),s?el('small',{},s):null)))))});}
+function pickSheet(title,opts,on){if(opts.length<=4){menuAt(opts.map(([v,l])=>({label:l,onclick:()=>on(v)})));return;}const inst=openSheet({title,left:{label:'Cancel'},build:b=>b.append(el('div',{class:'list'},opts.map(([v,l,s])=>el('button',{class:'li',style:'min-height:54px',onclick:()=>{inst.close();on(v);}},el('span',{class:'grow'},el('b',{style:'font-weight:500'},l),s?el('small',{},s):null)))))});}
 function entrySheet(hub,t,rec,{seed=null,after=null,type=null,preset=null}={}){
   if(t.wheel){wheelSheet(hub,t,rec);return;}
   if(hub==='Health'&&t.id==='workouts'&&(type==='routine'||(rec&&rec.f&&rec.f.t==='routine'))){workoutRoutineSheet(rec,{after});return;}
@@ -241,6 +242,8 @@ function quietTool(page){
   [...page.children].forEach(x=>{if(x.matches('p.small.muted,p.muted,div.small.muted')&&!/\d/.test(x.textContent)&&!x.querySelector('button,a,input'))x.remove();});
   [...page.children].forEach(x=>{if(x.matches('.sh2')&&x.nextElementSibling&&x.nextElementSibling.querySelector(':scope>.qempty,:scope.qempty')){const a=x.querySelector(':scope>button,:scope>.linkbtn');if(a&&x.children.length>1)a.remove();}});
   [...page.children].forEach(x=>{if(!x.matches('.sh2,.lbl,.sect'))return;const nx=x.nextElementSibling;if(!nx||nx.matches('.sh2,.lbl,.sect'))x.remove();});
+  /* one stat card per module: the first one stays */
+  {const st=[...page.children].filter(x=>x.matches('.mhead,.stat3,div:has(>.mhead)'));st.slice(1).forEach(x=>x.remove());page.querySelectorAll('.mhead .ring').forEach(r=>r.remove());}
   /* copy, share and export buttons live in the … menu, not on the page */
   page._extra=[];page.querySelectorAll('button.btn,button.chip').forEach(b=>{const tx=b.textContent.trim();if(!/^(Copy|Share|Export)\b/.test(tx)||b.closest('.li,.row,.dfact'))return;page._extra.push({label:tx,icon:'share',onclick:()=>b.click()});const host=b.parentElement;b.remove();if(host&&host!==page&&!host.children.length&&!host.textContent.trim())host.remove();});
   /* the + at the top adds; a second big "Log …" button only earns its place on an empty page */

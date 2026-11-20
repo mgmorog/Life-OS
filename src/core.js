@@ -112,8 +112,9 @@ const fmtDur=d=>{const h=Math.floor(d/60),m=d%60;return h&&m?`${h} hr ${m} min`:
 const fmtDurS=d=>{if(!d)return '';const h=Math.floor(d/60),m=d%60;return h&&m?`${h}h ${m}m`:h?`${h}h`:`${m}m`;};
 const daysBetween=(a,b)=>Math.round((fromK(b)-fromK(a))/864e5);
 const mdS=d=>get.settings().dateFmt==='dm'?`${d.getDate()} ${MON[d.getMonth()]}`:MON[d.getMonth()]+' '+d.getDate();
-const shortDay=s=>{const d=fromK(s);return `${DOW[d.getDay()].slice(0,3)}, ${mdS(d)}`+(d.getFullYear()!==today().getFullYear()?`, ${d.getFullYear()}`:'');};
-const relDay=s=>{if(!s)return 'No date';const diff=daysBetween(todayK(),s);if(diff===0)return 'Today';if(diff===1)return 'Tomorrow';if(diff===-1)return 'Yesterday';return shortDay(s);};
+/* one way to write a date: Nov 23, with the year only when it isn't this year */
+const shortDay=s=>{const d=fromK(s);return mdS(d)+(d.getFullYear()!==today().getFullYear()?`, ${d.getFullYear()}`:'');};
+const relDay=s=>{if(!s)return 'No date';const diff=daysBetween(todayK(),s);if(diff===0)return 'Today';if(diff===1)return 'Tomorrow';if(diff===-1)return 'Yesterday';if(diff>1&&diff<=6)return DOW[fromK(s).getDay()];return shortDay(s);};
 const timeAgo=ts=>{const days=daysBetween(k(new Date(ts)),todayK());if(days<=0)return 'Today';if(days===1)return 'Yesterday';if(days<7)return `${days} days ago`;if(days<30)return `${Math.floor(days/7)} wk ago`;return shortDay(k(new Date(ts)));};
 
 /* ---------- store: one document per record, private to the signed-in person ---------- */
@@ -364,6 +365,9 @@ function askConfirm({title,body,yes='Discard',no='Keep editing',danger=true,alt,
   $('#layers').append(cs,box);void box.offsetWidth;requestAnimationFrame(()=>{cs.classList.add('on');box.classList.add('on');});
 }
 function closeMenu(){const m=$('.menu'),s=$('.mscrim');m&&m.remove();s&&s.remove();}
+let LASTPT={x:innerWidth/2,y:innerHeight/2};document.addEventListener('pointerdown',e=>{LASTPT={x:e.clientX,y:e.clientY};},true);
+/* four choices or fewer: a small menu where you tapped, not a sheet */
+const menuAt=items=>openMenu(LASTPT.x,LASTPT.y,items);
 function openMenu(x,y,items){
   closeMenu();{const tEl=$('#toast');if(tEl)tEl.classList.remove('on');}/* the lift of the finger that opened the menu must not close it or pick an item, however long it was held */let armed=false;document.addEventListener('pointerdown',()=>{armed=true;},{capture:true,once:true});const stray=e=>e.detail>0&&!armed;const scrim=el('div',{class:'mscrim',onclick:e=>{if(!stray(e))closeMenu();},oncontextmenu:e=>{e.preventDefault();closeMenu();}}),m=el('div',{class:'menu',role:'menu'});m.addEventListener('click',e=>{if(stray(e)){e.stopPropagation();e.preventDefault();}},true);
   items.filter(Boolean).forEach(it=>m.append(el('button',{role:'menuitem',class:it.danger?'danger':'',html:(it.icon?ic(it.icon,18):'')+`<span>${esc(it.label)}</span>`,onclick:()=>{closeMenu();it.onclick();}})));

@@ -100,14 +100,14 @@ function viewToday(root){
   const page=el('div',{class:'page'+(first?' firstpaint':'')});
   const inboxN=get.all('idea').length;
   page.append(el('header',{},
-    ((pill)=>pill?el('div',{class:'hd-eyebrow'},el('span'),pill):null)(!isToday?el('button',{class:'pill-today',onclick:()=>goDay(tk)},'Today'):((n)=>n&&!get.settings().carryOver?el('button',{class:'pill-today',style:'color:var(--now)',onclick:()=>{App.go('tasks',{tab:'today'});}},`${n} overdue ›`):null)(carried().length)),
     el('div',{class:'hd'},
-      el('button',{class:'date'+(S.dateDrop?' open':''),'aria-label':'Pick a date','aria-expanded':String(!!S.dateDrop),onclick:()=>dateDrop(),html:`<span>${DOW[sel.getDay()]}, ${mdS(sel)}${sel.getFullYear()!==today().getFullYear()?`, ${sel.getFullYear()}`:''}</span>`+ic('chevd',18,2)}),
+      el('button',{class:'date'+(S.dateDrop?' open':''),'aria-label':'Pick a date','aria-expanded':String(!!S.dateDrop),onclick:()=>dateDrop(),html:`<span>${isToday?DOW[sel.getDay()]:DOW[sel.getDay()].slice(0,3)}, ${mdS(sel)}${sel.getFullYear()!==today().getFullYear()?`, ${sel.getFullYear()}`:''}</span>`+ic('chevd',18,2)}),
       el('div',{class:'icons'},
+        !isToday?el('button',{class:'linkbtn hdtoday',onclick:()=>goDay(tk)},'Today'):null,
         el('button',{class:'iconbtn','aria-label':inboxNew()?'Inbox, something new':'Inbox',html:ic('inbox',24)+(inboxNew()||newVerN()?'<span class="badge dot"></span>':''),onclick:()=>App.go('inbox')}),
         moreB('Today options',e=>openMenu(e.clientX,e.clientY,[{label:'Share this day',icon:'share',onclick:()=>shareDaySheet(dk)},{label:'Plan tomorrow',icon:'cal',onclick:()=>planTomorrowSheet(todayK())},{label:'Today settings',icon:'gear',onclick:()=>App.go('setpage',{id:'reviews'})}])))),
     S.dateDrop?dateDropEl(dk):null,S.dateDrop?null:weekStrip(dk),
-    isToday?nextLine(dk):null));
+    isToday?nextLine(dk):null,isToday?freeLine(dk):null));
   if(S.loading&&!recs.size){page.append(el('section',{class:'card',style:'display:grid;gap:12px'},el('div',{class:'skel',style:'height:14px;width:30%'}),el('div',{class:'skel',style:'height:30px;width:70%'}),el('div',{class:'skel',style:'height:200px'})));root.append(page);return;}
   const s=get.settings();
   {const fr=frNow(),onPrio=fr&&isToday&&t3Get(dk).some(x=>x.id===fr.id);const fc=onPrio?null:focusRunChip();if(fc)page.append(fc);}
@@ -118,17 +118,26 @@ function viewToday(root){
   if(isToday){const pe=planEveCard(dk);if(pe)page.append(pe);}
   const rem=reminderCard();if(rem)page.append(rem);
   const look=[];
-  if(isToday&&s.checkinCard&&reviewPeriod(dk)&&sel.getDay()===(s.reviewDay??0)&&s.checkinDone!==dk&&!(s.onboardedAt&&Date.now()-s.onboardedAt<6*864e5))page.append(s.checkinLater===dk?el('button',{class:'focus-chip',onclick:()=>App.go('review')},el('span',{class:'small'},'Weekly review'),el('span',{class:'fa'},'Start ›')):checkinCard(dk));
-  if(isToday){const gz=goalPulseCard();if(gz)page.append(gz);const gc=goalCheckCard();if(gc)page.append(gc);const cf=cfg('Health','checkin').f;if(cf.rem&&!checkOn(dk)&&nowMin()>=(tMin(cf.at||'21:00')??1260))page.append(el('button',{class:'focus-chip',onclick:()=>App.go('tool',{hub:'Health',tool:'checkin'})},el('span',{class:'small'},'Daily check-in'),el('span',{class:'fa'},'Log ›')));}
+  const also=[];const aRow=(t,sub,fn)=>also.push(el('button',{class:'li',onclick:fn},el('span',{class:'grow'},el('b',{},t),sub?el('small',{},sub):null),el('span',{class:'chev',html:ic('chevr',16,2)})));
+  if(isToday&&s.checkinCard&&reviewPeriod(dk)&&sel.getDay()===(s.reviewDay??0)&&s.checkinDone!==dk&&!(s.onboardedAt&&Date.now()-s.onboardedAt<6*864e5))aRow('Weekly review','A few minutes on the week behind and ahead',()=>App.go('review'));
+  if(isToday){const gz=goalPulseCard();if(gz)page.append(gz);
+    const g=get.all('goal').find(x=>goalCheckDue(x)&&App.state.goalLater!==x.id+todayK());if(g)aRow(`Check in on ${g.title}`,'How is this going?',()=>{const inst=openSheet({title:'Goal check-in',left:{label:'Close'},build:b=>{const c=goalCheckCard();if(c){c.style.boxShadow='none';c.style.padding='0';b.append(c);b.addEventListener('click',e=>{if(e.target.closest('.chip'))setTimeout(()=>inst.close(),150);});}}});});
+    const cf=cfg('Health','checkin').f;if(cf.rem&&!checkOn(dk)&&nowMin()>=(tMin(cf.at||'21:00')??1260))aRow('Daily check-in','Energy, water and sleep',()=>App.go('tool',{hub:'Health',tool:'checkin'}));
+    waitOpen().filter(w=>w.follow&&w.follow<=dk).slice(0,3).forEach(w=>aRow(`Follow up${w.who?` with ${w.who}`:''}`,w.title,()=>waitSheet(w)));
+    get.all('list').filter(l=>l.pinned&&(l.items||[]).some(i=>!i.d)).slice(0,2).forEach(l=>{const o2=l.items.filter(i=>!i.d);aRow(l.title,`${o2.length} left · ${o2.slice(0,3).map(i=>i.t).join(', ')}${o2.length>3?'…':''}`,()=>App.go('list',{id:l.id}));});}
   {const tc=tripTodayCard(dk);if(tc)page.append(tc);}
   {const pc=pinsCard(dk);if(pc)page.append(pc);}
-  {const wc=waitCard(dk);if(wc)page.append(wc);}
-  if(isToday){const pc=pinnedListsToday();if(pc)page.append(pc);}
+  if(also.length)page.append(el('div',{class:'lbl alsol'},'Also today'),el('div',{class:'list'},also));
   root.append(page);
   S._painted=true;S._anim=null;
   const mini=$('#mini');mini.textContent=`${mdS(sel)}`;mini.onclick=()=>scrollTo({top:0,behavior:'smooth'});
 }
 /* the one thing happening now or next, under the date */
+/* free time left today, counted like Studio: waking hours, minus work and meetings, from now on */
+function freeLine(dk){try{const nowM=nowMin(),s=get.settings(),sh=shiftsOn(dk);let awake=[[Math.max(420,nowM),1320]];const cut=(a,b)=>{awake=awake.flatMap(([x,y])=>b<=x||a>=y?[[x,y]]:[[x,Math.max(x,a)],[Math.min(y,b),y]]).filter(([x,y])=>y>x);};
+  sh.forEach(x=>cut(x.start,x.end>x.start?x.end:1440));if(s.protectEvenings&&sh.some(x=>!x.carry))cut(Math.max(...sh.filter(x=>!x.carry).map(x=>x.end>x.start?x.end:1440)),1440);
+  dayItems(dk).timed.filter(e=>e.kind!=='habit'&&e.kind!=='task').forEach(e=>cut(e.time,e.time+(e.dur||30)));const f=awake.reduce((n,[a,b])=>n+b-a,0);
+  return f>=15?el('span',{class:'freeline'},`${fmtDurS(f)} free today, outside work and meetings`):null;}catch(e){return null;}}
 function nextLine(dk){const nowM=nowMin(),t=dayItems(dk).timed.filter(e=>!e.done&&e.kind!=='habit'&&e.time+(e.dur||30)>nowM).sort((a,b)=>a.time-b.time),e=t[0];if(!e)return null;
   const during=e.time<=nowM,end=e.time+(e.dur||30);
   return el('button',{class:'nextline',onclick:()=>openItem(e,dk)},el('span',{class:'nl1'},el('b',{},during?'Now':'Next'),' ',e.title),el('span',{class:'nl2 tnum'},during?`Until ${fmtT(end)} · ${fmtDurS(end-nowM)} left`:`${fmtT(e.time)} · in ${fmtDurS(e.time-nowM)}`));}
@@ -302,9 +311,11 @@ function dayCard(dk){
   if(!shownC.length&&!t3es.length&&!nLate)todo.append(el('p',{class:'sub',style:'margin:6px 0 0'},isPast?'Nothing was left open.':total?'All done. Nice work.':'Nothing to do yet.'));
   const canAdd=!isPast||!total;
   /* the bottom: add a task, and the rest of today's list in place */
-  if(canAdd)todo.append(el('button',{class:'taddrow',onclick:()=>taskSheet(null,{date:dk})},el('span',{class:'pplus',html:ic('plus',14,2.4)}),'Add a task'));
+  if(canAdd){const inp=el('input',{class:'taddin',placeholder:dk===tk?'Add a task for today':'Add a task',enterkeyhint:'done',autocomplete:'off','aria-label':'Add a task',onkeydown:ev=>{if(ev.key!=='Enter'||ev.isComposing)return;ev.preventDefault();const raw=inp.value.trim();if(!raw)return;const w=parseWhen(raw,fromK(dk));const t=newTask(w.title||raw,{date:w.date||dk,time:w.time??null,deadline:w.deadline||null,color:defCol()});inp.value='';S._taddFocus=true;toast(`Added${t.date!==dk?` for ${relDay(t.date)}`:''}`,()=>remove(t.id,{hard:true}));}});
+    todo.append(el('div',{class:'taddrow'},el('span',{class:'pplus',html:ic('plus',14,2.4)}),inp,el('button',{class:'linkbtn small',onclick:()=>taskSheet(null,Object.assign({date:dk},inp.value.trim()?{title:inp.value.trim()}:{}))},'More options')));
+    if(S._taddFocus){S._taddFocus=false;setTimeout(()=>{const n=document.querySelector('.taddin');if(n)n.focus({preventScroll:true});},60);}}
   if(more>0||allOpen)todo.append(el('button',{class:'tmorerow',onclick:()=>{S._moreOpen[dk]=!S._moreOpen[dk];App.refresh();}},allOpen?'Show fewer':`Show ${more} more`));
-  const doneEls=[];if(nDone){S._doneOpen=S._doneOpen||{};const op=!!S._doneOpen[dk];doneEls.push(el('button',{class:'donefold'+(op?' open':''),'aria-expanded':String(op),onclick:()=>{S._doneOpen[dk]=!op;App.refresh();}},el('span',{},`Done · ${nDone}`),el('span',{class:'chev',html:ic('chevd',16,2.2)})));if(op)doneEls.push(dn);}
+  const doneEls=[];if(nDone){S._doneOpen=S._doneOpen||{};const op=!!S._doneOpen[dk];doneEls.push(el('button',{class:'habdone','aria-expanded':String(op),onclick:()=>{S._doneOpen[dk]=!op;App.refresh();}},op?'Hide done':`${nDone} done today`,el('span',{style:'display:grid',html:ic(op?'chevu':'chevr',14,2.2)})));if(op)doneEls.push(dn);}
   if(t3)wireRingDrop(todo,dk);
   out.push(todo);
   /* Habits */
@@ -333,7 +344,7 @@ function dayCard(dk){
    fl.forEach(f=>rows.append(el('button',{class:'upwork due',onclick:()=>flexWeekSheet(f.job.id,f.from)},el('span',{style:'display:grid',html:ic('plus',15,2.2)}),el('span',{},`Add your ${f.job.name&&f.job.name!=='Work'?f.job.name+' ':'work '}hours for ${mdS(fromK(f.from))}–${mdS(fromK(f.to))}`))));}
   const pastE=isToday?sched.filter(e=>e.kind!=='task'&&e.time+(e.dur||30)<=nowM):[],upN=Math.min(upcoming.length,Math.max(3,6-Math.min(pastE.length,3))),showE=[...pastE.slice(-(6-upN)),...upcoming.slice(0,upN)].slice(0,6);
   showE.forEach(e=>{const end=e.time+(e.dur||30),gone=isToday&&end<=nowM,during=isToday&&!gone&&e.time<=nowM,isNext=e===upcoming[0];
-    rows.append(el('button',{class:'uprow'+(gone?' gone':'')+(isNext?' nextup':''),style:`--c:${e.color||'var(--accent)'}`,onclick:()=>openItem(e,dk)},el('span',{class:'upt tnum'},fmtS(e.time)),el('span',{class:'upbar'}),el('span',{class:'grow'},el('span',{class:'tt'},e.title),el('span',{class:'meta'},sched.some(f=>f!==e&&f.kind!=='task'&&e.kind!=='task'&&f.time<e.time+(e.dur||30)&&e.time<f.time+(f.dur||30))?el('span',{class:'ovtag'},'Overlaps · '):null,e.kind==='task'?'':`Until ${fmtT(end)}`,during?el('b',{class:'upnow'},` · ${fmtDurS(end-nowM)} left`):isToday&&e===upcoming[0]?` · in ${fmtDurS(e.time-nowM)}`:''))));});
+    rows.append(el('button',{class:'uprow'+(gone?' gone':'')+(isNext?' nextup':''),style:`--c:${e.color||'var(--accent)'}`,onclick:()=>openItem(e,dk)},el('span',{class:'upt tnum'},fmtT(e.time)),el('span',{class:'upbar'}),el('span',{class:'grow'},el('span',{class:'tt'},e.title),el('span',{class:'meta'},sched.some(f=>f!==e&&f.kind!=='task'&&e.kind!=='task'&&f.time<e.time+(e.dur||30)&&e.time<f.time+(f.dur||30))?el('span',{class:'ovtag'},'Overlaps · '):null,e.kind==='task'?'':`Until ${fmtT(end)}`,during?el('b',{class:'upnow'},` · ${fmtDurS(end-nowM)} left`):isToday&&e===upcoming[0]?` · in ${fmtDurS(e.time-nowM)}`:''))));});
   if(!showE.length)rows.append(el('p',{class:'sub',style:'margin:2px 0 0'},sched.length?'Nothing else scheduled today.':isPast?'Nothing was scheduled.':'Nothing scheduled. Open the day to block time.'));
   cu.append(rows);
   cu.append(el('button',{class:'linkbtn small uptoggle','aria-expanded':String(open),onclick:()=>{S.gridOpen=!S.gridOpen;S._gridTop=null;App.refresh();}},open?'Hide full day':'See full day',el('span',{style:`display:grid;transition:transform .25s var(--ease);${open?'transform:rotate(90deg)':''}`,html:ic('chevr',16,2.2)})));
@@ -354,7 +365,7 @@ function habDot(e,dk){const h=e.rec,on=habitDone(h,dk),cnt=h.track==='count',c=h
   const v=cnt?(typeof (h.logs||{})[dk]==='number'?h.logs[dk]:h.logs&&h.logs[dk]?h.goalN:0):0;
   const b=el('button',{class:'fhab'+(on?' done':''),style:c?`--c:${c}`:null,'aria-pressed':String(on),'aria-label':on?`Undo ${h.title}`:cnt?`Add one to ${h.title}, ${v} of ${h.goalN}`:`Log ${h.title}`,
     onclick:()=>{if(cnt&&!on){buzz(6);logHabit(h,dk,1);return;}if(h.track==='time'&&!on){logTimeSheet(h,dk);return;}const now=toggleItem({kind:'habit',rec:h},dk);buzz(now?12:6);habDotSet(b,h,dk,now);if(now){const n=habitStreak(h);toast(n.n>1?`${h.title} · ${streakText(n)} in a row`:`${h.title} done`,()=>{toggleItem({kind:'habit',rec:h},dk);App.refresh();});}}},
-    habRing(on?1:habProg(h,dk),on?ic('check',18,2.8):habGlyph(h),c),el('small',{},h.title,cnt&&!on?el('em',{},`${v}/${h.goalN}`):null));
+    habRing(on?1:habProg(h,dk),on?ic('check',18,2.8):habGlyph(h),c),el('small',{},h.title),cnt?el('span',{class:'hcnt tnum'},`${on?h.goalN:v} of ${h.goalN}`):null);
   onPress(b,(x,y)=>itemMenu(e,dk,x,y));return b;}
 /* drop a row on a priority ring (long-press drag) */
 function ringAt(x,y){let best=null,bd=1e9;document.querySelectorAll('.todo .pring').forEach(n=>{const r=n.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2,d=Math.hypot(cx-x,cy-y);if(d<r.width/2+40&&d<bd){bd=d;best=n;}});return best;}

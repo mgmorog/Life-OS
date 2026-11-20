@@ -2550,3 +2550,20 @@ input[type=color]{width:40px;height:40px;border:0;border-radius:50%;padding:0;ba
 .fresh3{padding:6px 0 4px}
 .trow .tside{color:var(--ink-3);font-size:13px}
 .uprow.gone .ovtag{display:none}
+/* ===== v218 Today ===== */
+.hdtoday{font-weight:600;color:var(--accent-text);min-height:44px;padding:0 6px}
+.secl.tdiv{border:0!important;font-size:13px!important;font-weight:600;color:var(--ink-3);padding:14px 0 2px;margin:0}
+.secl.tdiv::before,.secl.tdiv::after{display:none!important}
+.fromareas{border-top:0;font-size:13px;padding-top:14px}
+.fhab .hcnt{margin-left:auto;font-size:13px;color:var(--ink-3);flex:none;padding-left:6px}
+.alsol{margin:6px 2px -4px}
+.taddrow input.taddin{flex:1;min-width:0;border:0;outline:0;background:none;font:inherit;font-size:16px;color:var(--ink);padding:10px 0}
+.taddrow input.taddin::placeholder{color:var(--accent-text);opacity:.85}
+.taddrow .linkbtn{flex:none;color:var(--ink-3);font-weight:500}
+.freeline{display:block;font-size:13px;color:var(--ink-3);margin-top:1px}
+.uprow .upt{white-space:nowrap;min-width:68px;flex:none}
+.fhab small{min-width:0}
+.uprow.nextup{color:var(--ink)}
+.uprow.nextup .upt{color:var(--accent-text)}
+.uprow.nextup .tt,.uprow.nextup b{color:var(--ink)}
+.hd .date span{white-space:nowrap}

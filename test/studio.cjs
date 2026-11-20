@@ -15,8 +15,8 @@ const free=p.locator('.stc:not([disabled])').last();await free.click();await p.w
 ok('tapping a day places it',await p.evaluate(t=>[...document.querySelectorAll('.stslot .stprow')].some(n=>n.textContent.includes(t)),title),title);
 ok('placed card leaves the list',await p.evaluate(t=>![...document.querySelectorAll('.strow b')].some(b=>b.textContent===t),title));
 const cnt=()=>p.evaluate(()=>document.querySelectorAll('.strow').length+(document.body.innerText.match(/Show (\d+) more/)||[0,0])[1]*1+(document.body.innerText.match(/Backlog · (\d+)/)||[0,0])[1]*1);const n0=await cnt();await p.getByText('Fill my week').click();await p.waitForTimeout(400);
-const g=await p.locator('.stprow.ghost').count();ok('fill my week shows dashed suggestions',g>0,g);
-await p.getByText('Keep all').click();await p.waitForTimeout(400);const n1=await cnt();ok('keep all places them',await p.locator('.stprow.ghost').count()===0&&n1<n0,[n0,n1]);
+const g=await p.locator('.stprow.sugg').count();ok('fill my week shows dashed suggestions',g>0,g);
+await p.getByText('Keep all').click();await p.waitForTimeout(400);const n1=await cnt();ok('keep all places them',await p.locator('.stprow.sugg').count()===0&&n1<n0,[n0,n1]);
 ok('no Done planning button',await p.getByText('Done planning').count()===0);
 ok('goal steps lead with their goal',await p.evaluate(()=>[...document.querySelectorAll('.strow small')].some(n=>/^Next: /.test(n.textContent))||true));
 ok('days use plain words',await p.evaluate(()=>!/commitment/.test(document.body.innerText)));

@@ -2576,8 +2576,8 @@ input[type=color]{width:40px;height:40px;border:0;border-radius:50%;padding:0;ba
 .stprow{display:flex;align-items:center;gap:10px;width:100%;min-height:40px;text-align:left;font-size:15px;color:var(--ink);border-top:1px solid var(--line-2);padding:4px 0}
 .stprow:first-child{border-top:0}
 .stprow .stai{width:24px;height:24px}
-.stprow.ghost{opacity:.6;border-top-style:dashed}
-.stprow.ghost small{color:var(--ink-3);font-size:12px}
+.stprow.sugg{opacity:.6;border-top-style:dashed}
+.stprow.sugg small{color:var(--ink-3);font-size:12px}
 .stpastline{display:flex;align-items:center;gap:6px;width:100%;min-height:44px;padding:0 4px;font-size:14px;color:var(--ink-3);text-align:left}
 .stplanned{font-size:14px;color:var(--ink-3);margin:4px 2px 14px}
 .stopen{margin-top:4px;padding:0}

@@ -167,7 +167,7 @@ function slotRow(sl,st,P,cards){
   if(hab.length)node.append(el('p',{class:'stfixed'},hab.length>2?`${hab.length} habits: ${hab.slice(0,2).map(c=>c.t).join(', ')}…`:hab.map(c=>c.t).join(', ')));
   if(placed.length||ghosts.length){const it=el('div',{class:'stitems'});
     placed.forEach(c=>{const n=el('button',{class:'stprow',onclick:()=>stOpen(c)},stAi(c),el('span',{class:'clip grow'},c.type==='step'?`${c.t} · ${c.m}`:c.t));draggable(n,{label:c.t,move:(x,y)=>hoverSlot(x,y),drop:(x,y)=>{const id=hoverSlot(x,y);clearHover();if(!id||id===sl.id)return;if(id==='rail'){unplaceCard(c,sl.id,st);App.refresh();toast('Back in Needs a day',()=>{placeCard(c,sl.id,st);App.refresh();});return;}const to=P.slots.find(z=>z.id===id);if(to&&to.past){toast('That day has passed');return;}unplaceCard(c,sl.id,st);placeCard(c,id,st);App.refresh();toast(`Moved to ${to.label}`);}});it.append(n);});
-    ghosts.forEach(g=>it.append(el('button',{class:'stprow ghost',onclick:()=>toast(g.why)},stAi(g.card),el('span',{class:'clip grow'},g.card.t),el('small',{},'Suggested'))));
+    ghosts.forEach(g=>it.append(el('button',{class:'stprow sugg',onclick:()=>toast(g.why)},stAi(g.card),el('span',{class:'clip grow'},g.card.type==='step'?`${g.card.t} · ${g.card.m}`:g.card.t),el('small',{},'Suggested'))));
     node.append(it);}
   return node;}
 function cardEl(c,st,P){
@@ -208,7 +208,7 @@ function slotEl(sl,st,P,cards){
     draggable(n,{label:c.t,move:(x,y)=>hoverSlot(x,y),drop:(x,y)=>{const id=hoverSlot(x,y);clearHover();if(!id||id===sl.id)return;if(id==='rail'){unplaceCard(c,sl.id,st);App.refresh();toast('Back in To plan',()=>{placeCard(c,sl.id,st);App.refresh();});return;}const to=P.slots.find(s=>s.id===id);if(to&&to.past){toast('That day has passed');return;}unplaceCard(c,sl.id,st);placeCard(c,id,st);App.refresh();toast(`Moved to ${to.label}`);}});
     items.append(n);
   });
-  st.ghosts.filter(g=>g.slot===sl.id).forEach(g=>items.append(el('button',{class:'pl ghosted','data-gid':g.card.id,style:`--c:${g.card.c}`,title:g.why,onclick:()=>toast(g.why)},el('span',{class:'clip grow'},g.card.t),el('small',{},'Suggested'))));
+  st.ghosts.filter(g=>g.slot===sl.id).forEach(g=>items.append(el('button',{class:'pl ghosted','data-gid':g.card.id,style:`--c:${g.card.c}`,title:g.why,onclick:()=>toast(g.why)},el('span',{class:'clip grow'},g.card.type==='step'?`${g.card.t} · ${g.card.m}`:g.card.t),el('small',{},'Suggested'))));
   if(!items.children.length)items.append(el('div',{class:'small',style:'color:var(--ink-3);padding:2px 0 4px'},sl.past?'Passed':'Open'));
   node.append(items);
   return node;

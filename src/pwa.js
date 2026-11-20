@@ -17,6 +17,8 @@ const PWA={
         push(e,dk,fromK(dk).getTime()+(e.time||0)*6e4,m);});}
     get.all('allday').forEach(r=>{if(r.reminder==null||r.reminder<14*1440)return;for(let i=15;i<=60;i++){const dk=addK(tk,i);if(occursOn(r.start,r.repeat,dk,r.skip))push({kind:'allday',id:r.id,title:r.title},dk,fromK(dk).getTime(),r.reminder);}});
     /* v235 · morning digest: one notification at your chosen time with the Top 3, the first commitment and habits due */
+    try{for(let i=0;i<=7;i++){const dk=addK(tk,i);(dayItems(dk).timed||[]).forEach(e=>{const tr=+(e.rec&&e.rec.travel)||0;if(!tr||e.kind!=='block'||e.done||e.cont)return;const fire=fromK(dk).getTime()+(e.time-tr)*6e4;if(fire<=now)return;out.push({key:'leave|'+e.id+'|'+dk,fire_at:new Date(fire).toISOString(),title:'Leave now',body:`${e.title} at ${fmtT(e.time)} · ${fmtDurS(tr)} away`,url:'/#today'});});}}catch(e){}
+    try{const fr=get.settings().focusRun;if(fr&&!fr.pausedAt){const end=fr.start+(fr.paused||0)+fr.plan*6e4;if(end>now+3e4)out.push({key:'focus|'+fr.start+'|'+fr.plan,fire_at:new Date(end).toISOString(),title:'Focus time is up',body:`${fr.title} · ${fmtDurS(fr.plan)} done. Finish, or keep going.`,url:'/#timer'});}}catch(e){}
     try{const S1=get.settings(),dg=S1.digest||{};if(dg.on){const tmin=dg.time!=null?dg.time:450;for(let i=0;i<=7;i++){const dk=addK(tk,i),fire=fromK(dk).getTime()+tmin*6e4;if(fire<=now)continue;const b=digestText(dk);if(!b)continue;out.push({key:'digest|'+dk,fire_at:new Date(fire).toISOString(),title:`Life OS · ${new Date(fire).toLocaleDateString(undefined,{weekday:'long'})}`,body:b,url:'/#today'});}}}catch(e){}
     return out.sort((a,b)=>a.fire_at<b.fire_at?-1:1).slice(0,300);
   },
@@ -65,8 +67,8 @@ const PWA={
       if(on)g.append(condRow(Row({style:'color:var(--action-text);font-weight:600',onclick:async()=>{const r=await p.test();toast(r?'Sent. It should arrive in a few seconds.':'Couldn’t send a test. Check your connection.');}},'Send a test notification')));
       {const g3=group('Morning digest'),dg=s.digest||{};
         setToggle(ctx,g3,null,'Morning digest','Your Top 3, first commitment and habits, once a day',!!dg.on,v=>{setSettings({digest:{...dg,on:v}});App.refresh();});
-        if(dg.on){const t=dg.time!=null?dg.time:450,inp=el('input',{type:'time',class:'tinput',value:`${String(Math.floor(t/60)).padStart(2,'0')}:${String(t%60).padStart(2,'0')}`,'aria-label':'Digest time',onchange:e=>{const[h,m]=e.target.value.split(':').map(Number);if(!isNaN(h))setSettings({digest:{...dg,on:true,time:h*60+(m||0)}});}});
-          g3.append(Row({as:'label'},el('span',{class:'grow'},el('b',{style:'font-weight:500'},'Send at'),el('small',{},'Uses your quiet hours too')),inp));
+        if(dg.on){const t=dg.time!=null?dg.time:450,inp=pickControl('time',fromMinT(t),v=>{const m=toMinT(v);if(m!=null)setSettings({digest:{...dg,on:true,time:m}});},{label:'Digest time',clear:false,cls:'tinput'});inp.setAttribute('aria-label','Digest time');
+          g3.append(Row({as:'div'},el('span',{class:'grow'},el('b',{style:'font-weight:500'},'Send at'),el('small',{},'Uses your quiet hours too')),inp));
           g3.append(Row({as:'div',style:'display:block;padding-block:var(--s3)'},el('small',{style:'white-space:normal'},'Tomorrow: '+digestText(addK(todayK(),1)))));}}
       if('setAppBadge' in navigator){const g2=group('App icon badge');
         setToggle(ctx,g2,null,'Overdue tasks','Counted on the Life OS icon',s.badgeOverdue!==false,v=>{setSettings({badgeOverdue:v});this.badge();});

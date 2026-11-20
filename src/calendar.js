@@ -52,7 +52,7 @@ function focusChip(fk,label,mode,range){
   const steps=allSteps(),inRange=s=>{if(!s.doneAt)return false;const d=k(new Date(s.doneAt));return d>=range[0]&&d<=range[1];};
   return el('div',{class:'bars'},
     el('div',{style:'display:flex;justify-content:space-between;align-items:center'},el('button',{class:'fl eyebrow',style:'font-size:var(--fs-caption)',onclick:()=>focusSheet(fk,label)},label+' · Edit'),el('button',{class:'linkbtn small',onclick:()=>{App.state.studio=Object.assign(App.state.studio||{},{mode:mode==='quarter'?'q':mode==='month'?'m':'w',anchor:range[0]});App.go('studio');}},'Plan in Studio ›')),
-    areas.map(ar=>{const list=steps.filter(s=>s.parent.kind==='goal'&&s.parent.area===ar),done=list.filter(s=>s.step.d&&inRange(s.step)).length,open=list.filter(s=>!s.step.d).length,tot=done+open;return el('div',{class:'bar-row'},el('span',{class:'clip'},ar),el('span',{class:'bar-track',role:'img','aria-label':`${done} of ${tot} goal steps finished this period`},el('span',{class:'bar-fill',style:`display:block;width:${tot?done/tot*100:0}%`})),el('span',{class:'small muted tnum'},tot?`${done}/${tot}`:'No open steps'));}));
+    areas.map(ar=>{const list=steps.filter(s=>s.parent.kind==='goal'&&s.parent.area===ar),done=list.filter(s=>s.step.d&&inRange(s.step)).length,open=list.filter(s=>!s.step.d).length,tot=done+open;return el('div',{class:'bar-row'},el('span',{class:'clip'},ar),Progress(tot?done/tot:0,{size:'lg','aria-label':`${done} of ${tot} goal steps finished this period`}),el('span',{class:'small muted tnum'},tot?`${done}/${tot}`:'No open steps'));}));
 }
 function focusSheet(fk,label){
   const f=focusRec(fk)||{id:'focus-'+fk,kind:'focus',areas:[]};let D=[...(f.areas||[])],inst;
@@ -107,7 +107,7 @@ function monthBody(body,a,C){
   body.append(el('div',{class:'wd-row',style:'margin:0 0 -6px'},wdLabels().map(l=>el('span',{},l))),grid,dayPanel(C.sel&&monthKey(fromK(C.sel))===monthKey(a)?C.sel:k(new Date(y,m,1))));
 }
 function dayLine(e,dk){
-  const row=el('div',{class:'dayline tick-host'+(e.done?' done':'')},e.kind==='gcal'?null:el('span',{class:'tick-hit'},tickBtn(e.done,on=>{row.classList.toggle('done',on);toggleItem(e,dk);setTimeout(()=>App.refresh(),820);})),el('span',{class:'tm'},e.time!=null?fmtT(e.time):'Anytime'),el('button',{class:'grow clip',style:'text-align:left;min-height:44px',onclick:()=>openItem(e,dk)},el('span',{class:'tt'},e.title)));
+  const row=el('div',{class:'dayline tick-host'+(e.done?' done':'')},e.kind==='gcal'?null:el('span',{class:'tick-hit'},tickBtn(e.done,on=>{row.classList.toggle('done',on);toggleItem(e,dk);setTimeout(()=>App.refresh(),820);})),el('span',{class:'tm'},e.time!=null?fmtT(e.time):'Anytime'),el('button',{class:'grow clip',style:'text-align:left;min-height:44px',onclick:()=>openItem(e,dk)},el('span',{class:'tt'},e.title),+(e.rec&&e.rec.travel)&&e.kind==='block'&&e.time!=null?el('small',{class:'trleave'},`Leave by ${fmtT(e.time-e.rec.travel)}`):null));
   calGestures(row,e,dk);
   /* v228 · the same swipe language as Today: right = done, left = open */
   if(e.kind==='gcal'||e.done)return row;
@@ -152,8 +152,7 @@ function dayPanel(dk){
   const{allDay,timed,anytime}=dayItems(dk,{filters:true}),tk=todayK(),d=fromK(dk);
   const ev=[...timed,...anytime].filter(e=>e.kind!=='task'&&e.kind!=='habit'),todo=[...timed,...anytime].filter(e=>e.kind==='task'),nOpen=todo.filter(e=>!e.done).length;
   const goT=()=>{App.state.sel=dk;App.state._fresh=true;App.go('today');};
-  const c=el('div',{class:'card dpanel',style:'padding:var(--s4) 18px'},
-    el('div',{style:'display:flex;align-items:baseline;justify-content:space-between;gap:var(--s2)'},el('div',{class:'serif dpdate'},`${DOW[d.getDay()]}, ${mdS(d)}`),el('button',{class:'linkbtn small',onclick:goT},'Open in Today ›')));
+  const c=Card({as:'div',cls:'dpanel'},el('div',{style:'display:flex;align-items:baseline;justify-content:space-between;gap:var(--s2)'},el('div',{class:'serif dpdate'},`${DOW[d.getDay()]}, ${mdS(d)}`),el('button',{class:'linkbtn small',onclick:goT},'Open in Today ›')));
   const adS=allDay.filter(e=>!(e.rec&&e.rec.tripId));if(adS.length)c.append(el('div',{class:'dpad'},adS.map(e=>e.title).join(' · ')));
   if(ev.length){const lst=el('div',{style:'margin-top:var(--s2)'});ev.forEach(e=>lst.append(dayLine(e,dk)));c.append(lst);}
   if(todo.length)c.append(el('button',{class:'dptodo',onclick:goT},nOpen?`${dCount(nOpen,'to-do')} ›`:`All ${todo.length} to-dos done ›`));
@@ -167,7 +166,7 @@ function pickPeriod(anchor){
     const box=el('div',{});
     const pick=d=>{C.anchor=k(d);if(C.mode==='month')C.sel=isCurrentFor('month',d)?todayK():k(d);if(C.mode==='week'){C.sel=k(d);C.weekOpen=null;}inst.close();calCommit();};
     const draw=()=>{box.innerHTML='';
-      if(C.mode==='week'){const c=formCtx(()=>{});box.append(el('div',{class:'card'},c.calendar(C.anchor,dk=>{if(dk)pick(fromK(dk));},{range:calRange(C)})));return;}
+      if(C.mode==='week'){const c=formCtx(()=>{});box.append(Card({as:'div'},c.calendar(C.anchor,dk=>{if(dk)pick(fromK(dk));},{range:calRange(C)})));return;}
       box.append(el('div',{style:'display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;font-weight:600'},IconButton('Previous year',{cls:'green',html:ic('chevl',20,2),onclick:()=>{vy--;draw();}}),String(vy),IconButton('Next year',{cls:'green',html:ic('chevr',20,2),onclick:()=>{vy++;draw();}})));
       if(C.mode==='month')box.append(el('div',{class:'pick-grid'},MONL.map((n,i)=>el('button',{class:(vy===a.getFullYear()&&i===a.getMonth()?'on ':'')+(vy===t.getFullYear()&&i===t.getMonth()?'cur':''),onclick:()=>pick(new Date(vy,i,1))},n.slice(0,3)))));
       else box.append(el('div',{class:'pick-grid',style:'grid-template-columns:repeat(2,minmax(0,1fr))'},[0,1,2,3].map(i=>el('button',{class:(vy===a.getFullYear()&&i===quarterOf(a)?'on ':'')+(vy===t.getFullYear()&&i===quarterOf(t)?'cur':''),style:'height:68px',onclick:()=>pick(new Date(vy,i*3,1))},`Q${i+1}`,el('small',{},`${MON[i*3]} – ${MON[i*3+2]}`)))));};

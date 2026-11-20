@@ -33,7 +33,7 @@ const bigN=(v,rest)=>el('p',{class:'bign'},el('span',{class:'serif n'},String(v)
 /* "all is well" labels say nothing; only a status that needs attention gets a pill */
 const pill=(t,c='')=>!t||/^(On track|On pace|Up to date|All good)$/.test(t)?null:el('span',{class:'hpill '+c},t);
 const AMBER='#D9A441',RUST='#C76A2E';
-const meter=(f,{c,mark,tall}={})=>el('div',{class:'hmeter'+(tall?' tall':'')},el('i',{style:`width:${Math.max(0,Math.min(100,(f||0)*100))}%${c?`;background:${c}`:''}`}),mark!=null?el('b',{style:`left:${mark*100}%`}):null);
+const meter=(f,{c,mark,tall}={})=>Progress(f,{tone:c||null,mark,size:tall?'lg':'md'});
 const paceC=f=>f>=1?RUST:f>=.75?AMBER:null;
 const tk=(on,fn,label)=>el('span',{class:'tick-hit'},tickBtn(on,fn,label));
 const rowX=({l,t,s,sc,r,on,strike,big,hold})=>{const n=Row({as:'div',style:''},l||null,el(on?'button':'div',{class:'grow',style:'text-align:left',onclick:on||null},el('b',{style:`font-weight:${big?600:500}${strike?';color:var(--ink-3);text-decoration:line-through':''}`},t),s?el('small',{class:sc||null},s):null),r||null);return hold?withPress(n,hold):n;};
@@ -165,7 +165,7 @@ function areaNexts(){const tk=todayK(),we=k(addD(weekStartOf(today()),6)),first=
   const out={};Object.keys(first).forEach(a=>{const f=first[a];out[a]=`${f.t} ${f.d===tk?(f.tm!=null?'at '+fmtT(f.tm):'today'):relDay(f.d).replace(/^Tomorrow$/,'tomorrow')}${(n[a]||0)>1?` · ${n[a]} this week`:''}`;});return out;}
 function areaRecords(a){return{tasks:get.all('task').filter(r=>r.area===a&&isOpenTask(r)),habits:get.all('habit').filter(r=>r.area===a),goals:get.all('goal').filter(r=>r.area===a),projects:get.all('project').filter(r=>r.area===a),resources:get.all('resource').filter(r=>r.area===a)};}
 function hubHidden(name){const s=get.settings(),off=(s.hubHidden||{})[name]||[],on=(s.hubShown||{})[name]||[];return[...off,...toolsOf(name).filter(t=>t.optIn&&!on.includes(t.id)).map(t=>t.id)];}
-function editToolsSheet(name,hub){const inst=openSheet({title:'Modules',left:{label:'Done'},build:b=>{const draw=()=>{b.innerHTML='';b.append(el('p',{class:'muted small'},'Turn off a module you don’t use. Nothing in it is deleted.'),el('div',{class:'list'},toolsOf(name).filter(t=>!t.hide).map(t=>{const on=toolOn(name,t.id);return Row({as:'div',style:''},el('span',{style:'display:grid;color:var(--action-text)',html:ic(t.icon,20)}),el('span',{class:'grow'},t.name),el('button',{class:'sw'+(on?' on':''),role:'switch','aria-checked':String(on),'aria-label':t.name,onclick:()=>{setToolOn(name,t.id,!on);draw();}},el('i')));})),Button('Build your own module',{variant:'secondary',full:true,style:'margin-top:var(--s3)',onclick:()=>{inst.close();App.state.params={name};modSheet(null);}}),el('button',{class:'linkbtn small',style:'margin-top:var(--s1)',onclick:()=>{inst.close();App.go('modules');}},'All modules'));};draw();}});}
+function editToolsSheet(name,hub){const inst=openSheet({title:'Modules',left:{label:'Done'},build:b=>{const draw=()=>{b.innerHTML='';b.append(el('p',{class:'muted small'},'Turn off a module you don’t use. Nothing in it is deleted.'),el('div',{class:'list'},toolsOf(name).filter(t=>!t.hide).map(t=>{const on=toolOn(name,t.id);return Switch({on,label:t.name,weight:400,lead:el('span',{style:'display:grid;color:var(--action-text)',html:ic(t.icon,20)}),onChange:v=>{setToolOn(name,t.id,v);draw();}});})),Button('Build your own module',{variant:'secondary',full:true,style:'margin-top:var(--s3)',onclick:()=>{inst.close();App.state.params={name};modSheet(null);}}),el('button',{class:'linkbtn small',style:'margin-top:var(--s1)',onclick:()=>{inst.close();App.go('modules');}},'All modules'));};draw();}});}
 function toolTile(name,t){const l=entries(name,t.id),d=t.tile?t.tile(l,name):{v:String(l.length),sub:l.length?t.sum(l):'Nothing yet'};
   return el('button',{class:'tc'+(d.off?' off':''),'aria-label':`${t.name}${d.sub?', '+d.sub:''}`,onclick:()=>App.go('tool',{hub:name,tool:t.id})},
     el('span',{class:'tt2'},el('span',{class:'ib',html:ic(t.icon||'grid',19)}),d.tag?pill(d.tag,d.tagc||''):null),
@@ -184,10 +184,11 @@ function renderFields(body,fields,D,update){
   let firstInput=null;
   fields.forEach(f=>{const id=`f-x-${f.id}`;let input;
     if(f.type==='select'&&f.id==='mood'&&optsOf(f).join()===MOODS.join()){body.append(el('div',{class:'field'},el('span',{class:'eyebrow'},f.label),moodPicker(D[f.id],v=>{D[f.id]=v;update();})));return;}
+    if(f.type==='date'||f.type==='time'){body.append(Field({label:f.label,type:f.type,id,value:D[f.id]||'',hint:f.hint||null,clear:f.blank||f.type==='time'||f.id==='last',onInput:v=>{D[f.id]=v;update();}}));return;}
     if(f.type==='select'){const o=optsOf(f);input=el('select',{id,onchange:e=>{D[f.id]=e.target.value;update();}},o.map(x=>{const op=el('option',{value:x},x);if(D[f.id]===x)op.selected=true;return op;}));}
     else if(f.type==='area'){body.append(fieldNotes(id,f.label,f.ph||'',D[f.id]||'',v=>{D[f.id]=v;update();}));return;}
     else{const kb=fieldKeyboard(f);input=el('input',{id,type:kb.type,inputmode:kb.mode,autocapitalize:kb.cap,autocorrect:kb.cap?'off':null,spellcheck:kb.cap?'false':null,value:D[f.id]??'',autocomplete:'off',oninput:e=>{D[f.id]=f.type==='number'?numIn(e.target.value):e.target.value;update();}});if(!firstInput&&f.type==='text')firstInput=input;}
-    body.append(el('label',{class:'field'},el('span',{class:'eyebrow'},f.label),input));});
+    body.append(Field({label:f.label,control:input,hint:f.hint||null}));});
   chainEnter(body);
   return firstInput;
 }
@@ -209,7 +210,7 @@ function chainEnter(body){const ins=[...body.querySelectorAll('input:not([type=d
 function fieldDefaults(fields,D){fields.forEach(f=>{if(D[f.id]!==undefined)return;if(f.def!=null)D[f.id]=f.def;else if(f.type==='select')D[f.id]=optsOf(f)[0];else if(f.type==='date'&&f.id!=='last'&&!f.blank)D[f.id]=todayK();});return D;}
 function askFields({title,fields,D={},save,addLabel='Save',word='change',isEdit=true,req=true}){fieldDefaults(fields,D);const titleF=fields.find(f=>f.type==='text'||f.type==='area');const can=()=>!req||!titleF||!!String(D[titleF.id]??'').trim();
   return formSheet({title,addLabel,D,word,isEdit,canAdd:can,commit:()=>save(D),build:(body,update)=>{renderFields(body,fields,D,update);}});}
-function pickSheet(title,opts,on){if(opts.length<=4){menuAt(opts.map(([v,l])=>({label:l,onclick:()=>on(v)})));return;}const inst=openSheet({title,left:{label:'Cancel'},build:b=>b.append(el('div',{class:'list'},opts.map(([v,l,s])=>Row({style:'',onclick:()=>{inst.close();on(v);}},el('span',{class:'grow'},el('b',{style:'font-weight:500'},l),s?el('small',{},s):null)))))});}
+function pickSheet(title,opts,on){if(opts.length<=4){menuAt(opts.map(([v,l])=>({label:l,onclick:()=>on(v)})));return;}Picker({title,items:opts,onPick:on});}
 function entrySheet(hub,t,rec,{seed=null,after=null,type=null,preset=null}={}){
   if(t.wheel){wheelSheet(hub,t,rec);return;}
   if(hub==='Health'&&t.id==='workouts'&&(type==='routine'||(rec&&rec.f&&rec.f.t==='routine'))){workoutRoutineSheet(rec,{after});return;}

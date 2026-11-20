@@ -221,7 +221,7 @@ function moreTurn(on,getP,done,top=null){return el('button',{class:top?'chip cap
   const pickTool=(hub,t)=>{markTurn(`${hub}|${t.id}`);inst.close();entrySheet(hub,t,null,{seed:getP(),after:done});};
   const pickBasic=id=>{inst.close();on(id);};
   const chip=(label,icon,fn,words)=>{const c=el('button',{class:'mtchip',onclick:fn},el('span',{style:'display:grid',html:ic(icon||'list',15,1.9)}),label);c._w=(label+' '+(words||'')).toLowerCase();return c;};
-  const section=(title,icon,chs)=>{if(!chs.length)return null;const n=el('section',{class:'card mtcard'},el('div',{class:'mthead'},icon?el('span',{class:'mtic',html:ic(icon,17,1.9)}):null,el('b',{},title)),el('div',{class:'mtchips'},chs));n._chips=chs;secs.push(n);return n;};
+  const section=(title,icon,chs)=>{if(!chs.length)return null;const n=Card({cls:'mtcard'},el('div',{class:'mthead'},icon?el('span',{class:'mtic',html:ic(icon,17,1.9)}):null,el('b',{},title)),el('div',{class:'mtchips'},chs));n._chips=chs;secs.push(n);return n;};
   const tools={};(get.settings().areas||AREAS).forEach(hub=>{toolsOf(hub).filter(t=>!t.wheel&&t.id!=='checkin'&&toolOn(hub,t.id)).forEach(t=>{tools[`${hub}|${t.id}`]={hub,t};});});
   const label=(hub,t)=>{const all=toolsOf(hub).filter(x=>x.word===t.word).length;return /^(entry|item|note|record|log)$/i.test(t.word)||all>1?t.name:cap(t.word);};
   /* search, then what you used last, then the basic types, then every life area */

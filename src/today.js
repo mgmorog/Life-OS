@@ -1,7 +1,9 @@
 /* ---------- Today ---------- */
 const HH=56;
 function snapItem(e){const before=clone(e.rec),ids=new Set(get.all(before.kind).map(r=>r.id));return()=>{put(before,{silent:true});get.all(before.kind).forEach(r=>{if(!ids.has(r.id))remove(r.id,{silent:true});});App.refresh();};}
-function pickProject(r){let inst;const ps=get.all('project').filter(p=>!p.finished&&p.id!==r.part);inst=openSheet({title:`Add “${r.title}” to`,left:{label:'Cancel'},build:b=>{b.append(el('div',{class:'list'},ps.map(p=>Row({style:'',onclick:()=>{const was=r.part;r.part=p.id;if(!r.area&&p.area)r.area=p.area;put(r);inst.close();toast(`Added to ${p.title}`,()=>{r.part=was;put(r);},'Undo',{open:dest('plan',{id:p.id})});}},el('span',{class:'grow'},el('b',{style:'font-weight:500'},p.title),p.area?el('small',{},p.area):null),el('span',{class:'chev',html:ic('chevr',16,2)}))),r.part?Row({style:'color:var(--overdue)',onclick:()=>{const was=r.part;r.part=null;put(r);inst.close();toast('Removed from project',()=>{r.part=was;put(r);});}},'Remove from its project'):null));}});}
+function pickProject(r){let inst;const ps=get.all('project').filter(p=>!p.finished&&p.id!==r.part);
+  inst=Picker({title:`Add “${r.title}” to`,recentKey:'project',items:ps.map(p=>({value:p.id,label:p.title,sub:p.area||null})),emptyText:'No open projects',onPick:id=>{const p=get.id(id),was=r.part;r.part=p.id;if(!r.area&&p.area)r.area=p.area;put(r);toast(`Added to ${p.title}`,()=>{r.part=was;put(r);},'Undo',{open:dest('plan',{id:p.id})});},
+    footer:r.part?el('div',{class:'list',style:'margin-top:var(--s3)'},Row({style:'color:var(--overdue)',onclick:()=>{const was=r.part;r.part=null;put(r);inst.close();toast('Removed from project',()=>{r.part=was;put(r);});}},'Remove from its project')):null});}
 function itemMenu(e,dk,x,y){
   const r=e.rec;
   if(e.kind==='gcal'){openMenu(x,y,[{label:'See details',icon:'cal',onclick:()=>Gcal.details(e)}]);return;}
@@ -9,6 +11,7 @@ function itemMenu(e,dk,x,y){
   const canDup=['task','block','allday'].includes(e.kind),movable=e.kind!=='allday';const occDay=e.kind==='allday'?allDayOccStart(r,dk):dk;
   openMenu(x,y,[
     {label:'Edit',icon:'edit',onclick:()=>openItem(e,dk)},
+    e.kind==='task'&&App.state.view==='tasks'?{label:'Select',icon:'check',onclick:()=>{App.state.taskSel=new Set([r.id]);App.refresh();}}:null,
     e.kind!=='allday'?{label:e.done?'Mark not done':'Mark done',icon:'task',onclick:()=>{toggleItem(e,dk);App.refresh();}}:null,
     movable?{label:e.time!=null?'Change the time':'Set a time',icon:'time',onclick:()=>timeSheet(e,dk)}:null,
     {label:'Move to tomorrow',icon:'arrow',onclick:()=>{const u=snapItem(e),d=addK(occDay,1);moveItemDay(e,occDay,d);toast(`Moved to ${relDay(d)}`,u);}},
@@ -18,7 +21,7 @@ function itemMenu(e,dk,x,y){
     e.time!=null&&e.kind!=='block'?{label:'Remove the time',icon:'x',onclick:()=>{const u=snapItem(e);setItemTime(e,dk,null);App.refresh();toast('Time removed',u);}}:null,
     (e.kind==='task'||e.kind==='entry')&&!e.done&&!t3Get(dk).some(q=>q.id===r.id)?{label:'Make it a priority',icon:'target',onclick:()=>{const l=t3Get(dk);if(l.length>=T3_MAX){toast('Three priorities is the limit. Remove one first.');return;}t3Set(dk,[...l,{id:r.id}]);buzz(12);toast('Added to priorities',()=>t3Set(dk,t3Get(dk).filter(q=>q.id!==r.id)));}}:null,
     e.kind==='task'?{label:r.priority==='high'?'Remove high priority':'Mark high priority',icon:'flag',onclick:()=>{const was=r.priority;r.priority=was==='high'?'normal':'high';put(r);toast(r.priority==='high'?'Marked high priority':'Priority cleared',()=>{r.priority=was;put(r);});}}:null,
-    e.kind==='task'&&!e.done?{label:frNow()&&frNow().id===r.id?'Back to the timer':'Start focus',icon:'play',onclick:()=>startFocus(r)}:null,
+    (e.kind==='task'||e.kind==='block')&&!e.done?{label:frNow()&&frNow().id===r.id?'Back to the timer':'Start focus',icon:'play',onclick:()=>frNow()&&frNow().id===r.id?App.go('timer'):focusLenSheet(r)}:null,
     e.kind==='task'&&r.part&&(get.id(r.part)||{}).kind==='project'?{label:'Waits for…',icon:'layers',onclick:()=>depSheet(r)}:null,
     e.kind==='task'&&get.all('project').some(p=>!p.finished)?{label:r.part?'Move to another project':'Add to a project',icon:'project',onclick:()=>pickProject(r)}:null,
     canDup?{label:'Duplicate',icon:'copy',onclick:()=>{const c=clone(r);delete c.id;delete c.createdAt;delete c.doneDates;delete c.skip;delete c.stepDone;delete c.autoSteps;(c.steps||[]).forEach(x=>{x.d=false;x.doneAt=null;});if(c.repeat&&c.repeat.type!=='never'){c.repeat={type:'never',end:null};if(c.kind==='allday'){if(c.end)c.end=addK(occDay,daysBetween(c.start,c.end));c.start=occDay;}else c.date=dk;}const made=put(Object.assign({id:uid(r.kind[0])},c));toast('Duplicated',()=>remove(made.id));}}:null,
@@ -49,7 +52,7 @@ function setItemTime(e,dk,time){
 function timeSheet(e,dk){
   let val=e.time!=null?e.time:(dk===todayK()?nextQuarter():9*60),inst;
   const c=formCtx(()=>{});const u=snapItem(e);
-  inst=openSheet({title:e.time!=null?'Change the time':'Set a time',left:{label:'Cancel'},right:{label:'Done',onclick:()=>{setItemTime(e,dk,val);inst.close();toast(`Set for ${fmtT(val)}`,u);}},build:b=>{b.append(el('p',{class:'muted'},e.title),el('div',{class:'card'},c.wheel(()=>val,v=>{val=v;})));}});
+  inst=openSheet({title:e.time!=null?'Change the time':'Set a time',left:{label:'Cancel'},right:{label:'Done',onclick:()=>{setItemTime(e,dk,val);inst.close();toast(`Set for ${fmtT(val)}`,u);}},build:b=>{b.append(el('p',{class:'muted'},e.title),Card({as:'div'},c.wheel(()=>val,v=>{val=v;})));}});
 }
 /* Habit sessions: put a habit on a day (and optionally a time), move a planned session, or take it off */
 function planHabitDay(h,d,time=null){h.sessions=h.sessions||{};const was=clone(h.sessions);h.sessions[d]=Object.assign({},h.sessions[d],{time});put(h);App.refresh();toast(`Planned for ${relDay(d)}`,()=>{h.sessions=was;put(h);App.refresh();},'Undo',{open:App.state.view==='today'&&App.state.sel===d?null:dayDest(d)});}
@@ -62,14 +65,14 @@ function habitPlanSheet(h){
       if(up.length)b.append(el('div',{class:'sect'},'Planned'),el('div',{class:'list'},up.map(d=>{const se=h.sessions[d]||{},mv=moving===d;return el('div',{class:'li'+(mv?' moving':''),style:''},el('span',{class:'grow'},el('b',{style:'font-weight:500'},relDay(d)),el('small',{},mv?'Now tap its new day below':se.time!=null?fmtT(se.time):'Any time')),
         el('button',{class:'chip'+(mv?' on':''),onclick:()=>{moving=mv?null:d;draw();}},mv?'Cancel':'Move'),
         mv?null:Chip('Remove',{onclick:()=>{const x=h.sessions[d];delete h.sessions[d];put(h);draw();App.refresh();toast('Session removed',()=>{h.sessions[d]=x;put(h);draw();App.refresh();});}}));})));
-      b.append(el('div',{class:'sect'},moving?`Move ${relDay(moving)} to`:up.length?'Add another':'Pick a day'),el('div',{class:'card'},c.calendar(null,d=>{if(!d)return;if(d<tk){toast('That day has passed');return;}
+      b.append(el('div',{class:'sect'},moving?`Move ${relDay(moving)} to`:up.length?'Add another':'Pick a day'),Card({as:'div'},c.calendar(null,d=>{if(!d)return;if(d<tk){toast('That day has passed');return;}
         if(moving){if(d!==moving){const x=h.sessions[moving];delete h.sessions[moving];h.sessions[d]=x||{time:null};put(h);toast(`Moved to ${relDay(d)}`);}moving=null;draw();App.refresh();return;}
         planHabitDay(h,d);draw();},{minK:tk})));};
     draw();}});
 }
 function moveSheet(e,dk){
   let inst;const c=formCtx(()=>{});const u=snapItem(e);
-  inst=openSheet({title:'Move to',build:b=>{b.append(el('p',{class:'muted'},e.title),el('div',{class:'card'},c.calendar(dk,d=>{if(!d||d===dk){inst.close();return;}moveItemDay(e,dk,d);inst.close();toast(`Moved to ${relDay(d)}`,u);})));}});
+  inst=openSheet({title:'Move to',build:b=>{b.append(el('p',{class:'muted'},e.title),Card({as:'div'},c.calendar(dk,d=>{if(!d||d===dk){inst.close();return;}moveItemDay(e,dk,d);inst.close();toast(`Moved to ${relDay(d)}`,u);})));}});
 }
 function goDay(dk){const S=App.state;if(dk===S.sel)return;const dir=dk>S.sel?1:-1;S._anim=null;S.sel=dk;S._fresh=true;S._gridTop=null;if(S.view!=='today'){App.refresh();return;}daySwap(()=>{clearTimeout(App._r);App.render();},dir);}
 /* reminders: an alert in the app, never fired twice, kept until dealt with */
@@ -88,8 +91,7 @@ function dueReminders(){
 function setRem(key,v){const st=remState(),tk=todayK();st.map[key]=v;for(const x in st.map){if(x.split('|')[1]<tk)delete st.map[x];}put(st);}
 function reminderCard(){
   const due=dueReminders();if(!due.length)return null;
-  return el('section',{class:'card remcard',role:'status'},el('div',{class:'eyebrow',style:'display:flex;gap:var(--s2);align-items:center;color:var(--overdue)',html:ic('bell',16,2)+`<span>Reminder${due.length>1?'s':''}</span>`}),
-    due.slice(0,4).map(({e,dk,key})=>el('div',{class:'remrow'},el('button',{class:'grow',style:'text-align:left',onclick:()=>{setRem(key,'x');openItem(e,dk);}},el('b',{},e.title),el('small',{},`${relDay(dk)}${e.time!=null?' · '+fmtT(e.time):' · All day'}`)),
+  return Card({cls:'remcard',role:'status'},el('div',{class:'eyebrow',style:'display:flex;gap:var(--s2);align-items:center;color:var(--overdue)',html:ic('bell',16,2)+`<span>Reminder${due.length>1?'s':''}</span>`}),due.slice(0,4).map(({e,dk,key})=>el('div',{class:'remrow'},el('button',{class:'grow',style:'text-align:left',onclick:()=>{setRem(key,'x');openItem(e,dk);}},el('b',{},e.title),el('small',{},`${relDay(dk)}${e.time!=null?' · '+fmtT(e.time):' · All day'}`)),
       el('span',{class:'remacts'},e.kind!=='allday'?Chip('Done',{onclick:()=>{toggleItem(e,dk);setRem(key,'x');buzz(8);}}):null,Chip('10 min',{onclick:()=>{setRem(key,Date.now()+10*6e4);toast('Reminding you in 10 minutes');}}),IconButton(`Dismiss ${e.title}`,{size:'sm',html:ic('x',16,2.2),onclick:()=>setRem(key,'x')})))));
 }
 const toastedRem=new Set();
@@ -111,6 +113,7 @@ function viewToday(root){
   if(S.loading&&!recs.size){page.append(...todaySkeleton());root.append(page);return;}
   const s=get.settings();
   {const fr=frNow(),onPrio=fr&&isToday&&t3Get(dk).some(x=>x.id===fr.id);const fc=onPrio?null:focusRunChip();if(fc)page.append(fc);}
+  {try{const yc=yirNudge(dk);if(yc)page.append(yc);}catch(e){}}
   if(!s.introDone&&!recs.size)page.append(introCard());
   if(isToday){const gc=gsCard();if(gc)page.append(gc);}
   {const ad=alldayRow(dk);if(ad)page.append(ad);}
@@ -161,7 +164,7 @@ function weekStrip(dk){
 }
 function pickDay(){
   let inst;const c=formCtx(()=>{});
-  inst=openSheet({title:'Go to a day',build:body=>{body.append(el('div',{class:'card'},c.calendar(App.state.sel,dk=>{if(dk){inst.close();goDay(dk);}})),Button('Jump to today',{variant:'quiet',full:true,onclick:()=>{inst.close();goDay(todayK());}}));}});
+  inst=openSheet({title:'Go to a day',build:body=>{body.append(Card({as:'div'},c.calendar(App.state.sel,dk=>{if(dk){inst.close();goDay(dk);}})),Button('Jump to today',{variant:'quiet',full:true,onclick:()=>{inst.close();goDay(todayK());}}));}});
 }
 function dueExtras(dk,shown){
   const tk=todayK();return get.all('task').filter(t=>isOpenTask(t)&&t.deadline&&(t.deadline===dk||(dk===tk&&t.deadline<dk))&&!shown.has(t.id)&&!occursOn(t.date,t.repeat,dk,t.skip));
@@ -346,7 +349,7 @@ function dayCard(dk){
    fl.forEach(f=>rows.append(el('button',{class:'upwork due',onclick:()=>flexWeekSheet(f.job.id,f.from)},el('span',{style:'display:grid',html:ic('plus',15,2.2)}),el('span',{},`Add your ${f.job.name&&f.job.name!=='Work'?f.job.name+' ':'work '}hours for ${mdS(fromK(f.from))}–${mdS(fromK(f.to))}`))));}
   const pastE=isToday?sched.filter(e=>e.kind!=='task'&&e.time+(e.dur||30)<=nowM):[],upN=Math.min(upcoming.length,Math.max(3,6-Math.min(pastE.length,3))),showE=[...pastE.slice(-(6-upN)),...upcoming.slice(0,upN)].slice(0,6);
   showE.forEach(e=>{const end=e.time+(e.dur||30),gone=isToday&&end<=nowM,during=isToday&&!gone&&e.time<=nowM,isNext=e===upcoming[0];
-    rows.append(el('button',{class:'uprow'+(gone?' gone':'')+(isNext?' nextup':''),style:`--c:${e.color||'var(--action)'}`,onclick:()=>openItem(e,dk)},el('span',{class:'upt tnum'},fmtT(e.time)),el('span',{class:'upbar'}),el('span',{class:'grow'},el('span',{class:'tt'},e.title),el('span',{class:'meta'},sched.some(f=>f!==e&&f.kind!=='task'&&e.kind!=='task'&&f.time<e.time+(e.dur||30)&&e.time<f.time+(f.dur||30))?el('span',{class:'ovtag'},'Overlaps · '):null,e.kind==='task'?'':`Until ${fmtT(end)}`,during?el('b',{class:'upnow'},` · ${fmtDurS(end-nowM)} left`):isToday&&e===upcoming[0]?` · in ${fmtDurS(e.time-nowM)}`:''))));});
+    rows.append(el('button',{class:'uprow'+(gone?' gone':'')+(isNext?' nextup':''),style:`--c:${e.color||'var(--action)'}`,onclick:()=>openItem(e,dk)},el('span',{class:'upt tnum'},fmtT(e.time)),el('span',{class:'upbar'}),el('span',{class:'grow'},el('span',{class:'tt'},e.title),el('span',{class:'meta'},+(e.rec&&e.rec.travel)&&e.kind==='block'&&!gone&&!during?el('span',{class:'trleave'},`Leave by ${fmtT(e.time-e.rec.travel)} · `):null,sched.some(f=>f!==e&&f.kind!=='task'&&e.kind!=='task'&&f.time<e.time+(e.dur||30)&&e.time<f.time+(f.dur||30))?el('span',{class:'ovtag'},'Overlaps · '):null,e.kind==='task'?'':`Until ${fmtT(end)}`,during?el('b',{class:'upnow'},` · ${fmtDurS(end-nowM)} left`):isToday&&e===upcoming[0]?` · in ${fmtDurS(e.time-nowM)}`:''))));});
   if(!showE.length)rows.append(el('p',{class:'sub',style:'margin:2px 0 0'},sched.length?'Nothing else scheduled today.':isPast?'Nothing was scheduled.':'Nothing scheduled. Open the day to block time.'));
   cu.append(rows);
   cu.append(el('button',{class:'linkbtn small uptoggle','aria-expanded':String(open),onclick:()=>{S.gridOpen=!S.gridOpen;S._gridTop=null;App.refresh();}},open?'Hide full day':'See full day',el('span',{style:`display:grid;transition:transform .25s var(--ease);${open?'transform:rotate(90deg)':''}`,html:ic('chevr',16,2.2)})));
@@ -376,7 +379,7 @@ function ringDrop(n,id,dk){const i=+n.dataset.ring,l=t3Get(dk).filter(q=>q.id!==
 function plateCard(dk){
   const S=App.state,list=get.all('task').filter(t=>!t.date&&isOpenTask(t)&&!(t.deadline&&t.deadline<=dk));if(!list.length)return null;
   const open=!!S.plateOpen;
-  const c=el('section',{class:'card','data-k':'plate',style:'padding:6px var(--s4)'},el('button',{class:'tmr',style:'min-height:48px','aria-expanded':String(open),onclick:()=>{S.plateOpen=!S.plateOpen;App.refresh();}},el('span',{class:'grow'},el('b',{style:'font-weight:600'},'On your plate'),el('span',{class:'small muted',style:'margin-left:var(--s2)'},`${list.length} unscheduled`)),el('span',{class:'chev'+(open?' open':''),style:open?'transform:rotate(90deg)':null,html:ic('chevr',16,2.2)})));
+  const c=Card({'data-k':'plate'},el('button',{class:'tmr',style:'min-height:48px','aria-expanded':String(open),onclick:()=>{S.plateOpen=!S.plateOpen;App.refresh();}},el('span',{class:'grow'},el('b',{style:'font-weight:600'},'On your plate'),el('span',{class:'small muted',style:'margin-left:var(--s2)'},`${list.length} unscheduled`)),el('span',{class:'chev'+(open?' open':''),style:open?'transform:rotate(90deg)':null,html:ic('chevr',16,2.2)})));
   if(open){const w=el('div',{class:'anytime',style:'margin-top:0'});list.slice(0,8).forEach(t=>{const e={kind:'task',id:t.id,rec:t,title:t.title,time:null,done:false};w.append(anyRow(e,dk,{target:dk,addToday:true}));});c.append(w,el('div',{style:'display:flex;justify-content:space-between;align-items:center;min-height:44px'},list.length>8?el('button',{class:'linkbtn small',onclick:()=>{App.go('tasks',{tab:'all'});}},`All ${list.length}`):el('span'),el('button',{class:'linkbtn small',onclick:()=>{S.studio=Object.assign(S.studio||{},{mode:'w',anchor:null});App.go('studio');}},'Plan in Studio ›')));}
   return c;
 }
@@ -458,6 +461,7 @@ function timeGrid(dk,timed){
       const mv=m=>{nd=Math.max(15,Math.min(1440,Math.round((d0+(m.clientY-y0)/HH*60)/15)*15));b.style.height=Math.max(Math.min(nd,1440-e.time)/60*HH-2,26)+'px';if(bm)bm.textContent=fmtRange(e.time,e.time+nd);if(nd!==lastN){lastN=nd;buzz(4);}showB();};
       const up=()=>{rz._on=false;bub.remove();rz.removeEventListener('pointermove',mv);rz.removeEventListener('pointerup',up);rz.removeEventListener('pointercancel',up);App.dragging=false;App._dragEnd=Date.now();if(nd!==d0){const u=snapItem(e),r=detachIfRepeating(e.rec,dk);r.dur=nd;put(r);toast(`${e.title} now ends ${fmtT((e.time+nd)%1440)}`,u);}else App.refresh();};
       rz.addEventListener('pointermove',mv);rz.addEventListener('pointerup',up);rz.addEventListener('pointercancel',up);});
+    {const tr=+(e.rec&&e.rec.travel)||0;if(tr&&e.kind==='block'&&!e.cont&&e.time-tr>=0){const th=tr/60*HH;cv.append(el('div',{class:'travelband','aria-hidden':'true',style:`--c:${e.color};top:${top-th}px;height:${th}px;`+(n>1?`left:calc(60px + (100% - 70px)/${n}*${c});right:auto;width:calc((100% - 70px)/${n} - 3px);`:'')},th>=18?el('span',{},`Travel · ${fmtDurS(tr)}`):null));}}
     cv.append(b);
   });
   if(isToday)cv.append(el('div',{class:'now',id:'now'},el('span',{class:'npill',id:'nowpill'}),el('span',{class:'bar'})));
@@ -479,10 +483,8 @@ function timeGrid(dk,timed){
 }
 function tickNow(){const n=$('#now');if(!n)return;const m=nowMin();n.style.top=`${m/60*HH+12}px`;const p=$('#nowpill');if(p)p.textContent=fmtS(m);$$('.hr').forEach(r=>{const l=r.querySelector('.lbl2');if(l)l.style.opacity=Math.abs(r.dataset.h*60-m)/60*HH<20?0:1;});}
 function reviewPeriod(dk){const d=fromK(dk),s=get.settings(),wk=s.weeklyReview!==false?'week':null,lastOfMonth=addD(d,7).getMonth()!==d.getMonth();if(!lastOfMonth)return wk;if(s.quarterlyReview&&d.getMonth()%3===2)return 'quarter';return s.monthlyReview?'month':wk;}
-function introCard(){return el('section',{class:'card fade-up'},el('div',{class:'eyebrow'},'Welcome'),el('h2',{},'Set up your foundation'),el('p',{class:'sub'},'Tell Life OS how you live, or look around with example data first. Examples are marked and can be cleared in one tap.'),
-  el('div',{class:'btnrow'},Button('Start',{variant:'primary',onclick:()=>App.go('foundation')}),Button('Load examples',{variant:'text',onclick:()=>{loadExamples();}})));}
-function checkinCard(dk){return el('section',{class:'card'},el('div',{class:'eyebrow'},'Weekly check-in'),el('h2',{},reviewPeriod(dk)==='week'?`${DOW[fromK(dk).getDay()]} check-in`:reviewPeriod(dk)==='month'?'Monthly review':'Quarterly review'),el('p',{class:'sub'},reviewPeriod(dk)==='week'?'Look back at this week, then plan the next one.':`Look back at this ${reviewPeriod(dk)}, then plan what comes next.`),
-  el('div',{class:'btnrow'},Button('Start',{variant:'primary',onclick:()=>App.go('review',{period:reviewPeriod(dk)})}),Button('Later',{variant:'text',onclick:()=>{setSettings({checkinLater:dk});}})));}
+function introCard(){return Card({cls:'fade-up'},el('div',{class:'eyebrow'},'Welcome'),el('h2',{},'Set up your foundation'),el('p',{class:'sub'},'Tell Life OS how you live, or look around with example data first. Examples are marked and can be cleared in one tap.'),el('div',{class:'btnrow'},Button('Start',{variant:'primary',onclick:()=>App.go('foundation')}),Button('Load examples',{variant:'text',onclick:()=>{loadExamples();}})));}
+function checkinCard(dk){return Card({},el('div',{class:'eyebrow'},'Weekly check-in'),el('h2',{},reviewPeriod(dk)==='week'?`${DOW[fromK(dk).getDay()]} check-in`:reviewPeriod(dk)==='month'?'Monthly review':'Quarterly review'),el('p',{class:'sub'},reviewPeriod(dk)==='week'?'Look back at this week, then plan the next one.':`Look back at this ${reviewPeriod(dk)}, then plan what comes next.`),el('div',{class:'btnrow'},Button('Start',{variant:'primary',onclick:()=>App.go('review',{period:reviewPeriod(dk)})}),Button('Later',{variant:'text',onclick:()=>{setSettings({checkinLater:dk});}})));}
 
 /* ---------- share a day as an image, a PDF or text ---------- */
 const emptyDayHead=dk=>{const tk=todayK();return dk<tk?'Nothing logged':dk===tk?'A clear day':'Nothing planned yet';};
@@ -629,7 +631,7 @@ function replanSheet(tasks,dk,ex){ex=ex||{};const tk=todayK(),sat=(()=>{const d=
       const opts=[[tk,'Today','Back on today’s list'],[addK(tk,1),'Tomorrow',relDay(addK(tk,1))],[sat,'This weekend',relDay(sat)],[mon,'Next week',relDay(mon)],...(n>1?[['spread','Spread out','2 a day from tomorrow']]:[]),[null,'Someday','No date, in Anytime']];
       b.append(el('button',{class:'rpback',onclick:()=>{mode='pick';draw(b);}},el('span',{style:'display:grid',html:ic('chevl',16,2.4)}),`Replan ${n} ${n===1?'to-do':'to-dos'}`),
         el('div',{class:'rpgrid'},opts.map(([v,t1,t2])=>el('button',{class:'rpopt'+(v===null?' quiet':''),onclick:()=>moveTo(v)},el('b',{},t1),el('span',{},t2))),
-          el('label',{class:'rpopt wide'},el('b',{},'Pick a date'),el('input',{type:'date',class:'rpdate',min:tk,onchange:ev=>{if(ev.target.value)moveTo(ev.target.value);}}))));
+          el('button',{class:'rpopt wide',onclick:()=>{const ctx=formCtx(()=>{});const ps=openSheet({title:'Move to',left:{label:'Cancel'},build:bd=>bd.append(ctx.calendar(null,dk=>{ps.close();moveTo(dk);},{minK:tk}))});}},el('b',{},'Pick a date'),el('span',{},'Opens the calendar'))));
       return;}
     const pickable=items.filter(x=>canAct(x,act)),all=pickable.length&&pickable.every(x=>sel().has(x.key));
     const seg=el('div',{class:'rpseg',role:'tablist'},[['replan','Replan'],['done','Mark complete']].map(([k,t])=>el('button',{class:act===k?'on':'',role:'tab','aria-selected':String(act===k),disabled:k==='replan'&&!items.some(x=>x.move)?'':null,onclick:()=>{if(act===k)return;act=k;draw(b);}},t)));
@@ -694,7 +696,7 @@ function habDotSet(b,h,dk,on){b.classList.toggle('done',on);b.setAttribute('aria
 /* v228 · loading Today paints the Stack's own card outlines (Top 3, To-do, Habits, Coming up), so nothing jumps when data lands */
 function todaySkeleton(){const bar=(w,h=12)=>el('div',{class:'skel',style:`height:${h}px;width:${w}`}),
   line=w=>el('div',{class:'sk-row'},el('span',{class:'sk-tick'}),bar(w)),
-  card=(lab,rows)=>el('section',{class:'card sk-card','aria-hidden':'true'},bar('28%',10),...rows);
+  card=(lab,rows)=>Card({cls:'sk-card','aria-hidden':'true'},bar('28%',10),...rows);
   return[el('span',{class:'sr-only',role:'status'},'Loading your day'),
     card('Top 3',[line('64%'),line('48%')]),
     card('To-do',[line('70%'),line('52%'),line('60%')]),
@@ -707,9 +709,9 @@ function tabSkeleton(kind){const bar=(w,h=12,x='')=>el('div',{class:'skel',style
   const title={calendar:'Calendar',studio:'Studio',more:'More'}[kind];
   page.append(el('div',{class:'pghead'},el('h1',{class:'pgtitle'},title)));
   if(kind==='calendar'){page.append(el('div',{class:'sk-seg'},bar('100%',38,'border-radius:12px')),
-    el('section',{class:'card sk-card'},bar('30%',14),el('div',{class:'sk-grid'},Array.from({length:35},()=>el('span',{class:'sk-dot'})))));}
+    Card({cls:'sk-card'},bar('30%',14),el('div',{class:'sk-grid'},Array.from({length:35},()=>el('span',{class:'sk-dot'})))));}
   else if(kind==='studio'){page.append(el('div',{class:'sk-habits'},[0,1,2].map(()=>el('div',{class:'sk-hab',style:'width:150px;height:84px'},bar('70%',10),bar('45%',10)))),
-    ...[0,1,2,3].map(()=>el('section',{class:'card sk-card'},bar('24%',10),el('div',{class:'sk-row'},el('span',{class:'sk-tick'}),bar('62%')))));}
+    ...[0,1,2,3].map(()=>Card({cls:'sk-card'},bar('24%',10),el('div',{class:'sk-row'},el('span',{class:'sk-tick'}),bar('62%')))));}
   else{page.append(bar('100%',46,'border-radius:12px'),el('div',{class:'sk-pins'},[0,1,2,3].map(()=>el('span',{class:'sk-ring',style:'width:52px;height:52px;border-width:0;background:var(--line-2)'}))),
-    el('section',{class:'card sk-card'},...[0,1,2,3].map(()=>el('div',{class:'sk-row'},el('span',{class:'sk-tick',style:'border-radius:var(--r-row)'}),bar('50%')))));}
+    Card({cls:'sk-card'},...[0,1,2,3].map(()=>el('div',{class:'sk-row'},el('span',{class:'sk-tick',style:'border-radius:var(--r-row)'}),bar('50%')))));}
   return page;}

@@ -3186,3 +3186,46 @@ html.t-auto #view,html.t-auto #layers{zoom:var(--tzoom,1)}
 .iconbtn.sm{width:36px;height:36px}
 .iconbtn.sm::before{content:'';position:absolute;inset:-4px}
 .otitle.cal-title{margin-top:0;align-items:center}
+/* v236 components */
+.card.tinted{background:var(--selected)}
+.card.alert{background:var(--danger-soft)}
+.card.flush{padding:0;overflow:hidden}
+.chead{margin-bottom:var(--s2)}
+.chact{min-height:var(--ctl-sm);padding:0 2px}
+.fpk{width:100%;min-height:var(--ctl);display:flex;align-items:center;padding:0 var(--s3);border:1px solid var(--border);border-radius:var(--r-row);background:var(--surface-raised);color:var(--action-text);font:inherit;font-weight:600;text-align:left}
+.fpk.empty{color:var(--text-muted);font-weight:400}
+.fpk.tinput{width:auto;flex:none}
+.field .fhint,.field .ferr{display:block;margin-top:var(--s1);font-size:var(--fs-footnote);line-height:var(--lh-ui);color:var(--text-muted)}
+.field .ferr{color:var(--overdue)}
+.field.bad input,.field.bad textarea,.field.bad select,.field.bad .fpk{border-color:var(--overdue)}
+.seg.sm button{height:28px;font-size:var(--fs-footnote)}
+.ring[style*="--ring-c"]{background:conic-gradient(var(--ring-c) calc(var(--p)*1%),var(--h0) 0)}
+.hmeter.sm{height:4px}
+.segs>i,.segs>span,.segs>button{flex:1;height:8px;border-radius:var(--r-micro);display:block}
+.segs>span,.segs>button{background:var(--h0)}
+.segs>.on{background:var(--seg-c,var(--action))}
+.segs>i{background:var(--h0) linear-gradient(var(--seg-c,var(--action)),var(--seg-c,var(--action))) no-repeat 0 0/0% 100%}
+.segs>i.on{background-size:100% 100%}
+.bar-row .hmeter{margin-top:0}
+#fr-top{position:fixed;z-index:var(--z-bar,60);top:calc(env(safe-area-inset-top) + 6px);left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:var(--s2);max-width:min(220px,56vw);height:var(--ctl-sm);padding:0 var(--s3);border-radius:var(--r-full);background:var(--action);color:var(--on-accent);font-size:var(--fs-label);box-shadow:var(--e-raised);animation:frIn var(--dur-base) var(--ease)}
+#fr-top i{width:8px;height:8px;border-radius:var(--r-full);background:currentColor;opacity:.7;animation:frDot 2s ease-in-out infinite;flex:none}
+#fr-top b{font-weight:700;flex:none}
+#fr-top span{opacity:.85;min-width:0}
+#fr-top.over{background:var(--overdue)}
+@keyframes frIn{from{opacity:0;transform:translate(-50%,-8px)}}
+@keyframes frDot{50%{opacity:.25}}
+@media (prefers-reduced-motion:reduce){#fr-top,#fr-top i{animation:none}}
+.flen{display:grid;grid-template-columns:1fr 1fr;gap:var(--s2)}
+/* v236 · select several: the action bar sits at the bottom, above the tab bar */
+.selbar{position:fixed;top:auto;left:50%;transform:translateX(-50%);width:min(560px,calc(100% - 2 * var(--s3)));bottom:calc(var(--bar) + env(safe-area-inset-bottom,0px) + var(--s2));z-index:var(--z-bar);animation:selUp var(--dur-base) var(--ease)}
+.page:has(>.selbar){padding-bottom:200px}
+@keyframes selUp{from{opacity:0;transform:translate(-50%,12px)}}
+@media (prefers-reduced-motion:reduce){.selbar{animation:none}}
+.sq.hasfav{background:var(--surface-raised);border:1px solid var(--border)}.sq .rfav{width:22px;height:22px;border-radius:5px;object-fit:contain}
+/* v236 · travel time before an event */
+.travelband{position:absolute;left:60px;right:10px;z-index:1;border-radius:var(--r-row) var(--r-row) 0 0;background:repeating-linear-gradient(-45deg,color-mix(in srgb,var(--c,var(--action)) 12%,transparent) 0 6px,transparent 6px 12px);border:1px dashed color-mix(in srgb,var(--c,var(--action)) 35%,transparent);border-bottom:0;padding:2px var(--s3);font-size:var(--fs-caption);font-weight:600;color:var(--text-muted);overflow:hidden;pointer-events:none}
+.dayline .trleave{display:block;font-size:var(--fs-caption);color:var(--text-muted);font-weight:500;margin-top:1px}
+.uprow .trleave{color:var(--action-text);font-weight:600}
+.field .fpk{border:0;background:none;padding:0;margin-top:var(--s2);min-height:28px;font-size:var(--fs-body);border-radius:0}
+.field .fpk::after{content:'›';margin-left:auto;color:var(--ink-3);font-weight:400}
+.field.bad .fpk{color:var(--overdue)}

@@ -4,7 +4,7 @@
   "installCommand": "npm ci",
   "buildCommand": "node build.mjs --target pwa",
   "outputDirectory": "dist-pwa",
-  "rewrites": [{ "source": "/cal/:token", "destination": "/api/cal?token=:token" }],
+  "rewrites": [{ "source": "/cal/:token", "destination": "/api/cal?token=:token" }, { "source": "/l/:token", "destination": "/share.html" }],
   "headers": [
     { "source": "/sw.js", "headers": [{ "key": "Cache-Control", "value": "no-cache" }, { "key": "Service-Worker-Allowed", "value": "/" }] },
     { "source": "/version.json", "headers": [{ "key": "Cache-Control", "value": "no-store" }] },

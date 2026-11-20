@@ -255,8 +255,8 @@ function taskSheet(rec,seed={}){
         if(isEdit&&D.part&&(get.id(D.part)||{}).kind==='project')details.append(ctx.row('dep','layers','Waits for',blockedBy(rec).length?`${blockedBy(rec).length} task${blockedBy(rec).length>1?'s':''}`:depsOf(rec).length?'All done':'Nothing',{tap:()=>{inst.close();depSheet(rec);}}));
       };
       ctxRender();
-      if(isEdit&&isOpenTask(rec))body.append(el('button',{class:'btn line block',style:'margin-top:6px',onclick:()=>{inst.close();startFocus(rec);}},el('span',{style:'display:grid',html:ic('play',15,2.2)}),frNow()&&frNow().id===rec.id?'Back to the timer':'Start focus'));
-      if(isEdit){const dk=occ||rec.date||todayK(),dn=isDone(rec,dk);body.append(el('button',{class:'btn line block',style:'margin-top:6px',onclick:()=>{setTaskDone(rec,dk,!dn,{quiet:true});inst.close();App.refresh();toast(dn?'Marked not done':'Done',()=>{setTaskDone(rec,dk,dn,{quiet:true});App.refresh();});}},el('span',{style:'display:grid',html:ic(dn?'undo':'check',16,2.2)}),dn?'Mark not done':'Mark done'));}
+      if(isEdit&&isOpenTask(rec))body.append(Button([el('span',{style:'display:grid',html:ic('play',15,2.2)}),frNow()&&frNow().id===rec.id?'Back to the timer':'Start focus'],{variant:'secondary',full:true,style:'margin-top:6px',onclick:()=>{inst.close();startFocus(rec);}}));
+      if(isEdit){const dk=occ||rec.date||todayK(),dn=isDone(rec,dk);body.append(Button([el('span',{style:'display:grid',html:ic(dn?'undo':'check',16,2.2)}),dn?'Mark not done':'Mark done'],{variant:'secondary',full:true,style:'margin-top:6px',onclick:()=>{setTaskDone(rec,dk,!dn,{quiet:true});inst.close();App.refresh();toast(dn?'Marked not done':'Done',()=>{setTaskDone(rec,dk,dn,{quiet:true});App.refresh();});}}));}
       if(isEdit)body.append(el('button',{class:'delete',onclick:()=>deleteFlow(rec,occ||null,inst)},'Delete task'));
       if(!isEdit)focusIfKeyboard(T.input);
     }});
@@ -366,10 +366,10 @@ function pickListSheet(text,done,photos=[]){
     const need=()=>{if(item.trim())return true;I.input.focus();return false;};
     const addTo=l=>{if(!need())return;l.items=l.items||[];l.items.push({id:uid('i'),t:item.trim(),d:false,photos});put(l);inst.close();done&&done();toast(`Added to ${l.title}`,null,'Undo',{open:dest('list',{id:l.id})});};
     body.append(I.wrap);
-    if(lists.length)body.append(el('div',{class:'sect'},'Choose a list'),el('div',{class:'list'},lists.map(l=>el('button',{class:'li',onclick:()=>addTo(l)},el('span',{class:'sq',html:ic('list',20)}),el('span',{class:'grow'},el('b',{},l.title),el('small',{},`${(l.items||[]).length} items`))))));
+    if(lists.length)body.append(el('div',{class:'sect'},'Choose a list'),el('div',{class:'list'},lists.map(l=>Row({onclick:()=>addTo(l)},el('span',{class:'sq',html:ic('list',20)}),el('span',{class:'grow'},el('b',{},l.title),el('small',{},`${(l.items||[]).length} items`))))));
     const nameT=fieldTitle('f-newlist','New list','Shopping, packing, anything','',v=>{nameT.v=v;mk.disabled=!v.trim();},()=>make());
     const make=()=>{const n=(nameT.v||'').trim();if(!n){nameT.input.focus();return;}if(!need())return;const nl=create('list',{title:n,items:[{id:uid('i'),t:item.trim(),d:false,photos}]});inst.close();done&&done();toast(`Added to ${n}`,null,'Undo',{open:dest('list',{id:nl.id})});};
-    const mk=el('button',{class:'btn primary block',disabled:true,onclick:make},'Create list and add');body.append(nameT.wrap,mk);
+    const mk=Button('Create list and add',{variant:'primary',full:true,disabled:true,onclick:make});body.append(nameT.wrap,mk);
   }});
 }
 function resourceSheet(rec,seed={},done){

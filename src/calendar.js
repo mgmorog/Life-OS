@@ -20,11 +20,11 @@ function viewCalendar(root){
   const title=mode==='quarter'?`Q${q+1}`:mode==='month'?MONL[a.getMonth()]:rangeD;
   const miniTitle=mode==='quarter'?`Q${q+1} ${y}`:mode==='month'?`${MONL[a.getMonth()]} ${y}`:`${rangeD}, ${wE.getFullYear()}`;
   const f=get.settings().filters||{},filtered=(f.areas&&f.areas.length)||Object.values(f.types||{}).some(v=>v===false);
-  const arrows=()=>el('div',{class:'arrows'},el('button',{class:'iconbtn green','aria-label':`Previous ${mode}`,html:ic('chevl',20,2),onclick:()=>calStep(-1)}),el('button',{class:'iconbtn green','aria-label':`Next ${mode}`,html:ic('chevr',20,2),onclick:()=>calStep(1)}),el('button',{class:'iconbtn green','aria-label':'Filters',html:ic('filter',20,2)+(filtered?'<span class="dot"></span>':''),onclick:e=>filterSheet({anchor:e.currentTarget.getBoundingClientRect()})}));
+  const arrows=()=>el('div',{class:'arrows'},IconButton(`Previous ${mode}`,{cls:'green',html:ic('chevl',20,2),onclick:()=>calStep(-1)}),IconButton(`Next ${mode}`,{cls:'green',html:ic('chevr',20,2),onclick:()=>calStep(1)}),IconButton('Filters',{cls:'green',html:ic('filter',20,2)+(filtered?'<span class="dot"></span>':''),onclick:e=>filterSheet({anchor:e.currentTarget.getBoundingClientRect()})}));
   const ORDERM=['quarter','month','week'];const modeSeg=()=>seg([['quarter','Quarter'],['month','Month'],['week','Week']],mode,v=>{const[s,e]=calRange(C);if(C.sel&&C.sel>=s&&C.sel<=e)C.anchor=C.sel;const dir=ORDERM.indexOf(v)>ORDERM.indexOf(C.mode)?1:-1;C.mode=v;C.weekOpen=null;try{localStorage.setItem('lifeos-cal-mode',v);}catch(e){}glideSwap(()=>calCommit(),[['#cal-body','x'],['#cal-h .tbtn span','y'],['#cal-h .cal-eyebrow','y']],dir);});
-  const pill=()=>!current?el('button',{class:'pill-today',onclick:calNow},'Today'):null;
+  const pill=()=>!current?Chip('Today',{variant:'status',cls:'pill-today',onclick:calNow}):null;
   const page=el('div',{class:'page'});
-  page.append(el('header',{class:'cal-h',id:'cal-h'},
+  page.append(el('header',{class:'phead cal-h',id:'cal-h'},
     el('div',{class:'cal-title'},el('button',{class:'tbtn'+(mode==='week'?' mid':''),'aria-label':`Choose ${mode}`,onclick:e=>pickPeriod(e.currentTarget.getBoundingClientRect()),html:`<span>${esc(title)}</span>`+ic('chevd',18,2)}),arrows()),
     eyebrow||!current?el('div',{class:'cal-eyebrow hq'},eyebrow?el('span',{class:'hquiet'},eyebrow):el('span'),pill()):null,
     el('div',{style:'margin-top:6px'},modeSeg())));
@@ -115,7 +115,7 @@ function dayLine(e,dk){
     left:{label:'Open',color:'var(--ink-2)',run:()=>{openItem(e,dk);setTimeout(()=>{row.style.transition='transform var(--dur-base) var(--ease)';row.style.transform='';},250);}}});
 }
 function allDayChips(allDay,dk){return el('div',{class:'allday-row',style:'margin-top:0'},allDay.map(e=>{const b=el('button',{class:'adchip',style:`--c:${e.color}`,html:(e.icon?glyph(e.icon,16,2):'')+`<span>${esc(e.title)}</span>`,onclick:()=>openItem(e,dk)});calGestures(b,e,dk);return b;}));}
-const addChips=(dk,inline)=>el('div',{class:'chips'},el('button',{class:'chip',onclick:e=>{const b=e.currentTarget,r=b.getBoundingClientRect();openMenu(r.left,r.bottom+4,[{label:'Task',icon:'task',onclick:()=>inline?wkAdd(b,dk):taskSheet(null,{date:dk})},{label:'Time block',icon:'time',onclick:()=>blockSheet(null,{date:dk,start:nextFreeSlot(dk)})},{label:'All-day',icon:'cal',onclick:()=>alldaySheet(null,{start:dk})}]);}},'+ Add'));
+const addChips=(dk,inline)=>el('div',{class:'chips'},Chip('+ Add',{onclick:e=>{const b=e.currentTarget,r=b.getBoundingClientRect();openMenu(r.left,r.bottom+4,[{label:'Task',icon:'task',onclick:()=>inline?wkAdd(b,dk):taskSheet(null,{date:dk})},{label:'Time block',icon:'time',onclick:()=>blockSheet(null,{date:dk,start:nextFreeSlot(dk)})},{label:'All-day',icon:'cal',onclick:()=>alldaySheet(null,{start:dk})}]);}}));
 function weekBody(body,start,C){
   const tk=todayK(),list=el('div',{}),adS0=a=>a.filter(e=>!(e.rec&&e.rec.tripId)).length;
   /* anything on every day of the week is said once at the top, not seven times */
@@ -168,10 +168,10 @@ function pickPeriod(anchor){
     const pick=d=>{C.anchor=k(d);if(C.mode==='month')C.sel=isCurrentFor('month',d)?todayK():k(d);if(C.mode==='week'){C.sel=k(d);C.weekOpen=null;}inst.close();calCommit();};
     const draw=()=>{box.innerHTML='';
       if(C.mode==='week'){const c=formCtx(()=>{});box.append(el('div',{class:'card'},c.calendar(C.anchor,dk=>{if(dk)pick(fromK(dk));},{range:calRange(C)})));return;}
-      box.append(el('div',{style:'display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;font-weight:600'},el('button',{class:'iconbtn green','aria-label':'Previous year',html:ic('chevl',20,2),onclick:()=>{vy--;draw();}}),String(vy),el('button',{class:'iconbtn green','aria-label':'Next year',html:ic('chevr',20,2),onclick:()=>{vy++;draw();}})));
+      box.append(el('div',{style:'display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;font-weight:600'},IconButton('Previous year',{cls:'green',html:ic('chevl',20,2),onclick:()=>{vy--;draw();}}),String(vy),IconButton('Next year',{cls:'green',html:ic('chevr',20,2),onclick:()=>{vy++;draw();}})));
       if(C.mode==='month')box.append(el('div',{class:'pick-grid'},MONL.map((n,i)=>el('button',{class:(vy===a.getFullYear()&&i===a.getMonth()?'on ':'')+(vy===t.getFullYear()&&i===t.getMonth()?'cur':''),onclick:()=>pick(new Date(vy,i,1))},n.slice(0,3)))));
       else box.append(el('div',{class:'pick-grid',style:'grid-template-columns:repeat(2,minmax(0,1fr))'},[0,1,2,3].map(i=>el('button',{class:(vy===a.getFullYear()&&i===quarterOf(a)?'on ':'')+(vy===t.getFullYear()&&i===quarterOf(t)?'cur':''),style:'height:68px',onclick:()=>pick(new Date(vy,i*3,1))},`Q${i+1}`,el('small',{},`${MON[i*3]} – ${MON[i*3+2]}`)))));};
-    draw();body.append(box,el('button',{class:'btn quiet block',onclick:()=>{inst.close();calNow();}},'Jump to today'));}});
+    draw();body.append(box,Button('Jump to today',{variant:'quiet',full:true,onclick:()=>{inst.close();calNow();}}));}});
 }
 function capLabels(full,unit){
   const b={1:[],2:[],3:[]};for(let n=1;n<full;n++){const l=levelOf(n,full);if(b[l])b[l].push(n);}

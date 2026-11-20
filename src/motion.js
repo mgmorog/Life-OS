@@ -307,7 +307,7 @@ function dayPeek(dk,sq){
   const card=el('div',{class:'peek',role:'dialog','aria-label':shortDay(dk)},el('div',{class:'lbl'},shortDay(dk)),
     lines.length?lines.slice(0,5).map(([t,ti,c])=>el('div',{class:'pk-l'},el('time',{},t),c?el('i',{style:`background:${c}`}):null,el('span',{},ti))):el('div',{class:'pk-l muted'},'Nothing planned'),
     lines.length>5?el('div',{class:'small muted',style:'padding-top:var(--s1)'},`+${lines.length-5} more`):null,
-    el('div',{class:'pk-a'},el('button',{class:'chip',onclick:go(()=>{App.state.sel=dk;App.state._fresh=true;App.go('today');})},'Open in Today'),el('button',{class:'chip',onclick:go(()=>taskSheet(null,{date:dk}))},'+ Task'),el('button',{class:'chip',onclick:go(()=>blockSheet(null,{date:dk,start:nextFreeSlot(dk)}))},'+ Block')));
+    el('div',{class:'pk-a'},Chip('Open in Today',{onclick:go(()=>{App.state.sel=dk;App.state._fresh=true;App.go('today');})}),Chip('+ Task',{onclick:go(()=>taskSheet(null,{date:dk}))}),Chip('+ Block',{onclick:go(()=>blockSheet(null,{date:dk,start:nextFreeSlot(dk)}))})));
   document.body.append(dim,card);
   const w=Math.min(310,innerWidth-24),h=card.offsetHeight,left=Math.max(12,Math.min(innerWidth-w-12,r.left+r.width/2-w/2)),above=r.top-h-10>12,top=above?r.top-h-10:Math.min(innerHeight-h-12,r.bottom+10);
   Object.assign(card.style,{left:left+'px',top:top+'px',width:w+'px',transformOrigin:`${r.left+r.width/2-left}px ${above?h:0}px`});
@@ -546,7 +546,7 @@ function focusRipple(rg){frDoneAt=Date.now();if(!motionOK())return;[0,1].forEach
 /* ---------- round 13 ---------- */
 /* hold to confirm: for deletes that can't be undone, the button fills while held; let go early and it drains */
 const hScale=n=>{const t=getComputedStyle(n).transform;return t&&t!=='none'?new DOMMatrix(t).a:0;};
-function holdBtn(label,onDone){const f=el('span',{class:'hfill'}),b=el('button',{class:'btn danger holdb'},f,el('span',{class:'hl'},label));let a=null,done=false;
+function holdBtn(label,onDone){const f=el('span',{class:'hfill'}),b=Button([f,el('span',{class:'hl'},label)],{variant:'secondary',cls:'danger holdb'});let a=null,done=false;
   const fire=()=>{done=true;buzz(14);b.classList.add('go');setTimeout(onDone,motionOK()?160:0);};
   const start=e=>{if(done||e.button>0)return;e.preventDefault();const sx=hScale(f);a&&a.cancel();a=f.animate([{transform:`scaleX(${sx})`},{transform:'scaleX(1)'}],{duration:1000*(1-sx)+1,easing:'linear',fill:'forwards'});a.onfinish=fire;};
   const stop=()=>{if(!a||done)return;const sx=hScale(f);a.onfinish=null;a.cancel();a=f.animate([{transform:`scaleX(${sx})`},{transform:'scaleX(0)'}],{duration:MOT.base,easing:EASE,fill:'forwards'});};
@@ -652,7 +652,7 @@ function wkAdd(btn,dk,quiet){const host=btn.closest('.wkitems');if(!host)return;
   const inp=el('input',{id:'li-new-wk',placeholder:`Add to ${relDay(dk)}`,enterkeyhint:'done',autocomplete:'off','aria-label':`Add a task to ${relDay(dk)}`});
   const save=()=>{const raw=inp.value.trim();if(!raw)return false;const w=parseWhen(raw,fromK(dk));create('task',{notes:'',steps:[],repeat:{type:'never',end:null},remUnit:'minute',photos:[],title:w.title||raw,date:dk,time:w.time??null});inp.value='';return true;};
   const close=()=>{if(!f.isConnected)return;if(!motionOK()){f.remove();return;}const h=f.offsetHeight;f.animate([{height:h+'px',opacity:1},{height:'0px',opacity:0}],{duration:MOT.fast,easing:EASE,fill:'forwards'}).onfinish=()=>f.remove();};
-  f=el('div',{class:'wkaddf'},inp,el('button',{class:'chip on',onpointerdown:e=>e.preventDefault(),onclick:()=>{if(save()){App.state._wkRefocus=dk;App.refresh();}else close();}},'Add'));
+  f=el('div',{class:'wkaddf'},inp,Chip('Add',{selected:true,onpointerdown:e=>e.preventDefault(),onclick:()=>{if(save()){App.state._wkRefocus=dk;App.refresh();}else close();}}));
   inp.addEventListener('keydown',e=>{if(e.key==='Enter'){if(save()){App.state._wkRefocus=dk;App.refresh();}else close();}if(e.key==='Escape')close();});inp.addEventListener('blur',()=>setTimeout(()=>{if(document.activeElement!==inp&&!inp.value.trim())close();},120));
   btn.closest('.chips').after(f);if(!quiet&&motionOK()){const h=f.offsetHeight;f.animate([{height:'0px',opacity:0},{height:h+'px',opacity:1}],{duration:MOT.base,easing:SOFT});}inp.focus({preventScroll:true});}
 /* repeat days: picking a preset fills (or clears) the day circles one after another */
@@ -688,7 +688,7 @@ function dateDropEl(dk){
   if(!list.some(x=>x.y===ym.y&&x.m===ym.m)){list.length=0;for(let i=-6;i<=18;i++){const d=new Date(ym.y,ym.m+i,1);list.push({y:d.getFullYear(),m:d.getMonth()});}}
   const draw=(dir,scroll)=>{
     yr.textContent=String(ym.y);
-    chips.replaceChildren(...list.map(x=>{const on=x.y===ym.y&&x.m===ym.m;const b=el('button',{class:'dp-chip'+(on?' on':''),role:'tab','aria-selected':on?'true':'false',onclick:()=>{const d=(x.y-ym.y)*12+(x.m-ym.m);if(!d)return;ym={y:x.y,m:x.m};draw(d>0?1:-1,true);}},(x.m===0&&x.y!==ym.y?MON[x.m]+' ’'+String(x.y).slice(2):MON[x.m]));return b;}));
+    chips.replaceChildren(...list.map(x=>{const on=x.y===ym.y&&x.m===ym.m;const b=el('button',{class:'chip filter dp-chip'+(on?' on':''),role:'tab','aria-selected':on?'true':'false',onclick:()=>{const d=(x.y-ym.y)*12+(x.m-ym.m);if(!d)return;ym={y:x.y,m:x.m};draw(d>0?1:-1,true);}},(x.m===0&&x.y!==ym.y?MON[x.m]+' ’'+String(x.y).slice(2):MON[x.m]));return b;}));
     const first=new Date(ym.y,ym.m,1),start=weekStartOf(first),cells=[];
     const weeks=Math.ceil((monIdx(first)+new Date(ym.y,ym.m+1,0).getDate())/7);
     for(let i=0;i<weeks*7;i++){const d=addD(start,i),key=k(d),inM=d.getMonth()===ym.m;

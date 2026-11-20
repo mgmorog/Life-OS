@@ -5,6 +5,39 @@ try{if(!document.documentElement.lang)document.documentElement.lang='en';}catch(
 const $=(s,r=document)=>r.querySelector(s);
 const $$=(s,r=document)=>[...r.querySelectorAll(s)];
 const el=(t,a={},...kids)=>{const e=document.createElement(t);for(const k in a){const v=a[k];if(v==null||v===false)continue;if(k==='class')e.className=v;else if(k==='html')e.innerHTML=v;else if(k==='style')e.setAttribute('style',v);else if(k==='value')e.value=v;else if(k.startsWith('on'))e.addEventListener(k.slice(2),v);else e.setAttribute(k,v===true?'':v);}for(const c of kids.flat(Infinity)){if(c==null||c===false)continue;e.append(c.nodeType?c:document.createTextNode(c));}return e;};
+/* ---- Components: every button, row, chip, icon button and page header in the app is drawn by one of these ---- */
+const BTN_V={primary:'primary',secondary:'line',quiet:'quiet',danger:'line danger',text:'text'};
+function Button(label,{variant='secondary',size='md',icon=null,full=false,tone=null,cls='',...rest}={}){
+  const c=['btn',BTN_V[variant]||'line',size==='sm'?'sm':size==='lg'?'lg':'',full?'block':'',tone==='danger'&&variant!=='danger'?'danger':'',cls].filter(Boolean).join(' ');
+  if(icon&&rest.html==null)rest.html=ic(icon,size==='sm'?14:16)+(label!=null&&typeof label!=='object'?esc(String(label)):'');
+  return el(rest.href?'a':'button',{type:rest.href?null:'button',...rest,class:c},rest.html!=null&&icon?null:label);
+}
+function IconButton(label,{size='md',icon=null,cls='',...rest}={},...kids){
+  const c=['iconbtn',size==='sm'?'sm':'',cls].filter(Boolean).join(' ');
+  if(icon&&rest.html==null)rest.html=ic(icon,size==='sm'?18:20);
+  return el('button',{type:'button',...rest,class:c,'aria-label':label},...kids);
+}
+function Chip(label,{variant='filter',selected=false,icon=null,as='button',cls='',...rest}={}){
+  const c=['chip',variant,selected?'on':'',cls].filter(Boolean).join(' ');
+  if(icon&&rest.html==null)rest.html=ic(icon,14)+(label!=null&&typeof label!=='object'?esc(String(label)):'');
+  return el(as,{...(as==='button'?{type:'button'}:{}),...rest,class:c},rest.html!=null&&icon?null:label);
+}
+function Row({lead=null,title=null,sub=null,trail=null,onOpen=null,swipe=null,menu=null,as=null,cls='',...rest}={},...kids){
+  const tag=as||(onOpen||rest.onclick?'button':'div');
+  const n=el(tag,{...(tag==='button'?{type:'button'}:{}),...rest,class:['li',cls].filter(Boolean).join(' '),onclick:onOpen||rest.onclick||null});
+  if(title!=null)n.append(...[lead,el('span',{class:'grow'},el('b',{class:'rt'},title),sub!=null&&sub!==''?el('small',{},sub):null),trail].filter(x=>x!=null&&x!==false));
+  for(const k of kids.flat(Infinity))if(k!=null&&k!==false)n.append(k.nodeType?k:document.createTextNode(k));
+  if(swipe&&typeof swipeAct==='function')swipeAct(n,swipe);
+  if(menu)onPress(n,(x,y)=>openMenu(x,y,typeof menu==='function'?menu():menu));
+  return n;
+}
+function PageHeader({back=null,title,subtitle=null,actions=null,controls=null,cls='',titleClass='',titleStyle=null,rowClass='',after=null}={}){
+  const bk=back?(back.nodeType?back:backBtn(back.label||'More',back.to||'more')):null;
+  const acts=(Array.isArray(actions)?actions:[actions]).flat(Infinity).filter(Boolean);
+  const top=bk||acts.length?el('div',{class:'pghead'},bk||el('span'),acts.length?el('div',{class:'pgacts'},...acts):null):null;
+  const h=el('h1',{class:['pgtitle',titleClass].filter(Boolean).join(' '),style:titleStyle},title);
+  return el('header',{class:['phead',cls].filter(Boolean).join(' ')},top,el('div',{class:[controls?'otitle phead-ctl':'otitle',rowClass].filter(Boolean).join(' ')},h,controls),subtitle?el('div',{class:'small muted pgsub'},subtitle):null,after);
+}
 /* v230 · three icon weights: regular 1.8, bold 2.4 (small or active), 2.8 for the checkmark only */
 const swN=s=>s>=2.7?2.8:s>=2.1?2.4:1.8;
 /* v234 · breakpoints and motion tokens for the code: the same values the stylesheet uses */
@@ -13,7 +46,7 @@ const isCompact=()=>innerWidth<=BP.compact,isTablet=()=>innerWidth>=BP.tablet&&i
 const MOT=(()=>{const cs=()=>getComputedStyle(document.documentElement),ms=(n,fb)=>{const v=cs().getPropertyValue(n).trim();if(!v)return fb;return v.endsWith('ms')?parseFloat(v):parseFloat(v)*1000;},cv=(n,fb)=>cs().getPropertyValue(n).trim()||fb;
   return{get fast(){return ms('--dur-fast',160);},get base(){return ms('--dur-base',280);},get slow(){return ms('--dur-slow',480);},get ease(){return cv('--ease','cubic-bezier(.2,.8,.2,1)');},get spring(){return cv('--spring','cubic-bezier(.3,1.35,.5,1)');},get exit(){return cv('--exit','cubic-bezier(.4,0,1,1)');}};})();
 const sv=(p,w=22,sw=1.8,extra='')=>`<svg width="${w}" height="${w}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${swN(sw)}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" ${extra}>${p}</svg>`;
-const P={
+const P={mic:'<path d="M12 3a3 3 0 0 1 3 3v5a3 3 0 0 1-6 0V6a3 3 0 0 1 3-3zM5 11a7 7 0 0 0 14 0M12 18v3"/>',
  drop:'<path d="M12 3.5c3 3.6 6 7 6 10.5a6 6 0 0 1-12 0c0-3.5 3-6.9 6-10.5Z"/>',
  moon:'<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5Z"/>',
  flame:'<path d=\"M12 3c1 3.5 5 5.5 5 10.5a5 5 0 0 1-10 0c0-1.8.8-3 1.8-4 .3 1.4 1 2.2 1.9 2.5C10.3 9 10.5 6 12 3Z\"/>',
@@ -390,7 +423,7 @@ function askConfirm({title,body,yes='Discard',no='Keep editing',danger=true,alt,
   const cs=el('div',{class:'cscrim'}),box=el('div',{class:'confirm',role:'alertdialog','aria-label':title});
   const off=()=>{cs.classList.remove('on');box.classList.remove('on');setTimeout(()=>{cs.remove();box.remove();},280);};
   box._no=off;cs.onclick=off;
-  box.append(el('div',{class:'box'},el('h3',{},title),body?el('p',{},body):null,hold?holdBtn(`Hold to ${yes.toLowerCase()}`,()=>{off();onYes();}):el('button',{class:'btn '+(danger?'danger':'primary'),onclick:()=>{off();onYes();}},yes),others.map(a=>el('button',{class:'btn quiet',style:a.danger?'color:var(--now)':null,onclick:()=>{off();a.onclick();}},a.label)),el('button',{class:'btn quiet',onclick:off},no)));
+  box.append(el('div',{class:'box'},el('h3',{},title),body?el('p',{},body):null,hold?holdBtn(`Hold to ${yes.toLowerCase()}`,()=>{off();onYes();}):Button(yes,{variant:'primary',cls:danger?'danger':'',onclick:()=>{off();onYes();}}),others.map(a=>Button(a.label,{variant:'quiet',tone:a.danger?'danger':null,onclick:()=>{off();a.onclick();}})),Button(no,{variant:'quiet',onclick:off})));
   $('#layers').append(cs,box);void box.offsetWidth;requestAnimationFrame(()=>{cs.classList.add('on');box.classList.add('on');});
 }
 function closeMenu(){const m=$('.menu'),s=$('.mscrim');m&&m.remove();s&&s.remove();}

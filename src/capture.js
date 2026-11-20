@@ -127,7 +127,7 @@ function saveCapture(D,from){
   if(s.captureTo==='today'&&!from){const w=parseWhen(D.title==='Unnamed Idea'?'':D.title);const r=create('task',{title:w.title||D.title,notes:D.notes,photos:D.photos,steps:[],date:w.date||(w.deadline?null:todayK()),time:w.time,repeat:{type:'never',end:null},reminder:w.time!=null?0:null,remUnit:'minute',deadline:w.deadline,priority:'normal',part:null,area:null});if(s.captureToast)toast(w.date&&w.date!==todayK()?`Added to ${relDay(w.date)}`:'Added to Today',()=>remove(r.id),'Undo',{open:dayDest(w.date||todayK())});return r;}
   const r=create('idea',{title:D.title,notes:D.notes,photos:D.photos||[],source:from||null});flyToInbox(D.title==='Unnamed Idea'?((D.notes||'').split('\n')[0]||'Idea'):D.title);if(s.captureToast)toast('Saved to Inbox',()=>remove(r.id),'Undo',{open:dest('inbox')});return r;
 }
-function captureSheet(rec,{from=null,photo=false}={}){
+function captureSheet(rec,{from=null,photo=false,listen=false}={}){
   const isEdit=!!rec;
   const D=isEdit?clone(rec):{title:'',notes:'',photos:[],source:from};D.photos=D.photos||[];D.keep=D.keep||[];
   let inst,ph,T,notesBox,hint,chips,dupe,ex,sess,saved=[],multi=false,showNotes=isEdit&&!!(D.notes||'').trim(),showPh=isEdit&&!!D.photos.length;D.noArea=false;
@@ -171,13 +171,15 @@ function captureSheet(rec,{from=null,photo=false}={}){
       const draft=!isEdit&&readDraft();if(draft){D.title=draft.title||'';D.notes=draft.notes||'';D.photos=draft.photos||[];if(D.notes)showNotes=true;}
       T=fieldTitle('f-cap-title','',"What's on your mind?",D.title,v=>{D.title=v;D.keep=D.keep.filter(w=>v.includes(w));if(!v.trim())multi=false;touched();},()=>{if(isEdit){if(can()){commit();inst.close();}return;}saveNext();});
       T.wrap.classList.add('capone');
+      /* v235 · talk to capture: a mic beside the field (where the device supports speech), and holding + opens this sheet already listening */
+      if(voiceOK()){const mic=el('button',{class:'capmic',type:'button','aria-label':'Talk','aria-pressed':'false',html:ic('mic',20,1.8),onclick:e=>{e.preventDefault();voiceToggle(T.input,mic);}});T.wrap.append(mic);T.wrap.classList.add('hasmic');if(listen)setTimeout(()=>voiceStart(T.input,mic),120);}
       notesBox=fieldNotes('f-cap-notes','Notes','Details or a link',D.notes,v=>{D.notes=v;touched();},{rows:1,min:26});
       ph=photosEditor(D,{compact:true,onChange:touched});hint=el('div',{class:'caphint',hidden:true});chips=el('div',{class:'capchips',hidden:true});
       dupe=el('div',{class:'capdupe',hidden:true});sess=el('div',{class:'capsess',hidden:true});ex=isEdit?null:el('p',{class:'capex'},CAP_EX[Math.floor(Math.random()*CAP_EX.length)]);
       const extras=el('div',{class:'capx'},
         el('button',{class:'capxb',onclick:()=>{showNotes=true;touched();const n=$('#f-cap-notes');if(n)n.focus();}},el('span',{style:'display:grid',html:ic('edit',15,2)}),'Note'),
         el('button',{class:'capxb',onclick:()=>{showPh=true;touched();const pi=ph.querySelector('input[type=file]');if(pi)pi.click();}},el('span',{style:'display:grid',html:ic('image',15,2)}),'Photo'));
-      const top=topTurns(),row=el('div',{class:'capturn'},top.map(id=>{const t=TURN.find(x=>x[0]===id);return el('button',{class:'chip','data-k':id,onclick:()=>go(id)},el('span',{style:'display:grid',html:ic(t[1],15,2)}),t[2]);}),
+      const top=topTurns(),row=el('div',{class:'capturn'},top.map(id=>{const t=TURN.find(x=>x[0]===id);return Chip([el('span',{style:'display:grid',html:ic(t[1],15,2)}),t[2]],{'data-k':id,onclick:()=>go(id)});}),
         moreTurn(go,()=>({title:D.title.trim(),notes:D.notes,photos:D.photos}),()=>{if(isEdit)remove(rec.id);else writeDraft(null);inst.close();},top));
       const smart=smartButton(D,()=>ph&&ph._files?ph._files():[],made=>{if(isEdit)remove(rec.id,{silent:true});else writeDraft(null);inst.close();App.refresh();toast(`${made.length} added`,()=>{made.forEach(r=>remove(r.id,{silent:true,hard:true}));if(isEdit)put(rec);App.refresh();});});
       body.append(T.wrap,ex,chips,dupe,hint,sess,extras,notesBox,ph,smart,el('div',{class:'sect'},isEdit?'Or turn into':'Or save as'),row);
@@ -244,3 +246,15 @@ function routeInto(kind,p,done){
     case 'resource':{const u=(`${raw} ${notes}`.match(URL_RE)||[])[0]||'';const clean=u?raw.replace(u,'').replace(/\s+/g,' ').trim():raw;const host=u&&!clean?u.replace(/^https?:\/\//i,'').replace(/^www\./i,'').split('/')[0]:'';resourceSheet(null,{title:clean||host,notes:u?notes.replace(u,'').trim():notes,photos,url:u&&/^www\./i.test(u)?'https://'+u:u},after);break;}
   }
 }
+
+/* v235 · speech to text for Quick capture (Web Speech API; hidden where the device has none) */
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+function voiceOK(){return !!SR;}
+let VOICE=null;
+function voiceStart(inp,btn){if(!SR||VOICE)return;try{const r=new SR();r.lang=navigator.language||'en-US';r.interimResults=true;r.continuous=true;const base=inp.value.trim();
+  r.onresult=e=>{let t='';for(let i=0;i<e.results.length;i++)t+=e.results[i][0].transcript;inp.value=(base?base+' ':'')+t.trim();inp.dispatchEvent(new Event('input',{bubbles:true}));};
+  r.onerror=e=>{if(e.error==='not-allowed'||e.error==='service-not-allowed')toast('Allow the microphone for Life OS to talk to capture.');voiceStop();};
+  r.onend=()=>{if(VOICE&&VOICE.r===r)voiceStop();};
+  r.start();VOICE={r,btn};if(btn){btn.classList.add('on');btn.setAttribute('aria-pressed','true');btn.setAttribute('aria-label','Stop listening');}buzz(6);}catch(e){VOICE=null;toast('Talking isn’t available here.');}}
+function voiceStop(){if(!VOICE)return;const{r,btn}=VOICE;VOICE=null;try{r.stop();}catch(e){}if(btn){btn.classList.remove('on');btn.setAttribute('aria-pressed','false');btn.setAttribute('aria-label','Talk');}}
+function voiceToggle(inp,btn){VOICE?voiceStop():voiceStart(inp,btn);}

@@ -16,6 +16,8 @@ const PWA={
       [...d.allDay,...d.timed].forEach(e=>{const m=e.rec.reminder;if(m==null||e.done||e.kind==='step'||e.kind==='gcal')return;if(e.kind==='habit'&&(e.rec.tod!=='set'||e.time==null))return;if(e.kind==='allday'&&allDayOccStart(e.rec,dk)!==dk)return;
         push(e,dk,fromK(dk).getTime()+(e.time||0)*6e4,m);});}
     get.all('allday').forEach(r=>{if(r.reminder==null||r.reminder<14*1440)return;for(let i=15;i<=60;i++){const dk=addK(tk,i);if(occursOn(r.start,r.repeat,dk,r.skip))push({kind:'allday',id:r.id,title:r.title},dk,fromK(dk).getTime(),r.reminder);}});
+    /* v235 · morning digest: one notification at your chosen time with the Top 3, the first commitment and habits due */
+    try{const S1=get.settings(),dg=S1.digest||{};if(dg.on){const tmin=dg.time!=null?dg.time:450;for(let i=0;i<=7;i++){const dk=addK(tk,i),fire=fromK(dk).getTime()+tmin*6e4;if(fire<=now)continue;const b=digestText(dk);if(!b)continue;out.push({key:'digest|'+dk,fire_at:new Date(fire).toISOString(),title:`Life OS · ${new Date(fire).toLocaleDateString(undefined,{weekday:'long'})}`,body:b,url:'/#today'});}}}catch(e){}
     return out.sort((a,b)=>a.fire_at<b.fire_at?-1:1).slice(0,300);
   },
   /* the next 90 days as an iCalendar file, for the subscribed calendar on iPhone */
@@ -57,10 +59,15 @@ const PWA={
     const a=this.api();if(!this.on||!a)return;const s=get.settings();
     if(id==='reviews'){
       const p=a.push,g=group('Notifications');
-      if(!p.supported()){g.append(el('div',{class:'li',style:''},el('span',{class:'grow'},el('b',{style:'font-weight:500'},'Notifications'),el('small',{},p.why()))));return;}
+      if(!p.supported()){g.append(Row({as:'div',style:''},el('span',{class:'grow'},el('b',{style:'font-weight:500'},'Notifications'),el('small',{},p.why()))));return;}
       const on=p.wanted();
       setToggle(ctx,g,null,'Reminders when the app is closed','Sent to this device',on,async v=>{if(v){const r=await p.enable();if(r!=='ok'){toast(r==='denied'?'Notifications are off for Life OS in your phone’s Settings.':'Couldn’t turn on notifications. Try again.');App.refresh();return;}this._sig.r=null;this.afterChange();toast('Reminders will reach you here');}else{await p.disable();toast('Notifications off on this device');}App.refresh();});
-      if(on)g.append(condRow(el('button',{class:'li',style:'color:var(--action-text);font-weight:600',onclick:async()=>{const r=await p.test();toast(r?'Sent. It should arrive in a few seconds.':'Couldn’t send a test. Check your connection.');}},'Send a test notification')));
+      if(on)g.append(condRow(Row({style:'color:var(--action-text);font-weight:600',onclick:async()=>{const r=await p.test();toast(r?'Sent. It should arrive in a few seconds.':'Couldn’t send a test. Check your connection.');}},'Send a test notification')));
+      {const g3=group('Morning digest'),dg=s.digest||{};
+        setToggle(ctx,g3,null,'Morning digest','Your Top 3, first commitment and habits, once a day',!!dg.on,v=>{setSettings({digest:{...dg,on:v}});App.refresh();});
+        if(dg.on){const t=dg.time!=null?dg.time:450,inp=el('input',{type:'time',class:'tinput',value:`${String(Math.floor(t/60)).padStart(2,'0')}:${String(t%60).padStart(2,'0')}`,'aria-label':'Digest time',onchange:e=>{const[h,m]=e.target.value.split(':').map(Number);if(!isNaN(h))setSettings({digest:{...dg,on:true,time:h*60+(m||0)}});}});
+          g3.append(Row({as:'label'},el('span',{class:'grow'},el('b',{style:'font-weight:500'},'Send at'),el('small',{},'Uses your quiet hours too')),inp));
+          g3.append(Row({as:'div',style:'display:block;padding-block:var(--s3)'},el('small',{style:'white-space:normal'},'Tomorrow: '+digestText(addK(todayK(),1)))));}}
       if('setAppBadge' in navigator){const g2=group('App icon badge');
         setToggle(ctx,g2,null,'Overdue tasks','Counted on the Life OS icon',s.badgeOverdue!==false,v=>{setSettings({badgeOverdue:v});this.badge();});
         setToggle(ctx,g2,null,'New ideas in the Inbox','Counted until you open the Inbox',s.badgeIdeas!==false,v=>{setSettings({badgeIdeas:v});this.badge();});}
@@ -70,16 +77,16 @@ const PWA={
       else{const url=this.feedUrl(s.icsToken);
         const markF=()=>setSettings({icsAdded:true,foundation:{...(get.settings().foundation||{}),calendar:true}});
         const added=s.icsAdded===true||(s.icsAdded==null&&!!s.icsToken);/* links made before v66 were already subscribed */
-        if(!added)g.append(el('a',{class:'li',href:url,style:'color:var(--action-text);font-weight:600;text-decoration:none',onclick:()=>setTimeout(markF,400)},'Subscribe in Calendar'));
-        else g.append(el('div',{class:'li',style:''},el('span',{class:'tick on',html:ic('check',14,3)}),el('span',{class:'grow'},el('b',{style:'font-weight:500'},'Added to Apple Calendar'),el('small',{},'Shows as “Life OS” in the Calendar app'))));
+        if(!added)g.append(Row({as:'a',href:url,style:'color:var(--action-text);font-weight:600;text-decoration:none',onclick:()=>setTimeout(markF,400)},'Subscribe in Calendar'));
+        else g.append(Row({as:'div',style:''},el('span',{class:'tick on',html:ic('check',14,3)}),el('span',{class:'grow'},el('b',{style:'font-weight:500'},'Added to Apple Calendar'),el('small',{},'Shows as “Life OS” in the Calendar app'))));
         g.append(setRow('Calendar link',null,null,e=>openMenu(e.clientX,e.clientY,[
           {label:'Copy the link',icon:'copy',onclick:async()=>{try{await navigator.clipboard.writeText(url.replace('webcal://','https://'));toast('Link copied');}catch(e){toast(url);}setSettings({foundation:{...(get.settings().foundation||{}),calendar:true}});}},
           added?{label:'Add it again',icon:'cal',onclick:()=>askConfirm({title:'Add Life OS again?',body:'If Life OS is already in your Calendar app, this makes a second copy. You can delete extras in Calendar › Calendars › ⓘ › Delete Calendar.',yes:'Add again',no:'Cancel',danger:false,onYes:()=>{location.href=url;}})}:null,
           {label:'Turn off and make a new link',icon:'x',danger:true,onclick:()=>askConfirm({title:'Stop this calendar link?',body:'Calendars subscribed with the old link stop updating.',yes:'Make a new link',no:'Keep it',onYes:async()=>{const old=s.icsToken;await a.dropCalFeed(old).catch(()=>{});setSettings({icsToken:null,icsAdded:false});toast('Link turned off. Delete Life OS in the Calendar app, then add it again here.');this.afterChange();}})}])));
         page.append(el('p',{class:'small muted',style:'padding:0 var(--s1)'},'Read-only. Changes in Life OS show up the next time your phone refreshes the calendar.'));}
     }else if(id==='data'){
-      const g=group('Account');window.__acctG=g;g.append(el('div',{class:'li',style:''},el('span',{class:'grow'},el('b',{style:'font-weight:500'},'Signed in'),el('small',{},a.email()||''))),
-        el('button',{class:'li',style:'color:var(--overdue);font-weight:600',onclick:()=>askConfirm({title:'Sign out?',body:'Your data stays in your account. Unsynced changes on this device are sent first.',yes:'Sign out',no:'Stay signed in',onYes:async()=>{flushAll();await new Promise(r=>setTimeout(r,900));try{localStorage.removeItem(CACHE);}catch(e){}await a.signOut();location.reload();}})},'Sign out'));
+      const g=group('Account');window.__acctG=g;g.append(Row({as:'div',style:''},el('span',{class:'grow'},el('b',{style:'font-weight:500'},'Signed in'),el('small',{},a.email()||''))),
+        Row({style:'color:var(--overdue);font-weight:600',onclick:()=>askConfirm({title:'Sign out?',body:'Your data stays in your account. Unsynced changes on this device are sent first.',yes:'Sign out',no:'Stay signed in',onYes:async()=>{flushAll();await new Promise(r=>setTimeout(r,900));try{localStorage.removeItem(CACHE);}catch(e){}await a.signOut();location.reload();}})},'Sign out'));
     }
   },
 };
@@ -125,3 +132,10 @@ function pullRefresh(){
 }
 pullRefresh();
 if(PWA.on){document.addEventListener('visibilitychange',()=>{if(!document.hidden)setTimeout(()=>PWA.badge(),1500);});setTimeout(()=>PWA.badge(),4000);}
+
+/* v235 · the digest text for one day: "Top 3: a, b, c. First up: X at 9:00. 2 habits today." */
+function digestText(dk){try{const d=dayItems(dk),tops=t3Get(dk).map(x=>get.id(x.id)).filter(r=>r&&!(r.kind==='task'?taskDone(r):false)).map(r=>r.title).slice(0,3);
+  const first=d.timed.filter(e=>e.time!=null&&e.kind!=='habit'&&!e.done).sort((a,b)=>a.time-b.time)[0];
+  const hab=[...d.allDay,...d.timed].filter(e=>e.kind==='habit'&&!e.done).length,ad=d.allDay.filter(e=>e.kind==='allday').map(e=>e.title).slice(0,2);
+  const parts=[];if(tops.length)parts.push(`Top ${tops.length}: ${tops.join(', ')}.`);if(first)parts.push(`First up: ${first.title} at ${fmtT(first.time)}.`);if(ad.length)parts.push(`${ad.join(' · ')}.`);if(hab)parts.push(`${hab} habit${hab>1?'s':''} today.`);
+  return parts.length?parts.join(' '):'Nothing planned yet. Open Today to set your Top 3.';}catch(e){return '';}}

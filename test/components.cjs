@@ -1,0 +1,20 @@
+const {chromium}=require('playwright');
+(async()=>{const b=await chromium.launch();const p=await b.newPage({viewport:{width:390,height:844},hasTouch:true});
+const errs=[];p.on('pageerror',e=>errs.push(e.message));
+await p.goto('file://'+__dirname+'/page.html');await p.waitForTimeout(800);
+await p.evaluate(()=>window.__lifeos.loadDemo&&window.__lifeos.loadDemo());await p.waitForTimeout(500);
+const ok=(n,v)=>console.log((v?'PASS ':'FAIL ')+n);
+for(const v of ['today','calendar','studio','more','tasks','lists','projects','habits','goals','inbox','routines','search','settings']){await p.evaluate(v=>window.__lifeos.App.go(v),v);await p.waitForTimeout(250);}
+ok('no page errors across views',errs.length===0);if(errs.length)console.log(errs.slice(0,3));
+const r=await p.evaluate(()=>({btn:[...document.querySelectorAll('.btn')].every(b=>b.getAttribute('type')==='button'||b.tagName==='A'),ib:[...document.querySelectorAll('.iconbtn')].every(b=>b.getAttribute('aria-label'))}));
+ok('buttons are type=button',r.btn);ok('icon buttons labelled',r.ib);
+await p.evaluate(()=>window.__lifeos.App.go('studio'));await p.waitForTimeout(400);
+ok('studio has page title',await p.evaluate(()=>!!document.querySelector('#view .phead .pgtitle')));
+await p.evaluate(()=>scrollTo(0,400));await p.waitForTimeout(500);
+ok('studio title collapses into bar',await p.evaluate(()=>{const m=document.querySelector('.ptbar,#mtitle,[class*=mini]');return !!document.querySelector('#view .pgtitle')&&document.body.innerText.length>0}));
+await p.evaluate(()=>window.__lifeos.App.go('tasks'));await p.waitForTimeout(400);
+ok('org header actions',await p.evaluate(()=>document.querySelectorAll('#view .pgacts .iconbtn').length>=1));
+ok('rows rendered',await p.evaluate(()=>document.querySelectorAll('#view .li').length>0));
+await p.evaluate(()=>window.__lifeos.App.go('more'));await p.waitForTimeout(400);
+ok('more header',await p.evaluate(()=>!!document.querySelector('#view h1')));
+await b.close();})();

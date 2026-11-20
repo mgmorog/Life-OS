@@ -96,7 +96,7 @@ ${BODY}
 `;
   writeFileSync(out + 'index.html', html);
   writeFileSync(out + 'version.json', JSON.stringify({ build: buildId, version: +ver }));
-  cpSync(root + 'pwa/icons', out + 'icons', { recursive: true }); cpSync(root + 'pwa/fonts', out + 'fonts', { recursive: true }); cpSync(root + 'pwa/splash', out + 'splash', { recursive: true });
+  cpSync(root + 'pwa/icons', out + 'icons', { recursive: true }); cpSync(root + 'pwa/fonts', out + 'fonts', { recursive: true }); cpSync(root + 'pwa/share.html', out + 'share.html'); cpSync(root + 'pwa/splash', out + 'splash', { recursive: true });
   writeFileSync(out + 'manifest.webmanifest', read('pwa/manifest.webmanifest'));
   const precache = ['/', '/index.html', `/${jsName}`, `/${cssName}`, `/${shimName}`, '/manifest.webmanifest', '/icons/icon-192.png', '/icons/icon-512.png', '/icons/apple-touch-icon.png', '/fonts/figtree.woff2', '/fonts/newsreader.woff2'];
   writeFileSync(out + 'sw.js', read('pwa/sw.js').replace('__BUILD__', buildId).replace('__PRECACHE__', JSON.stringify(precache)));

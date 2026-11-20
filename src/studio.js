@@ -120,10 +120,10 @@ function viewStudio(root){
   const page=el('div',{class:'page studio2'});
   const go=d=>{st.anchor=P.step(d);st.selCard=null;st.ghosts=[];st.open=null;App.refresh();};
   const menu=e=>openMenu(e.clientX,e.clientY,[st.mode==='w'&&!P.slots.every(x=>x.past)?{label:'Copy last week’s plan',icon:'rep',onclick:()=>copyLastWeek(P)}:null,{label:'New task, habit or goal',icon:'plus',onclick:()=>newCardSheet(st,P)},committed?{label:'Replan',icon:'edit',onclick:()=>{planRec.committed=false;put(planRec);}}:null].filter(Boolean));
-  page.append(el('header',{},
-    el('div',{class:'cal-title'},el('h1',{class:'serif',style:'font-size:34px;line-height:1.05;letter-spacing:-.01em;margin:0'},P.head),el('div',{class:'arrows'},el('button',{class:'iconbtn green','aria-label':'Previous',html:ic('chevl',20,2),onclick:()=>go(-1)}),el('button',{class:'iconbtn green','aria-label':'Next',html:ic('chevr',20,2),onclick:()=>go(1)}),moreB('Studio options',menu))),
-    el('span',{class:'hquiet'},P.eyebrow),
-    el('div',{style:'margin-top:10px'},seg([['w','Week'],['m','Month'],['q','Quarter']],st.mode,v=>{st.mode=v;st.anchor=null;st.selCard=null;st.ghosts=[];st.open=null;App.refresh();}))));
+  page.append(PageHeader({title:P.head,titleClass:'serif',titleStyle:'font-size:34px;line-height:1.05;letter-spacing:-.01em;margin:0',rowClass:'cal-title',
+    controls:el('div',{class:'arrows'},IconButton('Previous',{cls:'green',html:ic('chevl',20,2),onclick:()=>go(-1)}),IconButton('Next',{cls:'green',html:ic('chevr',20,2),onclick:()=>go(1)}),moreB('Studio options',menu)),
+    after:[el('span',{class:'hquiet'},P.eyebrow),
+    el('div',{style:'margin-top:10px'},seg([['w','Week'],['m','Month'],['q','Quarter']],st.mode,v=>{st.mode=v;st.anchor=null;st.selCard=null;st.ghosts=[];st.open=null;App.refresh();}))]}));
   const fk=st.mode==='q'?P.key.replace(/^q-(\d+)-Q(\d)/,(m,y,q)=>`q-${y}-${q-1}`):P.key;
   page.append(focusChip(fk,st.mode==='q'?`${P.head.split(' ')[0]} FOCUS`:st.mode==='m'?`${P.head.toUpperCase()} FOCUS`:'WEEK FOCUS',st.mode==='q'?'quarter':st.mode==='m'?'month':'week',st.mode==='m'?[`${P.key.slice(2)}-01`,k(new Date(+P.key.slice(2,6),+P.key.slice(7),0))]:[P.slots[0].from,P.slots[P.slots.length-1].to]));
   if(st.only){const o=get.id(st.only);if(!o)st.only=null;else page.append(el('div',{class:'focus-chip'},el('span',{class:'grow small',style:'text-align:left'},`Showing ${o.title} only`),el('button',{class:'fa',onclick:()=>{st.only=null;App.refresh();}},'Show all')));}
@@ -135,7 +135,7 @@ function viewStudio(root){
   const habNeed=st.mode==='w'?need.filter(x=>x.c.type==='habit'):[];const seenG=new Set();const need1=need.filter(x=>{if(st.mode==='w'&&x.c.type==='habit')return false;if(x.c.type!=='step')return true;if(seenG.has(x.c.rec.id))return false;seenG.add(x.c.rec.id);x.c.more=need.filter(y=>y.c.type==='step'&&y.c.rec.id===x.c.rec.id).length;return true;});
   const need2=need1.filter(x=>x.r[0]<99),top=need2.filter(x=>x.r[0]<9),back=need2.filter(x=>x.r[0]>=9&&x.r[0]<99),showBack=!!st.showBack;
   if(!allPast){
-    if(st.ghosts.length)page.append(el('div',{class:'stghost'},el('span',{class:'grow'},el('b',{},`${st.ghosts.length} suggested`),el('small',{},'Shown in your week below, dashed')),el('button',{class:'btn quiet sm',onclick:()=>{st.ghosts=[];App.refresh();}},'Clear'),el('button',{class:'btn primary sm',onclick:()=>{const n=st.ghosts.length,made=st.ghosts;made.forEach(g=>placeCard(g.card,g.slot,st));st.ghosts=[];App.refresh();toast(`${n} placed`,()=>{made.forEach(g=>unplaceCard(g.card,g.slot,st));App.refresh();});}},'Keep all')));
+    if(st.ghosts.length)page.append(el('div',{class:'stghost'},el('span',{class:'grow'},el('b',{},`${st.ghosts.length} suggested`),el('small',{},'Shown in your week below, dashed')),Button('Clear',{variant:'quiet',size:'sm',onclick:()=>{st.ghosts=[];App.refresh();}}),Button('Keep all',{variant:'primary',size:'sm',onclick:()=>{const n=st.ghosts.length,made=st.ghosts;made.forEach(g=>placeCard(g.card,g.slot,st));st.ghosts=[];App.refresh();toast(`${n} placed`,()=>{made.forEach(g=>unplaceCard(g.card,g.slot,st));App.refresh();});}})));
     page.append(lblRow(`Needs a ${P.unit}${need2.length?` · ${need2.length}`:''}`,need2.length&&!st.ghosts.length&&s.suggestOn!==false?lnk(`Fill my ${st.mode==='w'?'week':st.mode==='m'?'month':'quarter'}`,()=>{arcMark();st.ghosts=fillFew(top.map(x=>x.c),P,st);if(!st.ghosts.length)toast(`No open ${P.unit}s left to fill`);App.refresh();},'spark'):null));
     const list=el('div',{class:'list stneed',id:'st-dock','data-rail':'1'});
     const shown=[...top,...(showBack||!top.length?back:[])];
@@ -144,8 +144,7 @@ function viewStudio(root){
     if(!more&&!showBack&&nTop>5)list.append(el('button',{class:'addset muted',onclick:()=>{st.showMore=true;App.refresh();}},`Show ${nTop-5} more`));
     else if(back.length&&top.length)list.append(el('button',{class:'addset muted',onclick:()=>{st.showBack=!showBack;if(showBack)st.showMore=false;App.refresh();}},showBack?'Hide the backlog':`Backlog · ${back.length} more without a date`));
     else if(more&&nTop>5)list.append(el('button',{class:'addset muted',onclick:()=>{st.showMore=false;App.refresh();}},'Show fewer'));
-    if(habNeed.length){const hb=el('div',{class:'li strow sthab'},el('button',{class:'strow-h','aria-expanded':String(!!st.habOpen),onclick:()=>{st.habOpen=!st.habOpen;App.refresh();}},el('span',{class:'stai','aria-hidden':'true',html:ic('rep',14,2)}),el('span',{class:'grow'},el('b',{},`${dCount(habNeed.length,'habit')} to spread over the week`),el('small',{},st.habOpen?'Tap one to place it':habNeed.slice(0,3).map(x=>x.c.t).join(', ')+(habNeed.length>3?'…':'')))),
-        el('button',{class:'linkbtn small',onclick:ev=>{ev.stopPropagation();const g=suggest(habNeed.map(x=>x.c),P,st);if(!g.length){toast('No open days left');return;}g.forEach(x=>placeCard(x.card,x.slot,st));App.refresh();toast(`${g.length} sessions placed`,()=>{g.forEach(x=>unplaceCard(x.card,x.slot,st));App.refresh();});}},'Spread them'));
+    if(habNeed.length){const hb=Row({as:'div',cls:'strow sthab'},el('button',{class:'strow-h','aria-expanded':String(!!st.habOpen),onclick:()=>{st.habOpen=!st.habOpen;App.refresh();}},el('span',{class:'stai','aria-hidden':'true',html:ic('rep',14,2)}),el('span',{class:'grow'},el('b',{},`${dCount(habNeed.length,'habit')} to spread over the week`),el('small',{},st.habOpen?'Tap one to place it':habNeed.slice(0,3).map(x=>x.c.t).join(', ')+(habNeed.length>3?'…':'')))),el('button',{class:'linkbtn small',onclick:ev=>{ev.stopPropagation();const g=suggest(habNeed.map(x=>x.c),P,st);if(!g.length){toast('No open days left');return;}g.forEach(x=>placeCard(x.card,x.slot,st));App.refresh();toast(`${g.length} sessions placed`,()=>{g.forEach(x=>unplaceCard(x.card,x.slot,st));App.refresh();});}},'Spread them'));
       list.prepend(hb);}
     if(st.habOpen&&habNeed.length){const anchor=list.querySelector('.sthab');[...habNeed].reverse().forEach(({c,r})=>{const n=stRow(c,r[1],st,P);n.classList.add('sthabrow');anchor.after(n);});}
     if(need2.length||habNeed.length)page.append(list);
@@ -182,7 +181,7 @@ function slotRow(sl,st,P,cards){
   let span=null;if(st.mode==='m'){span=stSpan(sl.from,sl.to);const nt=span.td+placed.filter(c=>c.type!=='habit').length;fixed=[span.ad[0]||null,span.ev?dCount(span.ev,'event'):null,nt?dCount(nt,'to-do'):null].filter(Boolean).join(' · ');if(!sl.past&&span.n)fr=`${fmtDurS(span.fr)} free`;}
   const dues=st.mode==='w'?get.all('task').filter(t=>t.deadline===sl.id&&isOpenTask(t)).map(t=>t.title):[];
   const node=el('section',{class:'stslot'+(isToday?' istoday':'')+(sl.past?' past':'')+(st.mode==='m'&&!sl.past?' tapweek':''),'data-slot':sl.id,onclick:st.mode==='m'&&!sl.past?ev=>{if(ev.target.closest('button'))return;st.mode='w';st.anchor=sl.from;st.ghosts=[];st.open=null;App.refresh();}:null},
-    el('div',{class:'stslot-h'},el('b',{},st.mode==='w'?`${sl.a.slice(0,1)+sl.a.slice(1).toLowerCase()} ${sl.b}`:st.mode==='m'?`${sl.a} – ${sl.b.replace(/^to /,'')}`:sl.a),el('small',{class:frc==='full'?'late':null},fr),sl.past?null:el('button',{class:'iconbtn green',style:'width:36px;height:36px;margin-right:calc(var(--s2) * -1)','aria-label':`Add to ${sl.label}`,html:ic('plus',18,2),onclick:()=>st.mode==='w'?commitmentSheet(sl,st):newCardSheet(st,P)})),
+    el('div',{class:'stslot-h'},el('b',{},st.mode==='w'?`${sl.a.slice(0,1)+sl.a.slice(1).toLowerCase()} ${sl.b}`:st.mode==='m'?`${sl.a} – ${sl.b.replace(/^to /,'')}`:sl.a),el('small',{class:frc==='full'?'late':null},fr),sl.past?null:IconButton(`Add to ${sl.label}`,{size:'sm',cls:'green',style:'margin-right:calc(var(--s2) * -1)',html:ic('plus',18,2),onclick:()=>st.mode==='w'?commitmentSheet(sl,st):newCardSheet(st,P)})),
     st.mode==='w'&&!sl.past?stFreeBar(sl.id,over):st.mode==='m'&&!sl.past&&span&&span.n?stFreeBar(null,false,span.fr/(span.n*900)):null,
     fixed||over?el('p',{class:'stfixed'},fixed,over?el('span',{class:'stover'},`${fixed?' · ':''}More than fits`):null):null,
     dues.length?el('p',{class:'stdue'},`Due: ${dues.slice(0,2).join(', ')}${dues.length>2?` +${dues.length-2}`:''}`):null);
@@ -193,7 +192,7 @@ function slotRow(sl,st,P,cards){
     placed.forEach(c=>{const n=el('button',{class:'stprow',onclick:()=>stOpen(c)},stAi(c),el('span',{class:'clip grow'},c.type==='step'?`${c.m} · ${c.t}`:c.t));draggable(n,{label:c.t,move:(x,y)=>hoverSlot(x,y),drop:(x,y)=>{const id=hoverSlot(x,y);clearHover();if(!id||id===sl.id)return;if(id==='rail'){unplaceCard(c,sl.id,st);App.refresh();toast('Back in Needs a day',()=>{placeCard(c,sl.id,st);App.refresh();});return;}const to=P.slots.find(z=>z.id===id);if(to&&to.past){toast('That day has passed');return;}unplaceCard(c,sl.id,st);placeCard(c,id,st);App.refresh();toast(`Moved to ${to.label}`);}});it.append(n);});
     ghosts.forEach(g=>it.append(el('div',{class:'stprow sugg'},stAi(g.card),el('button',{class:'clip grow',style:'text-align:left',onclick:()=>toast(g.why)},g.card.type==='step'?`${g.card.m} · ${g.card.t}`:g.card.t),
       el('button',{class:'linkbtn small',onclick:()=>{placeCard(g.card,g.slot,st);st.ghosts=st.ghosts.filter(x=>x!==g);App.refresh();}},'Keep'),
-      el('button',{class:'iconbtn','aria-label':'Drop this suggestion',style:'width:36px;height:36px;color:var(--ink-3)',html:ic('x',14,2.2),onclick:()=>{st.ghosts=st.ghosts.filter(x=>x!==g);App.refresh();}}))));
+      IconButton('Drop this suggestion',{size:'sm',style:'color:var(--ink-3)',html:ic('x',14,2.2),onclick:()=>{st.ghosts=st.ghosts.filter(x=>x!==g);App.refresh();}}))));
     node.append(it);}
   return node;}
 function cardEl(c,st,P){
@@ -218,7 +217,7 @@ function slotEl(sl,st,P,cards){
   const node=el('section',{class:'slot'+(selC&&!sl.past?' can':'')+(sl.past?' past':''),'data-slot':sl.id,onclick:e=>{if(selC&&!e.target.closest('button,.pl')){doPlace(selC,sl.id,st,P,sl);}}},
     el('div',{class:'slot-h'},el('span',{class:'d'},el('b',{},sl.a),sl.b?el('small',{},sl.b):null),
       P.cap<99?el('span',{class:'load'+(loadN>=P.cap?' full':''),role:'img','aria-label':`${loadN} planned`},el('i',{style:`width:${pct}%`})):el('span',{class:'small muted tnum'},`${loadN} planned`),
-      sl.past?null:selC&&!sl.past?el('button',{class:'chip on',style:'height:32px',onclick:()=>doPlace(selC,sl.id,st,P,sl)},'Place here'):el('button',{class:'iconbtn green',style:'width:36px;height:36px','aria-label':`Add a commitment to ${sl.label}`,html:ic('plus',18,2),onclick:()=>commitmentSheet(sl,st)})));
+      sl.past?null:selC&&!sl.past?Chip('Place here',{selected:true,style:'height:32px',onclick:()=>doPlace(selC,sl.id,st,P,sl)}):IconButton(`Add a commitment to ${sl.label}`,{size:'sm',cls:'green',html:ic('plus',18,2),onclick:()=>commitmentSheet(sl,st)})));
   const items=el('div',{class:'slot-items'});
   // fixed items
   if(st.mode==='w'){const d=dayItems(sl.id);
@@ -242,32 +241,32 @@ function slotEl(sl,st,P,cards){
 function commitmentSheet(sl,st){
   const dk=sl.from;menuAt([{label:'Time block',icon:'hour',onclick:()=>blockSheet(null,{date:dk,start:nextFreeSlot(dk)})},{label:'All-day item',icon:'cal',onclick:()=>alldaySheet(null,{start:dk})},{label:'Task',icon:'task',onclick:()=>taskSheet(null,{date:dk})}]);return;
   const inst=openSheet({title:'Add a commitment',build:body=>{body.append(el('p',{class:'muted'},`Something fixed on ${st.mode==='w'?sl.label:'or around '+sl.label}. Plans work around it.`),el('div',{class:'list'},
-    el('button',{class:'li',onclick:()=>{inst.close();blockSheet(null,{date:dk,start:nextFreeSlot(dk)});}},el('span',{class:'sq',html:ic('hour',20)}),el('span',{class:'grow'},el('b',{},'Time block'),el('small',{},'A meeting, appointment or fixed time'))),
-    el('button',{class:'li',onclick:()=>{inst.close();alldaySheet(null,{start:dk});}},el('span',{class:'sq',html:ic('cal',20)}),el('span',{class:'grow'},el('b',{},'All-day item'),el('small',{},'A birthday, trip or day off'))),
-    el('button',{class:'li',onclick:()=>{inst.close();taskSheet(null,{date:dk});}},el('span',{class:'sq',html:ic('task',20)}),el('span',{class:'grow'},el('b',{},'Task'),el('small',{},'Something that needs doing that day')))));}});
+    Row({onclick:()=>{inst.close();blockSheet(null,{date:dk,start:nextFreeSlot(dk)});}},el('span',{class:'sq',html:ic('hour',20)}),el('span',{class:'grow'},el('b',{},'Time block'),el('small',{},'A meeting, appointment or fixed time'))),
+    Row({onclick:()=>{inst.close();alldaySheet(null,{start:dk});}},el('span',{class:'sq',html:ic('cal',20)}),el('span',{class:'grow'},el('b',{},'All-day item'),el('small',{},'A birthday, trip or day off'))),
+    Row({onclick:()=>{inst.close();taskSheet(null,{date:dk});}},el('span',{class:'sq',html:ic('task',20)}),el('span',{class:'grow'},el('b',{},'Task'),el('small',{},'Something that needs doing that day')))));}});
 }
 function newCardSheet(st,P){menuAt(st.mode==='w'?[{label:'Task',icon:'task',onclick:()=>taskSheet(null,{date:null,planWeek:P.slots[0].id})},{label:'Habit',icon:'habit',onclick:()=>habitSheet(null)},{label:'Goal',icon:'target',onclick:()=>goalSheet(null)},{label:'Project',icon:'project',onclick:()=>projectSheet(null)}]:[{label:'Goal',icon:'target',onclick:()=>goalSheet(null)},{label:'Project',icon:'project',onclick:()=>projectSheet(null)},{label:'Task with a deadline',icon:'task',onclick:()=>taskSheet(null,{date:null,deadline:P.slots[P.slots.length-1].to})}]);return;
   if(st.mode==='w'){const inst=openSheet({title:'New card',build:body=>{body.append(el('div',{class:'list'},
-    el('button',{class:'li',onclick:()=>{inst.close();taskSheet(null,{date:null,planWeek:P.slots[0].id});}},el('span',{class:'sq',html:ic('task',20)}),el('span',{class:'grow'},el('b',{},'Task'),el('small',{},'One action to finish'))),
-    el('button',{class:'li',onclick:()=>{inst.close();habitSheet(null);}},el('span',{class:'sq',html:ic('habit',20)}),el('span',{class:'grow'},el('b',{},'Habit'),el('small',{},'Something you repeat each week'))),
-    el('button',{class:'li',onclick:()=>{inst.close();goalSheet(null);}},el('span',{class:'sq',html:ic('target',20)}),el('span',{class:'grow'},el('b',{},'Goal'),el('small',{},'An outcome with steps'))),
-    el('button',{class:'li',onclick:()=>{inst.close();projectSheet(null);}},el('span',{class:'sq',html:ic('project',20)}),el('span',{class:'grow'},el('b',{},'Project'),el('small',{},'A bigger effort with steps')))));}});}
+    Row({onclick:()=>{inst.close();taskSheet(null,{date:null,planWeek:P.slots[0].id});}},el('span',{class:'sq',html:ic('task',20)}),el('span',{class:'grow'},el('b',{},'Task'),el('small',{},'One action to finish'))),
+    Row({onclick:()=>{inst.close();habitSheet(null);}},el('span',{class:'sq',html:ic('habit',20)}),el('span',{class:'grow'},el('b',{},'Habit'),el('small',{},'Something you repeat each week'))),
+    Row({onclick:()=>{inst.close();goalSheet(null);}},el('span',{class:'sq',html:ic('target',20)}),el('span',{class:'grow'},el('b',{},'Goal'),el('small',{},'An outcome with steps'))),
+    Row({onclick:()=>{inst.close();projectSheet(null);}},el('span',{class:'sq',html:ic('project',20)}),el('span',{class:'grow'},el('b',{},'Project'),el('small',{},'A bigger effort with steps')))));}});}
   else{const inst=openSheet({title:'New card',build:body=>{body.append(el('div',{class:'list'},
-    el('button',{class:'li',onclick:()=>{inst.close();goalSheet(null);}},el('span',{class:'sq',html:ic('target',20)}),el('span',{class:'grow'},el('b',{},'Goal'),el('small',{},'An outcome with steps'))),
-    el('button',{class:'li',onclick:()=>{inst.close();projectSheet(null);}},el('span',{class:'sq',html:ic('project',20)}),el('span',{class:'grow'},el('b',{},'Project'),el('small',{},'A bigger effort with steps'))),
-    el('button',{class:'li',onclick:()=>{inst.close();taskSheet(null,{date:null,deadline:P.slots[P.slots.length-1].to});}},el('span',{class:'sq',html:ic('task',20)}),el('span',{class:'grow'},el('b',{},'Task with a deadline'),el('small',{},'Something due this period')))));}});}
+    Row({onclick:()=>{inst.close();goalSheet(null);}},el('span',{class:'sq',html:ic('target',20)}),el('span',{class:'grow'},el('b',{},'Goal'),el('small',{},'An outcome with steps'))),
+    Row({onclick:()=>{inst.close();projectSheet(null);}},el('span',{class:'sq',html:ic('project',20)}),el('span',{class:'grow'},el('b',{},'Project'),el('small',{},'A bigger effort with steps'))),
+    Row({onclick:()=>{inst.close();taskSheet(null,{date:null,deadline:P.slots[P.slots.length-1].to});}},el('span',{class:'sq',html:ic('task',20)}),el('span',{class:'grow'},el('b',{},'Task with a deadline'),el('small',{},'Something due this period')))));}});}
 }
 function placedSheet(c,sl,st,P){
   const inst=openSheet({title:c.t,build:body=>{
     const ctx=formCtx(()=>{});
     const moves=P.slots.filter(s=>!s.past&&s.id!==sl.id);
-    body.append(el('div',{class:'sect'},'Move to'),el('div',{class:'chips'},moves.map(s=>el('button',{class:'chip',onclick:()=>{unplaceCard(c,sl.id,st);placeCard(c,s.id,st);inst.close();toast(`Moved to ${s.label}`);}},s.label))),
+    body.append(el('div',{class:'sect'},'Move to'),el('div',{class:'chips'},moves.map(s=>Chip(s.label,{onclick:()=>{unplaceCard(c,sl.id,st);placeCard(c,s.id,st);inst.close();toast(`Moved to ${s.label}`);}}))),
       el('p',{class:'small muted'},`Tip: you can also drag it straight to another ${P.unit}.`));
     if(st.mode==='w'){const seT=c.type==='habit'?(c.rec.sessions[sl.id]||{}).time:c.type==='task'?c.rec.time:c.step.time;
       body.append(el('div',{class:'sect'},'Time (optional)'),el('p',{class:'small muted'},'Leave it blank and it waits at the top of that day’s Today page, ready to drag onto a time.'),
-        el('button',{class:'btn line block',onclick:()=>{inst.close();const e=dayItems(sl.id);const it=[...e.timed,...e.anytime].find(x=>x.id===(c.type==='step'?c.step.id:c.rec.id));App.state.sel=sl.id;App.state._fresh=true;App.go('today');}},seT!=null?`Set for ${fmtT(seT)}. Open in Today`:'Open that day in Today'));}
-    body.append(el('button',{class:'btn quiet block',onclick:()=>{unplaceCard(c,sl.id,st);inst.close();toast('Back in To plan',()=>{placeCard(c,sl.id,st);App.refresh();});}},'Back to To plan'),
-      el('button',{class:'btn text',onclick:()=>{inst.close();if(c.type==='habit')App.go('habit',{id:c.rec.id});else if(c.type==='task')taskSheet(c.rec);else App.go('plan',{id:c.rec.id});}},`Edit ${({habit:'habit',task:'task',step:c.rec.kind})[c.type]}`));
+        Button(seT!=null?`Set for ${fmtT(seT)}. Open in Today`:'Open that day in Today',{variant:'secondary',full:true,onclick:()=>{inst.close();const e=dayItems(sl.id);const it=[...e.timed,...e.anytime].find(x=>x.id===(c.type==='step'?c.step.id:c.rec.id));App.state.sel=sl.id;App.state._fresh=true;App.go('today');}}));}
+    body.append(Button('Back to To plan',{variant:'quiet',full:true,onclick:()=>{unplaceCard(c,sl.id,st);inst.close();toast('Back in To plan',()=>{placeCard(c,sl.id,st);App.refresh();});}}),
+      Button(`Edit ${({habit:'habit',task:'task',step:c.rec.kind})[c.type]}`,{variant:'text',onclick:()=>{inst.close();if(c.type==='habit')App.go('habit',{id:c.rec.id});else if(c.type==='task')taskSheet(c.rec);else App.go('plan',{id:c.rec.id});}}));
   }});
 }
 function reviewSheet(P,st,cards){
@@ -279,17 +278,17 @@ function reviewSheet(P,st,cards){
     body.append(el('div',{class:'stat3'},el('div',{},el('b',{},String(placedN)),el('small',{},'planned')),el('div',{},el('b',{},String(fixed)),el('small',{},'commitments')),el('div',{},el('b',{},String(P.slots.filter(s=>!slotLoad(s,st,cards)).length)),el('small',{},`open ${P.unit}s`))));
     if(busy)body.append(el('p',{class:'small',style:'color:var(--overdue)'},`${busy} ${P.unit}${busy>1?'s are':' is'} over your capacity.`));
     if(late)body.append(el('p',{class:'small',style:'color:var(--overdue)'},`${late} card${late>1?'s land':' lands'} after the due date.`));
-    if(unplaced.length){body.append(el('div',{class:'sect'},`Not placed · ${unplaced.length}`));body.append(el('div',{class:'list'},unplaced.map(c=>el('div',{class:'li',style:''},el('span',{class:'grow'},el('b',{style:'font-weight:500'},c.t),el('small',{},c.type==='habit'?'Sessions left this week':'Stays in To plan'))))));}
-    body.append(el('button',{class:'btn primary block',onclick:()=>{const r=get.id('plan-'+P.key)||{id:'plan-'+P.key,kind:'plan',key:P.key};r.committed=true;r.committedAt=Date.now();App.state._commitSweep=true;put(r);if(st.mode==='w')setSettings({checkinDone:todayK()});inst.close();buzz(12);toast(P.doneL);}},P.commit),el('button',{class:'btn quiet block',onclick:()=>inst.close()},'Keep planning'));
+    if(unplaced.length){body.append(el('div',{class:'sect'},`Not placed · ${unplaced.length}`));body.append(el('div',{class:'list'},unplaced.map(c=>Row({as:'div',style:''},el('span',{class:'grow'},el('b',{style:'font-weight:500'},c.t),el('small',{},c.type==='habit'?'Sessions left this week':'Stays in To plan'))))));}
+    body.append(Button(P.commit,{variant:'primary',full:true,onclick:()=>{const r=get.id('plan-'+P.key)||{id:'plan-'+P.key,kind:'plan',key:P.key};r.committed=true;r.committedAt=Date.now();App.state._commitSweep=true;put(r);if(st.mode==='w')setSettings({checkinDone:todayK()});inst.close();buzz(12);toast(P.doneL);}}),Button('Keep planning',{variant:'quiet',full:true,onclick:()=>inst.close()}));
   }});
 }
 function checkinSheet(P,st,cards){
   const made=repeatLast(P,st,cards);const late=cards.filter(c=>c.tag==='Carried over');
   const inst=openSheet({title:'Sunday check-in',build:body=>{
     body.append(
-      el('div',{class:'cistep'},el('i',{},'1'),el('div',{},el('b',{},'Repeat last week’s rhythm'),el('p',{class:'small muted',style:'margin-top:2px'},made.length?made.map(m=>`${m.card.t} on ${m.slot&&DOW[fromK(m.slot).getDay()].slice(0,3)}`).join(', '):'No habit pattern from last week yet.'),made.length?el('button',{class:'btn line',style:'margin-top:var(--s2)',onclick:()=>{inst.close();studioMark();made.forEach(g=>placeCard(g.card,g.slot,st));App.refresh();toast(`${made.length} placed`);}},'Repeat it'):null)),
+      el('div',{class:'cistep'},el('i',{},'1'),el('div',{},el('b',{},'Repeat last week’s rhythm'),el('p',{class:'small muted',style:'margin-top:2px'},made.length?made.map(m=>`${m.card.t} on ${m.slot&&DOW[fromK(m.slot).getDay()].slice(0,3)}`).join(', '):'No habit pattern from last week yet.'),made.length?Button('Repeat it',{variant:'secondary',style:'margin-top:var(--s2)',onclick:()=>{inst.close();studioMark();made.forEach(g=>placeCard(g.card,g.slot,st));App.refresh();toast(`${made.length} placed`);}}):null)),
       el('div',{class:'cistep'},el('i',{},'2'),el('div',{},el('b',{},'Check what carried over'),el('p',{class:'small muted',style:'margin-top:2px'},late.length?late.map(c=>c.t).join(', '):'Nothing carried over.'))),
-      el('div',{class:'cistep'},el('i',{},'3'),el('div',{},el('b',{},'Fill the rest'),el('p',{class:'small muted',style:'margin-top:2px'},'Suggest uses your usual days, spaces habits out, skips full days and lands things before they’re due.'),el('button',{class:'btn line',style:'margin-top:var(--s2)',onclick:()=>{arcMark();const c2=stCards(st,P);st.ghosts=suggest(c2,P,st);inst.close();App.refresh();}},'Suggest the rest'))),
-      el('button',{class:'btn primary block',onclick:()=>{setSettings({checkinDone:todayK()});inst.close();}},'Go to my week'));
+      el('div',{class:'cistep'},el('i',{},'3'),el('div',{},el('b',{},'Fill the rest'),el('p',{class:'small muted',style:'margin-top:2px'},'Suggest uses your usual days, spaces habits out, skips full days and lands things before they’re due.'),Button('Suggest the rest',{variant:'secondary',style:'margin-top:var(--s2)',onclick:()=>{arcMark();const c2=stCards(st,P);st.ghosts=suggest(c2,P,st);inst.close();App.refresh();}}))),
+      Button('Go to my week',{variant:'primary',full:true,onclick:()=>{setSettings({checkinDone:todayK()});inst.close();}}));
   }});
 }

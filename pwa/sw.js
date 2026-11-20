@@ -8,6 +8,7 @@ const timeout = (p, ms) => Promise.race([p, new Promise((_, no) => setTimeout(()
 self.addEventListener('fetch', e => {
   const req = e.request, url = new URL(req.url);
   if (req.method !== 'GET') return;
+  if (url.pathname.startsWith('/l/') || url.pathname === '/share.html') return; // shared lists are their own page
   if (req.mode === 'navigate') {
     // newest page when online (so updates land on the next open), the saved copy when offline or very slow
     e.respondWith((async () => {

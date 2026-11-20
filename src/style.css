@@ -3170,3 +3170,19 @@ html.t-auto #view,html.t-auto #layers{zoom:var(--tzoom,1)}
 .cmdk-none{padding:var(--s4) var(--s3);color:var(--text-muted)}
 .cmdk-foot{display:flex;gap:var(--s4);padding:var(--s2) var(--s4);border-top:1px solid var(--line-2);font-size:var(--fs-caption);color:var(--text-muted)}
 .cmdk-foot kbd{min-width:22px;height:22px;font-size:var(--fs-cell);margin-right:2px}
+/* v235 · talk to capture */
+.field.hasmic{position:relative}.field.hasmic textarea{padding-right:52px}
+.capmic{position:absolute;right:var(--s2);top:50%;transform:translateY(-50%);width:var(--ctl);height:var(--ctl);border-radius:var(--r-full);display:grid;place-items:center;color:var(--action-text);background:var(--selected);transition:background var(--dur-fast),color var(--dur-fast),box-shadow var(--dur-base) var(--ease)}
+.capmic.on{background:var(--action);color:var(--on-accent);box-shadow:0 0 0 8px color-mix(in srgb,var(--action) 18%,transparent);animation:micPulse 1.4s ease-in-out infinite}
+@keyframes micPulse{50%{box-shadow:0 0 0 14px color-mix(in srgb,var(--action) 8%,transparent)}}
+.tinput{height:var(--ctl);border-radius:var(--r-row);border:1px solid var(--border);padding:0 var(--s3);font-size:var(--fs-body);background:var(--surface-raised);color:var(--text)}
+/* v235 components */
+.pgacts{display:flex;gap:2px;align-items:center}
+.pgsub{margin-top:var(--s1)}
+.phead-ctl{align-items:center;justify-content:space-between;flex-wrap:nowrap}
+.phead-ctl>.pgtitle{flex:1;min-width:0}
+.btn.lg{height:var(--ctl-lg);padding:0 var(--s5);font-size:var(--fs-row)}
+.btn.line.danger,.btn.quiet.danger,.btn.text.danger{background:var(--surface-raised);color:var(--overdue)}
+.iconbtn.sm{width:36px;height:36px}
+.iconbtn.sm::before{content:'';position:absolute;inset:-4px}
+.otitle.cal-title{margin-top:0;align-items:center}

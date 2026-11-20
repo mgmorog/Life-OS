@@ -126,7 +126,7 @@ const dirty=new Set();
 const deleted=new Set();
 const store={db:null,uid:null,coll:null,assets:null,downloads:null,ready:false,mode:'starting',lastError:null};
 const uid=(p='r')=>p+Date.now().toString(36)+Math.random().toString(36).slice(2,7);
-const DEFAULT_SETTINGS={id:'settings',kind:'settings',top3On:true,chime:true,planEve:true,planAt:1140,areaDue:true,weekStart:1,nav:['today','studio','calendar'],pinned:['inbox','tasks','habits','goals'],recent:[],capacity:{mode:'items',full:6,hours:8,lightWeekends:false},filters:{types:{task:true,block:true,allday:true,habit:true},areas:[]},reviewDay:0,grid:{startScroll:null},work:{start:540,end:1020},areas:AREAS.slice(),foundation:{},haptics:true,clock:12,textSize:'default',bold:false,borders:false,contrast:false,reduceMotion:false,celebrate:'flow',completed:'fade',carryOver:true,defaultHabitTarget:3,studioHabits:true,suggestOn:true,checkinCard:true,workDays:[0,1,2,3,4],protectEvenings:false,monthlyReview:true,quarterlyReview:true,inboxNudge:true,quiet:{on:false,from:1320,to:420},captureTo:'inbox',captureToast:true,calendar:{on:false,declined:false,chips:true,busy:true},currency:'$',hideAmounts:false};
+const DEFAULT_SETTINGS={id:'settings',kind:'settings',top3On:true,chime:true,planEve:true,planAt:1140,areaDue:true,weekStart:1,nav:['today','studio','calendar'],pinned:['inbox','tasks','habits','goals'],recent:[],capacity:{mode:'items',full:6,hours:8,lightWeekends:false},filters:{types:{task:true,block:true,allday:true,habit:true},areas:[]},reviewDay:0,grid:{startScroll:null},work:{start:540,end:1020},areas:AREAS.slice(),foundation:{},haptics:true,clock:12,textSize:'auto',bold:false,borders:false,contrast:false,reduceMotion:false,celebrate:'flow',completed:'fade',carryOver:true,defaultHabitTarget:3,studioHabits:true,suggestOn:true,checkinCard:true,workDays:[0,1,2,3,4],protectEvenings:false,monthlyReview:true,quarterlyReview:true,inboxNudge:true,quiet:{on:false,from:1320,to:420},captureTo:'inbox',captureToast:true,calendar:{on:false,declined:false,chips:true,busy:true},currency:'$',hideAmounts:false};
 const get={
   settings(){const r=recs.get('settings');if(!r)return DEFAULT_SETTINGS;if(r!==get._s){get._s=r;get._m=Object.assign({},DEFAULT_SETTINGS,r);}return get._m;},
   all(kind,{archived=false,every=false}={}){const out=[];recs.forEach(r=>{if(r.kind===kind&&(archived||!r.archived)&&(every||(!r.paused&&!r.finished)))out.push(r);});return out;},
@@ -562,8 +562,22 @@ function flexDue(){const s=get.settings(),out=[],tk=todayK();if(s.flexRemind===f
 
 /* v230 · section labels are real headings, and every role=button can be reached and pressed from the keyboard */
 function a11yPass(root){if(!root||!root.querySelectorAll)return;
-  root.querySelectorAll('.lbl,.lbl2,.lbl3,.sect,.secl,.dlhead').forEach(n=>{if(/^H[1-6]$/.test(n.tagName)||n.hasAttribute('role')||n.closest('button,a,label,.li,.chip,[role=button]'))return;n.setAttribute('role','heading');n.setAttribute('aria-level','2');});
+  root.querySelectorAll('.lbl,.lbl3,.sect,.secl,.dlhead').forEach(n=>{if(/^H[1-6]$/.test(n.tagName)||n.hasAttribute('role')||n.closest('button,a,label,.li,.chip,[role=button]'))return;n.setAttribute('role','heading');n.setAttribute('aria-level','2');});
   root.querySelectorAll('[role=button]:not([tabindex])').forEach(n=>n.setAttribute('tabindex','0'));}
 document.addEventListener('keydown',e=>{const t=e.target;if((e.key==='Enter'||e.key===' ')&&!e.defaultPrevented&&t&&t.getAttribute&&t.getAttribute('role')==='button'&&t.tagName!=='BUTTON'){e.preventDefault();t.click();}});
 
 function toastRestack(){const l=[...document.querySelectorAll('.toast.tstk')];while(l.length>2)l.shift().remove();l.reverse().forEach((n,i)=>n.style.setProperty('--i',i+1));}
+
+/* v232 · forgiving match: every word can match anywhere, in any order, with a small typo; lower score = better, -1 = no match */
+function editDist(a,b){if(a===b)return 0;const m=Array.from({length:a.length+1},(_,i)=>[i]);for(let j=1;j<=b.length;j++)m[0][j]=j;for(let i=1;i<=a.length;i++)for(let j=1;j<=b.length;j++)m[i][j]=Math.min(m[i-1][j]+1,m[i][j-1]+1,m[i-1][j-1]+(a[i-1]===b[j-1]?0:1));return m[a.length][b.length];}
+function fuzzyScore(text,q){const T=String(text||'').toLowerCase(),Q=String(q||'').toLowerCase().trim();if(!Q)return 0;if(!T)return -1;
+  if(T.startsWith(Q))return 0;if(T.includes(Q))return 1;
+  const toks=T.split(/[^a-z0-9À-ɏ]+/).filter(Boolean),ws=Q.split(/\s+/).filter(Boolean);let s=2;
+  for(const w of ws){let best=99;for(const t of toks){if(t.startsWith(w)){best=0;break;}if(t.includes(w))best=Math.min(best,1);else if(w.length>=4){const d=Math.min(editDist(w,t.slice(0,w.length)),editDist(w,t));if(d<=(w.length>=7?2:1))best=Math.min(best,2+d);}}
+    if(best===99)return -1;s+=best;}
+  return s;}
+
+/* v232 · where a new time block should start: the next free half hour that day (from now, if it's today), or 9:00 on an open day */
+function nextFreeSlot(dk,dur=30){try{const items=dayItems(dk).timed.filter(e=>e.time!=null&&e.kind!=='task'),busy=items.map(e=>[e.time,e.time+(e.dur||30)]);
+  const isT=dk===todayK();let t=isT?Math.max(0,Math.ceil(nowMin()/30)*30):9*60;if(!busy.length&&!isT)return 9*60;if(!isT)t=Math.min(t,9*60);
+  for(;t+dur<=23*60;t+=30){if(!busy.some(([a,b])=>t<b&&t+dur>a))return t;}return isT?Math.min(22*60,Math.ceil(nowMin()/30)*30):9*60;}catch(e){return 9*60;}}

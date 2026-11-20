@@ -123,7 +123,7 @@ function fabMenu(){
   const fab=$('#fab');if(!fab)return;if($('.fab-menu')){closeFabMenu();return;}
   const dk=App.state.view==='today'&&App.state.sel?App.state.sel:todayK();
   const go=fn=>()=>{closeFabMenu(true);setTimeout(fn,motionOK()?120:0);};
-  const items=[['Quick capture','inbox',()=>captureSheet(null)],['All-day','sun',()=>alldaySheet(null,{start:dk})],['Time block','time',()=>blockSheet(null,{date:dk,start:dk===todayK()?nextQuarter():9*60})],['Task','task',()=>taskSheet(null,{date:dk})]];
+  const items=[['Quick capture','inbox',()=>captureSheet(null)],['All-day','sun',()=>alldaySheet(null,{start:dk})],['Time block','time',()=>blockSheet(null,{date:dk,start:nextFreeSlot(dk)})],['Task','task',()=>taskSheet(null,{date:dk})]];
   const r=fab.getBoundingClientRect();
   const scrim=el('div',{class:'fab-scrim',onclick:()=>closeFabMenu()});
   const menu=el('div',{class:'fab-menu',role:'menu'},items.map(([l,i,fn])=>el('button',{class:'mitem',role:'menuitem',onclick:go(fn)},el('span',{class:'d',html:ic(i,16,2)}),l)));
@@ -307,7 +307,7 @@ function dayPeek(dk,sq){
   const card=el('div',{class:'peek',role:'dialog','aria-label':shortDay(dk)},el('div',{class:'lbl'},shortDay(dk)),
     lines.length?lines.slice(0,5).map(([t,ti,c])=>el('div',{class:'pk-l'},el('time',{},t),c?el('i',{style:`background:${c}`}):null,el('span',{},ti))):el('div',{class:'pk-l muted'},'Nothing planned'),
     lines.length>5?el('div',{class:'small muted',style:'padding-top:4px'},`+${lines.length-5} more`):null,
-    el('div',{class:'pk-a'},el('button',{class:'chip',onclick:go(()=>{App.state.sel=dk;App.state._fresh=true;App.go('today');})},'Open in Today'),el('button',{class:'chip',onclick:go(()=>taskSheet(null,{date:dk}))},'+ Task'),el('button',{class:'chip',onclick:go(()=>blockSheet(null,{date:dk,start:9*60}))},'+ Block')));
+    el('div',{class:'pk-a'},el('button',{class:'chip',onclick:go(()=>{App.state.sel=dk;App.state._fresh=true;App.go('today');})},'Open in Today'),el('button',{class:'chip',onclick:go(()=>taskSheet(null,{date:dk}))},'+ Task'),el('button',{class:'chip',onclick:go(()=>blockSheet(null,{date:dk,start:nextFreeSlot(dk)}))},'+ Block')));
   document.body.append(dim,card);
   const w=Math.min(310,innerWidth-24),h=card.offsetHeight,left=Math.max(12,Math.min(innerWidth-w-12,r.left+r.width/2-w/2)),above=r.top-h-10>12,top=above?r.top-h-10:Math.min(innerHeight-h-12,r.bottom+10);
   Object.assign(card.style,{left:left+'px',top:top+'px',width:w+'px',transformOrigin:`${r.left+r.width/2-left}px ${above?h:0}px`});
@@ -485,7 +485,7 @@ function petals(ring){if(!motionOK()||!ring||!ring.isConnected)return;const r=ri
 const SEGS=new Map();
 function segFill(root){root.querySelectorAll('.segs[data-seg]').forEach(b=>{const k=b.dataset.seg,on=b.querySelectorAll('i.on').length,prev=SEGS.get(k);SEGS.set(k,on);if(prev==null||on<=prev||!motionOK())return;[...b.querySelectorAll('i.on')].slice(prev).forEach((i,j)=>i.animate([{backgroundSize:'0% 100%'},{backgroundSize:'100% 100%'}],{duration:480,delay:j*80,easing:EASE,fill:'backwards'}));});}
 /* Text size: the page grows or shrinks in place instead of snapping */
-function textSizeGlide(a,b){if(!motionOK())return;const Z={default:1,large:1.1,larger:1.22},za=Z[a]||1,zb=Z[b]||1;if(za===zb)return;requestAnimationFrame(()=>{['#view','#layers'].forEach(sel=>{const n=$(sel);n&&n.animate([{transform:`scale(${za/zb})`,transformOrigin:'50% 0'},{transform:'none',transformOrigin:'50% 0'}],{duration:420,easing:EASE});});});}
+function textSizeGlide(a,b){if(!motionOK())return;const Z={default:1,large:1.1,larger:1.22,auto:sysTextZoom()},za=Z[a]||1,zb=Z[b]||1;if(za===zb)return;requestAnimationFrame(()=>{['#view','#layers'].forEach(sel=>{const n=$(sel);n&&n.animate([{transform:`scale(${za/zb})`,transformOrigin:'50% 0'},{transform:'none',transformOrigin:'50% 0'}],{duration:420,easing:EASE});});});}
 
 /* ---------- round 11 ---------- */
 /* Studio: items added in bulk drop into their days one day at a time */

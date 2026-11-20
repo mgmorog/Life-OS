@@ -72,7 +72,7 @@ function calGestures(node,e,dk){
   node.addEventListener('contextmenu',ev=>{ev.preventDefault();ev.stopPropagation();if(lastPointer==='mouse')itemMenu(e,dk,ev.clientX,ev.clientY);});
   draggable(node,{label:e.title,hold:(x,y)=>itemMenu(e,dk,x,y),move:(x,y)=>{hoverCal(x,y);autoscrollGrid(x,y);},drop:(x,y)=>{const d=hoverCal(x,y);clearCalHover();if(d&&d!==dk)moveAny(e,dk,d);}});
 }
-function dayMenu(dk,x,y){openMenu(x,y,[{label:'Open in Today',icon:'sun',onclick:()=>{App.state.sel=dk;App.state._fresh=true;App.go('today');}},{label:'Add a task',icon:'task',onclick:()=>taskSheet(null,{date:dk})},{label:'Add a time block',icon:'hour',onclick:()=>blockSheet(null,{date:dk,start:9*60})},{label:'Add an all-day item',icon:'cal',onclick:()=>alldaySheet(null,{start:dk})}]);}
+function dayMenu(dk,x,y){openMenu(x,y,[{label:'Open in Today',icon:'sun',onclick:()=>{App.state.sel=dk;App.state._fresh=true;App.go('today');}},{label:'Add a task',icon:'task',onclick:()=>taskSheet(null,{date:dk})},{label:'Add a time block',icon:'hour',onclick:()=>blockSheet(null,{date:dk,start:nextFreeSlot(dk)})},{label:'Add an all-day item',icon:'cal',onclick:()=>alldaySheet(null,{start:dk})}]);}
 function heatCell(d,{month,tk,C,onTap,bars=false,showSel=true}){
   const dk=k(d),out=month!=null&&d.getMonth()!==month,past=dk<tk;
   if(out)return el('span',{class:'heat out','aria-hidden':'true'});
@@ -115,7 +115,7 @@ function dayLine(e,dk){
     left:{label:'Open',color:'var(--ink-2)',run:()=>{openItem(e,dk);setTimeout(()=>{row.style.transition='transform var(--dur-base) var(--ease)';row.style.transform='';},250);}}});
 }
 function allDayChips(allDay,dk){return el('div',{class:'allday-row',style:'margin-top:0'},allDay.map(e=>{const b=el('button',{class:'adchip',style:`--c:${e.color}`,html:(e.icon?glyph(e.icon,16,2):'')+`<span>${esc(e.title)}</span>`,onclick:()=>openItem(e,dk)});calGestures(b,e,dk);return b;}));}
-const addChips=(dk,inline)=>el('div',{class:'chips'},el('button',{class:'chip',onclick:e=>{const b=e.currentTarget,r=b.getBoundingClientRect();openMenu(r.left,r.bottom+4,[{label:'Task',icon:'task',onclick:()=>inline?wkAdd(b,dk):taskSheet(null,{date:dk})},{label:'Time block',icon:'time',onclick:()=>blockSheet(null,{date:dk,start:9*60})},{label:'All-day',icon:'cal',onclick:()=>alldaySheet(null,{start:dk})}]);}},'+ Add'));
+const addChips=(dk,inline)=>el('div',{class:'chips'},el('button',{class:'chip',onclick:e=>{const b=e.currentTarget,r=b.getBoundingClientRect();openMenu(r.left,r.bottom+4,[{label:'Task',icon:'task',onclick:()=>inline?wkAdd(b,dk):taskSheet(null,{date:dk})},{label:'Time block',icon:'time',onclick:()=>blockSheet(null,{date:dk,start:nextFreeSlot(dk)})},{label:'All-day',icon:'cal',onclick:()=>alldaySheet(null,{start:dk})}]);}},'+ Add'));
 function weekBody(body,start,C){
   const tk=todayK(),list=el('div',{}),adS0=a=>a.filter(e=>!(e.rec&&e.rec.tripId)).length;
   /* anything on every day of the week is said once at the top, not seven times */

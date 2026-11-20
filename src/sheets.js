@@ -59,7 +59,7 @@ function formCtx(rerender){
   ctx.partRow=(g,D,{types=['goal','project','habit'],onPick=null}={})=>{const p=D.part?get.id(D.part):null;
     g.append(ctx.row('part','layers','Part of',p?el('span',{class:'on clip',style:'max-width:170px;display:flex;gap:8px;align-items:center'},p.title):'None'));
     if(ctx.open==='part'){const pick=o=>e=>{e.stopPropagation();const prev=D.part?get.id(D.part):null;D.part=o&&D.part!==o.id?o.id:null;if(!D.area&&o&&o.area&&D.part)D.area=o.area;ctx.open=null;onPick&&onPick(D.part?o:null,prev);rerender();};const any=types.some(t=>get.all(t).length);const name={goal:'Goals',project:'Projects',habit:'Habits'};
-      const pp=ctx.panel('part','',any?types.filter(t=>get.all(t).length).map(t=>el('div',{style:'margin-bottom:10px'},el('div',{class:'lbl3'},name[t]),el('div',{class:'chips'},get.all(t).map(o=>el('button',{class:'chip'+(D.part===o.id?' on':''),'aria-pressed':String(D.part===o.id),onclick:pick(o)},t==='habit'?`${o.title} · ${habitWeek(o,todayK())} of ${o.target}`:o.title))))):emptySm(`No ${types.map(t=>name[t].toLowerCase()).join(' or ')} yet`),
+      const pp=ctx.panel('part','',any?partPicker(types,name,D,pick):emptySm(`No ${types.map(t=>name[t].toLowerCase()).join(' or ')} yet`),
         el('div',{style:'display:flex;flex-wrap:wrap;gap:4px 18px;margin-top:8px'},D.part?el('button',{class:'linkbtn',onclick:pick(null)},'None'):null,types.includes('goal')?el('button',{class:'linkbtn',onclick:e=>{e.stopPropagation();goalSheet(null,{after:r=>{D.part=r.id;rerender();}});}},'+ New goal'):null,types.includes('project')?el('button',{class:'linkbtn',onclick:e=>{e.stopPropagation();projectSheet(null,{after:r=>{D.part=r.id;rerender();}});}},'+ New project'):null));g.append(pp);}
   };
   ctx.areaRow=(g,D)=>{g.append(ctx.row('area',D.area?areaIcon(D.area):'leaf','Life area',D.area||'None',{valOn:!!D.area}));
@@ -278,7 +278,7 @@ function deleteFlow(rec,occ,inst){
 
 /* ---------- New time block ---------- */
 function blockSheet(rec,seed={}){
-  const isEdit=!!rec;const lateNight=seed.start==null&&App.state.sel===todayK()&&Math.ceil(nowMin()/15)*15>=1440,n=lateNight?0:nextQuarter();
+  const isEdit=!!rec;const lateNight=seed.start==null&&App.state.sel===todayK()&&Math.ceil(nowMin()/15)*15>=1440,n=lateNight?0:nextFreeSlot(App.state.sel||todayK());
   const D=isEdit?clone(rec):Object.assign({title:'',notes:'',date:lateNight?addK(todayK(),1):App.state.sel,start:n,dur:60,repeat:{type:'never',end:null},reminder:null,remUnit:'minute',part:null,area:null,color:defCol(),icon:null},seed);
   delete D.occ;delete D._after;const occ=isEdit&&seed.occ&&rec.repeat&&rec.repeat.type!=='never'?seed.occ:null;if(occ)D.date=occ;
   let render;
@@ -381,3 +381,19 @@ function resourceSheet(rec,seed={},done){
       if(isEdit)body.append(el('button',{class:'delete',onclick:()=>archiveFlow(rec,inst)},'Archive resource'),el('button',{class:'delete',onclick:()=>{const c=clone(rec);remove(rec.id);inst.close();toast('Resource deleted',()=>put(c));}},'Delete resource'));else if(!T.input.value)focusIfKeyboard(T.input);}});
   return inst;
 }
+
+/* v232 · "Part of" picker: past eight options a search field sits on top, and your recent picks come first */
+function partPicker(types,name,D,pick){let rec=[];try{rec=JSON.parse(localStorage.getItem('lifeos-partRecent')||'[]');}catch(e){}
+  const lab=(t,o)=>t==='habit'?`${o.title} · ${habitWeek(o,todayK())} of ${o.target}`:o.title;
+  const remember=o=>{try{const r=[o.id,...rec.filter(x=>x!==o.id)].slice(0,4);localStorage.setItem('lifeos-partRecent',JSON.stringify(r));}catch(e){}};
+  const chip=(t,o)=>{const p=pick(o);const b=el('button',{class:'chip'+(D.part===o.id?' on':''),'aria-pressed':String(D.part===o.id),'data-q':o.title,onclick:e=>{remember(o);p(e);}},lab(t,o));return b;};
+  const all=types.flatMap(t=>get.all(t).map(o=>({t,o})));
+  const groups=types.filter(t=>get.all(t).length).map(t=>el('div',{class:'pgrp',style:'margin-bottom:10px'},el('div',{class:'lbl3'},name[t]),el('div',{class:'chips'},get.all(t).map(o=>chip(t,o)))));
+  if(all.length<=8)return groups;
+  const recent=rec.map(id=>all.find(x=>x.o.id===id)).filter(Boolean);
+  const rg=recent.length?el('div',{class:'pgrp prec',style:'margin-bottom:10px'},el('div',{class:'lbl3'},'Recent'),el('div',{class:'chips'},recent.map(({t,o})=>chip(t,o)))):null;
+  const none=el('p',{class:'muted small',hidden:true,style:'margin:4px 2px 10px'},'No matches');
+  const q=el('input',{type:'search',class:'psearch',placeholder:`Search ${types.map(t=>name[t].toLowerCase()).join(', ')}`,'aria-label':'Search','autocomplete':'off',oninput:()=>{const v=q.value.trim();let n=0;
+    box.querySelectorAll('.pgrp').forEach(g=>{let shown=0;g.querySelectorAll('.chip').forEach(b=>{const ok=!v||fuzzyScore(b.dataset.q,v)>=0;b.hidden=!ok;if(ok)shown++;});g.hidden=!shown||(v&&g.classList.contains('prec'));n+=shown;});none.hidden=!!n;}});
+  const box=el('div',{},rg,...groups);
+  return[el('div',{style:'margin-bottom:12px'},q),none,box];}

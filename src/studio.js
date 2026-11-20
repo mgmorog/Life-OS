@@ -240,9 +240,9 @@ function slotEl(sl,st,P,cards){
   return node;
 }
 function commitmentSheet(sl,st){
-  const dk=sl.from;menuAt([{label:'Time block',icon:'hour',onclick:()=>blockSheet(null,{date:dk,start:9*60})},{label:'All-day item',icon:'cal',onclick:()=>alldaySheet(null,{start:dk})},{label:'Task',icon:'task',onclick:()=>taskSheet(null,{date:dk})}]);return;
+  const dk=sl.from;menuAt([{label:'Time block',icon:'hour',onclick:()=>blockSheet(null,{date:dk,start:nextFreeSlot(dk)})},{label:'All-day item',icon:'cal',onclick:()=>alldaySheet(null,{start:dk})},{label:'Task',icon:'task',onclick:()=>taskSheet(null,{date:dk})}]);return;
   const inst=openSheet({title:'Add a commitment',build:body=>{body.append(el('p',{class:'muted'},`Something fixed on ${st.mode==='w'?sl.label:'or around '+sl.label}. Plans work around it.`),el('div',{class:'list'},
-    el('button',{class:'li',onclick:()=>{inst.close();blockSheet(null,{date:dk,start:9*60});}},el('span',{class:'sq',html:ic('hour',20)}),el('span',{class:'grow'},el('b',{},'Time block'),el('small',{},'A meeting, appointment or fixed time'))),
+    el('button',{class:'li',onclick:()=>{inst.close();blockSheet(null,{date:dk,start:nextFreeSlot(dk)});}},el('span',{class:'sq',html:ic('hour',20)}),el('span',{class:'grow'},el('b',{},'Time block'),el('small',{},'A meeting, appointment or fixed time'))),
     el('button',{class:'li',onclick:()=>{inst.close();alldaySheet(null,{start:dk});}},el('span',{class:'sq',html:ic('cal',20)}),el('span',{class:'grow'},el('b',{},'All-day item'),el('small',{},'A birthday, trip or day off'))),
     el('button',{class:'li',onclick:()=>{inst.close();taskSheet(null,{date:dk});}},el('span',{class:'sq',html:ic('task',20)}),el('span',{class:'grow'},el('b',{},'Task'),el('small',{},'Something that needs doing that day')))));}});
 }

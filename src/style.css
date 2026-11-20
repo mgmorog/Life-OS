@@ -2597,3 +2597,5 @@ input[type=color]{width:40px;height:40px;border:0;border-radius:50%;padding:0;ba
 .stnext{color:var(--ink-2);margin-top:4px}
 .sthab{display:flex;align-items:center}.sthab .strow-h{flex:1;min-width:0}
 .li.strow.sthab{display:flex!important;flex-direction:row;align-items:center;padding-right:14px}
+.caphint-b .grow{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.caphint-b .cwhy{font-weight:400;opacity:.85}

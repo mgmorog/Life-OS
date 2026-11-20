@@ -59,6 +59,11 @@ const tripSpent=x=>(+x.f.spent||0)+tripCosts(x.id).reduce((a,s)=>a+(+s.f.amount|
 function tripBand(row,week){const dks=week.map(k),cells=[...row.children];let lab=null;liveTrips().forEach(x=>{const end=tripEnd(x);dks.forEach((d,i)=>{if(d>=x.f.date&&d<=end&&cells[i]&&!cells[i].classList.contains('out')){cells[i].classList.add('tripday');if(d===x.f.date)cells[i].classList.add('tripfirst');cells[i].dataset.trip=x.id;}});
   const starts=dks.includes(x.f.date)||(dks[0]>x.f.date&&dks[0]<=end&&!row.previousElementSibling);if(starts&&!lab&&x.id!==App.state._tcId){const a=fromK(x.f.date<dks[0]?dks[0]:x.f.date),b=fromK(end);lab=el('button',{class:'tripname',onclick:e=>{e.stopPropagation();tripGo(x);}},el('i'),`${x.f.what} · ${DOW[fromK(x.f.date).getDay()].slice(0,3)}–${DOW[b.getDay()].slice(0,3)}`);}});return lab;}
 /* the next trip, as one card: counts down before, shows the day while you're away */
+/* the next trip as one quiet line: name, countdown and dates */
+function tripLine(){const tk=todayK(),cur=tripOn(tk),nx=cur||liveTrips().filter(x=>x.f.date>tk&&x.f.date<=addK(tk,45)).sort((a,b)=>a.f.date<b.f.date?-1:1)[0];if(!nx)return null;
+  const n=daysBetween(tk,nx.f.date),end=tripEnd(nx),when=cur?`day ${daysBetween(nx.f.date,tk)+1} of ${tripDays(nx)}`:n===1?'tomorrow':`in ${n} days`;
+  const dates=nx.f.date===end?shortDay(nx.f.date):fromK(nx.f.date).getMonth()===fromK(end).getMonth()?`${shortDay(nx.f.date)}–${fromK(end).getDate()}`:`${shortDay(nx.f.date)} – ${shortDay(end)}`;
+  return el('button',{class:'tripline',onclick:()=>tripGo(nx)},el('span',{class:'k',html:ic('plane',15,2.2)}),el('span',{class:'grow'},el('b',{},nx.f.what),` ${when} · ${dates}`),el('span',{style:'display:grid;color:var(--ink-3)',html:ic('chevr',14,2.2)}));}
 function tripCountdown(range){const tk=todayK(),cur=tripOn(tk),nx=cur||liveTrips().filter(x=>x.f.date>tk&&x.f.date<=addK(tk,45)).sort((a,b)=>a.f.date<b.f.date?-1:1)[0];if(!nx)return null;App.state._tcId=nx.id;
   const n=daysBetween(tk,nx.f.date),ts=tripTasks(nx.id),dn=ts.filter(t=>isDone(t,t.date||tk)).length;
   const eye=cur?`DAY ${daysBetween(nx.f.date,tk)+1} OF ${tripDays(nx)}`:n===1?'TOMORROW':`IN ${n} DAYS`;

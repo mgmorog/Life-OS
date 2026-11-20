@@ -100,7 +100,18 @@ function stRank(c,P,st){const end=P.slots[P.slots.length-1].to;
 function stArea(c){const r=c.rec;if(!r)return null;if(c.type==='task')return areaOfTask(r);if(r.area)return r.area;const p=r.part&&get.id(r.part);return p&&(p.area||(p.part&&(get.id(p.part)||{}).area))||null;}
 function stAi(c){return el('span',{class:'stai','aria-hidden':'true',html:ic(areaIcon(stArea(c)),14,2)});}
 function stOpen(c){if(c.type==='habit')App.go('habit',{id:c.rec.id});else if(c.type==='task')taskSheet(c.rec);else App.go('plan',{id:c.rec.id});}
-function stFreeBar(dk){const f=freeMinutes(dk);return el('span',{class:'stbar','aria-hidden':'true'},el('i',{style:`width:${Math.max(0,Math.min(100,f/900*100)).toFixed(0)}%`}));}
+function stFreeBar(dk,over,frac){const f=frac!=null?frac:freeMinutes(dk)/900;return el('span',{class:'stbar'+(over?' over':''),'aria-hidden':'true'},el('i',{style:`width:${Math.max(over?100:0,Math.min(100,f*100)).toFixed(0)}%`}));}
+/* Fill my week: tasks and goal steps only, two a slot at most, freest slots first, before any due date */
+function fillFew(list,P,st){const open=P.slots.filter(x=>!x.past&&!(st.mode==='w'&&tripBlocked(x.id)));const used=new Map(),out=[];
+  const fr=x=>st.mode==='w'?freeMinutes(x.id):-(slotLoad(x,st,[])||0);
+  list.forEach(c=>{let cand=open.filter(x=>(used.get(x.id)||0)<2&&!c.placedIn.includes(x.id));const before=c.due?cand.filter(x=>x.from<=c.due):cand;if(before.length)cand=before;if(!cand.length)return;
+    const x=cand.slice().sort((a,b)=>fr(b)-fr(a)||(a.from<b.from?-1:1))[0];used.set(x.id,(used.get(x.id)||0)+1);
+    out.push({card:c,slot:x.id,why:c.due?`Lands before ${relDay(c.due)}`:st.mode==='w'?`${fmtDurS(freeMinutes(x.id))} free that day`:`Lightest ${P.unit} with room`});});
+  return out;}
+/* how much the to-dos on a day ask for: their estimates, or 30 minutes each */
+function stNeedMin(placed){return placed.filter(c=>c.type!=='habit').reduce((n,c)=>n+((c.type==='task'&&planMin(c.rec))||30),0);}
+/* a short summary of a stretch of days: all-day highlights, events, to-dos and free time */
+function stSpan(from,to){let ev=0,td=0,fr=0,n=0;const ad=[];for(let d=from;d<=to;d=addK(d,1)){const x=dayItems(d);ev+=x.timed.filter(e=>e.kind==='block'||e.kind==='gcal').length;td+=x.timed.concat(x.anytime).filter(e=>e.kind==='task'&&!e.done).length;x.allDay.forEach(e=>{if(!ad.includes(e.title))ad.push(e.title);});if(d>=todayK()){fr+=freeMinutes(d);n++;}}return{ev,td,fr,n,ad};}
 function stFreeLine(dk){const f=freeMinutes(dk);return f<60?['Full','full']:[`${fmtDurS(f)} free`,''];}
 function viewStudio(root){
   const st=stState(),P=stPeriod(st),cards=stCards(st,P),planRec=get.id('plan-'+P.key),committed=planRec&&planRec.committed,s=get.settings();
@@ -120,10 +131,11 @@ function viewStudio(root){
   /* ---- what needs a day ---- */
   const ghostIds=new Set(st.ghosts.map(g=>g.card.id));
   const need=cards.filter(c=>c.q>0&&!(ghostIds.has(c.id)&&(c.type!=='habit'||st.ghosts.filter(g=>g.card.id===c.id).length>=c.q))).map(c=>({c,r:stRank(c,P,st)})).sort((a,b)=>a.r[0]-b.r[0]||((a.c.due||'9')<(b.c.due||'9')?-1:1));
-  const need2=need.filter(x=>x.r[0]<99),top=need2.filter(x=>x.r[0]<9),back=need2.filter(x=>x.r[0]>=9&&x.r[0]<99),showBack=!!st.showBack;
+  const habNeed=st.mode==='w'?need.filter(x=>x.c.type==='habit'):[];const seenG=new Set();const need1=need.filter(x=>{if(st.mode==='w'&&x.c.type==='habit')return false;if(x.c.type!=='step')return true;if(seenG.has(x.c.rec.id))return false;seenG.add(x.c.rec.id);x.c.more=need.filter(y=>y.c.type==='step'&&y.c.rec.id===x.c.rec.id).length;return true;});
+  const need2=need1.filter(x=>x.r[0]<99),top=need2.filter(x=>x.r[0]<9),back=need2.filter(x=>x.r[0]>=9&&x.r[0]<99),showBack=!!st.showBack;
   if(!allPast){
     if(st.ghosts.length)page.append(el('div',{class:'stghost'},el('span',{class:'grow'},el('b',{},`${st.ghosts.length} suggested`),el('small',{},'Shown in your week below, dashed')),el('button',{class:'btn quiet sm',onclick:()=>{st.ghosts=[];App.refresh();}},'Clear'),el('button',{class:'btn primary sm',onclick:()=>{const n=st.ghosts.length,made=st.ghosts;made.forEach(g=>placeCard(g.card,g.slot,st));st.ghosts=[];App.refresh();toast(`${n} placed`,()=>{made.forEach(g=>unplaceCard(g.card,g.slot,st));App.refresh();});}},'Keep all')));
-    page.append(lblRow(`Needs a ${P.unit}${need2.length?` · ${need2.length}`:''}`,need2.length&&!st.ghosts.length&&s.suggestOn!==false?lnk(`Fill my ${st.mode==='w'?'week':st.mode==='m'?'month':'quarter'}`,()=>{arcMark();st.ghosts=suggest(cards.filter(c=>stRank(c,P,st)[0]<9),P,st);if(!st.ghosts.length)toast(`No open ${P.unit}s left to fill`);App.refresh();},'spark'):null));
+    page.append(lblRow(`Needs a ${P.unit}${need2.length?` · ${need2.length}`:''}`,need2.length&&!st.ghosts.length&&s.suggestOn!==false?lnk(`Fill my ${st.mode==='w'?'week':st.mode==='m'?'month':'quarter'}`,()=>{arcMark();st.ghosts=fillFew(top.map(x=>x.c),P,st);if(!st.ghosts.length)toast(`No open ${P.unit}s left to fill`);App.refresh();},'spark'):null));
     const list=el('div',{class:'list stneed',id:'st-dock','data-rail':'1'});
     const shown=[...top,...(showBack||!top.length?back:[])];
     const more=!!st.showMore,lim=more||showBack?400:5,nTop=top.length?top.length:shown.length;
@@ -131,24 +143,32 @@ function viewStudio(root){
     if(!more&&!showBack&&nTop>5)list.append(el('button',{class:'addset muted',onclick:()=>{st.showMore=true;App.refresh();}},`Show ${nTop-5} more`));
     else if(back.length&&top.length)list.append(el('button',{class:'addset muted',onclick:()=>{st.showBack=!showBack;if(showBack)st.showMore=false;App.refresh();}},showBack?'Hide the backlog':`Backlog · ${back.length} more without a date`));
     else if(more&&nTop>5)list.append(el('button',{class:'addset muted',onclick:()=>{st.showMore=false;App.refresh();}},'Show fewer'));
-    if(need2.length)page.append(list);
-    else page.append(el('p',{class:'stplanned'},cards.length?`Everything has a ${P.unit}. Your ${st.mode==='w'?'week':st.mode==='m'?'month':'quarter'} is planned.`:'Nothing waiting. New tasks, habits and goal steps show up here.'));}
+    if(habNeed.length){const hb=el('div',{class:'li strow sthab'},el('button',{class:'strow-h','aria-expanded':String(!!st.habOpen),onclick:()=>{st.habOpen=!st.habOpen;App.refresh();}},el('span',{class:'stai','aria-hidden':'true',html:ic('rep',14,2)}),el('span',{class:'grow'},el('b',{},`${dCount(habNeed.length,'habit')} to spread over the week`),el('small',{},st.habOpen?'Tap one to place it':habNeed.slice(0,3).map(x=>x.c.t).join(', ')+(habNeed.length>3?'…':'')))),
+        el('button',{class:'linkbtn small',onclick:ev=>{ev.stopPropagation();const g=suggest(habNeed.map(x=>x.c),P,st);if(!g.length){toast('No open days left');return;}g.forEach(x=>placeCard(x.card,x.slot,st));App.refresh();toast(`${g.length} sessions placed`,()=>{g.forEach(x=>unplaceCard(x.card,x.slot,st));App.refresh();});}},'Spread them'));
+      list.prepend(hb);}
+    if(st.habOpen&&habNeed.length){const anchor=list.querySelector('.sthab');[...habNeed].reverse().forEach(({c,r})=>{const n=stRow(c,r[1],st,P);n.classList.add('sthabrow');anchor.after(n);});}
+    if(need2.length||habNeed.length)page.append(list);
+    if(!need2.length)page.append(el('p',{class:'stplanned'},cards.length?`Everything has a ${P.unit}. Your ${st.mode==='w'?'week':st.mode==='m'?'month':'quarter'} is planned.`:'Nothing waiting. New tasks, habits and goal steps show up here.'));}
   /* ---- the period ---- */
   page.append(lblRow(st.mode==='w'?'Your week':st.mode==='m'?'Weeks':'Months'));
-  const box=el('div',{class:'stslots'});const past=st.mode==='w'?P.slots.filter(x=>x.past):[];
-  if(past.length>1&&!allPast){const nm=x=>x.a.slice(0,1)+x.a.slice(1,3).toLowerCase(),ids=new Set(past.map(x=>x.id));const nd=get.all('task',{archived:true}).filter(t=>t.date&&ids.has(t.date)&&!isOpenTask(t)).length;
-    box.append(el('button',{class:'stpastline','aria-expanded':String(!!st.showPast),onclick:()=>{st.showPast=!st.showPast;App.refresh();}},el('span',{class:'grow'},`${nm(past[0])}–${nm(past[past.length-1])}${nd?` · ${nd} done`:''}`),el('span',{style:'display:grid',html:ic(st.showPast?'chevu':'chevr',14,2.2)})));
+  const box=el('div',{class:'stslots'});const past=P.slots.filter(x=>x.past);
+  if((past.length>1||(past.length&&st.mode!=='w'))&&!allPast){const a0=past[0],a1=past[past.length-1],nm=x=>x.a.slice(0,1)+x.a.slice(1,3).toLowerCase();const nd=get.all('task',{archived:true}).filter(t=>t.date&&t.date>=a0.from&&t.date<=a1.to&&!isOpenTask(t)).length;
+    const lab=st.mode==='w'?`${nm(a0)}–${nm(a1)}`:st.mode==='m'?`${shortDay(a0.from)} – ${shortDay(a1.to)} · ${dCount(past.length,'week')}`:past.length>1?`${a0.label}–${a1.label}`:a0.a;
+    box.append(el('button',{class:'stpastline','aria-expanded':String(!!st.showPast),onclick:()=>{st.showPast=!st.showPast;App.refresh();}},el('span',{class:'grow'},`${lab}${nd?` · ${nd} done`:''}`),el('span',{style:'display:grid',html:ic(st.showPast?'chevu':'chevr',14,2.2)})));
     P.slots.forEach(sl=>{if(sl.past&&!st.showPast)return;box.append(slotRow(sl,st,P,cards));});}
   else P.slots.forEach(sl=>box.append(slotRow(sl,st,P,cards)));page.append(box);
+  if(st.mode==='w'){const n0=addK(P.slots[6].id,1),n6=addK(n0,6),sp=stSpan(n0,n6),pw=get.all('task').filter(t=>isOpenTask(t)&&!t.date&&t.planWeek===n0).length,np=sp.td+pw;
+    const hi=(()=>{for(let d=n0;d<=n6;d=addK(d,1)){const a=dayItems(d).allDay.find(e=>e.kind!=='trip'&&!/work/i.test(e.title));if(a)return `${a.title} ${DOW[fromK(d).getDay()].slice(0,3)}`;}return '';})();
+    box.append(el('button',{class:'stpastline stnext',onclick:()=>go(1)},el('span',{class:'grow'},['Next week',np?`${np} planned`:'nothing planned yet',hi].filter(Boolean).join(' · ')),el('span',{style:'display:grid',html:ic('chevr',14,2.2)})));}
   studioBudget(page,st,P);
   /* ---- done ---- */
   root.append(page);
 }
 /* one card in Needs a day: tap to open its day circles, tap a circle to place it */
 function stRow(c,why,st,P){const open=st.open===c.id;
-  const head=el('button',{class:'strow-h','aria-expanded':String(open),onclick:()=>{st.open=open?null:c.id;App.refresh();}},stAi(c),el('span',{class:'grow'},el('b',{},c.type==='step'?c.m:c.t),el('small',{class:/Overdue|Carried/.test(why)?'late':null},c.type==='step'?[why==='Next step'?'':why,`Next: ${c.t}`].filter(Boolean).join(' · '):[why,c.type==='habit'?c.src:(/^Due /.test(why)&&/^Due /.test(c.m||'')?String(c.m).split(' · ').slice(1).join(' · '):c.m)].filter(Boolean).join(' · '))));
+  const head=el('button',{class:'strow-h','aria-expanded':String(open),onclick:()=>{st.open=open?null:c.id;App.refresh();}},stAi(c),el('span',{class:'grow'},el('b',{},c.type==='step'?c.m:c.t),el('small',{class:/Overdue|Carried/.test(why)?'late':null},c.type==='step'?[why==='Next step'?'':why,`Next: ${c.t}`,c.more>1?`${c.more} steps`:''].filter(Boolean).join(' · '):[why,c.type==='habit'?c.src:(/^Due /.test(why)&&/^Due /.test(c.m||'')?String(c.m).split(' · ').slice(1).join(' · '):c.m)].filter(Boolean).join(' · '))));
   const n=el('div',{class:'li strow'+(open?' open':''),'data-cid':c.id},head);
-  if(open){n.append(el('div',{class:'stpick'},P.slots.map(sl=>{const done=c.placedIn.includes(sl.id),late=c.due&&sl.from>c.due;return el('button',{class:'stc'+(done?' on':'')+(late?' late':''),disabled:sl.past||(done&&c.type!=='habit')||null,'aria-label':`${sl.label}${done?', placed':''}`,onclick:()=>{if(done){unplaceCard(c,sl.id,st);App.refresh();return;}st.open=c.type==='habit'&&c.q>1?c.id:null;doPlace(c,sl.id,st,P,sl);}},el('b',{},st.mode==='w'?sl.a[0]:st.mode==='m'?String(fromK(sl.from).getDate()):sl.a.slice(0,3)),st.mode==='w'?el('small',{},sl.b):null);})),
+  if(open){n.append(el('div',{class:'stpick'},P.slots.map(sl=>{const done=c.placedIn.includes(sl.id),late=c.due&&sl.from>c.due;const fm=st.mode==='w'&&!sl.past?freeMinutes(sl.id):null;return el('button',{class:'stc'+(done?' on':'')+(late?' late':'')+(fm!=null&&fm<60?' full':''),disabled:sl.past||(done&&c.type!=='habit')||null,'aria-label':`${sl.label}${done?', placed':''}`,onclick:()=>{if(done){unplaceCard(c,sl.id,st);App.refresh();return;}st.open=c.type==='habit'&&c.q>1?c.id:null;doPlace(c,sl.id,st,P,sl);}},el('b',{},st.mode==='w'?sl.a[0]:st.mode==='m'?String(fromK(sl.from).getDate()):sl.a.slice(0,3)),st.mode==='w'?el('small',{},sl.past?sl.b:fm<60?'Full':`${Math.round(fm/60)}h`):null);})),
     el('div',{class:'stacts'},el('button',{class:'linkbtn small',onclick:()=>stOpen(c)},'Open'),c.type==='task'&&st.mode==='w'?el('button',{class:'linkbtn small',onclick:()=>{c.rec.planWeek=addK(P.slots[0].id,7);put(c.rec);toast('Moved to next week',()=>{c.rec.planWeek=null;put(c.rec);});}},'Next week'):null));}
   draggable(head,{label:c.t,pull:true,move:(x,y)=>hoverSlot(x,y),drop:(x,y)=>{const id=hoverSlot(x,y);clearHover();if(id&&id!=='rail'){const sl=P.slots.find(z=>z.id===id);doPlace(c,id,st,P,sl);}}});
   return n;}
@@ -157,17 +177,22 @@ function slotRow(sl,st,P,cards){
   let placed=cards.filter(c=>c.placedIn.includes(sl.id)),ghosts=st.ghosts.filter(g=>g.slot===sl.id),isToday=st.mode==='w'&&sl.id===todayK();
   if(sl.past&&!placed.length)return el('div',{class:'stslot past','data-slot':sl.id},el('div',{class:'stslot-h'},el('b',{},st.mode==='w'?`${sl.a.slice(0,1)+sl.a.slice(1).toLowerCase()} ${sl.b}`:sl.label),el('small',{},'Passed')));
   let fixed='';if(st.mode==='w'){const d=dayItems(sl.id),busy=d.timed.filter(e=>e.kind==='block'||e.kind==='gcal'),ad=d.allDay.map(e=>e.title);const nt=placed.filter(c=>c.type!=='habit').length;fixed=[ad[0]||null,busy.length?dCount(busy.length,'event'):null,nt?dCount(nt,'to-do'):null].filter(Boolean).join(' · ');}
-  const [fr,frc]=st.mode==='w'&&!sl.past?stFreeLine(sl.id):[placed.length?`${placed.length} placed`:'',''];
-  const node=el('section',{class:'stslot'+(isToday?' istoday':'')+(sl.past?' past':''),'data-slot':sl.id},
+  let [fr,frc]=st.mode==='w'&&!sl.past?stFreeLine(sl.id):['',''];const over=st.mode==='w'&&!sl.past&&placed.length&&stNeedMin(placed)>freeMinutes(sl.id);
+  let span=null;if(st.mode==='m'){span=stSpan(sl.from,sl.to);const nt=span.td+placed.filter(c=>c.type!=='habit').length;fixed=[span.ad[0]||null,span.ev?dCount(span.ev,'event'):null,nt?dCount(nt,'to-do'):null].filter(Boolean).join(' · ');if(!sl.past&&span.n)fr=`${fmtDurS(span.fr)} free`;}
+  const dues=st.mode==='w'?get.all('task').filter(t=>t.deadline===sl.id&&isOpenTask(t)).map(t=>t.title):[];
+  const node=el('section',{class:'stslot'+(isToday?' istoday':'')+(sl.past?' past':'')+(st.mode==='m'&&!sl.past?' tapweek':''),'data-slot':sl.id,onclick:st.mode==='m'&&!sl.past?ev=>{if(ev.target.closest('button'))return;st.mode='w';st.anchor=sl.from;st.ghosts=[];st.open=null;App.refresh();}:null},
     el('div',{class:'stslot-h'},el('b',{},st.mode==='w'?`${sl.a.slice(0,1)+sl.a.slice(1).toLowerCase()} ${sl.b}`:st.mode==='m'?`${sl.a} – ${sl.b.replace(/^to /,'')}`:sl.a),el('small',{class:frc==='full'?'late':null},fr),sl.past?null:el('button',{class:'iconbtn green',style:'width:36px;height:36px;margin-right:-8px','aria-label':`Add to ${sl.label}`,html:ic('plus',18,2),onclick:()=>st.mode==='w'?commitmentSheet(sl,st):newCardSheet(st,P)})),
-    st.mode==='w'&&!sl.past?stFreeBar(sl.id):null,
-    fixed?el('p',{class:'stfixed'},fixed):null);
-  if(isToday){node.append(el('button',{class:'linkbtn small stopen',onclick:()=>App.go('today',{})},'Open Today ›'));st.ghosts.filter(g=>g.slot===sl.id).length&&node.append(el('p',{class:'stfixed'},`${st.ghosts.filter(g=>g.slot===sl.id).length} suggested`));return node;}
+    st.mode==='w'&&!sl.past?stFreeBar(sl.id,over):st.mode==='m'&&!sl.past&&span&&span.n?stFreeBar(null,false,span.fr/(span.n*900)):null,
+    fixed||over?el('p',{class:'stfixed'},fixed,over?el('span',{class:'stover'},`${fixed?' · ':''}More than fits`):null):null,
+    dues.length?el('p',{class:'stdue'},`Due: ${dues.slice(0,2).join(', ')}${dues.length>2?` +${dues.length-2}`:''}`):null);
+  if(isToday){node.append(el('button',{class:'linkbtn small stopen',onclick:()=>App.go('today',{})},'Open Today ›'));placed=[];}
   const hab=placed.filter(c=>c.type==='habit');placed=placed.filter(c=>c.type!=='habit');
-  if(hab.length)node.append(el('p',{class:'stfixed'},hab.length>2?`${hab.length} habits: ${hab.slice(0,2).map(c=>c.t).join(', ')}…`:hab.map(c=>c.t).join(', ')));
+  if(hab.length&&!isToday)node.append(el('p',{class:'stfixed'},hab.length>2?`${hab.length} habits: ${hab.slice(0,2).map(c=>c.t).join(', ')}…`:hab.map(c=>c.t).join(', ')));
   if(placed.length||ghosts.length){const it=el('div',{class:'stitems'});
-    placed.forEach(c=>{const n=el('button',{class:'stprow',onclick:()=>stOpen(c)},stAi(c),el('span',{class:'clip grow'},c.type==='step'?`${c.t} · ${c.m}`:c.t));draggable(n,{label:c.t,move:(x,y)=>hoverSlot(x,y),drop:(x,y)=>{const id=hoverSlot(x,y);clearHover();if(!id||id===sl.id)return;if(id==='rail'){unplaceCard(c,sl.id,st);App.refresh();toast('Back in Needs a day',()=>{placeCard(c,sl.id,st);App.refresh();});return;}const to=P.slots.find(z=>z.id===id);if(to&&to.past){toast('That day has passed');return;}unplaceCard(c,sl.id,st);placeCard(c,id,st);App.refresh();toast(`Moved to ${to.label}`);}});it.append(n);});
-    ghosts.forEach(g=>it.append(el('button',{class:'stprow sugg',onclick:()=>toast(g.why)},stAi(g.card),el('span',{class:'clip grow'},g.card.type==='step'?`${g.card.t} · ${g.card.m}`:g.card.t),el('small',{},'Suggested'))));
+    placed.forEach(c=>{const n=el('button',{class:'stprow',onclick:()=>stOpen(c)},stAi(c),el('span',{class:'clip grow'},c.type==='step'?`${c.m} · ${c.t}`:c.t));draggable(n,{label:c.t,move:(x,y)=>hoverSlot(x,y),drop:(x,y)=>{const id=hoverSlot(x,y);clearHover();if(!id||id===sl.id)return;if(id==='rail'){unplaceCard(c,sl.id,st);App.refresh();toast('Back in Needs a day',()=>{placeCard(c,sl.id,st);App.refresh();});return;}const to=P.slots.find(z=>z.id===id);if(to&&to.past){toast('That day has passed');return;}unplaceCard(c,sl.id,st);placeCard(c,id,st);App.refresh();toast(`Moved to ${to.label}`);}});it.append(n);});
+    ghosts.forEach(g=>it.append(el('div',{class:'stprow sugg'},stAi(g.card),el('button',{class:'clip grow',style:'text-align:left',onclick:()=>toast(g.why)},g.card.type==='step'?`${g.card.m} · ${g.card.t}`:g.card.t),
+      el('button',{class:'linkbtn small',onclick:()=>{placeCard(g.card,g.slot,st);st.ghosts=st.ghosts.filter(x=>x!==g);App.refresh();}},'Keep'),
+      el('button',{class:'iconbtn','aria-label':'Drop this suggestion',style:'width:36px;height:36px;color:var(--ink-3)',html:ic('x',14,2.2),onclick:()=>{st.ghosts=st.ghosts.filter(x=>x!==g);App.refresh();}}))));
     node.append(it);}
   return node;}
 function cardEl(c,st,P){

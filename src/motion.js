@@ -67,7 +67,7 @@ function tabPick(nav,id){
 addEventListener('resize',()=>{const nav=$('#nav-in'),a=nav&&nav.querySelector('.tab.act');tabInd(nav,a&&a.dataset.tab,true);});
 
 /* Soft press: whatever you press sinks a little and springs back */
-const PRESS='.btn,.chip,.li,.focus-chip,.tl,.tmr,.heat:not(.out),.dtile,.t3slot,.t3add,.iconbtn,.adchip,.mitem,.linkbtn,.saveas .tl';
+const PRESS='.btn,.chip,.li,.focus-chip,.tl,.tmr,.heat:not(.out),.dtile,.t3slot,.t3add,.iconbtn,.adchip,.mitem,.linkbtn,.saveas .tl,.dfact,.dayline,.ptile,.tile,.scard,.capchip,.fchip,.achip,.dp-chip,.hpill,.showmore,.kbdrow,[role=button]';
 document.addEventListener('pointerdown',e=>{
   if(!motionOK()||e.button>0)return;const n=e.target.closest&&e.target.closest(PRESS);if(!n||n.disabled||n.closest('.grid,.weekstrip,.dock,.blk'))return;
   const x0=e.clientX,y0=e.clientY;n.classList.add('pressing');
@@ -183,7 +183,7 @@ function todayHeaderScroll(){
 function pageTitleScroll(m){const h=$('#view .pgtitle');if(!h){if(m._pg){m.style.cssText='';m.textContent='';m.onclick=null;m._pg=null;}return;}
   const t=h.textContent.trim();if(m._pg!==t){m._pg=t;m.textContent=t;m.onclick=()=>scrollTo({top:0,behavior:motionOK()?'smooth':'auto'});}
   const top=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--sat'))||0,r=h.getBoundingClientRect(),bar=52+top;
-  const p=Math.max(0,Math.min(1,(bar-r.top)/(r.height*.8)));
+  const start=Math.max(0,r.top+scrollY-bar),p=Math.max(0,Math.min(1,(scrollY-start)/(r.height*.8)));
   h.style.transformOrigin='left center';h.style.transform=motionOK()&&p>0?`scale(${1-.12*p})`:'';h.style.opacity=p>0?String(1-p):'';
   Object.assign(m.style,{visibility:p>.02?'visible':'hidden',color:`rgba(30,38,34,${Math.max(0,(p-.5)/.5)})`,backgroundColor:`rgba(244,244,239,${p})`,borderBottomColor:`rgba(229,231,225,${p})`,pointerEvents:p>.9?'auto':'none',boxShadow:p>=1?'0 6px 14px -10px rgba(20,30,25,.22)':'none',transition:'none'});
 }

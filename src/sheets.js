@@ -272,7 +272,7 @@ function deleteFlow(rec,occ,inst){
   if(!repeating){doAll();return;}
   const dk=occ||(rec.kind==='task'?nextOcc(rec):rec[field]),when=dk===todayK()?'today':'on '+shortDay(dk);
   const change=(fn,msg)=>{const u=clone(rec);fn();put(rec);inst&&inst.close();toast(msg,()=>put(u));};
-  askConfirm({title:`Delete this repeating ${word}?`,body:`Remove every repeat, or only the one ${when}?`,yes:'Delete all of them',no:'Keep it',
+  askConfirm({title:`Delete this repeating ${word}?`,body:`Remove every repeat, or only the one ${when}?`,yes:'Delete every repeat',no:'Keep it',
     alts:[{label:'Only this one',onclick:()=>change(()=>{rec.skip=[...(rec.skip||[]),dk];},'Removed from this day')},dk>rec[field]?{label:'This and later ones',onclick:()=>change(()=>{rec.repeat=Object.assign({},rec.repeat,{end:addK(dk,-1)});},`Ended before ${relDay(dk)}`)}:null],onYes:doAll});
 }
 

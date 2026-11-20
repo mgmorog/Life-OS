@@ -50,26 +50,26 @@ const PWA={
     const a=this.api();if(!this.on||!a)return;const s=get.settings();
     if(id==='reviews'){
       const p=a.push,g=group('Notifications');
-      if(!p.supported()){g.append(el('div',{class:'li',style:'min-height:60px'},el('span',{class:'grow'},el('b',{style:'font-weight:500'},'Notifications'),el('small',{},p.why()))));return;}
+      if(!p.supported()){g.append(el('div',{class:'li',style:''},el('span',{class:'grow'},el('b',{style:'font-weight:500'},'Notifications'),el('small',{},p.why()))));return;}
       const on=p.wanted();
       setToggle(ctx,g,null,'Reminders when the app is closed','Sent to this device',on,async v=>{if(v){const r=await p.enable();if(r!=='ok'){toast(r==='denied'?'Notifications are off for Life OS in your phone’s Settings.':'Couldn’t turn on notifications. Try again.');App.refresh();return;}this._sig.r=null;this.afterChange();toast('Reminders will reach you here');}else{await p.disable();toast('Notifications off on this device');}App.refresh();});
-      if(on)g.append(condRow(el('button',{class:'li',style:'min-height:52px;color:var(--accent-text);font-weight:600',onclick:async()=>{const r=await p.test();toast(r?'Sent. It should arrive in a few seconds.':'Couldn’t send a test. Check your connection.');}},'Send a test notification')));
+      if(on)g.append(condRow(el('button',{class:'li',style:'color:var(--accent-text);font-weight:600',onclick:async()=>{const r=await p.test();toast(r?'Sent. It should arrive in a few seconds.':'Couldn’t send a test. Check your connection.');}},'Send a test notification')));
     }else if(id==='calendar'){
       const g=group('On your iPhone calendar');
       if(!s.icsToken){g.append(setRow('Show Life OS in Apple Calendar','Your blocks, timed tasks and all-day items, updated about every hour',null,()=>{setSettings({icsToken:this.newToken(),icsAdded:false});this.afterChange();}));}
       else{const url=this.feedUrl(s.icsToken);
         const markF=()=>setSettings({icsAdded:true,foundation:{...(get.settings().foundation||{}),calendar:true}});
         const added=s.icsAdded===true||(s.icsAdded==null&&!!s.icsToken);/* links made before v66 were already subscribed */
-        if(!added)g.append(el('a',{class:'li',href:url,style:'min-height:56px;color:var(--accent-text);font-weight:600;text-decoration:none',onclick:()=>setTimeout(markF,400)},'Subscribe in Calendar'));
-        else g.append(el('div',{class:'li',style:'min-height:60px'},el('span',{class:'tick on',html:ic('check',14,3)}),el('span',{class:'grow'},el('b',{style:'font-weight:500'},'Added to Apple Calendar'),el('small',{},'Shows as “Life OS” in the Calendar app'))));
+        if(!added)g.append(el('a',{class:'li',href:url,style:'color:var(--accent-text);font-weight:600;text-decoration:none',onclick:()=>setTimeout(markF,400)},'Subscribe in Calendar'));
+        else g.append(el('div',{class:'li',style:''},el('span',{class:'tick on',html:ic('check',14,3)}),el('span',{class:'grow'},el('b',{style:'font-weight:500'},'Added to Apple Calendar'),el('small',{},'Shows as “Life OS” in the Calendar app'))));
         g.append(setRow('Calendar link',null,null,e=>openMenu(e.clientX,e.clientY,[
           {label:'Copy the link',icon:'copy',onclick:async()=>{try{await navigator.clipboard.writeText(url.replace('webcal://','https://'));toast('Link copied');}catch(e){toast(url);}setSettings({foundation:{...(get.settings().foundation||{}),calendar:true}});}},
           added?{label:'Add it again',icon:'cal',onclick:()=>askConfirm({title:'Add Life OS again?',body:'If Life OS is already in your Calendar app, this makes a second copy. You can delete extras in Calendar › Calendars › ⓘ › Delete Calendar.',yes:'Add again',no:'Cancel',danger:false,onYes:()=>{location.href=url;}})}:null,
           {label:'Turn off and make a new link',icon:'x',danger:true,onclick:()=>askConfirm({title:'Stop this calendar link?',body:'Calendars subscribed with the old link stop updating.',yes:'Make a new link',no:'Keep it',onYes:async()=>{const old=s.icsToken;await a.dropCalFeed(old).catch(()=>{});setSettings({icsToken:null,icsAdded:false});toast('Link turned off. Delete Life OS in the Calendar app, then add it again here.');this.afterChange();}})}])));
         page.append(el('p',{class:'small muted',style:'padding:0 4px'},'Read-only. Changes in Life OS show up the next time your phone refreshes the calendar.'));}
     }else if(id==='data'){
-      const g=group('Account');window.__acctG=g;g.append(el('div',{class:'li',style:'min-height:56px'},el('span',{class:'grow'},el('b',{style:'font-weight:500'},'Signed in'),el('small',{},a.email()||''))),
-        el('button',{class:'li',style:'min-height:52px;color:var(--now);font-weight:600',onclick:()=>askConfirm({title:'Sign out?',body:'Your data stays in your account. Unsynced changes on this device are sent first.',yes:'Sign out',no:'Stay signed in',onYes:async()=>{flushAll();await new Promise(r=>setTimeout(r,900));try{localStorage.removeItem(CACHE);}catch(e){}await a.signOut();location.reload();}})},'Sign out'));
+      const g=group('Account');window.__acctG=g;g.append(el('div',{class:'li',style:''},el('span',{class:'grow'},el('b',{style:'font-weight:500'},'Signed in'),el('small',{},a.email()||''))),
+        el('button',{class:'li',style:'color:var(--now);font-weight:600',onclick:()=>askConfirm({title:'Sign out?',body:'Your data stays in your account. Unsynced changes on this device are sent first.',yes:'Sign out',no:'Stay signed in',onYes:async()=>{flushAll();await new Promise(r=>setTimeout(r,900));try{localStorage.removeItem(CACHE);}catch(e){}await a.signOut();location.reload();}})},'Sign out'));
     }
   },
 };

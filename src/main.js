@@ -35,7 +35,7 @@ const App={
     closeFabMenu(true);
     const skelG=root.querySelector('.skel')?$$('#view .page>*').filter(n=>n.querySelector('.skel')||n.classList.contains('skel')).map(ghostOf).filter(Boolean):[];
     const noDepth=S._noDepth;S._noDepth=false;const depthDir=!S._searchFrom&&!noDepth&&S.entering&&(S.dir==='push'||S.dir==='pop')&&S._painted?S.dir:null,depthGhost=null; /* v103: no two-page slide; the light CSS slide below runs smoothly on iPhone */
-    root.replaceChildren(frag);
+    root.replaceChildren(frag);try{a11yPass(root);}catch(e){}
     animateFills(root,S);
     listPlay(root,listBefore);
     rollCounts(root,`${S.view}|${S.sel}`);
@@ -136,3 +136,28 @@ try{matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{if
     else if(k==='/'){e.preventDefault();const f0=$('#view input[type=search]');if(f0){f0.focus();return;}App.go('more');setTimeout(()=>{const f=$('#view input[type=search],#view input');if(f)f.focus();},120);}
     else if(k==='?'){e.preventDefault();help();}
   });})();
+
+/* v230 · arrow keys through lists on a computer: ↑ ↓ move, Enter opens, X checks off, Delete deletes (with Undo) */
+(()=>{const ROWS=':is(.li,.dfact,.dayline,.ibrow)';const typing=t=>t&&(t.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName));
+  const vis=n=>{const r=n.getBoundingClientRect();return r.height>0&&r.width>0&&getComputedStyle(n).visibility!=='hidden';};
+  const rows=()=>[...document.querySelectorAll('#view '+ROWS)].filter(n=>!n.parentElement.closest(ROWS)&&vis(n));
+  const cur=()=>{const a=document.activeElement;return a&&a.closest?a.closest('#view '+ROWS):null;};
+  const mark=n=>{$$('.kfocus').forEach(x=>x.classList.remove('kfocus'));if(!n)return;if(!n.matches('button,a,[tabindex]'))n.setAttribute('tabindex','-1');n.classList.add('kfocus');n.focus({preventScroll:true});n.scrollIntoView({block:'nearest',behavior:motionOK()?'smooth':'auto'});};
+  const sw=n=>[n,n&&n.parentElement].find(x=>x&&x._sw);
+  addEventListener('pointerdown',()=>$$('.kfocus').forEach(x=>x.classList.remove('kfocus')),true);
+  addEventListener('keydown',e=>{if(e.metaKey||e.ctrlKey||e.altKey||e.defaultPrevented)return;if(typing(e.target)||sheetStack.length||$('.menu')||$('.confirm.on'))return;
+    const k=e.key;if(!['ArrowDown','ArrowUp','x','X','Delete','Backspace','Enter'].includes(k))return;
+    const c=cur();
+    if(k==='ArrowDown'||k==='ArrowUp'){const l=rows();if(!l.length)return;e.preventDefault();const i=c?l.indexOf(c):-1;mark(l[Math.max(0,Math.min(l.length-1,i<0?(k==='ArrowDown'?0:l.length-1):i+(k==='ArrowDown'?1:-1)))]);return;}
+    if(!c)return;
+    if(k==='Enter'){if(c.tagName==='BUTTON'||c.tagName==='A')return;e.preventDefault();const b=c.querySelector('button.grow,button:not(.tick):not(.tick-hit button),a');(b||c).click();return;}
+    if(k==='x'||k==='X'){e.preventDefault();const s=sw(c);if(s&&s._sw.right&&!/open/i.test(s._sw.right.label)){s._sw.right.run();return;}const t=c.querySelector('.tick-hit button,.tick-hit .tick,button.tick');if(t)t.click();return;}
+    if(k==='Delete'||k==='Backspace'){const s=sw(c);if(s&&s._sw.left&&/delete/i.test(s._sw.left.label)){e.preventDefault();s._sw.left.run();}}
+  });})();
+/* v230 · tooltips on icon-only buttons for mouse users: the button's name, and its shortcut if it has one */
+(()=>{let tip=null,tm=null,on=null;const KEY=[[/capture/i,'C'],[/search/i,'/'],[/keyboard shortcuts/i,'?']];
+  const hide=()=>{clearTimeout(tm);on=null;if(tip)tip.classList.remove('on');};
+  addEventListener('pointerover',e=>{if(e.pointerType!=='mouse')return;const b=e.target.closest&&e.target.closest('button[aria-label],a[aria-label]');if(b===on)return;hide();if(!b||b.textContent.trim())return;on=b;
+    tm=setTimeout(()=>{if(!b.isConnected)return;tip=tip||document.body.appendChild(el('div',{class:'tipx',role:'tooltip'}));const lab=b.getAttribute('aria-label'),k=(KEY.find(([re])=>re.test(lab))||[])[1];tip.innerHTML='';tip.append(lab,k?el('kbd',{},k):'');
+      const r=b.getBoundingClientRect(),w=tip.offsetWidth,h=tip.offsetHeight;let x=r.left+r.width/2-w/2,y=r.bottom+8;if(y+h>innerHeight-8)y=r.top-h-8;tip.style.left=Math.max(8,Math.min(innerWidth-w-8,x))+'px';tip.style.top=y+'px';tip.classList.add('on');},450);},true);
+  addEventListener('pointerout',e=>{if(on&&!on.contains(e.relatedTarget))hide();},true);addEventListener('pointerdown',hide,true);addEventListener('scroll',hide,{passive:true,capture:true});})();

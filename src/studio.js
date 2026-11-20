@@ -279,7 +279,7 @@ function reviewSheet(P,st,cards){
     body.append(el('div',{class:'stat3'},el('div',{},el('b',{},String(placedN)),el('small',{},'planned')),el('div',{},el('b',{},String(fixed)),el('small',{},'commitments')),el('div',{},el('b',{},String(P.slots.filter(s=>!slotLoad(s,st,cards)).length)),el('small',{},`open ${P.unit}s`))));
     if(busy)body.append(el('p',{class:'small',style:'color:var(--now)'},`${busy} ${P.unit}${busy>1?'s are':' is'} over your capacity.`));
     if(late)body.append(el('p',{class:'small',style:'color:var(--now)'},`${late} card${late>1?'s land':' lands'} after the due date.`));
-    if(unplaced.length){body.append(el('div',{class:'sect'},`Not placed · ${unplaced.length}`));body.append(el('div',{class:'list'},unplaced.map(c=>el('div',{class:'li',style:'min-height:52px'},el('span',{class:'grow'},el('b',{style:'font-weight:500'},c.t),el('small',{},c.type==='habit'?'Sessions left this week':'Stays in To plan'))))));}
+    if(unplaced.length){body.append(el('div',{class:'sect'},`Not placed · ${unplaced.length}`));body.append(el('div',{class:'list'},unplaced.map(c=>el('div',{class:'li',style:''},el('span',{class:'grow'},el('b',{style:'font-weight:500'},c.t),el('small',{},c.type==='habit'?'Sessions left this week':'Stays in To plan'))))));}
     body.append(el('button',{class:'btn primary block',onclick:()=>{const r=get.id('plan-'+P.key)||{id:'plan-'+P.key,kind:'plan',key:P.key};r.committed=true;r.committedAt=Date.now();App.state._commitSweep=true;put(r);if(st.mode==='w')setSettings({checkinDone:todayK()});inst.close();buzz(12);toast(P.doneL);}},P.commit),el('button',{class:'btn quiet block',onclick:()=>inst.close()},'Keep planning'));
   }});
 }

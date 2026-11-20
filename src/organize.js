@@ -59,6 +59,7 @@ function ideaLabel(i){const t=(i.title||'').trim();
   const segs=m[2].split(/[?#]/)[0].split('/').filter(x=>x&&!/^\d+$/.test(x)),last=(segs.pop()||'').replace(/\.(html?|php|aspx?)$/i,'').replace(/[-_+]+/g,' ').trim();
   return last&&/[a-z]/i.test(last)?`${last.charAt(0).toUpperCase()+last.slice(1)} · ${m[1]}`:m[1];}
 function viewInbox(root){
+  try{localStorage.setItem('lifeos-inboxSeen',String(Date.now()));}catch(e){}
   const S=App.state;S.inboxTab=S.inboxTab||'All';S.inboxSort=S.inboxSort||'old';
   const all=get.all('idea'),sorted=all.slice().sort((a,b)=>S.inboxSort==='old'?a.createdAt-b.createdAt:b.createdAt-a.createdAt),withPh=all.filter(i=>(i.photos||[]).length);
   if(S.inboxTab==='Photos'&&!withPh.length)S.inboxTab='All';

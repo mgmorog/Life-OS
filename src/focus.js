@@ -34,8 +34,9 @@ function t3WeekLine(a,b){const t3=get.settings().top3||{};let days=0,hit=0;for(l
 /* ---------- Evening: plan tomorrow ---------- */
 function planEveCard(dk){const s=get.settings();if(s.planEve===false||dk!==todayK()||nowMin()<(s.planAt??1080)||(s.planDone||{})[dk])return null;
   const left=planLeftovers(dk).length;
-  return el('section',{class:'card res pe'},el('div',{class:'bl'},el('span',{class:'lbl',style:'color:var(--accent-text)'},'Plan tomorrow'),),el('p',{class:'serif',style:'font-size:20px;line-height:1.25;margin:4px 0 10px'},left?`${left} left from today. Pick tomorrow’s top 3.`:'Today’s clear. Pick tomorrow’s top 3.'),
-    el('div',{style:'display:flex;gap:8px'},btnP('Plan it',()=>planTomorrowSheet(dk),{style:'flex:1'}),btnL('Not tonight',()=>{setSettings({planDone:planMark(dk,'skip')});})));}
+  const tmk=addK(dk,1),td=dayItems(tmk),tl=[...td.allDay,...td.timed,...td.anytime],ft=td.timed[0];
+  return el('section',{class:'card res pe'},el('button',{class:'lbl',style:'color:var(--accent-text);text-align:left',onclick:()=>{App.state.sel=tmk;App.go('today');}},`Tomorrow · ${tl.length?`${tl.length} planned${ft?`, first at ${fmtT(ft.time)}`:''}`:'nothing planned yet'}`),el('p',{class:'serif',style:'font-size:20px;line-height:1.25;margin:4px 0 10px'},left?`Pick tomorrow’s top 3 from ${left} left today.`:'Today’s clear. Pick tomorrow’s top 3.'),
+    el('div',{style:'display:flex;gap:12px;align-items:center'},btnP('Plan it',()=>planTomorrowSheet(dk),{style:'flex:1'}),el('button',{class:'linkbtn',onclick:()=>{setSettings({planDone:planMark(dk,'skip')});}},'Not tonight')));}
 const planMark=(dk,v)=>{const s=get.settings(),o=Object.assign({},s.planDone,{[dk]:v}),keep={};Object.keys(o).sort().slice(-30).forEach(d=>keep[d]=o[d]);return keep;};
 function planLeftovers(dk){const di=dayItems(dk),out=[];di.anytime.concat(di.timed).forEach(e=>{if(e.kind==='task'&&!e.done&&(!e.rec.repeat||e.rec.repeat.type==='never'))out.push(e.rec);});carried().forEach(t=>{if(!out.includes(t))out.push(t);});return out;}
 function planTomorrowSheet(dk){const tm=addK(dk,1),S={moved:{},picks:t3Get(tm).map(x=>x.id),start:(get.settings().startAt||{})[tm]??null};let inst;

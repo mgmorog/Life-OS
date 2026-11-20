@@ -104,8 +104,9 @@ function viewToday(root){
     el('div',{class:'hd'},
       el('button',{class:'date'+(S.dateDrop?' open':''),'aria-label':'Pick a date','aria-expanded':String(!!S.dateDrop),onclick:()=>dateDrop(),html:`<span>${DOW[sel.getDay()]}, ${mdS(sel)}${sel.getFullYear()!==today().getFullYear()?`, ${sel.getFullYear()}`:''}</span>`+ic('chevd',18,2)}),
       el('div',{class:'icons'},
-        el('button',{class:'iconbtn','aria-label':`Inbox, ${inboxN} ideas`,html:ic('inbox',24)+(inboxN?`<span class="badge" data-roll="inbox">${inboxN}</span>`:newVerN()?'<span class="badge dot"></span>':''),onclick:()=>App.go('inbox')}),
-        el('button',{class:'iconbtn','aria-label':'Share this day',html:ic('share',24),onclick:()=>shareDaySheet(dk)}))),
+        el('button',{class:'iconbtn','aria-label':inboxNew()?'Inbox, something new':'Inbox',html:ic('inbox',24)+(inboxNew()||newVerN()?'<span class="badge dot"></span>':''),onclick:()=>App.go('inbox')}),
+        moreB('Today options',e=>openMenu(e.clientX,e.clientY,[{label:'Share this day',icon:'share',onclick:()=>shareDaySheet(dk)},{label:'Plan tomorrow',icon:'cal',onclick:()=>planTomorrowSheet(todayK())},{label:'Today settings',icon:'gear',onclick:()=>App.go('setpage',{id:'reviews'})}])))),
+    isToday?nextLine(dk):null,
     S.dateDrop?dateDropEl(dk):null,S.dateDrop?null:weekStrip(dk)));
   if(S.loading&&!recs.size){page.append(el('section',{class:'card',style:'display:grid;gap:12px'},el('div',{class:'skel',style:'height:14px;width:30%'}),el('div',{class:'skel',style:'height:30px;width:70%'}),el('div',{class:'skel',style:'height:200px'})));root.append(page);return;}
   const s=get.settings();
@@ -127,6 +128,12 @@ function viewToday(root){
   S._painted=true;S._anim=null;
   const mini=$('#mini');mini.textContent=`${mdS(sel)}`;mini.onclick=()=>scrollTo({top:0,behavior:'smooth'});
 }
+/* the one thing happening now or next, under the date */
+function nextLine(dk){const nowM=nowMin(),t=dayItems(dk).timed.filter(e=>!e.done&&e.kind!=='habit'&&e.time+(e.dur||30)>nowM).sort((a,b)=>a.time-b.time),e=t[0];if(!e)return null;
+  const during=e.time<=nowM,end=e.time+(e.dur||30);
+  return el('button',{class:'nextline',onclick:()=>openItem(e,dk)},el('b',{},during?'Now':'Next'),el('span',{class:'clip'},e.title),el('span',{class:'nt tnum'},during?`until ${fmtT(end)}`:fmtT(e.time)),el('span',{class:'nin'},during?`${fmtDurS(end-nowM)} left`:`in ${fmtDurS(e.time-nowM)}`));}
+/* the Inbox dot: only for ideas that arrived since you last opened it */
+const inboxNew=()=>{let seen=0;try{seen=+localStorage.getItem('lifeos-inboxSeen')||0;}catch(e){}return get.all('idea').some(x=>(x.createdAt||0)>seen);};
 function weekStrip(dk){
   const sel=fromK(dk),start=weekStartOf(sel),tk=todayK();
   const strip=el('div',{class:'weekstrip',id:'week-strip','aria-label':'Choose a day'});
@@ -256,9 +263,9 @@ function dayCard(dk){
   /* Priorities as three rings; the first one not done sits under them as Up next; everything else folds away */
   const t3=t3on&&get.settings().top3On!==false;
   const nx0=isToday&&t3on&&get.settings().top3On!==false?t3es.find(e=>!e.done):null,foc=nx0&&frNow()&&t3es.some(e=>e.id===frNow().id);
-  const FOCUSBTN=nx0?el('button',{class:'prfocus2'+(foc?' on':''),'aria-label':foc?'Focusing — open timer':'Focus',onclick:()=>prFocusSheet(dk),html:ic('play',13,2.6)}):null;
+  const FOCUSBTN=nx0?el('button',{class:'linkbtn small prfocus3',onclick:()=>prFocusSheet(dk)},foc?'Focusing ›':'Focus'):null;
   const todo=el('section',{class:'card daycard todo rcard'+fu},
-    el('div',{class:'bl'},el('span',{class:'lbl'},(()=>{const d=isToday?'Today':relDay(dk);return t3?(['Today','Tomorrow','Yesterday'].includes(d)?`${d}’s priorities`:`Priorities · ${d}`):d;})()),el('span',{class:'blr'},total?el('span',{class:'small muted tnum'},el('span',{'data-roll':'done'},doneN>=total?'All done':`${total-doneN} left`)):null,FOCUSBTN)),
+    el('div',{class:'bl'},el('span',{class:'lbl'},(()=>{const d=isToday?'Today':relDay(dk);return t3?(['Today','Tomorrow','Yesterday'].includes(d)?`${d}’s priorities`:`Priorities · ${d}`):d;})()),el('span',{class:'blr'},FOCUSBTN)),
 );
   onSwipe(todo,()=>goDay(addK(S.sel,1)),()=>goDay(addK(S.sel,-1)));
   const W=t3&&t3es.length===T3_MAX&&t3es.every(e=>e.done);
@@ -286,11 +293,14 @@ function dayCard(dk){
   const nDone=dn.querySelectorAll(':scope>.trow-wrap').length;
   /* a thin line and a Tasks label keep the rings and the list apart */
   if(t3&&(shownC.length||!t3es.length||nLate))todo.append(el('div',{class:'secl tdiv'},'Tasks'));
+  if(odBtn)todo.append(el('button',{class:'odrow2',onclick:()=>replanSheet(lateList,dk,{missed:missedL,dueLate,area:aiLate})},el('span',{class:'grow'},`${nLate} overdue · Reschedule`),el('span',{style:'display:grid',html:ic('chevr',14,2.4)})));
+  S._moreOpen=S._moreOpen||{};if(S._moreOpen[dk])cand.slice(SHOW).forEach(c=>a.append(c.t==='a'?areaRow(c.r,true):anyRow(c.e,c.d,{target:dk,slim:true})));
   if(shownC.length)todo.append(a);
   if(!shownC.length&&!t3es.length&&!nLate)todo.append(el('p',{class:'sub',style:'margin:6px 0 0'},isPast?'Nothing was left open.':total?'All done. Nice work.':'Nothing to do yet.'));
   const canAdd=!isPast||!total;
-  if(more>0||canAdd||odBtn)todo.append(el('div',{class:'tfoot'},canAdd?el('button',{class:'tadd','aria-label':'Add a to-do',onclick:()=>taskSheet(null,{date:dk}),html:ic('plus',16,2.4)}):el('span',{class:'tsp'}),odBtn||el('span',{class:'tsp'}),
-    more>0?el('button',{class:'tmore',onclick:()=>{S.taskF=new Set(['today']);S.taskTab='all';App.go('tasks');}},'More',el('span',{style:'display:grid',html:ic('chevr',13,2.4)})):el('span',{class:'tsp'})));
+  /* the bottom: add a task, and the rest of today's list in place */
+  if(canAdd)todo.append(el('button',{class:'taddrow',onclick:()=>taskSheet(null,{date:dk})},el('span',{class:'pplus',html:ic('plus',14,2.4)}),'Add a task'));
+  if(more>0)todo.append(el('button',{class:'tmorerow',onclick:()=>{S._moreOpen[dk]=!S._moreOpen[dk];App.refresh();}},S._moreOpen[dk]?'Show fewer':`Show ${more} more`));
   const doneEls=[];if(nDone){S._doneOpen=S._doneOpen||{};const op=!!S._doneOpen[dk];doneEls.push(el('button',{class:'donefold'+(op?' open':''),'aria-expanded':String(op),onclick:()=>{S._doneOpen[dk]=!op;App.refresh();}},el('span',{},`Done · ${nDone}`),el('span',{class:'chev',html:ic('chevd',16,2.2)})));if(op)doneEls.push(dn);}
   if(t3)wireRingDrop(todo,dk);
   out.push(todo);
@@ -324,7 +334,8 @@ function dayCard(dk){
   if(open){const gw=el('div',{class:'gridin'});gw.append(timeGrid(dk,timed));cu.append(gw);}
   todo.append(...doneEls);
   out.push(cu);
-  /* tomorrow as one line */
+  /* tomorrow as one line (in the evening the Plan tomorrow card carries it instead) */
+  if(!(isToday&&typeof planEveCard==='function'&&planEveCard(dk)))
   {const sel=fromK(dk),tm=addD(sel,1),tmk=k(tm),td=dayItems(tmk),tl=[...td.allDay,...td.timed,...td.anytime],firstT=td.timed[0];
    out.push(el('section',{class:'card ftm'+fu},el('button',{class:'ftmrow',onclick:()=>{S.sel=tmk;S._fresh=true;S._gridTop=null;S._anim=null;S._noGlide=true;scrollTo(0,0);clearTimeout(App._r);App.render();}},
      el('span',{class:'ftmd'},el('small',{},DOW[tm.getDay()].slice(0,3).toUpperCase()),el('b',{},String(tm.getDate()))),

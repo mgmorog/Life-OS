@@ -60,7 +60,7 @@ const PWA={
       if(!p.supported()){g.append(el('div',{class:'li',style:''},el('span',{class:'grow'},el('b',{style:'font-weight:500'},'Notifications'),el('small',{},p.why()))));return;}
       const on=p.wanted();
       setToggle(ctx,g,null,'Reminders when the app is closed','Sent to this device',on,async v=>{if(v){const r=await p.enable();if(r!=='ok'){toast(r==='denied'?'Notifications are off for Life OS in your phone’s Settings.':'Couldn’t turn on notifications. Try again.');App.refresh();return;}this._sig.r=null;this.afterChange();toast('Reminders will reach you here');}else{await p.disable();toast('Notifications off on this device');}App.refresh();});
-      if(on)g.append(condRow(el('button',{class:'li',style:'color:var(--accent-text);font-weight:600',onclick:async()=>{const r=await p.test();toast(r?'Sent. It should arrive in a few seconds.':'Couldn’t send a test. Check your connection.');}},'Send a test notification')));
+      if(on)g.append(condRow(el('button',{class:'li',style:'color:var(--action-text);font-weight:600',onclick:async()=>{const r=await p.test();toast(r?'Sent. It should arrive in a few seconds.':'Couldn’t send a test. Check your connection.');}},'Send a test notification')));
       if('setAppBadge' in navigator){const g2=group('App icon badge');
         setToggle(ctx,g2,null,'Overdue tasks','Counted on the Life OS icon',s.badgeOverdue!==false,v=>{setSettings({badgeOverdue:v});this.badge();});
         setToggle(ctx,g2,null,'New ideas in the Inbox','Counted until you open the Inbox',s.badgeIdeas!==false,v=>{setSettings({badgeIdeas:v});this.badge();});}
@@ -70,7 +70,7 @@ const PWA={
       else{const url=this.feedUrl(s.icsToken);
         const markF=()=>setSettings({icsAdded:true,foundation:{...(get.settings().foundation||{}),calendar:true}});
         const added=s.icsAdded===true||(s.icsAdded==null&&!!s.icsToken);/* links made before v66 were already subscribed */
-        if(!added)g.append(el('a',{class:'li',href:url,style:'color:var(--accent-text);font-weight:600;text-decoration:none',onclick:()=>setTimeout(markF,400)},'Subscribe in Calendar'));
+        if(!added)g.append(el('a',{class:'li',href:url,style:'color:var(--action-text);font-weight:600;text-decoration:none',onclick:()=>setTimeout(markF,400)},'Subscribe in Calendar'));
         else g.append(el('div',{class:'li',style:''},el('span',{class:'tick on',html:ic('check',14,3)}),el('span',{class:'grow'},el('b',{style:'font-weight:500'},'Added to Apple Calendar'),el('small',{},'Shows as “Life OS” in the Calendar app'))));
         g.append(setRow('Calendar link',null,null,e=>openMenu(e.clientX,e.clientY,[
           {label:'Copy the link',icon:'copy',onclick:async()=>{try{await navigator.clipboard.writeText(url.replace('webcal://','https://'));toast('Link copied');}catch(e){toast(url);}setSettings({foundation:{...(get.settings().foundation||{}),calendar:true}});}},
@@ -79,7 +79,7 @@ const PWA={
         page.append(el('p',{class:'small muted',style:'padding:0 var(--s1)'},'Read-only. Changes in Life OS show up the next time your phone refreshes the calendar.'));}
     }else if(id==='data'){
       const g=group('Account');window.__acctG=g;g.append(el('div',{class:'li',style:''},el('span',{class:'grow'},el('b',{style:'font-weight:500'},'Signed in'),el('small',{},a.email()||''))),
-        el('button',{class:'li',style:'color:var(--now);font-weight:600',onclick:()=>askConfirm({title:'Sign out?',body:'Your data stays in your account. Unsynced changes on this device are sent first.',yes:'Sign out',no:'Stay signed in',onYes:async()=>{flushAll();await new Promise(r=>setTimeout(r,900));try{localStorage.removeItem(CACHE);}catch(e){}await a.signOut();location.reload();}})},'Sign out'));
+        el('button',{class:'li',style:'color:var(--overdue);font-weight:600',onclick:()=>askConfirm({title:'Sign out?',body:'Your data stays in your account. Unsynced changes on this device are sent first.',yes:'Sign out',no:'Stay signed in',onYes:async()=>{flushAll();await new Promise(r=>setTimeout(r,900));try{localStorage.removeItem(CACHE);}catch(e){}await a.signOut();location.reload();}})},'Sign out'));
     }
   },
 };
@@ -102,7 +102,7 @@ function pullRefresh(){
     arc.style.strokeDashoffset=(C*(1-p)).toFixed(1);arc.style.stroke=v>=PTR.at?'var(--accent)':'var(--h3)';};
   const close=()=>{const b=node();place(0,true);b.firstChild.style.opacity='0';
     /* the "Up to date" pill rides up with the page instead of sitting over the date */
-    let fly=null;if(b.classList.contains('p-ok')){const pd=b.querySelector('.p-done');fly=pd.animate([{transform:'none',opacity:1},{transform:`translateY(${-PTR.hold}px)`,opacity:1,offset:.6},{transform:`translateY(${-PTR.hold-12}px)`,opacity:0}],{duration:360,easing:'cubic-bezier(.2,.8,.2,1)',fill:'forwards'});}
+    let fly=null;if(b.classList.contains('p-ok')){const pd=b.querySelector('.p-done');fly=pd.animate([{transform:'none',opacity:1},{transform:`translateY(${-PTR.hold}px)`,opacity:1,offset:.6},{transform:`translateY(${-PTR.hold-12}px)`,opacity:0}],{duration:MOT.base,easing:MOT.ease,fill:'forwards'});}
     setTimeout(()=>{if(fly)fly.cancel();if(on||busy)return;b.classList.remove('p-ok','p-spin','p-ease');const v=view();if(v){v.classList.remove('ptr-ease','ptr-move');v.style.transform='';}},380);};
   const reset=()=>{if(!box)return;close();};
   const blocked=t=>sheetStack.length||busy||!!document.querySelector('.menu,.ghost,.lift')||(t&&t.closest&&t.closest('input,textarea,select,[contenteditable],.grid,.weekstrip,.sbody,.wcol,.hscroll,.dock,.mscrim'));

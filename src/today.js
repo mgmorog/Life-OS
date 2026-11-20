@@ -1,7 +1,7 @@
 /* ---------- Today ---------- */
 const HH=56;
 function snapItem(e){const before=clone(e.rec),ids=new Set(get.all(before.kind).map(r=>r.id));return()=>{put(before,{silent:true});get.all(before.kind).forEach(r=>{if(!ids.has(r.id))remove(r.id,{silent:true});});App.refresh();};}
-function pickProject(r){let inst;const ps=get.all('project').filter(p=>!p.finished&&p.id!==r.part);inst=openSheet({title:`Add “${r.title}” to`,left:{label:'Cancel'},build:b=>{b.append(el('div',{class:'list'},ps.map(p=>el('button',{class:'li',style:'',onclick:()=>{const was=r.part;r.part=p.id;if(!r.area&&p.area)r.area=p.area;put(r);inst.close();toast(`Added to ${p.title}`,()=>{r.part=was;put(r);},'Undo',{open:dest('plan',{id:p.id})});}},el('span',{class:'grow'},el('b',{style:'font-weight:500'},p.title),p.area?el('small',{},p.area):null),el('span',{class:'chev',html:ic('chevr',16,2)}))),r.part?el('button',{class:'li',style:'color:var(--now)',onclick:()=>{const was=r.part;r.part=null;put(r);inst.close();toast('Removed from project',()=>{r.part=was;put(r);});}},'Remove from its project'):null));}});}
+function pickProject(r){let inst;const ps=get.all('project').filter(p=>!p.finished&&p.id!==r.part);inst=openSheet({title:`Add “${r.title}” to`,left:{label:'Cancel'},build:b=>{b.append(el('div',{class:'list'},ps.map(p=>el('button',{class:'li',style:'',onclick:()=>{const was=r.part;r.part=p.id;if(!r.area&&p.area)r.area=p.area;put(r);inst.close();toast(`Added to ${p.title}`,()=>{r.part=was;put(r);},'Undo',{open:dest('plan',{id:p.id})});}},el('span',{class:'grow'},el('b',{style:'font-weight:500'},p.title),p.area?el('small',{},p.area):null),el('span',{class:'chev',html:ic('chevr',16,2)}))),r.part?el('button',{class:'li',style:'color:var(--overdue)',onclick:()=>{const was=r.part;r.part=null;put(r);inst.close();toast('Removed from project',()=>{r.part=was;put(r);});}},'Remove from its project'):null));}});}
 function itemMenu(e,dk,x,y){
   const r=e.rec;
   if(e.kind==='gcal'){openMenu(x,y,[{label:'See details',icon:'cal',onclick:()=>Gcal.details(e)}]);return;}
@@ -88,7 +88,7 @@ function dueReminders(){
 function setRem(key,v){const st=remState(),tk=todayK();st.map[key]=v;for(const x in st.map){if(x.split('|')[1]<tk)delete st.map[x];}put(st);}
 function reminderCard(){
   const due=dueReminders();if(!due.length)return null;
-  return el('section',{class:'card remcard',role:'status'},el('div',{class:'eyebrow',style:'display:flex;gap:var(--s2);align-items:center;color:var(--now)',html:ic('bell',16,2)+`<span>Reminder${due.length>1?'s':''}</span>`}),
+  return el('section',{class:'card remcard',role:'status'},el('div',{class:'eyebrow',style:'display:flex;gap:var(--s2);align-items:center;color:var(--overdue)',html:ic('bell',16,2)+`<span>Reminder${due.length>1?'s':''}</span>`}),
     due.slice(0,4).map(({e,dk,key})=>el('div',{class:'remrow'},el('button',{class:'grow',style:'text-align:left',onclick:()=>{setRem(key,'x');openItem(e,dk);}},el('b',{},e.title),el('small',{},`${relDay(dk)}${e.time!=null?' · '+fmtT(e.time):' · All day'}`)),
       el('span',{class:'remacts'},e.kind!=='allday'?el('button',{class:'chip',onclick:()=>{toggleItem(e,dk);setRem(key,'x');buzz(8);}},'Done'):null,el('button',{class:'chip',onclick:()=>{setRem(key,Date.now()+10*6e4);toast('Reminding you in 10 minutes');}},'10 min'),el('button',{class:'iconbtn','aria-label':`Dismiss ${e.title}`,style:'width:36px;height:36px',html:ic('x',16,2.2),onclick:()=>setRem(key,'x')})))));
 }
@@ -129,7 +129,7 @@ function viewToday(root){
   {const pc=pinsCard(dk);if(pc)page.append(pc);}
   if(also.length)page.append(el('div',{class:'lbl alsol'},'Also today'),el('div',{class:'list'},also));
   /* v228 · wide screens: your list on the left, Coming up (and the expanded day) on the right */
-  if(innerWidth>=700&&!(innerWidth>=900&&innerWidth<1100)){const kids=[...page.children],up=kids.find(n=>n.classList&&n.classList.contains('upcard'));if(up&&kids.length>2){const L=el('div',{class:'tcol'}),R=el('div',{class:'tcol tcol-r'});kids.slice(1).forEach(n=>(n===up?R:L).append(n));page.classList.add('today-wide');page.append(el('div',{class:'tcols'},L,R));}}
+  if(innerWidth>=BP.tablet&&!(innerWidth>=BP.desktop&&innerWidth<BP.wide)){const kids=[...page.children],up=kids.find(n=>n.classList&&n.classList.contains('upcard'));if(up&&kids.length>2){const L=el('div',{class:'tcol'}),R=el('div',{class:'tcol tcol-r'});kids.slice(1).forEach(n=>(n===up?R:L).append(n));page.classList.add('today-wide');page.append(el('div',{class:'tcols'},L,R));}}
   root.append(page);
   S._painted=true;S._anim=null;
   const mini=$('#mini');mini._pg=null;mini.textContent=`${mdS(sel)}`;mini.onclick=()=>scrollTo({top:0,behavior:'smooth'});
@@ -232,7 +232,7 @@ function habTileSet(card,h,dk){
     const before=new Map(tiles.map(t=>[t,t.getBoundingClientRect().left]));
     row.insertBefore(card,ref);
     if(!motionOK())return;
-    tiles.forEach(t=>{const dx=before.get(t)-t.getBoundingClientRect().left;if(!dx)return;t.animate([{transform:`translateX(${dx}px)`},{transform:'none'}],{duration:520,easing:'cubic-bezier(.3,1.05,.4,1)'});});
+    tiles.forEach(t=>{const dx=before.get(t)-t.getBoundingClientRect().left;if(!dx)return;t.animate([{transform:`translateX(${dx}px)`},{transform:'none'}],{duration:MOT.slow,easing:MOT.ease});});
     if(card.classList.contains('done')){const r=row.getBoundingClientRect(),c=card.getBoundingClientRect();if(c.right>r.right)row.scrollTo({left:row.scrollLeft+(c.right-r.right)+20,behavior:'smooth'});}
   },now?1500:900);
 }
@@ -346,7 +346,7 @@ function dayCard(dk){
    fl.forEach(f=>rows.append(el('button',{class:'upwork due',onclick:()=>flexWeekSheet(f.job.id,f.from)},el('span',{style:'display:grid',html:ic('plus',15,2.2)}),el('span',{},`Add your ${f.job.name&&f.job.name!=='Work'?f.job.name+' ':'work '}hours for ${mdS(fromK(f.from))}–${mdS(fromK(f.to))}`))));}
   const pastE=isToday?sched.filter(e=>e.kind!=='task'&&e.time+(e.dur||30)<=nowM):[],upN=Math.min(upcoming.length,Math.max(3,6-Math.min(pastE.length,3))),showE=[...pastE.slice(-(6-upN)),...upcoming.slice(0,upN)].slice(0,6);
   showE.forEach(e=>{const end=e.time+(e.dur||30),gone=isToday&&end<=nowM,during=isToday&&!gone&&e.time<=nowM,isNext=e===upcoming[0];
-    rows.append(el('button',{class:'uprow'+(gone?' gone':'')+(isNext?' nextup':''),style:`--c:${e.color||'var(--accent)'}`,onclick:()=>openItem(e,dk)},el('span',{class:'upt tnum'},fmtT(e.time)),el('span',{class:'upbar'}),el('span',{class:'grow'},el('span',{class:'tt'},e.title),el('span',{class:'meta'},sched.some(f=>f!==e&&f.kind!=='task'&&e.kind!=='task'&&f.time<e.time+(e.dur||30)&&e.time<f.time+(f.dur||30))?el('span',{class:'ovtag'},'Overlaps · '):null,e.kind==='task'?'':`Until ${fmtT(end)}`,during?el('b',{class:'upnow'},` · ${fmtDurS(end-nowM)} left`):isToday&&e===upcoming[0]?` · in ${fmtDurS(e.time-nowM)}`:''))));});
+    rows.append(el('button',{class:'uprow'+(gone?' gone':'')+(isNext?' nextup':''),style:`--c:${e.color||'var(--action)'}`,onclick:()=>openItem(e,dk)},el('span',{class:'upt tnum'},fmtT(e.time)),el('span',{class:'upbar'}),el('span',{class:'grow'},el('span',{class:'tt'},e.title),el('span',{class:'meta'},sched.some(f=>f!==e&&f.kind!=='task'&&e.kind!=='task'&&f.time<e.time+(e.dur||30)&&e.time<f.time+(f.dur||30))?el('span',{class:'ovtag'},'Overlaps · '):null,e.kind==='task'?'':`Until ${fmtT(end)}`,during?el('b',{class:'upnow'},` · ${fmtDurS(end-nowM)} left`):isToday&&e===upcoming[0]?` · in ${fmtDurS(e.time-nowM)}`:''))));});
   if(!showE.length)rows.append(el('p',{class:'sub',style:'margin:2px 0 0'},sched.length?'Nothing else scheduled today.':isPast?'Nothing was scheduled.':'Nothing scheduled. Open the day to block time.'));
   cu.append(rows);
   cu.append(el('button',{class:'linkbtn small uptoggle','aria-expanded':String(open),onclick:()=>{S.gridOpen=!S.gridOpen;S._gridTop=null;App.refresh();}},open?'Hide full day':'See full day',el('span',{style:`display:grid;transition:transform .25s var(--ease);${open?'transform:rotate(90deg)':''}`,html:ic('chevr',16,2.2)})));
@@ -416,7 +416,7 @@ function metaOf(e,late,dk){
 function gridTimeAt(x,y,grab=0,dur=0){const g=$('#grid');if(!g)return null;const r=g.getBoundingClientRect();if(x<r.left||x>r.right||y<r.top||y>r.bottom)return null;const py=y-r.top+g.scrollTop-12,m=py/HH*60-grab;return Math.max(0,Math.min(1440-Math.max(dur,15),Math.round(m/15)*15));}
 function dropPreview(x,y,dur=30,grab=0,text){const t=gridTimeAt(x,y,grab,dur);let p=$('#drop-prev');const cv=$('.gcanvas');if(t==null||!cv){p&&p.remove();return null;}if(!p){p=el('div',{class:'droptime',id:'drop-prev'});cv.append(p);}p.style.top=t/60*HH+12+'px';p.style.height=Math.max(dur/60*HH-2,24)+'px';p.textContent=(dropCarry&&dropCarry.title?dropCarry.title+' · ':'')+(text||(dur>=30?fmtRange(t,t+dur):fmtT(t)));carryPreview(p,t);return t;}
 function clearPreview(){const p=$('#drop-prev');p&&p.remove();if(!App.dragging)dropCarry=null;}
-function autoscrollGrid(x,y){const g=$('#grid');if(g&&!g.classList.contains('gfull')){const r=g.getBoundingClientRect();if(x>=r.left&&x<=r.right){if(y<r.top+36&&y>r.top-20)g.scrollTop-=7;else if(y>r.bottom-36&&y<r.bottom+20)g.scrollTop+=7;}}if(y<70)scrollBy(0,-7);else if(y>innerHeight-(innerWidth<900?110:40))scrollBy(0,7);}
+function autoscrollGrid(x,y){const g=$('#grid');if(g&&!g.classList.contains('gfull')){const r=g.getBoundingClientRect();if(x>=r.left&&x<=r.right){if(y<r.top+36&&y>r.top-20)g.scrollTop-=7;else if(y>r.bottom-36&&y<r.bottom+20)g.scrollTop+=7;}}if(y<70)scrollBy(0,-7);else if(y>innerHeight-(innerWidth<BP.desktop?110:40))scrollBy(0,7);}
 function timeGrid(dk,timed){
   const S=App.state,isToday=dk===todayK();
   const gw=el('div',{class:'gridwrap'}),g=el('div',{class:'grid',id:'grid',tabindex:0,'aria-label':'Time grid'}),cv=el('div',{class:'gcanvas'});
@@ -454,7 +454,7 @@ function timeGrid(dk,timed){
     const rz=b.querySelector('.rz');
     if(rz)rz.addEventListener('touchmove',tv=>{if(rz._on&&tv.cancelable)tv.preventDefault();},{passive:false});
     if(rz)rz.addEventListener('pointerdown',ev=>{if(ev.pointerType!=='mouse'&&!rz._held){const x0=ev.clientX,yy=ev.clientY;let t=setTimeout(()=>{rz._held=true;buzz(10);rz.dispatchEvent(new PointerEvent('pointerdown',{pointerId:ev.pointerId,pointerType:ev.pointerType,clientX:x0,clientY:yy,bubbles:true}));},320);const cx=m=>{if(Math.hypot(m.clientX-x0,m.clientY-yy)>8){clearTimeout(t);fin();}};const fin=()=>{clearTimeout(t);removeEventListener('pointermove',cx);removeEventListener('pointerup',fin);removeEventListener('pointercancel',fin);};addEventListener('pointermove',cx);addEventListener('pointerup',fin);addEventListener('pointercancel',fin);return;}
-      rz._held=false;rz._on=true;ev.stopPropagation();ev.preventDefault();const y0=ev.clientY,d0=e.dur;try{rz.setPointerCapture(ev.pointerId);}catch(_){}App.dragging=true;let nd=d0,lastN=d0;const bub=el('span',{class:'rzbub'});cv.append(bub);const showB=()=>{bub.textContent=`Ends ${fmtT((e.time+nd)%1440)} · ${fmtDur(nd)}`;bub.style.top=(b.offsetTop+b.offsetHeight+8)+'px';};showB();if(motionOK())bub.animate([{opacity:0,transform:'translateY(-4px)'},{opacity:1,transform:'none'}],{duration:180,easing:EASE});
+      rz._held=false;rz._on=true;ev.stopPropagation();ev.preventDefault();const y0=ev.clientY,d0=e.dur;try{rz.setPointerCapture(ev.pointerId);}catch(_){}App.dragging=true;let nd=d0,lastN=d0;const bub=el('span',{class:'rzbub'});cv.append(bub);const showB=()=>{bub.textContent=`Ends ${fmtT((e.time+nd)%1440)} · ${fmtDur(nd)}`;bub.style.top=(b.offsetTop+b.offsetHeight+8)+'px';};showB();if(motionOK())bub.animate([{opacity:0,transform:'translateY(-4px)'},{opacity:1,transform:'none'}],{duration:MOT.fast,easing:EASE});
       const mv=m=>{nd=Math.max(15,Math.min(1440,Math.round((d0+(m.clientY-y0)/HH*60)/15)*15));b.style.height=Math.max(Math.min(nd,1440-e.time)/60*HH-2,26)+'px';if(bm)bm.textContent=fmtRange(e.time,e.time+nd);if(nd!==lastN){lastN=nd;buzz(4);}showB();};
       const up=()=>{rz._on=false;bub.remove();rz.removeEventListener('pointermove',mv);rz.removeEventListener('pointerup',up);rz.removeEventListener('pointercancel',up);App.dragging=false;App._dragEnd=Date.now();if(nd!==d0){const u=snapItem(e),r=detachIfRepeating(e.rec,dk);r.dur=nd;put(r);toast(`${e.title} now ends ${fmtT((e.time+nd)%1440)}`,u);}else App.refresh();};
       rz.addEventListener('pointermove',mv);rz.addEventListener('pointerup',up);rz.addEventListener('pointercancel',up);});
@@ -515,9 +515,9 @@ async function saveFile(filename,data){if(!store.downloads){toast('Saving files 
 function shareDaySheet(dk){
   Promise.resolve(document.fonts&&document.fonts.ready).then(()=>openSheet({title:'Share this day',build:body=>{
     const c=dayCanvas(dk),base=`Life-OS-${dk}`;
-    const img=el('img',{alt:`Preview of ${shortDay(dk)}`,style:'width:100%;border-radius:var(--r-card);border:1px solid var(--line);display:block',src:c.toDataURL('image/png')});
+    const img=el('img',{alt:`Preview of ${shortDay(dk)}`,style:'width:100%;border-radius:var(--r-card);border:1px solid var(--border);display:block',src:c.toDataURL('image/png')});
     const copy=el('button',{class:'btn quiet block',onclick:async e=>{const t=dayText(dk),btn=e.currentTarget;try{await navigator.clipboard.writeText(t);toast('Copied');doneMorph(btn);}catch(e){ta.hidden=false;ta.value=t;ta.select();toast('Select the text below to copy it');}}},'Copy as text');
-    const ta=el('textarea',{id:'share-text',hidden:true,rows:6,style:'width:100%;border:1px solid var(--line);border-radius:var(--r-row);padding:10px;background:var(--card);color:var(--ink)'});
+    const ta=el('textarea',{id:'share-text',hidden:true,rows:6,style:'width:100%;border:1px solid var(--border);border-radius:var(--r-row);padding:10px;background:var(--surface-raised);color:var(--text)'});
     body.append(img,el('button',{class:'btn primary block',onclick:()=>c.toBlob(b=>saveFile(base+'.png',b),'image/png')},'Save image'),
       el('button',{class:'btn line block',onclick:()=>{const flat=document.createElement('canvas');flat.width=c.width;flat.height=c.height;flat.getContext('2d').drawImage(c,0,0);flat.toBlob(async b=>{const buf=new Uint8Array(await b.arrayBuffer());saveFile(base+'.pdf',new Blob([pdfFromJpeg(buf,c.width,c.height)],{type:'application/pdf'}));},'image/jpeg',.92);}},'Save PDF'),copy,ta);
   }}));
@@ -567,16 +567,16 @@ function wireRingDrop(card,dk){card.addEventListener('pointerdown',ev=>{const g=
   const finish=()=>{gh.remove();w.classList.remove('dragsrc');App.dragging=false;App._dragEnd=Date.now();};
   const up=()=>{end();const h=hot;hot&&hot.classList.remove('hot');
     if(h){const b=h.getBoundingClientRect(),x=b.left+b.width/2,y=b.top+b.height/2;buzz(12);
-      const a=motionOK()?gh.animate([{transform:gh.style.transform,opacity:1},{transform:`translate3d(${x}px,${y}px,0) translate(-50%,-50%) scale(.3)`,opacity:0}],{duration:240,easing:'cubic-bezier(.3,.7,.3,1)',fill:'forwards'}):null;
+      const a=motionOK()?gh.animate([{transform:gh.style.transform,opacity:1},{transform:`translate3d(${x}px,${y}px,0) translate(-50%,-50%) scale(.3)`,opacity:0}],{duration:MOT.base,easing:MOT.ease,fill:'forwards'}):null;
       const go=()=>{finish();const i=+h.dataset.ring,l=t3Get(dk).filter(q=>q.id!==r.id);if(i<l.length)l.splice(i,1,{id:r.id});else l.push({id:r.id});t3Set(dk,l);};a?a.onfinish=go:go();}
-    else{const b=w.getBoundingClientRect();const a=motionOK()?gh.animate([{transform:gh.style.transform,opacity:1},{transform:`translate3d(${b.left+b.width/2}px,${b.top+b.height/2}px,0) translate(-50%,-50%) scale(.9)`,opacity:0}],{duration:260,easing:'cubic-bezier(.3,.7,.3,1)',fill:'forwards'}):null;a?a.onfinish=finish:finish();}};
+    else{const b=w.getBoundingClientRect();const a=motionOK()?gh.animate([{transform:gh.style.transform,opacity:1},{transform:`translate3d(${b.left+b.width/2}px,${b.top+b.height/2}px,0) translate(-50%,-50%) scale(.9)`,opacity:0}],{duration:MOT.base,easing:MOT.ease,fill:'forwards'}):null;a?a.onfinish=finish:finish();}};
   const cancel=()=>{end();hot&&hot.classList.remove('hot');finish();};
-  mv(ev);if(motionOK())gh.animate([{opacity:0,scale:'.85'},{opacity:1,scale:'1'}],{duration:180,easing:'cubic-bezier(.3,1.3,.5,1)'});
+  mv(ev);if(motionOK())gh.animate([{opacity:0,scale:'.85'},{opacity:1,scale:'1'}],{duration:MOT.fast,easing:MOT.spring});
   addEventListener('pointermove',mv,true);addEventListener('pointerup',up,true);addEventListener('pointercancel',cancel,true);raf=requestAnimationFrame(loop);},true);}
 
 /* Review what's carried over: send each to today, or let it go (it moves to someday, nothing is deleted) */
 function carrySheet(dk){let inst;const draw=b=>{const late=carried();b.replaceChildren();if(!late.length){inst&&inst.close();return;}
-  b.append(el('p',{class:'small muted',style:'margin:0 var(--s1) 10px;text-align:center'},'Move to today, or let go of what no longer matters.'),el('div',{class:'list'},late.map(t=>el('div',{class:'li',style:''},el('span',{class:'grow'},el('span',{class:'tt',style:'display:block'},t.title),el('small',{style:'color:var(--now)'},`From ${relDay(t.date)}`)),
+  b.append(el('p',{class:'small muted',style:'margin:0 var(--s1) 10px;text-align:center'},'Move to today, or let go of what no longer matters.'),el('div',{class:'list'},late.map(t=>el('div',{class:'li',style:''},el('span',{class:'grow'},el('span',{class:'tt',style:'display:block'},t.title),el('small',{style:'color:var(--overdue)'},`From ${relDay(t.date)}`)),
     el('button',{class:'cpill',onclick:()=>{const d0=t.date;t.date=dk;t.moves=(t.moves||0)+1;put(t);draw(b);toast('Moved to today',()=>{t.date=d0;put(t);});}},'Today'),
     el('button',{class:'iconbtn','aria-label':`Let go of ${t.title}`,style:'width:40px;height:40px',html:ic('x',16,2.2),onclick:()=>{const d0=t.date;t.date=null;put(t);draw(b);toast(`Let go · in Someday`,()=>{t.date=d0;put(t);});}})))));};
   inst=openSheet({title:`${carried().length} carried over`,left:{label:'Done'},build:b=>draw(b)});}
@@ -691,7 +691,7 @@ function habGlyph(h){const g=x=>glyph(x,24,1.9);if(h.icon&&h.icon!=='habit'&&GL[
 function foldAway(w,on){if(!w||!motionOK())return;setTimeout(()=>{if(!w.isConnected)return;const h=w.offsetHeight;w.style.height=h+'px';w.style.overflow='hidden';w.getBoundingClientRect();w.style.transition='height .24s cubic-bezier(.2,.8,.2,1),opacity .16s ease';w.style.height='0px';w.style.opacity='0';},170);}
 
 /* habit ring updates in place: the ring fills and the icon swaps to a check, with no re-render */
-function habDotSet(b,h,dk,on){b.classList.toggle('done',on);b.setAttribute('aria-pressed',String(on));const old=b.querySelector('.hring');if(!old)return;const c=h.color?colorHex(h.color):null;const nr=habRing(on?1:habProg(h,dk),on?ic('check',18,2.8):habGlyph(h),c);old.replaceWith(nr);if(motionOK())nr.animate([{transform:'scale(1.1)'},{transform:'scale(1.25)'}],{duration:260,easing:'cubic-bezier(.3,1.5,.5,1)'});}
+function habDotSet(b,h,dk,on){b.classList.toggle('done',on);b.setAttribute('aria-pressed',String(on));const old=b.querySelector('.hring');if(!old)return;const c=h.color?colorHex(h.color):null;const nr=habRing(on?1:habProg(h,dk),on?ic('check',18,2.8):habGlyph(h),c);old.replaceWith(nr);if(motionOK())nr.animate([{transform:'scale(1.1)'},{transform:'scale(1.25)'}],{duration:MOT.base,easing:MOT.spring});}
 
 /* v228 · loading Today paints the Stack's own card outlines (Top 3, To-do, Habits, Coming up), so nothing jumps when data lands */
 function todaySkeleton(){const bar=(w,h=12)=>el('div',{class:'skel',style:`height:${h}px;width:${w}`}),

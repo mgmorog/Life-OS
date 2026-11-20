@@ -224,7 +224,7 @@ function slotEl(sl,st,P,cards){
   if(st.mode==='w'){const d=dayItems(sl.id);
     d.allDay.forEach(e=>items.append(el('button',{class:'fx',onclick:()=>openItem(e,sl.id)},el('time',{},e.rec&&e.rec.tripId?'Away':'All day'),el('span',{},e.title))));
     d.timed.filter(e=>e.kind==='block'||(e.kind==='gcal'&&get.settings().calendar.busy)).forEach(e=>items.append(el('button',{class:'fx',onclick:()=>openItem(e,sl.id)},el('time',{},fmtS(e.time)),el('span',{},e.title))));
-    get.all('task').filter(t=>t.deadline===sl.id&&isOpenTask(t)).forEach(t=>items.append(el('button',{class:'fx',onclick:()=>taskSheet(t)},el('time',{style:'color:var(--now)'},'Due'),el('span',{},t.title))));
+    get.all('task').filter(t=>t.deadline===sl.id&&isOpenTask(t)).forEach(t=>items.append(el('button',{class:'fx',onclick:()=>taskSheet(t)},el('time',{style:'color:var(--overdue)'},'Due'),el('span',{},t.title))));
     // recurring habits/tasks that sit here on their own
     d.anytime.concat(d.timed).filter(e=>(e.kind==='task'&&e.rec.repeat&&e.rec.repeat.type!=='never')||(e.kind==='habit'&&e.rec.days&&e.rec.days.length)||e.kind==='routine').forEach(e=>items.append(el('button',{class:'fx',onclick:()=>openItem(e,sl.id)},el('time',{},'Repeat'),el('span',{},e.title))));
   }else if(st.mode==='m'&&sl.heat){items.append(el('div',{style:'display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:var(--s1)','aria-hidden':'true'},sl.heat.map(l=>el('i',{style:`display:block;height:8px;border-radius:2px;background:var(--h${l})`}))));}
@@ -277,8 +277,8 @@ function reviewSheet(P,st,cards){
   const late=cards.filter(c=>c.due&&c.placedIn.some(id=>{const s=P.slots.find(x=>x.id===id);return s&&s.from>c.due;})).length;
   const inst=openSheet({title:`Review ${P.head}`,build:body=>{
     body.append(el('div',{class:'stat3'},el('div',{},el('b',{},String(placedN)),el('small',{},'planned')),el('div',{},el('b',{},String(fixed)),el('small',{},'commitments')),el('div',{},el('b',{},String(P.slots.filter(s=>!slotLoad(s,st,cards)).length)),el('small',{},`open ${P.unit}s`))));
-    if(busy)body.append(el('p',{class:'small',style:'color:var(--now)'},`${busy} ${P.unit}${busy>1?'s are':' is'} over your capacity.`));
-    if(late)body.append(el('p',{class:'small',style:'color:var(--now)'},`${late} card${late>1?'s land':' lands'} after the due date.`));
+    if(busy)body.append(el('p',{class:'small',style:'color:var(--overdue)'},`${busy} ${P.unit}${busy>1?'s are':' is'} over your capacity.`));
+    if(late)body.append(el('p',{class:'small',style:'color:var(--overdue)'},`${late} card${late>1?'s land':' lands'} after the due date.`));
     if(unplaced.length){body.append(el('div',{class:'sect'},`Not placed · ${unplaced.length}`));body.append(el('div',{class:'list'},unplaced.map(c=>el('div',{class:'li',style:''},el('span',{class:'grow'},el('b',{style:'font-weight:500'},c.t),el('small',{},c.type==='habit'?'Sessions left this week':'Stays in To plan'))))));}
     body.append(el('button',{class:'btn primary block',onclick:()=>{const r=get.id('plan-'+P.key)||{id:'plan-'+P.key,kind:'plan',key:P.key};r.committed=true;r.committedAt=Date.now();App.state._commitSweep=true;put(r);if(st.mode==='w')setSettings({checkinDone:todayK()});inst.close();buzz(12);toast(P.doneL);}},P.commit),el('button',{class:'btn quiet block',onclick:()=>inst.close()},'Keep planning'));
   }});

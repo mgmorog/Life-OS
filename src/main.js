@@ -144,7 +144,7 @@ setTimeout(checkReminders,1500);
 try{matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{if(get.settings().mode==='auto')App.refresh();});}catch(e){}
 
 /* v228 · re-lay Today when the window crosses the two-column width */
-(()=>{const two=()=>innerWidth>=700&&!(innerWidth>=900&&innerWidth<1100);let wide=two();addEventListener('resize',()=>{const w=two();if(w!==wide){wide=w;if(App.state.view==='today')App.refresh();}});})();
+(()=>{const two=()=>innerWidth>=BP.tablet&&!(innerWidth>=BP.desktop&&innerWidth<BP.wide);let wide=two();addEventListener('resize',()=>{const w=two();if(w!==wide){wide=w;if(App.state.view==='today')App.refresh();}});})();
 /* v228 · more keyboard shortcuts on a computer (C, N, T and arrows already live above): 1–4 switch tabs, / search, T anywhere goes to Today, ? lists them all */
 (()=>{const typing=t=>t&&(t.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName));
   const keys=[['C','Quick capture'],['N','New task (Today)'],['T','Jump to today'],['← →','Previous or next day or period'],['1 2 3 4','Today, Studio, Calendar, More'],['/','Search'],['Esc','Close a sheet or menu'],['⌘K','Command bar: search and run anything'],['?','Show these shortcuts']];
@@ -187,15 +187,15 @@ try{matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{if
 addEventListener('pointerdown',e=>{const n=e.target.closest&&e.target.closest('#view :is(.li,.dfact,.ptile,.scard,.tile,.trow)');App._tap=n?{el:n,t:Date.now()}:null;},true);
 function rowZoomIn(pg,z){try{const P=pg.getBoundingClientRect(),r=z.r,ease='cubic-bezier(.2,.8,.2,1)';
   const ins=`inset(${Math.max(0,r.top-P.top)}px ${Math.max(0,P.right-r.right)}px ${Math.max(0,P.bottom-r.bottom)}px ${Math.max(0,r.left-P.left)}px round 12px)`;
-  pg.animate([{clipPath:ins,opacity:.6},{clipPath:'inset(0 0 0 0 round 0px)',opacity:1}],{duration:440,easing:ease});
+  pg.animate([{clipPath:ins,opacity:.6},{clipPath:'inset(0 0 0 0 round 0px)',opacity:1}],{duration:MOT.slow,easing:ease});
   const h=pg.querySelector('.pgtitle');if(h){const H=h.getBoundingClientRect(),s=z.fs/(parseFloat(getComputedStyle(h).fontSize)||34);
-    h.animate([{transform:`translate(${z.tr.left-H.left}px,${z.tr.top-H.top}px) scale(${s})`,transformOrigin:'left top'},{transform:'none',transformOrigin:'left top'}],{duration:440,easing:ease});}
-  [...pg.children].filter(n=>!n.contains(h)).forEach((n,i)=>n.animate([{opacity:0,transform:'translateY(8px)'},{opacity:1,transform:'none'}],{duration:300,delay:140+Math.min(i,6)*30,easing:ease,fill:'backwards'}));}catch(e){}}
+    h.animate([{transform:`translate(${z.tr.left-H.left}px,${z.tr.top-H.top}px) scale(${s})`,transformOrigin:'left top'},{transform:'none',transformOrigin:'left top'}],{duration:MOT.slow,easing:ease});}
+  [...pg.children].filter(n=>!n.contains(h)).forEach((n,i)=>n.animate([{opacity:0,transform:'translateY(8px)'},{opacity:1,transform:'none'}],{duration:MOT.base,delay:140+Math.min(i,6)*30,easing:ease,fill:'backwards'}));}catch(e){}}
 function rowZoomOut(clone,label){try{const rows=[...document.querySelectorAll('#view :is(.li,.dfact,.ptile,.scard,.tile,.trow)')];const row=rows.find(n=>{const t=(n.querySelector('b,.tt,.t3n')||n).textContent.trim();return t&&label&&t.slice(0,80)===label;});
-  if(!row){clone.animate([{opacity:1},{opacity:0}],{duration:200}).onfinish=()=>clone.remove();return;}
+  if(!row){clone.animate([{opacity:1},{opacity:0}],{duration:MOT.fast}).onfinish=()=>clone.remove();return;}
   const r=row.getBoundingClientRect(),ins=`inset(${Math.max(0,r.top)}px ${Math.max(0,innerWidth-r.right)}px ${Math.max(0,innerHeight-r.bottom)}px ${Math.max(0,r.left)}px round 12px)`;
-  clone.animate([{clipPath:'inset(0 0 0 0 round 0px)',opacity:1},{clipPath:ins,opacity:0}],{duration:360,easing:'cubic-bezier(.4,0,.2,1)'}).onfinish=()=>clone.remove();
-  row.animate([{opacity:.3},{opacity:1}],{duration:360,delay:120,fill:'backwards'});}catch(e){clone.remove();}}
+  clone.animate([{clipPath:'inset(0 0 0 0 round 0px)',opacity:1},{clipPath:ins,opacity:0}],{duration:MOT.base,easing:MOT.ease}).onfinish=()=>clone.remove();
+  row.animate([{opacity:.3},{opacity:1}],{duration:MOT.base,delay:120,fill:'backwards'});}catch(e){clone.remove();}}
 
 /* v232 · command bar on a computer: ⌘K (Ctrl K) searches everything and runs actions */
 function cmdBar(){if($('.cmdk'))return;const prevFocus=document.activeElement;

@@ -113,7 +113,7 @@ function reorderable(h,row,box,commit){
 function stepsEditor(D,{tick=true,word='step'}={}){const Word=word[0].toUpperCase()+word.slice(1);
   const wrap=el('div',{style:'display:grid;gap:8px'}),box=el('div',{class:'steps'});
   const newStep=()=>({id:uid('s'),t:'',d:false});
-  const count=el('div',{class:'eyebrow',style:'font-size:11px;padding:0 4px',hidden:true});
+  const count=el('div',{class:'eyebrow',style:'font-size:12px;padding:0 4px',hidden:true});
   const recount=()=>{const t=D.steps.filter(x=>x.t.trim()),show=tick&&!(D.repeat&&D.repeat.type!=='never')&&t.length;count.hidden=!show;if(show)count.textContent=`${Word}s · ${t.filter(x=>x.d).length} of ${t.length} done`;};
   const draw=focus=>{box.innerHTML='';recount();const showTick=tick&&!(D.repeat&&D.repeat.type!=='never');D.steps.forEach((s,i)=>{
     const inp=el('input',{value:s.t,placeholder:Word,'aria-label':`${Word} ${i+1}`,enterkeyhint:'next',autocapitalize:'sentences'});

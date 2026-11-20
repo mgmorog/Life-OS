@@ -50,7 +50,7 @@ function focusChip(fk,label,mode,range){
   if(!areas.length)return el('button',{class:'focus-link',onclick:()=>focusSheet(fk,label)},el('span',{style:'display:grid',html:ic('plus',14,2.4)}),`Set a ${label.replace(/ FOCUS$/,'').replace(/^WEEK$/,'week').replace(/^([A-Z]+)$/,(m)=>m[0]+m.slice(1).toLowerCase())} focus`);
   const steps=allSteps(),inRange=s=>{if(!s.doneAt)return false;const d=k(new Date(s.doneAt));return d>=range[0]&&d<=range[1];};
   return el('div',{class:'bars'},
-    el('div',{style:'display:flex;justify-content:space-between;align-items:center'},el('button',{class:'fl eyebrow',style:'font-size:11px',onclick:()=>focusSheet(fk,label)},label+' · Edit'),el('button',{class:'linkbtn small',onclick:()=>{App.state.studio=Object.assign(App.state.studio||{},{mode:mode==='quarter'?'q':mode==='month'?'m':'w',anchor:range[0]});App.go('studio');}},'Plan in Studio ›')),
+    el('div',{style:'display:flex;justify-content:space-between;align-items:center'},el('button',{class:'fl eyebrow',style:'font-size:12px',onclick:()=>focusSheet(fk,label)},label+' · Edit'),el('button',{class:'linkbtn small',onclick:()=>{App.state.studio=Object.assign(App.state.studio||{},{mode:mode==='quarter'?'q':mode==='month'?'m':'w',anchor:range[0]});App.go('studio');}},'Plan in Studio ›')),
     areas.map(ar=>{const list=steps.filter(s=>s.parent.kind==='goal'&&s.parent.area===ar),done=list.filter(s=>s.step.d&&inRange(s.step)).length,open=list.filter(s=>!s.step.d).length,tot=done+open;return el('div',{class:'bar-row'},el('span',{class:'clip'},ar),el('span',{class:'bar-track',role:'img','aria-label':`${done} of ${tot} goal steps finished this period`},el('span',{class:'bar-fill',style:`display:block;width:${tot?done/tot*100:0}%`})),el('span',{class:'small muted tnum'},tot?`${done}/${tot}`:'No open steps'));}));
 }
 function focusSheet(fk,label){
@@ -107,7 +107,11 @@ function monthBody(body,a,C){
 }
 function dayLine(e,dk){
   const row=el('div',{class:'dayline tick-host'+(e.done?' done':'')},e.kind==='gcal'?null:el('span',{class:'tick-hit'},tickBtn(e.done,on=>{row.classList.toggle('done',on);toggleItem(e,dk);setTimeout(()=>App.refresh(),820);})),el('span',{class:'tm'},e.time!=null?fmtT(e.time):'Anytime'),el('button',{class:'grow clip',style:'text-align:left;min-height:44px',onclick:()=>openItem(e,dk)},el('span',{class:'tt'},e.title)));
-  calGestures(row,e,dk);return row;
+  calGestures(row,e,dk);
+  /* v228 · the same swipe language as Today: right = done, left = open */
+  if(e.kind==='gcal'||e.done)return row;
+  return swipeAct(row,{right:['task','step','habit'].includes(e.kind)?{label:'Done',color:'var(--accent)',run:()=>{row.classList.add('done');toggleItem(e,dk);setTimeout(()=>App.refresh(),420);}}:null,
+    left:{label:'Open',color:'var(--ink-2)',run:()=>{openItem(e,dk);setTimeout(()=>{row.style.transition='transform var(--dur-base) var(--ease)';row.style.transform='';},250);}}});
 }
 function allDayChips(allDay,dk){return el('div',{class:'allday-row',style:'margin-top:0'},allDay.map(e=>{const b=el('button',{class:'adchip',style:`--c:${e.color}`,html:(e.icon?glyph(e.icon,16,2):'')+`<span>${esc(e.title)}</span>`,onclick:()=>openItem(e,dk)});calGestures(b,e,dk);return b;}));}
 const addChips=(dk,inline)=>el('div',{class:'chips'},el('button',{class:'chip',onclick:e=>{const b=e.currentTarget,r=b.getBoundingClientRect();openMenu(r.left,r.bottom+4,[{label:'Task',icon:'task',onclick:()=>inline?wkAdd(b,dk):taskSheet(null,{date:dk})},{label:'Time block',icon:'time',onclick:()=>blockSheet(null,{date:dk,start:9*60})},{label:'All-day',icon:'cal',onclick:()=>alldaySheet(null,{start:dk})}]);}},'+ Add'));

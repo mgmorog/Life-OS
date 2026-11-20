@@ -304,9 +304,13 @@ function openSheet({title,full=false,left,right,build,onClose,tryClose,raw=false
   sheet.append(grab);
   let head=null;
   if(title!==undefined&&!raw){
-    const lb=el('button',{class:'l',onclick:()=>left&&left.onclick?left.onclick():requestClose()},left?left.label:'Close');
-    /* a form's Save lives at the bottom, within thumb reach; Cancel stays top left */
+    /* v228 · one sheet vocabulary: new things say Add, changes say Save, forms cancel with Cancel, read-only sheets close with a round × */
+    if(right&&!right.keepLabel&&/^(Save|Done|Create|Update)$/i.test(String(right.label||'').trim()))right={...right,label:/^(New|Add)\b/i.test(String(title||''))?'Add':'Save'};
     const formy=right&&(/^(Save|Add|Create|Done|Update|Log|Set|Keep|Plan it|Book it|Start)$/i.test(String(right.label||'').trim())||right.foot);
+    const plainL=!left||/^(Close|Done|Cancel)$/i.test(String(left.label||'').trim());
+    if(formy&&plainL)left={...(left||{}),label:'Cancel'};
+    const xClose=!formy&&plainL;
+    const lb=xClose?el('button',{class:'l sx','aria-label':'Close',onclick:()=>left&&left.onclick?left.onclick():requestClose()},el('span',{html:ic('x',14,2.6)})):el('button',{class:'l',onclick:()=>left&&left.onclick?left.onclick():requestClose()},left.label);
     const rb=right?el('button',{class:formy?'btn primary block sfoot-btn':'r',disabled:right.disabled,onclick:right.onclick},right.label):el('span');
     head=el('div',{class:'shead'},lb,el('h2',{},title),formy?el('span',{class:'r'}):rb);inst.rightBtn=rb;inst.titleEl=head.children[1];
     sheet.append(head);inst._foot=formy?el('div',{class:'sfoot'},rb):null;

@@ -108,7 +108,7 @@ function viewToday(root){
         moreB('Today options',e=>openMenu(e.clientX,e.clientY,[{label:'Share this day',icon:'share',onclick:()=>shareDaySheet(dk)},{label:'Plan tomorrow',icon:'cal',onclick:()=>planTomorrowSheet(todayK())},{label:'Today settings',icon:'gear',onclick:()=>App.go('setpage',{id:'reviews'})}])))),
     S.dateDrop?dateDropEl(dk):null,S.dateDrop?null:weekStrip(dk),
     isToday?nextLine(dk):null,isToday?freeLine(dk):null));
-  if(S.loading&&!recs.size){page.append(el('section',{class:'card',style:'display:grid;gap:12px'},el('div',{class:'skel',style:'height:14px;width:30%'}),el('div',{class:'skel',style:'height:30px;width:70%'}),el('div',{class:'skel',style:'height:200px'})));root.append(page);return;}
+  if(S.loading&&!recs.size){page.append(...todaySkeleton());root.append(page);return;}
   const s=get.settings();
   {const fr=frNow(),onPrio=fr&&isToday&&t3Get(dk).some(x=>x.id===fr.id);const fc=onPrio?null:focusRunChip();if(fc)page.append(fc);}
   if(!s.introDone&&!recs.size)page.append(introCard());
@@ -128,6 +128,8 @@ function viewToday(root){
   {const tc=tripTodayCard(dk);if(tc)page.append(tc);}
   {const pc=pinsCard(dk);if(pc)page.append(pc);}
   if(also.length)page.append(el('div',{class:'lbl alsol'},'Also today'),el('div',{class:'list'},also));
+  /* v228 · wide screens: your list on the left, Coming up (and the expanded day) on the right */
+  if(innerWidth>=1100){const kids=[...page.children],up=kids.find(n=>n.classList&&n.classList.contains('upcard'));if(up&&kids.length>2){const L=el('div',{class:'tcol'}),R=el('div',{class:'tcol tcol-r'});kids.slice(1).forEach(n=>(n===up?R:L).append(n));page.classList.add('today-wide');page.append(el('div',{class:'tcols'},L,R));}}
   root.append(page);
   S._painted=true;S._anim=null;
   const mini=$('#mini');mini.textContent=`${mdS(sel)}`;mini.onclick=()=>scrollTo({top:0,behavior:'smooth'});
@@ -513,7 +515,7 @@ async function saveFile(filename,data){if(!store.downloads){toast('Saving files 
 function shareDaySheet(dk){
   Promise.resolve(document.fonts&&document.fonts.ready).then(()=>openSheet({title:'Share this day',build:body=>{
     const c=dayCanvas(dk),base=`Life-OS-${dk}`;
-    const img=el('img',{alt:`Preview of ${shortDay(dk)}`,style:'width:100%;border-radius:16px;border:1px solid var(--line);display:block',src:c.toDataURL('image/png')});
+    const img=el('img',{alt:`Preview of ${shortDay(dk)}`,style:'width:100%;border-radius:18px;border:1px solid var(--line);display:block',src:c.toDataURL('image/png')});
     const copy=el('button',{class:'btn quiet block',onclick:async e=>{const t=dayText(dk),btn=e.currentTarget;try{await navigator.clipboard.writeText(t);toast('Copied');doneMorph(btn);}catch(e){ta.hidden=false;ta.value=t;ta.select();toast('Select the text below to copy it');}}},'Copy as text');
     const ta=el('textarea',{id:'share-text',hidden:true,rows:6,style:'width:100%;border:1px solid var(--line);border-radius:12px;padding:10px;background:var(--card);color:var(--ink)'});
     body.append(img,el('button',{class:'btn primary block',onclick:()=>c.toBlob(b=>saveFile(base+'.png',b),'image/png')},'Save image'),
@@ -690,3 +692,13 @@ function foldAway(w,on){if(!w||!motionOK())return;setTimeout(()=>{if(!w.isConnec
 
 /* habit ring updates in place: the ring fills and the icon swaps to a check, with no re-render */
 function habDotSet(b,h,dk,on){b.classList.toggle('done',on);b.setAttribute('aria-pressed',String(on));const old=b.querySelector('.hring');if(!old)return;const c=h.color?colorHex(h.color):null;const nr=habRing(on?1:habProg(h,dk),on?ic('check',18,2.8):habGlyph(h),c);old.replaceWith(nr);if(motionOK())nr.animate([{transform:'scale(1.1)'},{transform:'scale(1.25)'}],{duration:260,easing:'cubic-bezier(.3,1.5,.5,1)'});}
+
+/* v228 · loading Today paints the Stack's own card outlines (Top 3, To-do, Habits, Coming up), so nothing jumps when data lands */
+function todaySkeleton(){const bar=(w,h=12)=>el('div',{class:'skel',style:`height:${h}px;width:${w}`}),
+  line=w=>el('div',{class:'sk-row'},el('span',{class:'sk-tick'}),bar(w)),
+  card=(lab,rows)=>el('section',{class:'card sk-card','aria-hidden':'true'},bar('28%',10),...rows);
+  return[el('span',{class:'sr-only',role:'status'},'Loading your day'),
+    card('Top 3',[line('64%'),line('48%')]),
+    card('To-do',[line('70%'),line('52%'),line('60%')]),
+    el('div',{class:'sk-habits','aria-hidden':'true'},[0,1,2,3].map(()=>el('div',{class:'sk-hab'},el('span',{class:'sk-ring'}),bar('70%',10)))),
+    card('Coming up',[line('58%'),line('44%')])];}

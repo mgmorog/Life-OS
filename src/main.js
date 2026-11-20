@@ -5,6 +5,7 @@ const App={
   go(view,params={}){const S=this.state;if(view!==S.view)S.trashSel=null;try{const tt=$('#toast');if(tt&&tt.classList.contains('on')&&Date.now()-toastAt>1200)tt.classList.remove('on');}catch(e){}if(S.view==='today'){const g=$('#grid');if(g)S._gridTop=g.scrollTop;}
     const y=scrollY;S.scrolls=S.scrolls||{};S.scrolls[S.view]=y;
     if(view==='today')S._fresh=S._fresh||S.view!=='today';
+    try{const pg0=$('#view')&&$('#view').firstElementChild;if(pg0&&!TOPS.includes(view)){(this._snaps=this._snaps||{})[(S.stack||[]).length+1]={node:pg0.cloneNode(true),view:S.view,y};}}catch(e){}
     (S.stack=S.stack||[]).push({view:S.view,params:S.params,y});if(S.stack.length>30)S.stack.shift();
     if(view==='tasks')S.taskTab=params.tab||'all';S.view=view;S.params=params;S.entering=true;S.dir=TOPS.includes(view)?'tab':'push';
     try{if(/^[a-z-]+$/.test(view))history.replaceState(null,'','#'+(view==='settings'?'prefs':view));}catch(e){}
@@ -40,7 +41,7 @@ const App={
     rollCounts(root,`${S.view}|${S.sel}`);
     swipeArrive();settleBlock();todayHeaderScroll();meterPops(root,`${S.view}|${S.sel}`);studioPop();if(opened){countUp(root);chartsIn(root);}milestones(root);skeletonMelt(skelG,root);chipChecks(root);segFill(root);studioCascade();arcPlay();weekBandGlide();commitSweep();streakRoll(root);emptyDraw(root);dotRun(root);ideaMorph(root);stepIn(root);panelIn(root);searchGrow(root);wkRefocus(root);hcFill(root);msLine(root);blkFlip(blkBefore);dateDropIn(root);heldPlay(root);t3Roll(root);pinDropIn(root);
     if(depthGhost){depthSlide(depthGhost,root.firstElementChild,depthDir);S.dir=null;S.entering=false;}
-    if(S.entering){const pg=root.firstElementChild;if(pg&&S._painted&&(S.view!=='today'||S.dir==='pop'||S.dir==='swiped'))pg.classList.add(S.dir==='push'?'viewin-push':S.dir==='pop'?'viewin-pop':S.dir==='swiped'?'viewin-swiped':'viewin');S.dir=null;S.entering=false;}
+    if(S.entering){const pg=root.firstElementChild;if(pg&&S._painted&&(S.view!=='today'||S.dir==='pop'||S.dir==='swiped'))if(!(S.dir==='swiped'&&S._under))pg.classList.add(S.dir==='push'?'viewin-push':S.dir==='pop'?'viewin-pop':S.dir==='swiped'?'viewin-swiped':'viewin');S._under=false;S.dir=null;S.entering=false;}
     S.lastView=S.view;
     const d2=$('#st-dock');if(d2)d2.scrollLeft=dockL;
     this.navbar();
@@ -97,18 +98,41 @@ App.render();
 connect();
 setTimeout(checkReminders,1500);
 
-/* swipe in from the left edge to go back, like an iPhone app (pages with a back button only) */
+/* swipe in from the left edge to go back, like an iPhone app (pages with a back button only).
+   v228: the page you came from sits underneath, shifted left and dimmed, and slides into place as you drag */
 (()=>{const EDGE=26;let t=null;const V=()=>$('#view');
   const canBack=()=>!sheetStack.length&&!$('.menu')&&!$('.confirm.on')&&!TOPS.includes(App.state.view)&&!!document.querySelector('#view .pghead .back');
-  const reset=(v,anim)=>{v.style.transition=anim?'transform .28s cubic-bezier(.2,.8,.2,1),opacity .28s':'';v.style.transform='';v.style.opacity='';if(anim)setTimeout(()=>{v.style.transition='';},300);};
-  addEventListener('touchstart',e=>{if(e.touches.length!==1)return;const x=e.touches[0].clientX;if(x>EDGE||!canBack()){t=null;return;}t={x0:x,y0:e.touches[0].clientY,t0:Date.now(),on:false,dx:0};},{passive:true});
+  const underFor=()=>{const S=App.state,st=S.stack||[],sn=(App._snaps||{})[st.length];if(!sn||!st.length||st[st.length-1].view!==sn.view)return null;
+    const v=V(),cs=getComputedStyle(v),u=el('div',{class:'swipe-under','aria-hidden':'true',inert:''}),inner=el('div',{class:'su-in'}),dim=el('div',{class:'su-dim'});
+    const c=sn.node.cloneNode(true);c.removeAttribute('id');c.querySelectorAll('[id]').forEach(n=>n.removeAttribute('id'));
+    inner.style.cssText=`max-width:${cs.maxWidth};margin-left:${cs.marginLeft};margin-right:${cs.marginRight};padding:${cs.padding};transform:translate3d(-30%,${-sn.y}px,0)`;inner.append(c);u.append(inner,dim);document.body.append(u);v.classList.add('swiping');return{u,inner,dim,y:sn.y};};
+  const place=(un,f)=>{if(!un)return;un.inner.style.transform=`translate3d(${-30*(1-f)}%,${-un.y}px,0)`;un.dim.style.opacity=String(.08*(1-f));};
+  const drop=(un,ms)=>{if(!un)return;setTimeout(()=>{un.u.remove();const v=V();if(v)v.classList.remove('swiping');},ms);};
+  const reset=(v,anim)=>{v.style.transition=anim?'transform var(--dur-base) var(--ease),opacity var(--dur-base)':'';v.style.transform='';v.style.opacity='';if(anim)setTimeout(()=>{v.style.transition='';},300);};
+  addEventListener('touchstart',e=>{if(e.touches.length!==1)return;const x=e.touches[0].clientX;if(x>EDGE||!canBack()){t=null;return;}t={x0:x,y0:e.touches[0].clientY,t0:Date.now(),on:false,dx:0,un:null};},{passive:true});
   addEventListener('touchmove',e=>{if(!t)return;const p=e.touches[0],dx=p.clientX-t.x0,dy=p.clientY-t.y0;
-    if(!t.on){if(Math.abs(dy)>10&&Math.abs(dy)>Math.abs(dx)){t=null;return;}if(dx<8)return;t.on=true;}
-    e.preventDefault();t.dx=Math.max(0,dx);const v=V(),w=innerWidth;v.style.transition='';v.style.transform=`translateX(${t.dx}px)`;v.style.opacity=String(1-Math.min(.35,t.dx/w*.5));},{passive:false});
+    if(!t.on){if(Math.abs(dy)>10&&Math.abs(dy)>Math.abs(dx)){t=null;return;}if(dx<8)return;t.on=true;try{if(motionOK())t.un=underFor();}catch(err){t.un=null;}}
+    e.preventDefault();t.dx=Math.max(0,dx);const v=V(),w=innerWidth;v.style.transition='';v.style.transform=`translateX(${t.dx}px)`;if(!t.un)v.style.opacity=String(1-Math.min(.35,t.dx/w*.5));place(t.un,Math.min(1,t.dx/w));},{passive:false});
   const end=()=>{if(!t)return;const s=t;t=null;if(!s.on)return;const v=V(),w=innerWidth,vel=s.dx/Math.max(1,Date.now()-s.t0);
-    if(s.dx>w*.33||(vel>.45&&s.dx>40)){v.style.transition='transform .2s cubic-bezier(.2,.8,.2,1),opacity .2s';v.style.transform=`translateX(${w}px)`;v.style.opacity='0';
-      buzz(8);setTimeout(()=>{const b=document.querySelector('#view .pghead .back');App.state._swiped=true;reset(v,false);if(b)b.click();else App.back();},190);}
-    else reset(v,true);};
+    if(s.dx>w*.33||(vel>.45&&s.dx>40)){v.style.transition='transform .22s var(--ease),opacity .22s';v.style.transform=`translateX(${w}px)`;if(!s.un)v.style.opacity='0';
+      if(s.un){s.un.inner.style.transition='transform .22s var(--ease)';s.un.dim.style.transition='opacity .22s';place(s.un,1);}
+      buzz(8);setTimeout(()=>{const b=document.querySelector('#view .pghead .back');App.state._swiped=true;App.state._under=!!s.un;reset(v,false);if(b)b.click();else App.back();drop(s.un,60);},210);}
+    else{reset(v,true);if(s.un){s.un.inner.style.transition='transform var(--dur-base) var(--ease)';s.un.dim.style.transition='opacity var(--dur-base)';place(s.un,0);drop(s.un,300);}}};
   addEventListener('touchend',end,{passive:true});addEventListener('touchcancel',end,{passive:true});})();
 
 try{matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{if(get.settings().mode==='auto')App.refresh();});}catch(e){}
+
+/* v228 · re-lay Today when the window crosses the two-column width */
+(()=>{let wide=innerWidth>=1100;addEventListener('resize',()=>{const w=innerWidth>=1100;if(w!==wide){wide=w;if(App.state.view==='today')App.refresh();}});})();
+/* v228 · more keyboard shortcuts on a computer (C, N, T and arrows already live above): 1–4 switch tabs, / search, T anywhere goes to Today, ? lists them all */
+(()=>{const typing=t=>t&&(t.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName));
+  const keys=[['C','Quick capture'],['N','New task (Today)'],['T','Jump to today'],['← →','Previous or next day or period'],['1 2 3 4','Today, Studio, Calendar, More'],['/','Search'],['Esc','Close a sheet or menu'],['?','Show these shortcuts']];
+  const help=()=>openSheet({title:'Keyboard shortcuts',build:b=>b.append(el('div',{class:'kbdlist'},keys.map(([k,t])=>el('div',{class:'kbdrow'},el('span',{},t),el('span',{class:'kbds'},k.split(' ').map(x=>el('kbd',{},x))))))) });
+  addEventListener('keydown',e=>{if(e.metaKey||e.ctrlKey||e.altKey||e.defaultPrevented)return;
+    if(typing(e.target)||sheetStack.length||App.dragging||$('.menu')||$('.confirm.on'))return;
+    const S=App.state,k=e.key,tabs={'1':'today','2':'studio','3':'calendar','4':'more'};
+    if(tabs[k]){e.preventDefault();if(S.view!==tabs[k])App.go(tabs[k]);}
+    else if((k==='t'||k==='T')&&S.view!=='today'&&S.view!=='calendar'){e.preventDefault();S.sel=todayK();S._fresh=true;App.go('today');}
+    else if(k==='/'){e.preventDefault();const f0=$('#view input[type=search]');if(f0){f0.focus();return;}App.go('more');setTimeout(()=>{const f=$('#view input[type=search],#view input');if(f)f.focus();},120);}
+    else if(k==='?'){e.preventDefault();help();}
+  });})();

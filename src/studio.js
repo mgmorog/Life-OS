@@ -17,7 +17,7 @@ function stCards0(st,P){
   const out=[],slotIds=new Set(P.slots.map(s=>s.id));
   const inP=(v)=>v&&slotIds.has(v);
   if(st.mode==='w'){
-    (get.settings().studioHabits?get.all('habit'):[]).forEach(h=>{if(h.days&&h.days.length)return;const placed=P.slots.filter(s=>(h.sessions||{})[s.id]).length;const remain=Math.max((h.target||1)-placed,0);out.push({id:'h:'+h.id,type:'habit',rec:h,t:h.title,c:colorHex(h.color),m:fmtDurS(h.dur),q:remain,placedIn:P.slots.filter(s=>(h.sessions||{})[s.id]).map(s=>s.id),src:`${placed} of ${h.target} placed`});});
+    (get.settings().studioHabits?get.all('habit'):[]).forEach(h=>{if(h.days&&h.days.length)return;const placed=P.slots.filter(s=>(h.sessions||{})[s.id]).length;const remain=Math.max((h.target||1)-placed,0);out.push({id:'h:'+h.id,type:'habit',rec:h,t:h.title,c:colorHex(h.color),m:fmtDurS(h.dur),q:remain,placedIn:P.slots.filter(s=>(h.sessions||{})[s.id]).map(s=>s.id),src:`${placed} of ${h.target} this week`});});
     get.all('task').forEach(t=>{if(!isOpenTask(t)||(t.repeat&&t.repeat.type!=='never'))return;const inWeek=t.date&&slotIds.has(t.date);const proj=t.part&&get.id(t.part);if(proj&&proj.kind==='project'&&(proj.paused||proj.finished)&&!t.date)return;if(proj&&proj.kind==='project'&&!t.date&&!t.planWeek&&!t.planMonth&&nextProjectTask(proj)!==t)return;const unscheduled=!t.date&&(!t.planWeek||t.planWeek===P.slots[0].id)&&(!t.planMonth||t.planMonth===monthKey(fromK(P.slots[0].id))||t.planMonth===monthKey(fromK(P.slots[6].id)));const late=t.date&&t.date<todayK();if(!inWeek&&!unscheduled&&!late)return;out.push({id:'t:'+t.id,type:'task',rec:t,t:t.title,c:colorHex(proj&&proj.color),m:t.deadline?`Due ${relDay(t.deadline)}`:(proj?proj.title:''),q:inWeek?0:1,placedIn:inWeek?[t.date]:[],tag:late?'Carried over':'',due:t.deadline});});
     allSteps().forEach(({parent,step})=>{if(step.d)return;const inWeek=step.date&&slotIds.has(step.date);const plannedHere=step.planWeek===P.slots[0].id;const next=(parent.steps||[]).find(s=>!s.d)===step&&!step.planWeek&&!step.date;const late=step.date&&step.date<P.slots[0].id;if(!inWeek&&!plannedHere&&!next&&!late)return;out.push({id:'s:'+step.id,type:'step',rec:parent,step,t:step.t,c:colorHex(parent.color),m:parent.title,q:inWeek?0:1,placedIn:inWeek?[step.date]:[],tag:late?'Carried over':'',due:parent.deadline});});
   }else if(st.mode==='m'){
@@ -97,6 +97,10 @@ function stRank(c,P,st){const end=P.slots[P.slots.length-1].to;
   if(c.type==='habit')return[(+c.rec.target||1)>=7?99:6,''];
   if(c.type==='step')return[4,'Next step'];
   return[9,''];}
+function stArea(c){const r=c.rec;if(!r)return null;if(c.type==='task')return areaOfTask(r);if(r.area)return r.area;const p=r.part&&get.id(r.part);return p&&(p.area||(p.part&&(get.id(p.part)||{}).area))||null;}
+function stAi(c){return el('span',{class:'stai','aria-hidden':'true',html:ic(areaIcon(stArea(c)),14,2)});}
+function stOpen(c){if(c.type==='habit')App.go('habit',{id:c.rec.id});else if(c.type==='task')taskSheet(c.rec);else App.go('plan',{id:c.rec.id});}
+function stFreeBar(dk){const f=freeMinutes(dk);return el('span',{class:'stbar','aria-hidden':'true'},el('i',{style:`width:${Math.max(0,Math.min(100,f/900*100)).toFixed(0)}%`}));}
 function stFreeLine(dk){const f=freeMinutes(dk);return f<60?['Full','full']:[`${fmtDurS(f)} free`,''];}
 function viewStudio(root){
   const st=stState(),P=stPeriod(st),cards=stCards(st,P),planRec=get.id('plan-'+P.key),committed=planRec&&planRec.committed,s=get.settings();
@@ -122,41 +126,48 @@ function viewStudio(root){
     page.append(lblRow(`Needs a ${P.unit}${need2.length?` · ${need2.length}`:''}`,need2.length&&!st.ghosts.length&&s.suggestOn!==false?lnk(`Fill my ${st.mode==='w'?'week':st.mode==='m'?'month':'quarter'}`,()=>{arcMark();st.ghosts=suggest(cards.filter(c=>stRank(c,P,st)[0]<9),P,st);if(!st.ghosts.length)toast(`No open ${P.unit}s left to fill`);App.refresh();},'spark'):null));
     const list=el('div',{class:'list stneed',id:'st-dock','data-rail':'1'});
     const shown=[...top,...(showBack||!top.length?back:[])];
-    shown.slice(0,showBack?400:12).forEach(({c,r})=>list.append(stRow(c,r[1],st,P)));
-    if(!need2.length)list.append(el('p',{class:'qempty muted'},cards.length?`Everything has a ${P.unit}.`:'Nothing waiting. New tasks, habits and goal steps show up here.'));
-    if(back.length&&top.length)list.append(el('button',{class:'addset muted',onclick:()=>{st.showBack=!showBack;App.refresh();}},showBack?'Hide the backlog':`Backlog · ${back.length} more without a date`));
-    else if(!showBack&&top.length>12)list.append(el('button',{class:'addset muted',onclick:()=>{st.showBack=true;App.refresh();}},`Show ${top.length-12} more`));
-    page.append(list);}
+    const more=!!st.showMore,lim=more||showBack?400:5,nTop=top.length?top.length:shown.length;
+    shown.slice(0,lim).forEach(({c,r})=>list.append(stRow(c,r[1],st,P)));
+    if(!more&&!showBack&&nTop>5)list.append(el('button',{class:'addset muted',onclick:()=>{st.showMore=true;App.refresh();}},`Show ${nTop-5} more`));
+    else if(back.length&&top.length)list.append(el('button',{class:'addset muted',onclick:()=>{st.showBack=!showBack;if(showBack)st.showMore=false;App.refresh();}},showBack?'Hide the backlog':`Backlog · ${back.length} more without a date`));
+    else if(more&&nTop>5)list.append(el('button',{class:'addset muted',onclick:()=>{st.showMore=false;App.refresh();}},'Show fewer'));
+    if(need2.length)page.append(list);
+    else page.append(el('p',{class:'stplanned'},cards.length?`Everything has a ${P.unit}. Your ${st.mode==='w'?'week':st.mode==='m'?'month':'quarter'} is planned.`:'Nothing waiting. New tasks, habits and goal steps show up here.'));}
   /* ---- the period ---- */
   page.append(lblRow(st.mode==='w'?'Your week':st.mode==='m'?'Weeks':'Months'));
-  const box=el('div',{class:'stslots'});P.slots.forEach(sl=>box.append(slotRow(sl,st,P,cards)));page.append(box);
+  const box=el('div',{class:'stslots'});const past=st.mode==='w'?P.slots.filter(x=>x.past):[];
+  if(past.length>1&&!allPast){const nm=x=>x.a.slice(0,1)+x.a.slice(1,3).toLowerCase(),ids=new Set(past.map(x=>x.id));const nd=get.all('task',{archived:true}).filter(t=>t.date&&ids.has(t.date)&&!isOpenTask(t)).length;
+    box.append(el('button',{class:'stpastline','aria-expanded':String(!!st.showPast),onclick:()=>{st.showPast=!st.showPast;App.refresh();}},el('span',{class:'grow'},`${nm(past[0])}–${nm(past[past.length-1])}${nd?` · ${nd} done`:''}`),el('span',{style:'display:grid',html:ic(st.showPast?'chevu':'chevr',14,2.2)})));
+    P.slots.forEach(sl=>{if(sl.past&&!st.showPast)return;box.append(slotRow(sl,st,P,cards));});}
+  else P.slots.forEach(sl=>box.append(slotRow(sl,st,P,cards)));page.append(box);
   studioBudget(page,st,P);
   /* ---- done ---- */
-  if(!allPast)page.append(committed?el('p',{class:'small muted',style:'text-align:center;margin-top:6px'},`${P.doneL}. `,el('button',{class:'linkbtn small',onclick:()=>{planRec.committed=false;put(planRec);}},'Replan')):el('button',{class:'btn line block',style:'margin-top:4px',onclick:()=>reviewSheet(P,st,cards)},'Done planning'));
   root.append(page);
 }
 /* one card in Needs a day: tap to open its day circles, tap a circle to place it */
 function stRow(c,why,st,P){const open=st.open===c.id;
-  const head=el('button',{class:'strow-h','aria-expanded':String(open),onclick:()=>{st.open=open?null:c.id;App.refresh();}},el('i',{class:'stdot',style:`background:${c.c}`}),el('span',{class:'grow'},el('b',{},c.t),el('small',{class:/Overdue|Carried/.test(why)?'late':null},[why,c.type==='habit'?c.src:(/^Due /.test(why)&&/^Due /.test(c.m||'')?String(c.m).split(' · ').slice(1).join(' · '):c.m)].filter(Boolean).join(' · '))),c.q>1?el('span',{class:'stq'},`×${c.q}`):null);
+  const head=el('button',{class:'strow-h','aria-expanded':String(open),onclick:()=>{st.open=open?null:c.id;App.refresh();}},stAi(c),el('span',{class:'grow'},el('b',{},c.type==='step'?c.m:c.t),el('small',{class:/Overdue|Carried/.test(why)?'late':null},c.type==='step'?[why==='Next step'?'':why,`Next: ${c.t}`].filter(Boolean).join(' · '):[why,c.type==='habit'?c.src:(/^Due /.test(why)&&/^Due /.test(c.m||'')?String(c.m).split(' · ').slice(1).join(' · '):c.m)].filter(Boolean).join(' · '))));
   const n=el('div',{class:'li strow'+(open?' open':''),'data-cid':c.id},head);
   if(open){n.append(el('div',{class:'stpick'},P.slots.map(sl=>{const done=c.placedIn.includes(sl.id),late=c.due&&sl.from>c.due;return el('button',{class:'stc'+(done?' on':'')+(late?' late':''),disabled:sl.past||(done&&c.type!=='habit')||null,'aria-label':`${sl.label}${done?', placed':''}`,onclick:()=>{if(done){unplaceCard(c,sl.id,st);App.refresh();return;}st.open=c.type==='habit'&&c.q>1?c.id:null;doPlace(c,sl.id,st,P,sl);}},el('b',{},st.mode==='w'?sl.a[0]:st.mode==='m'?String(fromK(sl.from).getDate()):sl.a.slice(0,3)),st.mode==='w'?el('small',{},sl.b):null);})),
-    el('div',{class:'stacts'},el('button',{class:'linkbtn small',onclick:()=>{if(c.type==='habit')App.go('habit',{id:c.rec.id});else if(c.type==='task')taskSheet(c.rec);else App.go('plan',{id:c.rec.id});}},'Open'),c.type==='task'&&st.mode==='w'?el('button',{class:'linkbtn small',onclick:()=>{c.rec.planWeek=addK(P.slots[0].id,7);put(c.rec);toast('Moved to next week',()=>{c.rec.planWeek=null;put(c.rec);});}},'Next week'):null));}
+    el('div',{class:'stacts'},el('button',{class:'linkbtn small',onclick:()=>stOpen(c)},'Open'),c.type==='task'&&st.mode==='w'?el('button',{class:'linkbtn small',onclick:()=>{c.rec.planWeek=addK(P.slots[0].id,7);put(c.rec);toast('Moved to next week',()=>{c.rec.planWeek=null;put(c.rec);});}},'Next week'):null));}
   draggable(head,{label:c.t,pull:true,move:(x,y)=>hoverSlot(x,y),drop:(x,y)=>{const id=hoverSlot(x,y);clearHover();if(id&&id!=='rail'){const sl=P.slots.find(z=>z.id===id);doPlace(c,id,st,P,sl);}}});
   return n;}
 /* one day (or week, or month): what you placed, what's fixed in one line, and how much room is left */
 function slotRow(sl,st,P,cards){
   let placed=cards.filter(c=>c.placedIn.includes(sl.id)),ghosts=st.ghosts.filter(g=>g.slot===sl.id),isToday=st.mode==='w'&&sl.id===todayK();
   if(sl.past&&!placed.length)return el('div',{class:'stslot past','data-slot':sl.id},el('div',{class:'stslot-h'},el('b',{},st.mode==='w'?`${sl.a.slice(0,1)+sl.a.slice(1).toLowerCase()} ${sl.b}`:sl.label),el('small',{},'Passed')));
-  let fixed='';if(st.mode==='w'){const d=dayItems(sl.id),busy=d.timed.filter(e=>e.kind==='block'||e.kind==='gcal'),ad=d.allDay.map(e=>e.title);fixed=[ad[0]||null,busy.length?dCount(busy.length,'commitment'):null].filter(Boolean).join(' · ');}
+  let fixed='';if(st.mode==='w'){const d=dayItems(sl.id),busy=d.timed.filter(e=>e.kind==='block'||e.kind==='gcal'),ad=d.allDay.map(e=>e.title);const nt=placed.filter(c=>c.type!=='habit').length;fixed=[ad[0]||null,busy.length?dCount(busy.length,'event'):null,nt?dCount(nt,'to-do'):null].filter(Boolean).join(' · ');}
   const [fr,frc]=st.mode==='w'&&!sl.past?stFreeLine(sl.id):[placed.length?`${placed.length} placed`:'',''];
   const node=el('section',{class:'stslot'+(isToday?' istoday':'')+(sl.past?' past':''),'data-slot':sl.id},
     el('div',{class:'stslot-h'},el('b',{},st.mode==='w'?`${sl.a.slice(0,1)+sl.a.slice(1).toLowerCase()} ${sl.b}`:st.mode==='m'?`${sl.a} – ${sl.b.replace(/^to /,'')}`:sl.a),el('small',{class:frc==='full'?'late':null},fr),sl.past?null:el('button',{class:'iconbtn green',style:'width:36px;height:36px;margin-right:-8px','aria-label':`Add to ${sl.label}`,html:ic('plus',18,2),onclick:()=>st.mode==='w'?commitmentSheet(sl,st):newCardSheet(st,P)})),
+    st.mode==='w'&&!sl.past?stFreeBar(sl.id):null,
     fixed?el('p',{class:'stfixed'},fixed):null);
+  if(isToday){node.append(el('button',{class:'linkbtn small stopen',onclick:()=>App.go('today',{})},'Open Today ›'));st.ghosts.filter(g=>g.slot===sl.id).length&&node.append(el('p',{class:'stfixed'},`${st.ghosts.filter(g=>g.slot===sl.id).length} suggested`));return node;}
   const hab=placed.filter(c=>c.type==='habit');placed=placed.filter(c=>c.type!=='habit');
   if(hab.length)node.append(el('p',{class:'stfixed'},hab.length>2?`${hab.length} habits: ${hab.slice(0,2).map(c=>c.t).join(', ')}…`:hab.map(c=>c.t).join(', ')));
   if(placed.length||ghosts.length){const it=el('div',{class:'stitems'});
-    placed.forEach(c=>{const n=el('button',{class:'stpl',style:`--c:${c.c}`,onclick:()=>placedSheet(c,sl,st,P)},el('span',{class:'clip'},c.t));draggable(n,{label:c.t,move:(x,y)=>hoverSlot(x,y),drop:(x,y)=>{const id=hoverSlot(x,y);clearHover();if(!id||id===sl.id)return;if(id==='rail'){unplaceCard(c,sl.id,st);App.refresh();toast('Back in Needs a day',()=>{placeCard(c,sl.id,st);App.refresh();});return;}const to=P.slots.find(z=>z.id===id);if(to&&to.past){toast('That day has passed');return;}unplaceCard(c,sl.id,st);placeCard(c,id,st);App.refresh();toast(`Moved to ${to.label}`);}});it.append(n);});
-    ghosts.forEach(g=>it.append(el('button',{class:'stpl ghost',style:`--c:${g.card.c}`,onclick:()=>toast(g.why)},el('span',{class:'clip'},g.card.t))));
+    placed.forEach(c=>{const n=el('button',{class:'stprow',onclick:()=>stOpen(c)},stAi(c),el('span',{class:'clip grow'},c.type==='step'?`${c.t} · ${c.m}`:c.t));draggable(n,{label:c.t,move:(x,y)=>hoverSlot(x,y),drop:(x,y)=>{const id=hoverSlot(x,y);clearHover();if(!id||id===sl.id)return;if(id==='rail'){unplaceCard(c,sl.id,st);App.refresh();toast('Back in Needs a day',()=>{placeCard(c,sl.id,st);App.refresh();});return;}const to=P.slots.find(z=>z.id===id);if(to&&to.past){toast('That day has passed');return;}unplaceCard(c,sl.id,st);placeCard(c,id,st);App.refresh();toast(`Moved to ${to.label}`);}});it.append(n);});
+    ghosts.forEach(g=>it.append(el('button',{class:'stprow ghost',onclick:()=>toast(g.why)},stAi(g.card),el('span',{class:'clip grow'},g.card.t),el('small',{},'Suggested'))));
     node.append(it);}
   return node;}
 function cardEl(c,st,P){

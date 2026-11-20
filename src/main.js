@@ -63,9 +63,15 @@ const App={
       const tab=(id,label,icon)=>{const b=el('button',{class:'tab','data-tab':id,onclick:()=>{
         if(id===App.state.view){tabTop();return;}
         if(nav._pending===id)return;nav._pending=id;
+        /* v231 · each tab keeps its own page and scroll; tapping the tab you're in goes back to its top page */
+        const S=App.state,curTab=(nav.querySelector('.tab.act')||{dataset:{}}).dataset.tab;S.tabMem=S.tabMem||{};
+        if(curTab&&curTab!==id)S.tabMem[curTab]={view:S.view,params:S.params,stack:(S.stack||[]).slice(),y:scrollY,sel:S.sel};
+        const mem=curTab===id?null:S.tabMem[id];if(curTab===id)S.tabMem[id]=null;
         App.state.stack=[];tabPick(nav,id);
         /* let the highlight start moving first, then draw the page */
-        requestAnimationFrame(()=>setTimeout(()=>{nav._pending=null;App.go(id);},0));
+        requestAnimationFrame(()=>setTimeout(()=>{nav._pending=null;
+          if(mem&&mem.view!==id&&!TOPS.includes(mem.view)){S.view=mem.view;S.params=mem.params;S.stack=mem.stack;S.entering=true;S.dir='tab';App.render();scrollTo(0,mem.y||0);}
+          else{App.go(id);if(mem&&mem.y)scrollTo(0,mem.y);}},0));
       }},el('span',{class:'ic',html:icon}),el('span',{class:'tl-lbl'},label));return b;};
       const iconOf=id=>id==='more'?sv('<circle cx="5" cy="12" r="1.8" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.8" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.8" fill="currentColor" stroke="none"/>',22):ic(PLACES[id].i,22);
       const short=id=>({'tools':'Tools'})[id]||PLACES[id].n;
@@ -123,7 +129,7 @@ setTimeout(checkReminders,1500);
 try{matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{if(get.settings().mode==='auto')App.refresh();});}catch(e){}
 
 /* v228 · re-lay Today when the window crosses the two-column width */
-(()=>{let wide=innerWidth>=1100;addEventListener('resize',()=>{const w=innerWidth>=1100;if(w!==wide){wide=w;if(App.state.view==='today')App.refresh();}});})();
+(()=>{const two=()=>innerWidth>=700&&!(innerWidth>=900&&innerWidth<1100);let wide=two();addEventListener('resize',()=>{const w=two();if(w!==wide){wide=w;if(App.state.view==='today')App.refresh();}});})();
 /* v228 · more keyboard shortcuts on a computer (C, N, T and arrows already live above): 1–4 switch tabs, / search, T anywhere goes to Today, ? lists them all */
 (()=>{const typing=t=>t&&(t.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName));
   const keys=[['C','Quick capture'],['N','New task (Today)'],['T','Jump to today'],['← →','Previous or next day or period'],['1 2 3 4','Today, Studio, Calendar, More'],['/','Search'],['Esc','Close a sheet or menu'],['?','Show these shortcuts']];

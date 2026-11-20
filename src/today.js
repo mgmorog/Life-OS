@@ -129,7 +129,7 @@ function viewToday(root){
   {const pc=pinsCard(dk);if(pc)page.append(pc);}
   if(also.length)page.append(el('div',{class:'lbl alsol'},'Also today'),el('div',{class:'list'},also));
   /* v228 · wide screens: your list on the left, Coming up (and the expanded day) on the right */
-  if(innerWidth>=1100){const kids=[...page.children],up=kids.find(n=>n.classList&&n.classList.contains('upcard'));if(up&&kids.length>2){const L=el('div',{class:'tcol'}),R=el('div',{class:'tcol tcol-r'});kids.slice(1).forEach(n=>(n===up?R:L).append(n));page.classList.add('today-wide');page.append(el('div',{class:'tcols'},L,R));}}
+  if(innerWidth>=700&&!(innerWidth>=900&&innerWidth<1100)){const kids=[...page.children],up=kids.find(n=>n.classList&&n.classList.contains('upcard'));if(up&&kids.length>2){const L=el('div',{class:'tcol'}),R=el('div',{class:'tcol tcol-r'});kids.slice(1).forEach(n=>(n===up?R:L).append(n));page.classList.add('today-wide');page.append(el('div',{class:'tcols'},L,R));}}
   root.append(page);
   S._painted=true;S._anim=null;
   const mini=$('#mini');mini._pg=null;mini.textContent=`${mdS(sel)}`;mini.onclick=()=>scrollTo({top:0,behavior:'smooth'});

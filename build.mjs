@@ -82,9 +82,8 @@ ${js}</script>
 <link rel="apple-touch-startup-image" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="/splash/splash-750x1334.png">
 <link rel="apple-touch-startup-image" media="(device-width: 420px) and (device-height: 912px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="/splash/splash-1260x2736.png">
 <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="${FONTS}">
+<link rel="preload" href="/fonts/figtree.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/newsreader.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/${cssName}">
 <script>window.LIFEOS_PWA=${JSON.stringify(cfg)};</script>
 <script defer src="/${shimName}"></script>
@@ -97,9 +96,9 @@ ${BODY}
 `;
   writeFileSync(out + 'index.html', html);
   writeFileSync(out + 'version.json', JSON.stringify({ build: buildId, version: +ver }));
-  cpSync(root + 'pwa/icons', out + 'icons', { recursive: true }); cpSync(root + 'pwa/splash', out + 'splash', { recursive: true });
+  cpSync(root + 'pwa/icons', out + 'icons', { recursive: true }); cpSync(root + 'pwa/fonts', out + 'fonts', { recursive: true }); cpSync(root + 'pwa/splash', out + 'splash', { recursive: true });
   writeFileSync(out + 'manifest.webmanifest', read('pwa/manifest.webmanifest'));
-  const precache = ['/', '/index.html', `/${jsName}`, `/${cssName}`, `/${shimName}`, '/manifest.webmanifest', '/icons/icon-192.png', '/icons/icon-512.png', '/icons/apple-touch-icon.png'];
+  const precache = ['/', '/index.html', `/${jsName}`, `/${cssName}`, `/${shimName}`, '/manifest.webmanifest', '/icons/icon-192.png', '/icons/icon-512.png', '/icons/apple-touch-icon.png', '/fonts/figtree.woff2', '/fonts/newsreader.woff2'];
   writeFileSync(out + 'sw.js', read('pwa/sw.js').replace('__BUILD__', buildId).replace('__PRECACHE__', JSON.stringify(precache)));
   console.log('pwa', buildId, Object.entries(files).map(([n, c]) => `${n} ${Math.round(c.length / 1024)}KB`).join(', '));
 } else {

@@ -35,7 +35,14 @@ const PWA={
   },
   _sig:{},_t:null,
   /* after any change, quietly send the reminder schedule and calendar feed up (only when they changed) */
+  /* v231 · a badge on the home-screen icon: overdue tasks plus new Inbox ideas, each switchable in Settings */
+  badgeCount(){const s=get.settings(),tk=todayK();let n=0;
+    if(s.badgeOverdue!==false)n+=get.all('task').filter(t=>isOpenTask(t)&&((t.date&&t.date<tk&&(!t.repeat||t.repeat.type==='never'))||(t.deadline&&t.deadline<tk))).length;
+    if(s.badgeIdeas!==false){let seen=0;try{seen=+localStorage.getItem('lifeos-inboxSeen')||0;}catch(e){}n+=get.all('idea').filter(x=>(x.createdAt||0)>seen).length;}
+    return n;},
+  badge(){try{if(!('setAppBadge' in navigator))return;const n=this.badgeCount();(n?navigator.setAppBadge(n):navigator.clearAppBadge()).catch(()=>{});}catch(e){}},
   afterChange(){
+    clearTimeout(this._bt);this._bt=setTimeout(()=>this.badge(),600);
     const a=this.api();if(!a||store.mode!=='synced')return;clearTimeout(this._t);
     this._t=setTimeout(()=>{try{
       const s=get.settings();
@@ -54,6 +61,9 @@ const PWA={
       const on=p.wanted();
       setToggle(ctx,g,null,'Reminders when the app is closed','Sent to this device',on,async v=>{if(v){const r=await p.enable();if(r!=='ok'){toast(r==='denied'?'Notifications are off for Life OS in your phone’s Settings.':'Couldn’t turn on notifications. Try again.');App.refresh();return;}this._sig.r=null;this.afterChange();toast('Reminders will reach you here');}else{await p.disable();toast('Notifications off on this device');}App.refresh();});
       if(on)g.append(condRow(el('button',{class:'li',style:'color:var(--accent-text);font-weight:600',onclick:async()=>{const r=await p.test();toast(r?'Sent. It should arrive in a few seconds.':'Couldn’t send a test. Check your connection.');}},'Send a test notification')));
+      if('setAppBadge' in navigator){const g2=group('App icon badge');
+        setToggle(ctx,g2,null,'Overdue tasks','Counted on the Life OS icon',s.badgeOverdue!==false,v=>{setSettings({badgeOverdue:v});this.badge();});
+        setToggle(ctx,g2,null,'New ideas in the Inbox','Counted until you open the Inbox',s.badgeIdeas!==false,v=>{setSettings({badgeIdeas:v});this.badge();});}
     }else if(id==='calendar'){
       const g=group('On your iPhone calendar');
       if(!s.icsToken){g.append(setRow('Show Life OS in Apple Calendar','Your blocks, timed tasks and all-day items, updated about every hour',null,()=>{setSettings({icsToken:this.newToken(),icsAdded:false});this.afterChange();}));}
@@ -114,3 +124,4 @@ function pullRefresh(){
   document.addEventListener('touchend',end,{passive:true});document.addEventListener('touchcancel',()=>{if(on){on=false;dead=true;reset();}},{passive:true});
 }
 pullRefresh();
+if(PWA.on){document.addEventListener('visibilitychange',()=>{if(!document.hidden)setTimeout(()=>PWA.badge(),1500);});setTimeout(()=>PWA.badge(),4000);}

@@ -182,7 +182,7 @@ function slotRow(sl,st,P,cards){
   let span=null;if(st.mode==='m'){span=stSpan(sl.from,sl.to);const nt=span.td+placed.filter(c=>c.type!=='habit').length;fixed=[span.ad[0]||null,span.ev?dCount(span.ev,'event'):null,nt?dCount(nt,'to-do'):null].filter(Boolean).join(' · ');if(!sl.past&&span.n)fr=`${fmtDurS(span.fr)} free`;}
   const dues=st.mode==='w'?get.all('task').filter(t=>t.deadline===sl.id&&isOpenTask(t)).map(t=>t.title):[];
   const node=el('section',{class:'stslot'+(isToday?' istoday':'')+(sl.past?' past':'')+(st.mode==='m'&&!sl.past?' tapweek':''),'data-slot':sl.id,onclick:st.mode==='m'&&!sl.past?ev=>{if(ev.target.closest('button'))return;st.mode='w';st.anchor=sl.from;st.ghosts=[];st.open=null;App.refresh();}:null},
-    el('div',{class:'stslot-h'},el('b',{},st.mode==='w'?`${sl.a.slice(0,1)+sl.a.slice(1).toLowerCase()} ${sl.b}`:st.mode==='m'?`${sl.a} – ${sl.b.replace(/^to /,'')}`:sl.a),el('small',{class:frc==='full'?'late':null},fr),sl.past?null:el('button',{class:'iconbtn green',style:'width:36px;height:36px;margin-right:-8px','aria-label':`Add to ${sl.label}`,html:ic('plus',18,2),onclick:()=>st.mode==='w'?commitmentSheet(sl,st):newCardSheet(st,P)})),
+    el('div',{class:'stslot-h'},el('b',{},st.mode==='w'?`${sl.a.slice(0,1)+sl.a.slice(1).toLowerCase()} ${sl.b}`:st.mode==='m'?`${sl.a} – ${sl.b.replace(/^to /,'')}`:sl.a),el('small',{class:frc==='full'?'late':null},fr),sl.past?null:el('button',{class:'iconbtn green',style:'width:36px;height:36px;margin-right:calc(var(--s2) * -1)','aria-label':`Add to ${sl.label}`,html:ic('plus',18,2),onclick:()=>st.mode==='w'?commitmentSheet(sl,st):newCardSheet(st,P)})),
     st.mode==='w'&&!sl.past?stFreeBar(sl.id,over):st.mode==='m'&&!sl.past&&span&&span.n?stFreeBar(null,false,span.fr/(span.n*900)):null,
     fixed||over?el('p',{class:'stfixed'},fixed,over?el('span',{class:'stover'},`${fixed?' · ':''}More than fits`):null):null,
     dues.length?el('p',{class:'stdue'},`Due: ${dues.slice(0,2).join(', ')}${dues.length>2?` +${dues.length-2}`:''}`):null);
@@ -227,7 +227,7 @@ function slotEl(sl,st,P,cards){
     get.all('task').filter(t=>t.deadline===sl.id&&isOpenTask(t)).forEach(t=>items.append(el('button',{class:'fx',onclick:()=>taskSheet(t)},el('time',{style:'color:var(--now)'},'Due'),el('span',{},t.title))));
     // recurring habits/tasks that sit here on their own
     d.anytime.concat(d.timed).filter(e=>(e.kind==='task'&&e.rec.repeat&&e.rec.repeat.type!=='never')||(e.kind==='habit'&&e.rec.days&&e.rec.days.length)||e.kind==='routine').forEach(e=>items.append(el('button',{class:'fx',onclick:()=>openItem(e,sl.id)},el('time',{},'Repeat'),el('span',{},e.title))));
-  }else if(st.mode==='m'&&sl.heat){items.append(el('div',{style:'display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:4px','aria-hidden':'true'},sl.heat.map(l=>el('i',{style:`display:block;height:8px;border-radius:2px;background:var(--h${l})`}))));}
+  }else if(st.mode==='m'&&sl.heat){items.append(el('div',{style:'display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:var(--s1)','aria-hidden':'true'},sl.heat.map(l=>el('i',{style:`display:block;height:8px;border-radius:2px;background:var(--h${l})`}))));}
   // placed cards
   cards.filter(c=>c.placedIn.includes(sl.id)).forEach(c=>{
     const n=el('div',{class:'pl',style:`--c:${c.c}`,role:'button',tabindex:0,onclick:()=>placedSheet(c,sl,st,P)},el('span',{class:'clip grow'},c.t),c.type==='habit'&&c.rec.dur?el('small',{},fmtDurS(c.rec.dur)):c.m?el('small',{class:'clip',style:'max-width:45%'},c.m):null);
@@ -235,7 +235,7 @@ function slotEl(sl,st,P,cards){
     items.append(n);
   });
   st.ghosts.filter(g=>g.slot===sl.id).forEach(g=>items.append(el('button',{class:'pl ghosted','data-gid':g.card.id,style:`--c:${g.card.c}`,title:g.why,onclick:()=>toast(g.why)},el('span',{class:'clip grow'},g.card.type==='step'?`${g.card.t} · ${g.card.m}`:g.card.t),el('small',{},'Suggested'))));
-  if(!items.children.length)items.append(el('div',{class:'small',style:'color:var(--ink-3);padding:2px 0 4px'},sl.past?'Passed':'Open'));
+  if(!items.children.length)items.append(el('div',{class:'small',style:'color:var(--ink-3);padding:2px 0 var(--s1)'},sl.past?'Passed':'Open'));
   node.append(items);
   return node;
 }
@@ -287,9 +287,9 @@ function checkinSheet(P,st,cards){
   const made=repeatLast(P,st,cards);const late=cards.filter(c=>c.tag==='Carried over');
   const inst=openSheet({title:'Sunday check-in',build:body=>{
     body.append(
-      el('div',{class:'cistep'},el('i',{},'1'),el('div',{},el('b',{},'Repeat last week’s rhythm'),el('p',{class:'small muted',style:'margin-top:2px'},made.length?made.map(m=>`${m.card.t} on ${m.slot&&DOW[fromK(m.slot).getDay()].slice(0,3)}`).join(', '):'No habit pattern from last week yet.'),made.length?el('button',{class:'btn line',style:'margin-top:8px',onclick:()=>{inst.close();studioMark();made.forEach(g=>placeCard(g.card,g.slot,st));App.refresh();toast(`${made.length} placed`);}},'Repeat it'):null)),
+      el('div',{class:'cistep'},el('i',{},'1'),el('div',{},el('b',{},'Repeat last week’s rhythm'),el('p',{class:'small muted',style:'margin-top:2px'},made.length?made.map(m=>`${m.card.t} on ${m.slot&&DOW[fromK(m.slot).getDay()].slice(0,3)}`).join(', '):'No habit pattern from last week yet.'),made.length?el('button',{class:'btn line',style:'margin-top:var(--s2)',onclick:()=>{inst.close();studioMark();made.forEach(g=>placeCard(g.card,g.slot,st));App.refresh();toast(`${made.length} placed`);}},'Repeat it'):null)),
       el('div',{class:'cistep'},el('i',{},'2'),el('div',{},el('b',{},'Check what carried over'),el('p',{class:'small muted',style:'margin-top:2px'},late.length?late.map(c=>c.t).join(', '):'Nothing carried over.'))),
-      el('div',{class:'cistep'},el('i',{},'3'),el('div',{},el('b',{},'Fill the rest'),el('p',{class:'small muted',style:'margin-top:2px'},'Suggest uses your usual days, spaces habits out, skips full days and lands things before they’re due.'),el('button',{class:'btn line',style:'margin-top:8px',onclick:()=>{arcMark();const c2=stCards(st,P);st.ghosts=suggest(c2,P,st);inst.close();App.refresh();}},'Suggest the rest'))),
+      el('div',{class:'cistep'},el('i',{},'3'),el('div',{},el('b',{},'Fill the rest'),el('p',{class:'small muted',style:'margin-top:2px'},'Suggest uses your usual days, spaces habits out, skips full days and lands things before they’re due.'),el('button',{class:'btn line',style:'margin-top:var(--s2)',onclick:()=>{arcMark();const c2=stCards(st,P);st.ghosts=suggest(c2,P,st);inst.close();App.refresh();}},'Suggest the rest'))),
       el('button',{class:'btn primary block',onclick:()=>{setSettings({checkinDone:todayK()});inst.close();}},'Go to my week'));
   }});
 }

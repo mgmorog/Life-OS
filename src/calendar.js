@@ -51,7 +51,7 @@ function focusChip(fk,label,mode,range){
   if(!areas.length)return el('button',{class:'focus-link',onclick:()=>focusSheet(fk,label)},el('span',{style:'display:grid',html:ic('plus',14,2.4)}),`Set a ${label.replace(/ FOCUS$/,'').replace(/^WEEK$/,'week').replace(/^([A-Z]+)$/,(m)=>m[0]+m.slice(1).toLowerCase())} focus`);
   const steps=allSteps(),inRange=s=>{if(!s.doneAt)return false;const d=k(new Date(s.doneAt));return d>=range[0]&&d<=range[1];};
   return el('div',{class:'bars'},
-    el('div',{style:'display:flex;justify-content:space-between;align-items:center'},el('button',{class:'fl eyebrow',style:'font-size:12px',onclick:()=>focusSheet(fk,label)},label+' · Edit'),el('button',{class:'linkbtn small',onclick:()=>{App.state.studio=Object.assign(App.state.studio||{},{mode:mode==='quarter'?'q':mode==='month'?'m':'w',anchor:range[0]});App.go('studio');}},'Plan in Studio ›')),
+    el('div',{style:'display:flex;justify-content:space-between;align-items:center'},el('button',{class:'fl eyebrow',style:'font-size:var(--fs-caption)',onclick:()=>focusSheet(fk,label)},label+' · Edit'),el('button',{class:'linkbtn small',onclick:()=>{App.state.studio=Object.assign(App.state.studio||{},{mode:mode==='quarter'?'q':mode==='month'?'m':'w',anchor:range[0]});App.go('studio');}},'Plan in Studio ›')),
     areas.map(ar=>{const list=steps.filter(s=>s.parent.kind==='goal'&&s.parent.area===ar),done=list.filter(s=>s.step.d&&inRange(s.step)).length,open=list.filter(s=>!s.step.d).length,tot=done+open;return el('div',{class:'bar-row'},el('span',{class:'clip'},ar),el('span',{class:'bar-track',role:'img','aria-label':`${done} of ${tot} goal steps finished this period`},el('span',{class:'bar-fill',style:`display:block;width:${tot?done/tot*100:0}%`})),el('span',{class:'small muted tnum'},tot?`${done}/${tot}`:'No open steps'));}));
 }
 function focusSheet(fk,label){
@@ -95,7 +95,7 @@ function quarterBody(body,y,months,C){
     if(inQ&&!C.showEarlier)weeks=weeks.filter(w=>k(w[0])>=curW);
     if(!weeks.length)return;
     const sec=el('section',{},el('button',{class:'m-head',onclick:()=>{const gr=sec.querySelector('.qgrid'),r0=gr&&gr.getBoundingClientRect();C.mode='month';C.anchor=k(new Date(y,m,1));const t=today();C.sel=(t.getFullYear()===y&&t.getMonth()===m)?tk:k(new Date(y,m,1));calCommit();zoomGrid(r0);}},MONL[m],el('span',{class:'m-go',html:ic('chevr',14,2.4)})));
-    sec.append(el('div',{class:'wd-row',style:'margin:0 0 8px'},wdLabels().map(l=>el('span',{},l))));firstShown=false;
+    sec.append(el('div',{class:'wd-row',style:'margin:0 0 var(--s2)'},wdLabels().map(l=>el('span',{},l))));firstShown=false;
     const grid=el('div',{class:'qgrid',style:'display:grid;gap:6px'});
     weeks.forEach(w=>{const row=el('div',{class:'heat-row'+(k(w[0])===curW?' curwk':'')});w.forEach(d=>row.append(heatCell(d,{month:m,tk,C,showSel:false,onTap:()=>{C.mode='week';C.anchor=k(d);C.sel=k(d);C.weekOpen=k(d);calCommit();}})));grid.append(row);{const tl=tripBand(row,w);if(tl)grid.append(tl);}});
     sec.append(grid);body.append(sec);
@@ -152,10 +152,10 @@ function dayPanel(dk){
   const{allDay,timed,anytime}=dayItems(dk,{filters:true}),tk=todayK(),d=fromK(dk);
   const ev=[...timed,...anytime].filter(e=>e.kind!=='task'&&e.kind!=='habit'),todo=[...timed,...anytime].filter(e=>e.kind==='task'),nOpen=todo.filter(e=>!e.done).length;
   const goT=()=>{App.state.sel=dk;App.state._fresh=true;App.go('today');};
-  const c=el('div',{class:'card dpanel',style:'padding:16px 18px'},
-    el('div',{style:'display:flex;align-items:baseline;justify-content:space-between;gap:8px'},el('div',{class:'serif dpdate'},`${DOW[d.getDay()]}, ${mdS(d)}`),el('button',{class:'linkbtn small',onclick:goT},'Open in Today ›')));
+  const c=el('div',{class:'card dpanel',style:'padding:var(--s4) 18px'},
+    el('div',{style:'display:flex;align-items:baseline;justify-content:space-between;gap:var(--s2)'},el('div',{class:'serif dpdate'},`${DOW[d.getDay()]}, ${mdS(d)}`),el('button',{class:'linkbtn small',onclick:goT},'Open in Today ›')));
   const adS=allDay.filter(e=>!(e.rec&&e.rec.tripId));if(adS.length)c.append(el('div',{class:'dpad'},adS.map(e=>e.title).join(' · ')));
-  if(ev.length){const lst=el('div',{style:'margin-top:8px'});ev.forEach(e=>lst.append(dayLine(e,dk)));c.append(lst);}
+  if(ev.length){const lst=el('div',{style:'margin-top:var(--s2)'});ev.forEach(e=>lst.append(dayLine(e,dk)));c.append(lst);}
   if(todo.length)c.append(el('button',{class:'dptodo',onclick:goT},nOpen?`${dCount(nOpen,'to-do')} ›`:`All ${todo.length} to-dos done ›`));
   if(!ev.length&&!todo.length&&!adS.length)c.append(el('p',{class:'small muted',style:'margin:6px 0 0'},emptyDayHead(dk)));
   const ch=addChips(dk);ch.style.marginTop='12px';c.append(ch);
@@ -182,7 +182,7 @@ function filterSheet(opts={}){
   const s=get.settings(),f=clone(s.filters||DEFAULT_SETTINGS.filters),cap=clone(s.capacity||DEFAULT_SETTINGS.capacity);let inst,draw,step=opts.capacity?'cap':'main';
   const showHeat=calState().mode!=='week';
   inst=openSheet({anchor:opts.anchor,title:step==='cap'?'Daily capacity':'Filters',left:{label:step==='cap'?'Back':'Reset',onclick:()=>{if(step==='cap'){if(opts.capacity){inst.close();return;}step='main';draw();return;}setSettings({filters:clone(DEFAULT_SETTINGS.filters)});inst.close();}},right:{label:'Done',onclick:()=>{setSettings({filters:f,capacity:cap});inst.close();}},build:(body,i)=>{inst=i;
-    const ctx=formCtx(()=>draw());const box=el('div',{style:'display:flex;flex-direction:column;gap:12px'});body.append(box);
+    const ctx=formCtx(()=>draw());const box=el('div',{style:'display:flex;flex-direction:column;gap:var(--s3)'});body.append(box);
     draw=()=>{box.innerHTML='';inst.titleEl.textContent=step==='cap'?'Daily capacity':'Filters';$('.l',inst.sheet).textContent=step==='cap'?(opts.capacity?'Close':'Back'):'Reset';
       if(step==='main'){
         const types=el('div',{class:'group'});[['task','task','Tasks and steps'],['block','hour','Time blocks'],['allday','cal','All-day items'],['habit','habit','Habits']].forEach(([id,icon,n])=>types.append(ctx.row(id,icon,n,null,{expand:false,trailing:ctx.sw(f.types[id]!==false,n,on=>{f.types[id]=on;draw();})})));
@@ -190,10 +190,10 @@ function filterSheet(opts={}){
         if(showHeat){const g=el('div',{class:'group'});g.append(ctx.row('dc','grid','Daily capacity',cap.mode==='hours'?`${cap.hours} hours`:`${cap.full} items`,{tap:()=>{step='cap';draw();},expand:false,trailing:el('span',{class:'chev',html:ic('chevr',16,2.2)})}));box.append(el('div',{class:'sect'},'Heat map'),g);}
       }else{
         const full=cap.mode==='hours'?cap.hours:cap.full,unit=cap.mode==='hours'?'h':'';
-        const wrap=el('div',{class:box._step===step?'':'slide-l',style:'display:flex;flex-direction:column;gap:12px'});box._step=step;
+        const wrap=el('div',{class:box._step===step?'':'slide-l',style:'display:flex;flex-direction:column;gap:var(--s3)'});box._step=step;
         const g=el('div',{class:'group'});
         g.append(ctx.row('m','chart','Measure by',null,{expand:false,trailing:seg([['items','Items'],['hours','Hours']],cap.mode,v=>{cap.mode=v;draw();})}));
-        g.append(ctx.row('fl','grid','A full day',null,{expand:false,trailing:el('span',{style:'display:flex;align-items:center;gap:8px'},cap.mode==='hours'?ctx.stepper(cap.hours,2,16,v=>{cap.hours=v;draw();}):ctx.stepper(cap.full,2,20,v=>{cap.full=v;draw();}),cap.mode==='hours'?'hrs':'items')}));
+        g.append(ctx.row('fl','grid','A full day',null,{expand:false,trailing:el('span',{style:'display:flex;align-items:center;gap:var(--s2)'},cap.mode==='hours'?ctx.stepper(cap.hours,2,16,v=>{cap.hours=v;draw();}):ctx.stepper(cap.full,2,20,v=>{cap.full=v;draw();}),cap.mode==='hours'?'hrs':'items')}));
         g.append(ctx.row('lw','sun','Lighter weekends',null,{expand:false,trailing:ctx.sw(cap.lightWeekends,'Lighter weekends',on=>{cap.lightWeekends=on;draw();})}));
         const st=weekStartOf(today());
         const prev=el('div',{class:'heat-row','aria-label':'Preview of this week'},Array.from({length:7},(_,i)=>{const d=addD(st,i),dk=k(d),it=dayItems(dk),v=cap.mode==='hours'?it.timed.reduce((n,e)=>n+(e.dur||30),0)/60:it.timed.length+it.anytime.length,wk=[0,6].includes(d.getDay())&&cap.lightWeekends?.5:1,l=levelOf(v,full*wk);return el('span',{class:'heat '+(l?'l'+l:''),'data-preview':l},el('span',{class:'hn'},String(d.getDate())));}));

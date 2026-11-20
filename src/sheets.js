@@ -42,13 +42,13 @@ function formCtx(rerender){
       u==='day'||u==='week'?dayChips(u==='day'&&n===1?[0,1,2,3,4,5,6]:u==='week'&&n===1?(r.days||[]):[],v=>{if(v.length===7){r.unit='day';r.n=1;}else{r.unit='week';r.n=1;r.days=v;}rerender();}):null,
       u==='month'?(()=>{const sd=fromK(dateK),nth=Math.ceil(sd.getDate()/7),ord=['','first','second','third','fourth','fifth'],isLastWk=sd.getDate()+7>new Date(sd.getFullYear(),sd.getMonth()+1,0).getDate(),wdN=WDN[monIdx(sd)];const by=r.by||'date';
         const opts=[['date',`On the ${sd.getDate()}${['th','st','nd','rd'][(sd.getDate()%10>3||[11,12,13].includes(sd.getDate()))?0:sd.getDate()%10]}`],['nth',`On the ${nth<=4?ord[nth]:'last'} ${wdN}`],['last','On the last day']];if(isLastWk&&nth<=4)opts.splice(2,0,['nthlast',`On the last ${wdN}`]);
-        return el('div',{class:'chips',style:'margin-top:8px'},opts.map(([v,l])=>el('button',{class:'chip'+((v==='nthlast'?by==='nth'&&r.nth===-1:v==='nth'?by==='nth'&&r.nth!==-1:by===v)?' on':''),onclick:e=>{e.stopPropagation();if(v==='date'){delete r.by;delete r.nth;delete r.wd;}else if(v==='last'){r.by='last';delete r.nth;delete r.wd;}else{r.by='nth';r.wd=monIdx(sd);r.nth=v==='nthlast'||nth>4?-1:nth;}rerender();}},l)));})():null,
+        return el('div',{class:'chips',style:'margin-top:var(--s2)'},opts.map(([v,l])=>el('button',{class:'chip'+((v==='nthlast'?by==='nth'&&r.nth===-1:v==='nth'?by==='nth'&&r.nth!==-1:by===v)?' on':''),onclick:e=>{e.stopPropagation();if(v==='date'){delete r.by;delete r.nth;delete r.wd;}else if(v==='last'){r.by='last';delete r.nth;delete r.wd;}else{r.by='nth';r.wd=monIdx(sd);r.nth=v==='nthlast'||nth>4?-1:nth;}rerender();}},l)));})():null,
       u==='week'?el('div',{class:'wdays',role:'group'},wdMap((d,i)=>{const on=(r.days||[]).includes(i);return el('button',{class:on?'on':'','aria-label':WDN[i],'aria-pressed':String(on),onclick:e=>{e.stopPropagation();r.days=r.days||[];const j=r.days.indexOf(i);if(j>=0){if(r.days.length>1)r.days.splice(j,1);else{toast('Pick at least one day');return;}}else r.days.push(i);rerender();}},d);})):null);};
   ctx.repeatRows=(w,D,dateK,{unit='week'}={})=>{const hasRep=D.repeat&&D.repeat.type!=='never';
     w.append(ctx.row('repeat','rep','Repeat',null,{expand:false,tap:hasRep?()=>{ctx.open=ctx.open==='repeat'?null:'repeat';rerender();}:null,trailing:[hasRep?el('span',{class:'on clip',style:'max-width:150px'},repeatLabel(D.repeat)):null,ctx.sw(hasRep,'Repeat',on=>{if(on){if('date' in D&&!D.date)D.date=dateK();D.repeat={type:'custom',unit,n:1,days:[monIdx(fromK(dateK()))],end:null};ctx.open='repeat';}else{D.repeat={type:'never',end:null};if(['repeat','rend'].includes(ctx.open))ctx.open=null;}rerender();})]}));
     if(hasRep){const p=ctx.panel('repeat','wide',ctx.customRepeat(D,dateK()));p&&w.append(p);
       w.append(ctx.row('rend','endrep','End repeat',D.repeat.end?relDay(D.repeat.end):'Never',{valOn:!!D.repeat.end}));
-      const pe=ctx.panel('rend','',el('div',{class:'chips'},el('button',{class:'chip'+(!D.repeat.end?' on':''),onclick:e=>{e.stopPropagation();D.repeat.end=null;ctx.open=null;rerender();}},'Never'),el('button',{class:'chip'+(D.repeat.end?' on':''),onclick:e=>{e.stopPropagation();if(!D.repeat.end)D.repeat.end=k(addD(fromK(dateK()),D.repeat.unit==='year'?365:30));rerender();}},'On a date')),D.repeat.end?el('div',{style:'margin-top:12px'},ctx.calendar(D.repeat.end,dk=>{D.repeat.end=dk;ctx.open=null;rerender();},{minK:dateK()})):null);pe&&w.append(pe);}
+      const pe=ctx.panel('rend','',el('div',{class:'chips'},el('button',{class:'chip'+(!D.repeat.end?' on':''),onclick:e=>{e.stopPropagation();D.repeat.end=null;ctx.open=null;rerender();}},'Never'),el('button',{class:'chip'+(D.repeat.end?' on':''),onclick:e=>{e.stopPropagation();if(!D.repeat.end)D.repeat.end=k(addD(fromK(dateK()),D.repeat.unit==='year'?365:30));rerender();}},'On a date')),D.repeat.end?el('div',{style:'margin-top:var(--s3)'},ctx.calendar(D.repeat.end,dk=>{D.repeat.end=dk;ctx.open=null;rerender();},{minK:dateK()})):null);pe&&w.append(pe);}
   };
   ctx.followDate=(D,dk)=>{const r=D.repeat;if(!r||r.type==='never'||!dk)return;if(r.unit==='week'&&(r.days||[]).length===1)r.days=[monIdx(fromK(dk))];if(r.end&&r.end<dk)r.end=null;};
   ctx.reminderRow=(w,D,{noTime=false,onNeedTime=null,word='the time'}={})=>{const hasRem=!noTime&&D.reminder!=null;
@@ -57,10 +57,10 @@ function formCtx(rerender){
       w.append(ctx.panel('rem','',el('div',{class:'sub'},el('div',{class:'lbl3'},'Remind me'),el('div',{class:'subrow'},ctx.stepper(amt,0,max,n=>{D.reminder=n*per;rerender();}),el('span',{},amt===0?`at ${word}`:`${unit}${amt===1?'':'s'} before`)),seg([['minute','Minutes'],['hour','Hours'],['day','Days']],unit,u=>{const p={minute:1,hour:60,day:1440}[u];D.remUnit=u;D.reminder=Math.min(amt,{minute:59,hour:23,day:14}[u])*p;rerender();}))));}
   };
   ctx.partRow=(g,D,{types=['goal','project','habit'],onPick=null}={})=>{const p=D.part?get.id(D.part):null;
-    g.append(ctx.row('part','layers','Part of',p?el('span',{class:'on clip',style:'max-width:170px;display:flex;gap:8px;align-items:center'},p.title):'None'));
+    g.append(ctx.row('part','layers','Part of',p?el('span',{class:'on clip',style:'max-width:170px;display:flex;gap:var(--s2);align-items:center'},p.title):'None'));
     if(ctx.open==='part'){const pick=o=>e=>{e.stopPropagation();const prev=D.part?get.id(D.part):null;D.part=o&&D.part!==o.id?o.id:null;if(!D.area&&o&&o.area&&D.part)D.area=o.area;ctx.open=null;onPick&&onPick(D.part?o:null,prev);rerender();};const any=types.some(t=>get.all(t).length);const name={goal:'Goals',project:'Projects',habit:'Habits'};
       const pp=ctx.panel('part','',any?partPicker(types,name,D,pick):emptySm(`No ${types.map(t=>name[t].toLowerCase()).join(' or ')} yet`),
-        el('div',{style:'display:flex;flex-wrap:wrap;gap:4px 18px;margin-top:8px'},D.part?el('button',{class:'linkbtn',onclick:pick(null)},'None'):null,types.includes('goal')?el('button',{class:'linkbtn',onclick:e=>{e.stopPropagation();goalSheet(null,{after:r=>{D.part=r.id;rerender();}});}},'+ New goal'):null,types.includes('project')?el('button',{class:'linkbtn',onclick:e=>{e.stopPropagation();projectSheet(null,{after:r=>{D.part=r.id;rerender();}});}},'+ New project'):null));g.append(pp);}
+        el('div',{style:'display:flex;flex-wrap:wrap;gap:var(--s1) 18px;margin-top:var(--s2)'},D.part?el('button',{class:'linkbtn',onclick:pick(null)},'None'):null,types.includes('goal')?el('button',{class:'linkbtn',onclick:e=>{e.stopPropagation();goalSheet(null,{after:r=>{D.part=r.id;rerender();}});}},'+ New goal'):null,types.includes('project')?el('button',{class:'linkbtn',onclick:e=>{e.stopPropagation();projectSheet(null,{after:r=>{D.part=r.id;rerender();}});}},'+ New project'):null));g.append(pp);}
   };
   ctx.areaRow=(g,D)=>{g.append(ctx.row('area',D.area?areaIcon(D.area):'leaf','Life area',D.area||'None',{valOn:!!D.area}));
     if(ctx.open==='area')g.append(ctx.panel('area','wide',el('div',{class:'chips'},(get.settings().areas||AREAS).map(a=>el('button',{class:'chip ichip'+(D.area===a?' on':''),'aria-pressed':String(D.area===a),onclick:e=>{e.stopPropagation();D.area=D.area===a?null:a;ctx.open=null;rerender();}},areaChipIc(a),a)))));};
@@ -71,7 +71,7 @@ function formCtx(rerender){
     if(ctx.open==='look'){const hx=el('input',{type:'text',id:'hex-input','aria-label':'Hex color',value:colorHex(cur).toUpperCase(),maxlength:7,autocomplete:'off',spellcheck:'false',oninput:e=>{let v=e.target.value.trim();if(v&&v[0]!=='#')v='#'+v;if(/^#[0-9a-f]{6}$/i.test(v)){D.color=v;D.lookTouched=true;$$('.swatch').forEach(x=>{x.classList.remove('on');x.innerHTML='';});ctx.refreshLook();}},onclick:e=>e.stopPropagation()});
       g.append(ctx.panel('look','wide',el('div',{class:'lbl3'},'Color'),el('div',{class:'swatches'},COLORS.map(([id,n,h])=>el('button',{class:'swatch'+(cur===id?' on':''),style:`--c:${h}`,'aria-label':n,'aria-pressed':String(cur===id),html:cur===id?ic('check',16,3):'',onclick:e=>{e.stopPropagation();D.color=id;D.lookTouched=true;rerender();}}))),
         el('div',{class:'hexrow',onclick:e=>e.stopPropagation()},el('span',{class:'small muted',style:'margin-right:2px'},'Custom'),el('input',{type:'color','aria-label':'Color wheel',value:colorHex(cur),oninput:e=>{D.color=e.target.value;D.lookTouched=true;hx.value=e.target.value.toUpperCase();$$('.swatch').forEach(x=>{x.classList.remove('on');x.innerHTML='';});ctx.refreshLook();}}),hx),
-        el('div',{class:'lbl3',style:'margin-top:12px'},'Icon'),el('div',{class:'icongrid'},el('button',{class:!D.icon?'on':'','aria-label':'No icon','aria-pressed':String(!D.icon),html:sv('<circle cx="12" cy="12" r="8"/><path d="m6.5 6.5 11 11"/>',20),onclick:e=>{e.stopPropagation();D.icon=null;D.lookTouched=true;rerender();}}),GLYPHS.map(([id,n])=>el('button',{class:D.icon===id?'on':'','aria-label':n,title:n,'aria-pressed':String(D.icon===id),html:glyph(id,20),onclick:e=>{e.stopPropagation();D.icon=id;D.lookTouched=true;rerender();}})))));}
+        el('div',{class:'lbl3',style:'margin-top:var(--s3)'},'Icon'),el('div',{class:'icongrid'},el('button',{class:!D.icon?'on':'','aria-label':'No icon','aria-pressed':String(!D.icon),html:sv('<circle cx="12" cy="12" r="8"/><path d="m6.5 6.5 11 11"/>',20),onclick:e=>{e.stopPropagation();D.icon=null;D.lookTouched=true;rerender();}}),GLYPHS.map(([id,n])=>el('button',{class:D.icon===id?'on':'','aria-label':n,title:n,'aria-pressed':String(D.icon===id),html:glyph(id,20),onclick:e=>{e.stopPropagation();D.icon=id;D.lookTouched=true;rerender();}})))));}
   };
   ctx.lookRows=(g,D)=>ctx.appearanceRow(g,D,()=>el('span',{class:'pvchip',style:`--c:${colorHex(D.color||'sage')}`,html:(D.icon?glyph(D.icon,14):'')+`<span>${esc((D.title||'').trim()||'Preview')}</span>`}));
   return ctx;
@@ -111,9 +111,9 @@ function reorderable(h,row,box,commit){
     window.addEventListener('pointermove',mv,{capture:true,passive:false});window.addEventListener('blur',lost);ends.forEach(n=>window.addEventListener(n,up,true));loop();});
 }
 function stepsEditor(D,{tick=true,word='step'}={}){const Word=word[0].toUpperCase()+word.slice(1);
-  const wrap=el('div',{style:'display:grid;gap:8px'}),box=el('div',{class:'steps'});
+  const wrap=el('div',{style:'display:grid;gap:var(--s2)'}),box=el('div',{class:'steps'});
   const newStep=()=>({id:uid('s'),t:'',d:false});
-  const count=el('div',{class:'eyebrow',style:'font-size:12px;padding:0 4px',hidden:true});
+  const count=el('div',{class:'eyebrow',style:'font-size:var(--fs-caption);padding:0 var(--s1)',hidden:true});
   const recount=()=>{const t=D.steps.filter(x=>x.t.trim()),show=tick&&!(D.repeat&&D.repeat.type!=='never')&&t.length;count.hidden=!show;if(show)count.textContent=`${Word}s · ${t.filter(x=>x.d).length} of ${t.length} done`;};
   const draw=focus=>{box.innerHTML='';recount();const showTick=tick&&!(D.repeat&&D.repeat.type!=='never');D.steps.forEach((s,i)=>{
     const inp=el('input',{value:s.t,placeholder:Word,'aria-label':`${Word} ${i+1}`,enterkeyhint:'next',autocapitalize:'sentences'});
@@ -329,7 +329,7 @@ function alldaySheet(rec,seed={}){
   const inst=formSheet({title:isEdit?'Edit all-day item':'New all-day item',addLabel:isEdit?'Save':'Add',D,word:'all-day item',isEdit,canAdd:()=>!!D.title.trim(),commit:()=>commit(),
     build:(body,update)=>{
       const ctx=formCtx(()=>render());
-      const chip=()=>el('span',{class:'adchip',style:`--c:${colorHex(D.color)};height:28px;font-size:13px`,html:(D.icon?glyph(D.icon,14,2):'')+`<span>${esc(D.title.trim()||'Preview')}</span>`});
+      const chip=()=>el('span',{class:'adchip',style:`--c:${colorHex(D.color)};height:28px;font-size:var(--fs-footnote)`,html:(D.icon?glyph(D.icon,14,2):'')+`<span>${esc(D.title.trim()||'Preview')}</span>`});
       const refreshPv=()=>ctx.refreshLook&&ctx.refreshLook();
       const T=fieldTitle('f-ad-title','Title','Birthday, trip, day off…',D.title,v=>{D.title=v;update();refreshPv();},()=>{if(isTouch()){T.input.blur();return;}if(D.title.trim()&&commit()!==false)inst.close();});
       const when=el('div',{class:'group'}),det=el('div',{class:'group'});
@@ -340,7 +340,7 @@ function alldaySheet(rec,seed={}){
         if(ctx.open==='date')when.append(ctx.panel('date','wide',ctx.calendar(D.start,dk=>{if(!dk)return;if(D.end)D.end=addK(dk,daysBetween(D.start,D.end));D.start=dk;ctx.followDate(D,dk);ctx.open=null;render();},{range:D.end?[D.start,D.end]:null})));
         const multi=!!D.end,fe=multi?fromK(D.end):null;
         when.append(ctx.row('end','ends',multi?'Last day':'Multiple days',null,{expand:false,tap:multi?()=>{ctx.open=ctx.open==='end'?null:'end';render();}:null,trailing:[multi?el('span',{class:'on'},`${mdS(fe)} · ${daysBetween(D.start,D.end)+1} days`):null,ctx.sw(multi,'Multiple days',on=>{if(on){D.end=addK(D.start,2);ctx.open='end';}else{D.end=null;if(ctx.open==='end')ctx.open=null;}render();})]}));
-        if(multi&&ctx.open==='end')when.append(ctx.panel('end','wide',el('div',{class:'eyebrow',style:'text-align:center;margin:2px 0 8px'},'Pick the last day'),ctx.calendar(D.end,dk=>{if(!dk)return;D.end=dk===D.start?null:dk;ctx.open=null;render();if(!D.end)toast('Back to a single day');},{minK:D.start,range:[D.start,D.end]})));
+        if(multi&&ctx.open==='end')when.append(ctx.panel('end','wide',el('div',{class:'eyebrow',style:'text-align:center;margin:2px 0 var(--s2)'},'Pick the last day'),ctx.calendar(D.end,dk=>{if(!dk)return;D.end=dk===D.start?null:dk;ctx.open=null;render();if(!D.end)toast('Back to a single day');},{minK:D.start,range:[D.start,D.end]})));
         ctx.repeatRows(when,D,()=>D.start,{unit:'year'});
         const hasRem=D.reminder!=null,syncRem=()=>{const r=D.rem;D.reminder=r.n*(r.unit==='week'?7:1)*1440-r.at;};const remText=r=>`${r.n===0?'Day of':`${r.n} ${r.unit}${r.n>1?'s':''}`} · ${fmtT(r.at)}`;
         when.append(ctx.row('rem','bell','Reminder',null,{expand:false,tap:hasRem?()=>{ctx.open=ctx.open==='rem'?null:'rem';render();}:null,trailing:[hasRem?el('span',{class:'on clip',id:'ad-rem',style:'max-width:170px'},remText(D.rem)):null,ctx.sw(hasRem,'Remind me',on=>{if(on){D.rem={n:1,unit:'day',at:540};syncRem();ctx.open='rem';}else{D.reminder=null;delete D.rem;if(ctx.open==='rem')ctx.open=null;}render();})]}));
@@ -392,8 +392,8 @@ function partPicker(types,name,D,pick){let rec=[];try{rec=JSON.parse(localStorag
   if(all.length<=8)return groups;
   const recent=rec.map(id=>all.find(x=>x.o.id===id)).filter(Boolean);
   const rg=recent.length?el('div',{class:'pgrp prec',style:'margin-bottom:10px'},el('div',{class:'lbl3'},'Recent'),el('div',{class:'chips'},recent.map(({t,o})=>chip(t,o)))):null;
-  const none=el('p',{class:'muted small',hidden:true,style:'margin:4px 2px 10px'},'No matches');
+  const none=el('p',{class:'muted small',hidden:true,style:'margin:var(--s1) 2px 10px'},'No matches');
   const q=el('input',{type:'search',class:'psearch',placeholder:`Search ${types.map(t=>name[t].toLowerCase()).join(', ')}`,'aria-label':'Search','autocomplete':'off',oninput:()=>{const v=q.value.trim();let n=0;
     box.querySelectorAll('.pgrp').forEach(g=>{let shown=0;g.querySelectorAll('.chip').forEach(b=>{const ok=!v||fuzzyScore(b.dataset.q,v)>=0;b.hidden=!ok;if(ok)shown++;});g.hidden=!shown||(v&&g.classList.contains('prec'));n+=shown;});none.hidden=!!n;}});
   const box=el('div',{},rg,...groups);
-  return[el('div',{style:'margin-bottom:12px'},q),none,box];}
+  return[el('div',{style:'margin-bottom:var(--s3)'},q),none,box];}

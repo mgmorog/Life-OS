@@ -74,7 +74,9 @@ minus:'<path d="M5 12h14"/>',
  spark:'<path d="M12 3v5M12 16v5M3 12h5M16 12h5M6 6l3 3M15 15l3 3M18 6l-3 3M9 15l-3 3"/>',bookmark:'<path d="M6 3h12v18l-6-4-6 4z"/>',link:'<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>',
  shield:'<path d="M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6z"/>',coins:'<circle cx="9" cy="9" r="5.5"/><path d="M15.5 9.6a5.5 5.5 0 1 1-6 6"/>',users:'<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.6 3.3-5.5 6.5-5.5s5.9 1.9 6.5 5.5"/><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8M18.5 14.8c1.7.8 2.8 2.6 3 5.2"/>',globe:'<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z"/>',lock:'<rect x="5" y="10.5" width="14" height="10" rx="2.5"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"/>',moon:'<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/>',star:'<path d="m12 3.5 2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"/>',
 };
-const ic=(n,w=22,s=1.8)=>sv(P[n]||'',w,n==='check'&&s>=2.6?2.8:w<=16||s>=2.4?2.4:1.8);
+/* v233 · four icon sizes, each with its weight: small 14 and regular 16 at 2.4, medium 20 and large 24 at 1.8 (checkmark 2.8; 28+ stays as drawn) */
+const icSize=w=>w<=14?14:w<=17?16:w<=21?20:w<=27?24:w;
+const ic=(n,w=22,s=1.8)=>{const z=icSize(w);return sv(P[n]||'',z,n==='check'&&s>=2.6?2.8:z<=16?2.4:1.8);};
 const GLYPHS=[['focus','Focus','<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1" fill="currentColor"/>'],['brief','Work','<rect x="3.5" y="7.5" width="17" height="12" rx="2"/><path d="M9 7.5V6a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 6v1.5M3.5 12.5h17"/>'],['dumbbell','Workout','<path d="M6.5 7v10M17.5 7v10M3.5 9.5v5M20.5 9.5v5M6.5 12h11"/>'],['book','Reading','<path d="M5 18V6a2 2 0 0 1 2-2h12v14H7a2 2 0 0 0-2 2 2 2 0 0 0 2 2h12"/>'],['pencil','Writing','<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m13.5 6.5 4 4"/>'],['users','People','<circle cx="9" cy="8" r="3.5"/><path d="M3 20a6 6 0 0 1 12 0M16 4.5a3.5 3.5 0 0 1 0 7M21 20a6 6 0 0 0-3.5-5.5"/>'],['phone','Call','<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/>'],['coffee','Coffee','<path d="M4 9h13v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5z"/><path d="M17 11h1.5a2.5 2.5 0 0 1 0 5H17M8 3.5v2.5M12 3.5v2.5"/>'],['meal','Meal','<path d="M7 3v18M4 3v5a3 3 0 0 0 6 0V3M17 21V3c-2 1-3 4-3 8h3"/>'],['heart','Care',P.heart],['music','Music','<path d="M9 18V6l10-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/>'],['car','Travel','<path d="M5 16.5h14M5.5 12l1.6-4.2A2 2 0 0 1 9 6.5h6a2 2 0 0 1 1.9 1.3l1.6 4.2"/><rect x="3.5" y="12" width="17" height="5.5" rx="1.5"/><path d="M6.5 17.5V19M17.5 17.5V19"/>'],['cake','Birthday','<path d="M4 20h16M5 20v-6a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v6"/><path d="M5 16c1.5 1 2.5 1 3.5 0s2-1 3.5 0 2.5 1 3.5 0 2-1 3.5 0"/><path d="M12 12V9"/><path d="M12 4.5c.9.9 1 1.9 0 2.8-1-.9-.9-1.9 0-2.8z"/>'],['gift','Gift','<rect x="4" y="9" width="16" height="11" rx="1.5"/><path d="M3 9h18M12 9v11"/><path d="M12 9C10.5 5 7 5 7 7s3 2 5 2c2 0 5 0 5-2s-3.5-2-5 2z"/>'],['plane','Trip','<path d="M10.5 13.5 4 12l-1 1.5 5.5 3M10.5 13.5l-2 4.5 1.5 1 4.5-5.5M10.5 13.5 18 6c1-1 2.5-1.2 3-.7s.3 2-.7 3L13 16"/>'],['flag','Deadline',P.flag],['home','Home','<path d="M4 11 12 4.5l8 6.5M6 9.5V20h12V9.5M10 20v-5h4v5"/>'],['cap','Graduation','<path d="m12 5 9.5 4.5L12 14 2.5 9.5z"/><path d="M6.5 11.5V16c1.5 1.5 3.5 2 5.5 2s4-.5 5.5-2v-4.5M21.5 9.5V15"/>'],['health','Appointment','<rect x="4" y="4" width="16" height="16" rx="4"/><path d="M12 8v8M8 12h8"/>'],['ticket','Event','<path d="M4 8a2 2 0 0 0 2-2h12a2 2 0 0 0 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 0-2 2H6a2 2 0 0 0-2-2v-2a2 2 0 0 0 0-4z"/>'],['sun','Day off',P.sun],['pay','Bill due','<rect x="3.5" y="6" width="17" height="12" rx="2"/><path d="M3.5 10h17M7 14.5h3"/>'],['leaf','Outdoors',P.leaf],['drop','Water',P.drop],['moon','Night',P.moon],['star','Special',P.star],['pill','Medicine','<rect x="3" y="8.5" width="18" height="7" rx="3.5" transform="rotate(-45 12 12)"/><path d="m9.5 9.5 5 5"/>'],['walk','Walk','<circle cx="13" cy="4.5" r="1.8"/><path d="M9 21l2.5-6 2.5 2.5V21M11.5 15 12.5 9l-3 1.5L8 13.5M12.5 9l2 3 3 1"/>'],['paw','Pets','<circle cx="6.5" cy="10.5" r="1.8"/><circle cx="10" cy="6.5" r="1.8"/><circle cx="14" cy="6.5" r="1.8"/><circle cx="17.5" cy="10.5" r="1.8"/><path d="M8 17.5c0-2.5 1.8-4.5 4-4.5s4 2 4 4.5c0 1.5-1.2 2.5-2.5 2.5-.6 0-1-.3-1.5-.3s-.9.3-1.5.3C9.2 20 8 19 8 17.5z"/>']];
 const GL=Object.fromEntries(GLYPHS.map(([id,n,p])=>[id,{n,p}]));
 const glyph=(id,w=18,s=1.8)=>GL[id]?sv(GL[id].p,w,s):'';
@@ -83,7 +85,8 @@ const colorHex=c=>!c?COLORS[0][2]:c[0]==='#'?c:(COLORS.find(x=>x[0]===c)||COLORS
 const AREA_ICON={Health:'a_health',Home:'a_home',Finances:'a_money',Relationships:'a_people',Career:'a_career',Learning:'a_learn',Recreation:'a_rec',Travel:'a_travel','Personal growth':'a_growth','Life admin':'a_admin',Family:'a_family',Pets:'a_pets',Community:'a_comm'};
 const areaIcon=a=>AREA_ICON[a]||((get.settings().areaIcons||{})[a])||'leaf';
 const AREAS=['Health','Home','Finances','Relationships','Career','Learning','Recreation','Travel','Personal growth'];
-const AREA_COLOR={Health:'#466B5A',Home:'#8A6A50',Finances:'#677A38',Relationships:'#A8625F',Career:'#4A6E9C',Learning:'#735B98',Recreation:'#8A6731',Travel:'#3F7680','Personal growth':'#5D6573'};
+/* v233 · area colours live in style.css as --a-<area>; code points at them */
+const AREA_COLOR={Health:'var(--a-health)',Home:'var(--a-home)',Finances:'var(--a-finances)',Relationships:'var(--a-relationships)',Career:'var(--a-career)',Learning:'var(--a-learning)',Recreation:'var(--a-recreation)',Travel:'var(--a-travel)','Personal growth':'var(--a-personal)'};
 
 /* ---------- dates ---------- */
 const DOW=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
@@ -305,7 +308,7 @@ function openSheet({title,full=false,left,right,build,onClose,tryClose,raw=false
   const grab=el('div',{class:'grab'},el('i'));
   const inst={sheet,body,scrim,close,requestClose};
   const opener=document.activeElement;
-  const z=41+sheetStack.length*2;scrim.style.zIndex=z-1;sheet.style.zIndex=z;
+  const zBase=parseInt(getComputedStyle(document.documentElement).getPropertyValue('--z-sheet'))||40,z=zBase+1+sheetStack.length*2;scrim.style.zIndex=z-1;sheet.style.zIndex=z;
   sheet.append(grab);
   let head=null;
   if(title!==undefined&&!raw){
@@ -581,3 +584,6 @@ function fuzzyScore(text,q){const T=String(text||'').toLowerCase(),Q=String(q||'
 function nextFreeSlot(dk,dur=30){try{const items=dayItems(dk).timed.filter(e=>e.time!=null&&e.kind!=='task'),busy=items.map(e=>[e.time,e.time+(e.dur||30)]);
   const isT=dk===todayK();let t=isT?Math.max(0,Math.ceil(nowMin()/30)*30):9*60;if(!busy.length&&!isT)return 9*60;if(!isT)t=Math.min(t,9*60);
   for(;t+dur<=23*60;t+=30){if(!busy.some(([a,b])=>t<b&&t+dur>a))return t;}return isT?Math.min(22*60,Math.ceil(nowMin()/30)*30):9*60;}catch(e){return 9*60;}}
+
+/* v233 · read a CSS token from code (for canvas drawing, where var() can't be used) */
+const tok=(n,fb='')=>{try{return getComputedStyle(document.documentElement).getPropertyValue(n).trim()||fb;}catch(e){return fb;}};

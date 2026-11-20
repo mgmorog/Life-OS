@@ -88,7 +88,7 @@ function dueReminders(){
 function setRem(key,v){const st=remState(),tk=todayK();st.map[key]=v;for(const x in st.map){if(x.split('|')[1]<tk)delete st.map[x];}put(st);}
 function reminderCard(){
   const due=dueReminders();if(!due.length)return null;
-  return el('section',{class:'card remcard',role:'status'},el('div',{class:'eyebrow',style:'display:flex;gap:8px;align-items:center;color:var(--now)',html:ic('bell',16,2)+`<span>Reminder${due.length>1?'s':''}</span>`}),
+  return el('section',{class:'card remcard',role:'status'},el('div',{class:'eyebrow',style:'display:flex;gap:var(--s2);align-items:center;color:var(--now)',html:ic('bell',16,2)+`<span>Reminder${due.length>1?'s':''}</span>`}),
     due.slice(0,4).map(({e,dk,key})=>el('div',{class:'remrow'},el('button',{class:'grow',style:'text-align:left',onclick:()=>{setRem(key,'x');openItem(e,dk);}},el('b',{},e.title),el('small',{},`${relDay(dk)}${e.time!=null?' · '+fmtT(e.time):' · All day'}`)),
       el('span',{class:'remacts'},e.kind!=='allday'?el('button',{class:'chip',onclick:()=>{toggleItem(e,dk);setRem(key,'x');buzz(8);}},'Done'):null,el('button',{class:'chip',onclick:()=>{setRem(key,Date.now()+10*6e4);toast('Reminding you in 10 minutes');}},'10 min'),el('button',{class:'iconbtn','aria-label':`Dismiss ${e.title}`,style:'width:36px;height:36px',html:ic('x',16,2.2),onclick:()=>setRem(key,'x')})))));
 }
@@ -282,7 +282,7 @@ function dayCard(dk){
   const W=t3&&t3es.length===T3_MAX&&t3es.every(e=>e.done);
   if(W){if(S._won!==dk&&S._painted)todo.classList.add('win');todo.classList.add('won');S._won=dk;}else if(S._won===dk){S._won=null;if(motionOK())todo.classList.add('lose');}
   const freshDay=t3&&!t3es.length&&!todoAny.length&&!due.length&&!aiT.length&&!(late.length);
-  if(freshDay){const open=get.all('task').filter(t=>isOpenTask(t)&&(!t.repeat||t.repeat.type==='never')).length;todo.append(el('div',{class:'fresh3'},el('p',{class:'serif',style:'font-size:22px;line-height:1.2;margin:4px 0 2px'},dk===tk?'What are today’s three?':`What are ${relDay(dk)}’s three?`),open?el('p',{class:'small muted',style:'margin:0 0 12px'},`Pick from ${dCount(open,'open task')}.`):null,btnP('Pick three',()=>t3PickSheet(dk,0),{style:'width:100%'})));}
+  if(freshDay){const open=get.all('task').filter(t=>isOpenTask(t)&&(!t.repeat||t.repeat.type==='never')).length;todo.append(el('div',{class:'fresh3'},el('p',{class:'serif',style:'font-size:var(--fs-title);line-height:1.2;margin:var(--s1) 0 2px'},dk===tk?'What are today’s three?':`What are ${relDay(dk)}’s three?`),open?el('p',{class:'small muted',style:'margin:0 0 var(--s3)'},`Pick from ${dCount(open,'open task')}.`):null,btnP('Pick three',()=>t3PickSheet(dk,0),{style:'width:100%'})));}
   else if(t3)todo.append(priorityRings(dk,t3es,W));
   const nx=t3?t3es.find(e=>!e.done):null;
   if(W)todo.append(el('p',{class:'wonmsg'},'What mattered most is done.'));
@@ -376,7 +376,7 @@ function ringDrop(n,id,dk){const i=+n.dataset.ring,l=t3Get(dk).filter(q=>q.id!==
 function plateCard(dk){
   const S=App.state,list=get.all('task').filter(t=>!t.date&&isOpenTask(t)&&!(t.deadline&&t.deadline<=dk));if(!list.length)return null;
   const open=!!S.plateOpen;
-  const c=el('section',{class:'card','data-k':'plate',style:'padding:6px 16px'},el('button',{class:'tmr',style:'min-height:48px','aria-expanded':String(open),onclick:()=>{S.plateOpen=!S.plateOpen;App.refresh();}},el('span',{class:'grow'},el('b',{style:'font-weight:600'},'On your plate'),el('span',{class:'small muted',style:'margin-left:8px'},`${list.length} unscheduled`)),el('span',{class:'chev'+(open?' open':''),style:open?'transform:rotate(90deg)':null,html:ic('chevr',16,2.2)})));
+  const c=el('section',{class:'card','data-k':'plate',style:'padding:6px var(--s4)'},el('button',{class:'tmr',style:'min-height:48px','aria-expanded':String(open),onclick:()=>{S.plateOpen=!S.plateOpen;App.refresh();}},el('span',{class:'grow'},el('b',{style:'font-weight:600'},'On your plate'),el('span',{class:'small muted',style:'margin-left:var(--s2)'},`${list.length} unscheduled`)),el('span',{class:'chev'+(open?' open':''),style:open?'transform:rotate(90deg)':null,html:ic('chevr',16,2.2)})));
   if(open){const w=el('div',{class:'anytime',style:'margin-top:0'});list.slice(0,8).forEach(t=>{const e={kind:'task',id:t.id,rec:t,title:t.title,time:null,done:false};w.append(anyRow(e,dk,{target:dk,addToday:true}));});c.append(w,el('div',{style:'display:flex;justify-content:space-between;align-items:center;min-height:44px'},list.length>8?el('button',{class:'linkbtn small',onclick:()=>{App.go('tasks',{tab:'all'});}},`All ${list.length}`):el('span'),el('button',{class:'linkbtn small',onclick:()=>{S.studio=Object.assign(S.studio||{},{mode:'w',anchor:null});App.go('studio');}},'Plan in Studio ›')));}
   return c;
 }
@@ -388,7 +388,7 @@ function anyRow(e,dk,{late,target,addToday,slim}={}){
     el('button',{class:'t',onclick:()=>openItem(e,dk),'aria-label':slim&&e.kind==='task'&&e.rec.priority==='high'?`${e.title}, important`:null},el('span',{class:'tt'},!slim&&e.kind==='task'&&e.rec.priority==='high'&&!e.done?el('span',{class:'oflag','aria-label':'High priority',html:ic('flag',13,2.4)}):null,e.title),slim?(steps.filter(x=>x.t).length&&!e.done?el('span',{class:'meta'},`${steps.filter(x=>x.t&&stepDone(e.rec,x,dk)).length} of ${steps.filter(x=>x.t).length} steps`):null):metaOf(e,late,dk)),
     slim&&e.time!=null&&!e.done?el('span',{class:'tside tnum'},fmtT(e.time)):null,
     e.kind==='habit'&&!e.done&&e.rec.link&&e.rec.link.log&&wkRoutines(e.rec).length?el('button',{class:'chip startchip',style:'height:36px','aria-label':`Start ${(wkFor(e.rec,dk)||{f:{}}).f.what||'a workout'}`,onclick:ev=>{ev.stopPropagation();wkStart(e.rec,dk);}},el('span',{style:'display:grid',html:ic('play',12,2.4)}),'Start'):e.kind==='habit'&&e.rec.track==='count'?el('button',{class:'chip',style:'height:36px','aria-label':`Add one to ${e.title}`,onclick:()=>{buzz(6);logHabit(e.rec,dk,1);}},'+1'):e.kind==='habit'&&e.rec.track==='time'?el('button',{class:'chip',style:'height:36px','aria-label':`Log time for ${e.title}`,onclick:()=>logTimeSheet(e.rec,dk)},'Log'):null,
-    (late||addToday)?el('button',{class:'chip',style:'height:32px;font-size:14px',onclick:()=>{const before=e.rec.date;e.rec.date=target;e.rec.moves=(e.rec.moves||0)+1;put(e.rec);toast('Moved to today',()=>{e.rec.date=before;put(e.rec);});}},'Today'):null,
+    (late||addToday)?el('button',{class:'chip',style:'height:32px;font-size:var(--fs-label)',onclick:()=>{const before=e.rec.date;e.rec.date=target;e.rec.moves=(e.rec.moves||0)+1;put(e.rec);toast('Moved to today',()=>{e.rec.date=before;put(e.rec);});}},'Today'):null,
     steps.length&&!slim?el('button',{class:'iconbtn',style:'width:36px;height:36px;color:var(--ink-3)','aria-label':S.expanded[e.id]?'Hide steps':'Show steps','aria-expanded':String(!!S.expanded[e.id]),html:ic(S.expanded[e.id]?'chevu':'chevd',16,2.2),onclick:()=>{S.expanded[e.id]=!S.expanded[e.id];App.refresh();}}):null);
   const menu=(x,y)=>itemMenu(e,target||e.occ||dk,x,y);
   row.addEventListener('contextmenu',ev=>{ev.preventDefault();if(lastPointer==='mouse')menu(ev.clientX,ev.clientY);});
@@ -488,19 +488,19 @@ function checkinCard(dk){return el('section',{class:'card'},el('div',{class:'eye
 const emptyDayHead=dk=>{const tk=todayK();return dk<tk?'Nothing logged':dk===tk?'A clear day':'Nothing planned yet';};
 function dayCanvas(dk){
   const{allDay,timed,anytime}=dayItems(dk),d=fromK(dk);
-  const W=1080,rows=[...timed.map(e=>[e.kind==='task'?fmtT(e.time):fmtRange(e.time,e.time+e.dur),e.title,e.color,e.done]),...anytime.map(e=>['Anytime',e.title,'#97A09B',e.done])];
+  const W=1080,rows=[...timed.map(e=>[e.kind==='task'?fmtT(e.time):fmtRange(e.time,e.time+e.dur),e.title,e.color,e.done]),...anytime.map(e=>['Anytime',e.title,tok('--ink-faint','#97A09B'),e.done])];
   const H=Math.max(720,330+(allDay.length?90:0)+Math.max(rows.length,1)*104+70);
   const c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d');
   x.fillStyle='#F4F4EF';x.fillRect(0,0,W,H);
   const f=(s,fam,w=400)=>`${w} ${s}px ${fam==='d'?'Newsreader,Palatino,Georgia,serif':'Figtree,system-ui,sans-serif'}`;
-  x.fillStyle='#5B6560';x.font=f(30,'b',600);x.fillText(DOW[d.getDay()].toUpperCase(),72,110);
-  x.fillStyle='#1E2622';x.font=f(104,'d',500);x.fillText(`${MONL[d.getMonth()]} ${d.getDate()}`,72,216);
+  x.fillStyle=tok('--ink-2','#5B6560');x.font=f(30,'b',600);x.fillText(DOW[d.getDay()].toUpperCase(),72,110);
+  x.fillStyle=tok('--ink','#1E2622');x.font=f(104,'d',500);x.fillText(`${MONL[d.getMonth()]} ${d.getDate()}`,72,216);
   let y=280;
   if(allDay.length){let cx=72;x.font=f(30,'b',500);allDay.forEach(e=>{const w=x.measureText(e.title).width+44;x.fillStyle=e.color;rr(x,cx,y,w,58,14);x.fill();x.fillStyle='#fff';x.fillText(e.title,cx+22,y+40);cx+=w+14;});y+=90;}
   x.fillStyle='#fff';rr(x,48,y,W-96,Math.max(rows.length,1)*104+40,36);x.fill();y+=20;
-  if(!rows.length){x.fillStyle='#5B6560';x.font=f(38,'d',500);x.fillText(emptyDayHead(dk),96,y+66);}
-  rows.forEach(([t,title,col,dn],i)=>{const ry=y+i*104;x.fillStyle=col;rr(x,88,ry+20,8,64,4);x.fill();x.fillStyle='#5B6560';x.font=f(26,'b',500);x.fillText(t,116,ry+44);x.fillStyle=dn?'#97A09B':'#1E2622';x.font=f(36,'b',500);let tt=title;while(x.measureText(tt).width>W-240&&tt.length>4)tt=tt.slice(0,-2);if(tt!==title)tt+='…';x.fillText(tt,116,ry+86);});
-  x.fillStyle='#97A09B';x.font=f(24,'b',500);x.fillText('Life OS',72,H-34);
+  if(!rows.length){x.fillStyle=tok('--ink-2','#5B6560');x.font=f(38,'d',500);x.fillText(emptyDayHead(dk),96,y+66);}
+  rows.forEach(([t,title,col,dn],i)=>{const ry=y+i*104;x.fillStyle=col;rr(x,88,ry+20,8,64,4);x.fill();x.fillStyle=tok('--ink-2','#5B6560');x.font=f(26,'b',500);x.fillText(t,116,ry+44);x.fillStyle=dn?tok('--ink-faint','#97A09B'):tok('--ink','#1E2622');x.font=f(36,'b',500);let tt=title;while(x.measureText(tt).width>W-240&&tt.length>4)tt=tt.slice(0,-2);if(tt!==title)tt+='…';x.fillText(tt,116,ry+86);});
+  x.fillStyle=tok('--ink-faint','#97A09B');x.font=f(24,'b',500);x.fillText('Life OS',72,H-34);
   return c;
 }
 function rr(x,a,b,w,h,r){x.beginPath();x.moveTo(a+r,b);x.arcTo(a+w,b,a+w,b+h,r);x.arcTo(a+w,b+h,a,b+h,r);x.arcTo(a,b+h,a,b,r);x.arcTo(a,b,a+w,b,r);x.closePath();}
@@ -515,9 +515,9 @@ async function saveFile(filename,data){if(!store.downloads){toast('Saving files 
 function shareDaySheet(dk){
   Promise.resolve(document.fonts&&document.fonts.ready).then(()=>openSheet({title:'Share this day',build:body=>{
     const c=dayCanvas(dk),base=`Life-OS-${dk}`;
-    const img=el('img',{alt:`Preview of ${shortDay(dk)}`,style:'width:100%;border-radius:18px;border:1px solid var(--line);display:block',src:c.toDataURL('image/png')});
+    const img=el('img',{alt:`Preview of ${shortDay(dk)}`,style:'width:100%;border-radius:var(--r-card);border:1px solid var(--line);display:block',src:c.toDataURL('image/png')});
     const copy=el('button',{class:'btn quiet block',onclick:async e=>{const t=dayText(dk),btn=e.currentTarget;try{await navigator.clipboard.writeText(t);toast('Copied');doneMorph(btn);}catch(e){ta.hidden=false;ta.value=t;ta.select();toast('Select the text below to copy it');}}},'Copy as text');
-    const ta=el('textarea',{id:'share-text',hidden:true,rows:6,style:'width:100%;border:1px solid var(--line);border-radius:12px;padding:10px;background:var(--card);color:var(--ink)'});
+    const ta=el('textarea',{id:'share-text',hidden:true,rows:6,style:'width:100%;border:1px solid var(--line);border-radius:var(--r-row);padding:10px;background:var(--card);color:var(--ink)'});
     body.append(img,el('button',{class:'btn primary block',onclick:()=>c.toBlob(b=>saveFile(base+'.png',b),'image/png')},'Save image'),
       el('button',{class:'btn line block',onclick:()=>{const flat=document.createElement('canvas');flat.width=c.width;flat.height=c.height;flat.getContext('2d').drawImage(c,0,0);flat.toBlob(async b=>{const buf=new Uint8Array(await b.arrayBuffer());saveFile(base+'.pdf',new Blob([pdfFromJpeg(buf,c.width,c.height)],{type:'application/pdf'}));},'image/jpeg',.92);}},'Save PDF'),copy,ta);
   }}));
@@ -576,7 +576,7 @@ function wireRingDrop(card,dk){card.addEventListener('pointerdown',ev=>{const g=
 
 /* Review what's carried over: send each to today, or let it go (it moves to someday, nothing is deleted) */
 function carrySheet(dk){let inst;const draw=b=>{const late=carried();b.replaceChildren();if(!late.length){inst&&inst.close();return;}
-  b.append(el('p',{class:'small muted',style:'margin:0 4px 10px;text-align:center'},'Move to today, or let go of what no longer matters.'),el('div',{class:'list'},late.map(t=>el('div',{class:'li',style:''},el('span',{class:'grow'},el('span',{class:'tt',style:'display:block'},t.title),el('small',{style:'color:var(--now)'},`From ${relDay(t.date)}`)),
+  b.append(el('p',{class:'small muted',style:'margin:0 var(--s1) 10px;text-align:center'},'Move to today, or let go of what no longer matters.'),el('div',{class:'list'},late.map(t=>el('div',{class:'li',style:''},el('span',{class:'grow'},el('span',{class:'tt',style:'display:block'},t.title),el('small',{style:'color:var(--now)'},`From ${relDay(t.date)}`)),
     el('button',{class:'cpill',onclick:()=>{const d0=t.date;t.date=dk;t.moves=(t.moves||0)+1;put(t);draw(b);toast('Moved to today',()=>{t.date=d0;put(t);});}},'Today'),
     el('button',{class:'iconbtn','aria-label':`Let go of ${t.title}`,style:'width:40px;height:40px',html:ic('x',16,2.2),onclick:()=>{const d0=t.date;t.date=null;put(t);draw(b);toast(`Let go · in Someday`,()=>{t.date=d0;put(t);});}})))));};
   inst=openSheet({title:`${carried().length} carried over`,left:{label:'Done'},build:b=>draw(b)});}
@@ -713,5 +713,5 @@ function tabSkeleton(kind){const bar=(w,h=12,x='')=>el('div',{class:'skel',style
   else if(kind==='studio'){page.append(el('div',{class:'sk-habits'},[0,1,2].map(()=>el('div',{class:'sk-hab',style:'width:150px;height:84px'},bar('70%',10),bar('45%',10)))),
     ...[0,1,2,3].map(()=>el('section',{class:'card sk-card'},bar('24%',10),el('div',{class:'sk-row'},el('span',{class:'sk-tick'}),bar('62%')))));}
   else{page.append(bar('100%',46,'border-radius:12px'),el('div',{class:'sk-pins'},[0,1,2,3].map(()=>el('span',{class:'sk-ring',style:'width:52px;height:52px;border-width:0;background:var(--line-2)'}))),
-    el('section',{class:'card sk-card'},...[0,1,2,3].map(()=>el('div',{class:'sk-row'},el('span',{class:'sk-tick',style:'border-radius:12px'}),bar('50%')))));}
+    el('section',{class:'card sk-card'},...[0,1,2,3].map(()=>el('div',{class:'sk-row'},el('span',{class:'sk-tick',style:'border-radius:var(--r-row)'}),bar('50%')))));}
   return page;}

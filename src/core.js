@@ -6,7 +6,7 @@ const $=(s,r=document)=>r.querySelector(s);
 const $$=(s,r=document)=>[...r.querySelectorAll(s)];
 const el=(t,a={},...kids)=>{const e=document.createElement(t);for(const k in a){const v=a[k];if(v==null||v===false)continue;if(k==='class')e.className=v;else if(k==='html')e.innerHTML=v;else if(k==='style')e.setAttribute('style',v);else if(k==='value')e.value=v;else if(k.startsWith('on'))e.addEventListener(k.slice(2),v);else e.setAttribute(k,v===true?'':v);}for(const c of kids.flat(Infinity)){if(c==null||c===false)continue;e.append(c.nodeType?c:document.createTextNode(c));}return e;};
 /* ---- Components: every button, row, chip, icon button and page header in the app is drawn by one of these ---- */
-const BTN_V={primary:'primary',secondary:'line',quiet:'quiet',danger:'line danger',text:'text',link:'link'};
+const BTN_V={primary:'primary',tonal:'tonal',secondary:'line',quiet:'quiet',danger:'line danger',text:'text',link:'link'};
 function Button(label,{variant='secondary',size='md',icon=null,full=false,tone=null,cls='',...rest}={}){
   if(variant==='link'){const chev=rest.chevron;delete rest.chevron;const k=['linkbtn',size==='sm'?'small':'',tone==='danger'?'danger':'',cls].filter(Boolean).join(' ');
     return el(rest.href?'a':'button',{type:rest.href?null:'button',...rest,class:k},icon?el('span',{style:'display:grid',html:ic(icon,size==='sm'?14:16,2.2)}):null,label,chev?el('span',{class:'lchev',html:ic('chevr',size==='sm'?12:14,2.4)}):null);}

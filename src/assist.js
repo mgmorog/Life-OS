@@ -140,7 +140,7 @@ function smartLocal(D,why){const mny=String(D.title||'').match(/\$\s?(\d+(?:\.\d
   const it=g.kind==='allday'?{kind:'allday',title,start:when}:g.kind==='block'?{kind:'block',title,date:when,time:start!=null?hm(start):null,minutes:/dinner|brunch/i.test(D.title)?90:60}:{kind:'task',title,date:W.date||W.deadline||null};
   return smartValid({title,summary:`${why}, so this is a quick guess from your note. Check it before adding.`,items:[it]});}
 function smartButton(D,getFiles,finish){
-  const btn=Button(null,{variant:'secondary',full:true,hidden:true,html:ic('spark',18,1.9)+'<span>Sort this for me</span>'});let ctl=null;const label=t=>btn.querySelector('span').textContent=t;
+  const btn=Button(null,{variant:'tonal',full:true,hidden:true,html:ic('spark',18,1.9)+'<span>Sort this for me</span>'});let ctl=null;const label=t=>btn.querySelector('span').textContent=t;
   getSample().then(s=>{if(s)btn.hidden=false;});
   btn.onclick=async()=>{if(ctl){ctl.abort();return;}if(!(D.title.trim()||D.notes.trim()||(D.photos||[]).length)){toast('Add a note or a photo first.');return;}
     const s=await getSample();if(!s)return;ctl=new AbortController();label('Reading it… Tap to stop');let plan=null;

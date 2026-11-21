@@ -290,7 +290,7 @@ function dayCard(dk){
   const W=t3&&t3es.length===T3_MAX&&t3es.every(e=>e.done);
   if(W){if(S._won!==dk&&S._painted)todo.classList.add('win');todo.classList.add('won');S._won=dk;}else if(S._won===dk){S._won=null;if(motionOK())todo.classList.add('lose');}
   const freshDay=t3&&!t3es.length&&!todoAny.length&&!due.length&&!aiT.length&&!(late.length);
-  if(freshDay){const open=get.all('task').filter(t=>isOpenTask(t)&&(!t.repeat||t.repeat.type==='never')).length;todo.append(el('div',{class:'fresh3'},el('p',{class:'serif',style:'font-size:var(--fs-title);line-height:1.2;margin:var(--s1) 0 2px'},dk===tk?'What are today’s three?':`What are ${relDay(dk)}’s three?`),open?Caption(`Pick from ${dCount(open,'open task')}.`,{as:'p',style:'margin:0 0 var(--s3)'}):null,btnP('Pick three',()=>t3PickSheet(dk,0),{style:'width:100%'})));}
+  if(freshDay){const open=get.all('task').filter(t=>isOpenTask(t)&&(!t.repeat||t.repeat.type==='never')).length;todo.append(el('div',{class:'fresh3'},el('p',{class:'serif',style:'font-size:var(--fs-title);line-height:1.2;margin:var(--s1) 0 2px'},dk===tk?'What are today’s three?':`What are ${relDay(dk)}’s three?`),open?Caption(`Pick from ${dCount(open,'open task')}.`,{as:'p',style:'margin:0 0 var(--s3)'}):null,btnP('Pick three',()=>t3PickSheet(dk,0),{variant:'tonal',size:'lg',style:'width:100%'})));}
   else if(t3)todo.append(priorityRings(dk,t3es,W));
   const nx=t3?t3es.find(e=>!e.done):null;
   if(W)todo.append(el('p',{class:'wonmsg'},'What mattered most is done.'));

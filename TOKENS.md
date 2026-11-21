@@ -109,6 +109,7 @@ Components use the **Roles**; palettes in Settings change the accent colours und
 | `--text` | `var(--ink)` | `#1E2622` |
 | `--text-muted` | `var(--ink-2)` | `#5B6560` |
 | `--border` | `var(--line)` | `#E5E7E1` |
+| `--edge` | `transparent` |  |
 | `--focus` | `var(--accent)` | `#466B5A` |
 
 ## Type
@@ -117,11 +118,11 @@ Components use the **Roles**; palettes in Settings change the accent colours und
 | --- | --- | --- |
 | `--fs-cell` | `11px` |  |
 | `--fs-caption` | `12px` |  |
-| `--fs-footnote` | `13px` |  |
-| `--fs-label` | `14px` |  |
-| `--fs-row` | `15px` |  |
-| `--fs-body` | `16px` |  |
-| `--fs-headline` | `17px` |  |
+| `--fs-footnote` | `14px` |  |
+| `--fs-label` | `15px` |  |
+| `--fs-row` | `16px` |  |
+| `--fs-body` | `17px` |  |
+| `--fs-headline` | `18px` |  |
 | `--fs-title-s` | `20px` |  |
 | `--fs-title` | `22px` |  |
 | `--fs-large-s` | `26px` |  |
@@ -146,7 +147,7 @@ Components use the **Roles**; palettes in Settings change the accent colours und
 | `--s4` | `16px` |  |
 | `--s5` | `24px` |  |
 | `--s6` | `32px` |  |
-| `--pad-card` | `16px` |  |
+| `--pad-card` | `18px` |  |
 | `--pad-row` | `16px` |  |
 | `--pad` | `18px` |  |
 
@@ -157,8 +158,8 @@ Components use the **Roles**; palettes in Settings change the accent colours und
 | `--r-full` | `999px` |  |
 | `--r-chip` | `8px` |  |
 | `--r-row` | `12px` |  |
-| `--r-card` | `18px` |  |
-| `--r-sheet` | `24px` |  |
+| `--r-card` | `22px` |  |
+| `--r-sheet` | `28px` |  |
 | `--r-micro` | `4px` |  |
 
 ## Size
@@ -169,25 +170,25 @@ Components use the **Roles**; palettes in Settings change the accent colours und
 | `--icon` | `16px` |  |
 | `--icon-md` | `20px` |  |
 | `--icon-lg` | `24px` |  |
-| `--ctl-sm` | `36px` |  |
+| `--ctl-sm` | `40px` |  |
 | `--ctl` | `44px` |  |
-| `--ctl-lg` | `52px` |  |
-| `--row` | `52px` |  |
+| `--ctl-lg` | `56px` |  |
+| `--row` | `56px` |  |
 | `--icon-col` | `40px` |  |
 | `--bar` | `68px` |  |
 | `--hour` | `56px` |  |
-| `--row-2` | `64px` |  |
+| `--row-2` | `68px` |  |
 
 ## Depth
 
 | Token | Value | Resolves to |
 | --- | --- | --- |
 | `--e-flat` | `none` |  |
-| `--e-raised` | `var(--shadow-1)` | `0 1px 2px rgba(20,30,25,.06),0 1px 6px rgba(20,30,25,.04)` |
+| `--e-raised` | `var(--shadow-1)` | `0 1px 3px rgba(20,30,25,.05),0 4px 14px rgba(20,30,25,.05)` |
 | `--e-floating` | `var(--shadow-2)` | `0 10px 30px rgba(20,30,25,.12)` |
 | `--e-overlay` | `var(--shadow-3)` | `0 18px 44px rgba(20,30,25,.2)` |
 | `--e-focus` | `0 0 0 4px color-mix(in srgb,var(--accent) 22%,transparent)` | `0 0 0 4px color-mix(in srgb,#466B5A 22%,transparent)` |
-| `--shadow-1` | `0 1px 2px rgba(20,30,25,.06),0 1px 6px rgba(20,30,25,.04)` |  |
+| `--shadow-1` | `0 1px 3px rgba(20,30,25,.05),0 4px 14px rgba(20,30,25,.05)` |  |
 | `--shadow-2` | `0 10px 30px rgba(20,30,25,.12)` |  |
 | `--shadow-3` | `0 18px 44px rgba(20,30,25,.2)` |  |
 

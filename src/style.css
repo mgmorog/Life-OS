@@ -3449,3 +3449,5 @@ body.hasfloat .page{padding-bottom:calc(var(--float-h,0px) + 120px)}
 @media (min-width:900px){.nav{box-shadow:none}}
 .stslot{border-color:var(--edge)}
 .stslot.istoday{background:var(--accent-wash);box-shadow:var(--e-raised)}
+/* a divider only between rows: the add row draws none when it is first */
+.stepcard>.addrow:first-child,.stepcard>.steps:empty+.stepadd,.group>.addrow:first-child,.list>.addrow:first-child{border-top:0}

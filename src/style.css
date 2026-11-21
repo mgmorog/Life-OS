@@ -24,10 +24,10 @@
   /* Roles · what components use (palettes change these through the colours above) */
   --action:var(--accent); --action-text:var(--accent-text); --done:var(--accent); --selected:var(--accent-soft);
   --overdue:var(--now); --surface:var(--bg); --surface-raised:var(--card); --text:var(--ink);
-  --text-muted:var(--ink-2); --border:var(--line); --edge:transparent; --focus:var(--accent);
+  --text-muted:var(--ink-2); --border:var(--line); --edge:transparent; --chev:#B9BEB9; --tick-ring:var(--line-strong); --focus:var(--accent);
   /* Type */
   --fs-cell:11px; --fs-caption:12px; --fs-footnote:14px; --fs-label:15px; --fs-row:16px; --fs-body:17px;
-  --fs-headline:18px; --fs-title-s:20px; --fs-title:22px; --fs-large-s:26px; --fs-large:30px; --fs-display:44px;
+  --fs-headline:18px; --fs-title-s:20px; --fs-title:22px; --fs-large-s:26px; --fs-large:30px; --fs-stat:28px; --fs-display:44px;
   --tr-tight:-.01em; --tr-caps:0em; --label-case:none; --lh-tight:1.1; --lh-ui:1.35; --lh-read:1.5;
   --display:"Newsreader","Iowan Old Style",Palatino,Georgia,serif;
   --body:"Figtree",-apple-system,"Segoe UI",system-ui,sans-serif; --lh-solid:1;
@@ -3510,3 +3510,31 @@ body.hasfloat .page{padding-bottom:calc(var(--float-h,0px) + 120px)}
 .t3row.done{min-height:40px}
 .t3row.done .tt{font-size:var(--fs-footnote);color:var(--ink-3);background-size:0 0}
 .t3row.done .tick,.t3row.done .t3n{transform:scale(.72);transform-origin:center}
+/* v251 · polish round 3 */
+/* dates as a plain text column, not boxed tiles */
+.dbadge,.hdtile{width:52px;height:auto;min-height:0;background:none!important;border-radius:0;flex-direction:row;align-items:baseline;justify-content:flex-start;gap:3px;color:var(--text-muted);line-height:var(--lh-ui)}
+.dbadge i,.hdtile i{font-size:var(--fs-footnote);font-weight:500;letter-spacing:0;text-transform:none}
+.dbadge b,.hdtile b{font-size:var(--fs-footnote);font-weight:500;margin:0}
+.dbadge.today,.hdtile.today{color:var(--action-text)}.dbadge.today i,.dbadge.today b{font-weight:600}
+.dbadge.late{color:var(--overdue)}.dbadge.warn,.hdtile.warn{color:var(--amber)}
+.odrow2.soft{display:flex;align-items:center;gap:var(--s3);width:100%;min-height:var(--row-2);padding:var(--s2) 0;text-align:left;border-bottom:1px solid var(--line-2);color:var(--text)}
+.odrow2.soft b{display:block;font-weight:600;font-size:var(--fs-row)}
+.odrow2.soft small{display:block;font-size:var(--fs-footnote);color:var(--text-muted)}
+.odrow2.soft .odpill{flex:none;height:32px;padding:0 var(--s3);border-radius:var(--r-full);background:var(--selected);color:var(--accent-deep);font-size:var(--fs-footnote);font-weight:600;display:inline-flex;align-items:center}
+.m-head .m-go{width:auto;height:auto;background:none!important;box-shadow:none;color:var(--ink-faint);margin-left:var(--s1)}
+/* softer chevrons, one colour everywhere */
+.chev,.aichev,.rend.chev,.hachev,.m-go{color:var(--chev)!important}
+/* lighter open-tick ring */
+.tick:not(.on){border-width:1.4px;border-color:var(--tick-ring)}
+.done>.tick{border-color:var(--done)}
+/* dividers start where the row's text starts */
+.list>.li+.li:has(>.itile.md)::before,.list>.li+.li:has(>.sq)::before{left:calc(var(--s4) + 36px + var(--s4))}
+.list>.li+.li:has(>.itile.sm)::before{left:calc(var(--s4) + 28px + var(--s4))}
+.list>.li+.li:has(>.tick-hit)::before{left:calc(var(--s4) + 24px + var(--s3))}
+/* frosted bottom bar: content glides under it */
+.nav{background:color-mix(in srgb,var(--surface) 72%,transparent);-webkit-backdrop-filter:blur(18px) saturate(1.6);backdrop-filter:blur(18px) saturate(1.6)}
+@media (min-width:900px){.nav{background:var(--surface);-webkit-backdrop-filter:none;backdrop-filter:none}}
+.stat .stv,.stat.md .stv,.stat.lg .stv{font-size:var(--fs-stat);font-weight:400}
+.statrow .stat .stv,.statrow .stat.lg .stv{font-size:var(--fs-title)}
+.stat.sm .stv{font-size:var(--fs-headline)}
+.ometa .atag,.meta .atag{margin-right:0;vertical-align:-2px}

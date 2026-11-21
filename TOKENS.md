@@ -82,10 +82,10 @@ Components use the **Roles**; palettes in Settings change the accent colours und
 
 | Token | Value | Resolves to |
 | --- | --- | --- |
-| `--h0` | `#E8EAE4` |  |
-| `--h1` | `#DCE5DF` |  |
-| `--h2` | `#BCD0C4` |  |
-| `--h3` | `#8FB09E` |  |
+| `--h0` | `#EEF2EE` |  |
+| `--h1` | `#E2EBE6` |  |
+| `--h2` | `#CFE1D7` |  |
+| `--h3` | `#9DBFAE` |  |
 | `--h4` | `#4E6E5E` |  |
 | `--chart-1` | `var(--accent)` | `#466B5A` |
 | `--chart-2` | `var(--a-career)` | `#4A6E9C` |
@@ -110,6 +110,8 @@ Components use the **Roles**; palettes in Settings change the accent colours und
 | `--text-muted` | `var(--ink-2)` | `#5B6560` |
 | `--border` | `var(--line)` | `#E5E7E1` |
 | `--edge` | `transparent` |  |
+| `--chev` | `#B9BEB9` |  |
+| `--tick-ring` | `var(--line-strong)` | `#C9CDC7` |
 | `--focus` | `var(--accent)` | `#466B5A` |
 
 ## Type
@@ -127,9 +129,11 @@ Components use the **Roles**; palettes in Settings change the accent colours und
 | `--fs-title` | `22px` |  |
 | `--fs-large-s` | `26px` |  |
 | `--fs-large` | `30px` |  |
+| `--fs-stat` | `28px` |  |
 | `--fs-display` | `44px` |  |
 | `--tr-tight` | `-.01em` |  |
-| `--tr-caps` | `.12em` |  |
+| `--tr-caps` | `0em` |  |
+| `--label-case` | `none` |  |
 | `--lh-tight` | `1.1` |  |
 | `--lh-ui` | `1.35` |  |
 | `--lh-read` | `1.5` |  |

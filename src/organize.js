@@ -7,9 +7,8 @@ function orgHead(title,sub,{type,menu,menuLabel,sort}={}){
   const[b,to]=backInfo();
   return PageHeader({back:{label:b,to},title,actions:[
 
-    IconButton(`Search ${title.toLowerCase()}`,{cls:'green',html:ic('search',21,1.9),onclick:e=>{searchFrom(e.currentTarget);App.state.q='';App.state.qType=type||'All';App.go('search');}}),
-    sorts.length?IconButton(sorts.length===1?sorts[0].label:`Sort ${title.toLowerCase()}`,{cls:'green',html:ic('sort',21,1.9),onclick:e=>{if(sorts.length===1)return sorts[0].onclick();Menu(sorts,{at:e.currentTarget});}}):null,
-    more.length?moreB(menuLabel||`${title} options`,e=>{Menu(menu().filter(Boolean),{at:e.currentTarget});}):null]});
+    /* v251 · one header icon: search and sort live in the ••• menu */
+    moreB(menuLabel||`${title} options`,e=>{const at=e.currentTarget;Menu([{label:`Search ${title.toLowerCase()}`,icon:'search',onclick:()=>{searchFrom(at);App.state.q='';App.state.qType=type||'All';App.go('search');}},...(sort?sort().filter(Boolean):[]),...(menu?menu().filter(Boolean):[])],{at});})]});
 }
 const addBar=(label,aria,fn)=>el('button',{class:'oadd','aria-label':aria,onclick:fn},el('span',{style:'display:grid',html:ic('plus',20,2)}),label);
 const areasIn=list=>[...new Set(list.map(r=>r.area).filter(Boolean))].sort();
@@ -111,6 +110,7 @@ function taskRow(t,dk,{late=false,date=false,doneOn=null,grouped=false}={}){
   if(!done&&!doneOn){const dm=depMeta(t);if(dm)meta.push(dm);}
   if(proj)meta.push(proj.title);
   if(!doneOn)tagMeta(t).forEach(x=>meta.push(x));
+  if(t.area&&!grouped&&!doneOn)meta.unshift(areaTag(t.area));
   const hold=(x,y)=>itemMenu({kind:'task',id:t.id,rec:t,title:t.title,time:t.time,dur:t.dur||30,area:t.area,done},t.date&&!(t.repeat&&t.repeat.type!=='never')?t.date:dk,x,y);
   const r=el('div',{class:'li tick-host'+(done?' done':''),'data-k':'t:'+t.id+(doneOn?':d':''),style:''},
     el('span',{class:'tick-hit'},tickBtn(done,on=>{r.classList.toggle('done',on);if(!on)hideToast();setTaskDone(t,dk,on);setTimeout(()=>App.refresh(),820);}),steps.length&&!done?stepRing(t.id,sd,steps.length):null),

@@ -451,7 +451,8 @@ document.addEventListener('click',e=>{const h=e.target.closest&&e.target.closest
   if(navigator.onLine===false)setTimeout(()=>dispatchEvent(new Event('offline')),300);})();
 /* First visit to a swipeable list: the top row peeks sideways once to show what's underneath */
 function swipeHint(){try{if(localStorage.getItem('lifeos-swipehint'))return;}catch(e){return;}const w=$('#view .swr');if(!w||!motionOK())return;const n=w.querySelector('.li');if(!n)return;try{localStorage.setItem('lifeos-swipehint','1');}catch(e){}
-  w.dataset.dir='l';n.animate([{transform:'none'},{transform:'translateX(-76px)',offset:.35},{transform:'translateX(-76px)',offset:.55},{transform:'none'}],{duration:1300,easing:EASE}).onfinish=()=>{w.dataset.dir='r';n.animate([{transform:'none'},{transform:'translateX(66px)',offset:.35},{transform:'translateX(66px)',offset:.55},{transform:'none'}],{duration:1200,easing:EASE}).onfinish=()=>{delete w.dataset.dir;};};}
+  /* v251 · one small nudge toward the keep action; never flashes the red delete colour */
+  w.dataset.dir='r';n.animate([{transform:'none'},{transform:'translateX(36px)',offset:.4},{transform:'translateX(36px)',offset:.55},{transform:'none'}],{duration:1100,easing:EASE}).onfinish=()=>{delete w.dataset.dir;};}
 /* Pinned shortcuts in edit mode: they jiggle, drag one to reorder */
 function pinDrag(tile){tile.addEventListener('pointerdown',e=>{if(!App.state.pinEdit||e.target.closest('.pin-x'))return;const grid=tile.parentElement,cells=[...grid.children],i=cells.indexOf(tile),rs=cells.map(c=>c.getBoundingClientRect()),x0=e.clientX,y0=e.clientY;let to=i,moved=false;tile.setPointerCapture(e.pointerId);
   const step=rs.length>1?rs[1].left-rs[0].left:0;

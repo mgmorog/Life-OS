@@ -40,6 +40,8 @@ const App={
     const skelG=root.querySelector('.skel')?$$('#view .page>*').filter(n=>n.querySelector('.skel')||n.classList.contains('skel')).map(ghostOf).filter(Boolean):[];
     const noDepth=S._noDepth;S._noDepth=false;const depthDir=!S._searchFrom&&!noDepth&&S.entering&&(S.dir==='push'||S.dir==='pop')&&S._painted?S.dir:null,depthGhost=null; /* v103: no two-page slide; the light CSS slide below runs smoothly on iPhone */
     root.replaceChildren(frag);try{a11yPass(root);}catch(e){}
+    /* v251 · one strong button per screen: the first solid one stays, the rest turn soft green */
+    try{[...root.querySelectorAll('.btn.primary')].slice(1).forEach(b=>{b.classList.remove('primary');b.classList.add('tonal');});}catch(e){}
     animateFills(root,S);
     listPlay(root,listBefore);
     rollCounts(root,`${S.view}|${S.sel}`);

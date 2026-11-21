@@ -54,7 +54,9 @@ function dashTools(page,name,hub){const off=hubHidden(name);page.append(lblRow('
 /* a module's one-line status, or nothing when it would only say zero or "nothing" */
 function modSub(v){let x=String(v==null?'':v).trim();if(!x||/^(\$?0(\.0+)?\b|0 [a-z]|nothing|no |none|not yet|all caught up|all up to date|all good)/i.test(x)||/\b0 consistency\b/.test(x))return null;
   x=x.replace(/(^|[^\d.,])1 ([a-z]+?)((?<!ser)ies|ren|(?<![su]|thi|ha|wa|i)s)\b/gi,(m,a,w,e)=>a+'1 '+w+(e.toLowerCase()==='ies'?'y':e.toLowerCase()==='ren'?'':''));return el('small',{class:'l2'},x);}
-function dashNotes(page,name){const notes=get.id('area-'+name)||{id:'area-'+name,kind:'areanote',text:''};page.append(fieldNotes('f-area-notes','Notes',`What matters in ${name.toLowerCase()} right now`,notes.text,v=>{notes.text=v;put(notes,{silent:true});}));}
+function dashNotes(page,name){const notes=get.id('area-'+name)||{id:'area-'+name,kind:'areanote',text:''};const S=App.state;
+  if(!(notes.text||'').trim()&&S.areaNoteOpen!==name){page.append(el('button',{class:'oquiet anote',onclick:()=>{S.areaNoteOpen=name;App.refresh();setTimeout(()=>{const f=$('#f-area-notes');if(f)f.focus();},60);}},el('span',{style:'display:grid',html:ic('edit',14,2.2)}),el('span',{class:'grow',style:'text-align:left'},`Add a note for ${name}`)));return;}
+  page.append(fieldNotes('f-area-notes','Notes',`What matters in ${name.toLowerCase()} right now`,notes.text,v=>{notes.text=v;put(notes,{silent:true});}));}
 /* ===== Health dashboard ===== */
 function hCheckMap(){const m={};ofType('Health','checkin','').forEach(x=>{if(x.f.date)m[x.f.date]=x;});return m;}
 function hMedActive(m,d){const a=m.createdAt?k(new Date(m.createdAt)):'';const t=m.f.taken||{};return !a||d>=a||!!t[d];}

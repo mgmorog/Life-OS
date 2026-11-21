@@ -3452,3 +3452,6 @@ body.hasfloat .page{padding-bottom:calc(var(--float-h,0px) + 120px)}
 .stslot.istoday{background:var(--accent-wash);box-shadow:var(--e-raised)}
 /* a divider only between rows: the add row draws none when it is first */
 .stepcard>.addrow:first-child,.stepcard>.steps:empty+.stepadd,.group>.addrow:first-child,.list>.addrow:first-child{border-top:0}
+/* v248 · the compact title bar carries the page's back button once you scroll; picker shows only this month's days */
+.mini .mback{position:absolute;left:max(var(--s2),env(safe-area-inset-left,0px));top:0;bottom:0;width:var(--ctl);display:grid;place-items:center;color:inherit}
+.dp-d.dp-blank{pointer-events:none}

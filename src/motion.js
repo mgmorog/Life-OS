@@ -181,7 +181,7 @@ function todayHeaderScroll(){
 }
 /* v229 · every page: its big title fades into the same compact bar as Today; tap the bar to go back to the top */
 function pageTitleScroll(m){const h=$('#view .pgtitle');if(!h){if(m._pg){m.style.cssText='';m.textContent='';m.onclick=null;m._pg=null;}return;}
-  const t=h.textContent.trim();if(m._pg!==t){m._pg=t;m.textContent=t;m.onclick=()=>scrollTo({top:0,behavior:motionOK()?'smooth':'auto'});}
+  const t=h.textContent.trim(),bk=$('#view .back');if(m._pg!==t){m._pg=t;m.replaceChildren(t);if(bk){const lab=bk.textContent.trim()||'Back';m.append(el('button',{class:'mback','aria-label':'Back to '+lab,html:ic('chevl',20,2.2),onclick:e=>{e.stopPropagation();const b=$('#view .back');if(b)b.click();}}));}m.onclick=()=>scrollTo({top:0,behavior:motionOK()?'smooth':'auto'});}
   const top=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--sat'))||0,r=h.getBoundingClientRect(),bar=52+top;
   const start=Math.max(0,r.top+scrollY-bar),p=Math.max(0,Math.min(1,(scrollY-start)/(r.height*.8)));
   h.style.transformOrigin='left center';h.style.transform=motionOK()&&p>0?`scale(${1-.12*p})`:'';h.style.opacity=p>0?String(1-p):'';
@@ -690,8 +690,9 @@ function dateDropEl(dk){
     yr.textContent=String(ym.y);
     chips.replaceChildren(...list.map(x=>{const on=x.y===ym.y&&x.m===ym.m;const b=el('button',{class:'chip filter dp-chip'+(on?' on':''),role:'tab','aria-selected':on?'true':'false',onclick:()=>{const d=(x.y-ym.y)*12+(x.m-ym.m);if(!d)return;ym={y:x.y,m:x.m};draw(d>0?1:-1,true);}},(x.m===0&&x.y!==ym.y?MON[x.m]+' ’'+String(x.y).slice(2):MON[x.m]));return b;}));
     const first=new Date(ym.y,ym.m,1),start=weekStartOf(first),cells=[];
-    const weeks=Math.ceil((monIdx(first)+new Date(ym.y,ym.m+1,0).getDate())/7);
+    const weeks=Math.ceil((Math.round((first-start)/864e5)+new Date(ym.y,ym.m+1,0).getDate())/7);
     for(let i=0;i<weeks*7;i++){const d=addD(start,i),key=k(d),inM=d.getMonth()===ym.m;
+      if(!inM){cells.push(el('span',{class:'dp-d dp-blank','aria-hidden':'true'}));continue;}
       cells.push(el('button',{class:'dp-d'+(inM?'':' out')+(key===dk?' sel':'')+(key===tK?' today':''),'aria-label':`${DOW[d.getDay()]}, ${MONL[d.getMonth()]} ${d.getDate()}`,'aria-current':key===dk?'date':null,onclick:()=>close(key)},String(d.getDate()),inM&&has(key)?el('i',{'aria-hidden':'true'}):null));}
     const body=el('div',{class:'dp-days'},...cells);
     grid.replaceChildren(el('div',{class:'dp-wd','aria-hidden':'true'},...wdMap(w=>el('span',{},w))),body);

@@ -1867,16 +1867,16 @@ html.a-motion #st-dock .scard{transition:none}
 .dp-grid{padding:0 var(--s3);overflow:hidden}
 .dp-wd,.dp-days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr))}
 .dp-wd{text-align:center;font-size:var(--fs-caption);font-weight:600;letter-spacing:var(--tr-caps);color:var(--text-muted);padding-bottom:var(--s1)}
-.dp-days{row-gap:var(--s1)}
-.dp-d{justify-self:center;position:relative;width:46px;height:46px;border-radius:var(--r-full);font-size:var(--fs-headline);font-weight:500;color:var(--text);display:grid;place-items:center;font-variant-numeric:tabular-nums;transition:background var(--dur-fast),transform var(--dur-fast) var(--ease)}
+.dp-days{row-gap:2px}
+.dp-d{justify-self:center;position:relative;width:var(--ctl-sm);height:var(--ctl-sm);border-radius:var(--r-full);font-size:var(--fs-headline);font-weight:500;color:var(--text);display:grid;place-items:center;font-variant-numeric:tabular-nums;transition:background var(--dur-fast),transform var(--dur-fast) var(--ease)}
 .dp-d:active{transform:scale(.9);background:var(--chip)}
 .dp-d.today{box-shadow:inset 0 0 0 1.5px var(--action)}
 .dp-d.sel{background:var(--action);color:var(--on-accent);font-weight:600;box-shadow:var(--e-flat)}
 .dp-d i{position:absolute;bottom:5px;left:50%;width:5px;height:5px;margin-left:calc(var(--s1) * -1);border-radius:var(--r-full);background:var(--action)}
 .dp-d.sel i{background:var(--on-accent)}
-.dp-quick{display:grid;grid-template-columns:repeat(4,minmax(0,auto));justify-content:space-between;gap:var(--s2);padding:var(--s3) var(--s4) 0}
-.dp-q{height:40px;padding:0 var(--s3);white-space:nowrap;font-size:var(--fs-footnote);border-radius:var(--r-full);border:1px solid var(--border);background:var(--surface-raised);color:var(--text);font-size:var(--fs-label);font-weight:500}
-.dp-q.on{border-color:var(--action);color:var(--action-text)}
+.dp-quick{display:flex;gap:var(--s2);padding:var(--s3) var(--s4) 0}
+.dp-q{flex:1 1 auto;min-width:0;height:var(--ctl-sm);padding:0 var(--s2);white-space:nowrap;text-align:center;border-radius:var(--r-full);background:var(--chip);color:var(--text);font-size:var(--fs-label);font-weight:500}
+.dp-q.on{background:var(--selected);color:var(--accent-deep);font-weight:600}
 /* module icon beside page titles: same icon as in the lists, so the two are learned together */
 .tirow{display:flex;align-items:flex-start;gap:var(--s3);margin-top:var(--s1)}
 .tirow>.pgtitle,.tirow>.otitle{flex:1;min-width:0;margin-top:0}
@@ -3131,9 +3131,9 @@ input,textarea,[contenteditable]{caret-color:var(--action)}
 ::selection{background:var(--accent-pale);color:var(--text)}
 /* Increase Contrast (iPhone Settings › Accessibility): darker lines and edges, muted text near black, outlined chips */
 @media(prefers-contrast:more){
-  :root{--line:#9AA19C;--line-2:#C3C8C3;--line-3:#8E958F;--line-strong:#7A817C;--seg:#D6D9D3;--ink-2:#3B433F;--ink-3:#3B433F;--ink-soft:#3B433F;--ink-faint:#5B6560;--accent-text:#2F4A3D;--edge:rgba(20,30,25,.12)}
+  :root{--line:#C2C7C2;--line-2:#D3D7D2;--line-3:#A3AAA5;--line-strong:#8A918C;--seg:#D6D9D3;--ink-2:#3B433F;--ink-3:#3B433F;--ink-soft:#3B433F;--ink-faint:#5B6560;--accent-text:#2F4A3D;--edge:rgba(20,30,25,.12)}
   .sheet,.confirm,.menu{border-color:var(--border)}
-  .chip:not(.on),.fchip:not(.on),.achip:not(.on){box-shadow:inset 0 0 0 1px var(--border)}
+  .chip:not(.on),.fchip:not(.on),.achip:not(.on){box-shadow:inset 0 0 0 1px var(--edge)}
   .tick:not(.on){border-color:#6E7671}
 }
 /* iPad held upright (700–899px): a wider column, sheets as centered dialogs */

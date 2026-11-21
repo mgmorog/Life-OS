@@ -3538,3 +3538,7 @@ body.hasfloat .page{padding-bottom:calc(var(--float-h,0px) + 120px)}
 .statrow .stat .stv,.statrow .stat.lg .stv{font-size:var(--fs-title)}
 .stat.sm .stv{font-size:var(--fs-headline)}
 .ometa .atag,.meta .atag{margin-right:0;vertical-align:-2px}
+/* finished priorities step back (the slots Today really uses) */
+.pslot:has(.pl-done){min-height:36px}
+.plab.pl-done{text-decoration:none;font-size:var(--fs-footnote);color:var(--ink-3)}
+.pslot:has(.pl-done)>:first-child{transform:scale(.72);transform-origin:center}

@@ -186,7 +186,7 @@ function filterSheet(opts={}){
       if(step==='main'){
         const types=el('div',{class:'group'});[['task','task','Tasks and steps'],['block','hour','Time blocks'],['allday','cal','All-day items'],['habit','habit','Habits']].forEach(([id,icon,n])=>types.append(ctx.row(id,icon,n,null,{expand:false,trailing:ctx.sw(f.types[id]!==false,n,on=>{f.types[id]=on;draw();})})));
         box.append(SectionLabel('Show'),types,SectionLabel('Life areas'),el('div',{class:'chips'},[...(s.areas||AREAS),'None'].map(a=>el('button',{class:'chip ichip'+((f.areas||[]).includes(a)?' on':''),'aria-pressed':String((f.areas||[]).includes(a)),onclick:()=>{f.areas=f.areas||[];f.areas.includes(a)?f.areas=f.areas.filter(x=>x!==a):f.areas.push(a);draw();}},a!=='None'?areaChipIc(a):null,a))));
-        if(showHeat){const g=el('div',{class:'group'});g.append(ctx.row('dc','grid','Daily capacity',cap.mode==='hours'?`${cap.hours} hours`:`${cap.full} items`,{tap:()=>{step='cap';draw();},expand:false,trailing:el('span',{class:'chev',html:ic('chevr',16,2.2)})}));box.append(SectionLabel('Heat map'),g);}
+        if(showHeat){const g=el('div',{class:'group'});g.append(ctx.row('dc','grid','Daily capacity',cap.mode==='hours'?`${cap.hours} hours`:`${cap.full} items`,{tap:()=>{step='cap';draw();},expand:false,trailing:RowEnd('chevron')}));box.append(SectionLabel('Heat map'),g);}
       }else{
         const full=cap.mode==='hours'?cap.hours:cap.full,unit=cap.mode==='hours'?'h':'';
         const wrap=el('div',{class:box._step===step?'':'slide-l',style:'display:flex;flex-direction:column;gap:var(--s3)'});box._step=step;
@@ -219,9 +219,11 @@ function printWeek(startK){const days=Array.from({length:7},(_,i)=>addK(startK,i
   setTimeout(()=>{try{window.print();}catch(e){done();}setTimeout(()=>{if(!matchMedia('print').matches&&document.body.classList.contains('printing'))done();},60000);},80);}
 
 /* v237 · week timeline: seven columns by the hour on iPad and computer, three days at a time on iPhone */
-function weekTimeline(body,start,C){const tk=todayK(),wide=innerWidth>=BP.tablet,days=Array.from({length:7},(_,i)=>k(addD(start,i)));
+function weekTimeline(body,start,C){return TimeGrid(body,start,C);}
+/* one time grid for any run of days (Calendar's week; Today's day shares its hour height, lanes, travel bands and now-line) */
+function TimeGrid(body,start,C){const tk=todayK(),wide=innerWidth>=BP.tablet,days=Array.from({length:7},(_,i)=>k(addD(start,i)));
   if(C.tlOff==null||C.tlWeek!==days[0]){const ti=days.indexOf(tk);C.tlOff=wide?0:Math.max(0,Math.min(4,ti<0?0:ti));C.tlWeek=days[0];}
-  const show=wide?days:days.slice(C.tlOff,C.tlOff+3),HH=44,its=show.map(dk=>{const x=dayItems(dk,{filters:true});return{dk,all:x.allDay||[],timed:(x.timed||[]).filter(e=>e.time!=null&&!e.cont)};});
+  const show=wide?days:days.slice(C.tlOff,C.tlOff+3),its=show.map(dk=>{const x=dayItems(dk,{filters:true});return{dk,all:x.allDay||[],timed:(x.timed||[]).filter(e=>e.time!=null&&!e.cont)};});
   let h0=7,h1=21;its.forEach(o=>o.timed.forEach(e=>{h0=Math.min(h0,Math.floor((e.time-(+(e.rec&&e.rec.travel)||0))/60));h1=Math.max(h1,Math.ceil((e.time+(e.dur||30))/60));}));h0=Math.max(0,h0);h1=Math.min(24,h1);
   const cols=`44px repeat(${show.length},minmax(0,1fr))`,hours=[];for(let h=h0;h<=h1;h++)hours.push(h);
   const head=el('div',{class:'tlhead',style:`grid-template-columns:${cols}`},wide?el('span'):el('span',{class:'tlnav'},IconButton('Earlier days',{size:'sm',html:ic('chevl',16,2.2),disabled:C.tlOff<=0,onclick:()=>{C.tlOff=Math.max(0,C.tlOff-3);App.refresh();}})),
@@ -233,13 +235,14 @@ function weekTimeline(body,start,C){const tk=todayK(),wide=innerWidth>=BP.tablet
   its.forEach(o=>{const col=el('div',{class:'tlcol'+(o.dk===tk?' today':''),'aria-label':`${shortDay(o.dk)} timeline`,'data-dk':o.dk});
     for(let h=h0;h<h1;h++)col.append(el('i',{class:'tlln',style:`top:${(h-h0)*HH}px`}));
     col.addEventListener('click',ev=>{if(ev.target.closest('.tlev'))return;const r=col.getBoundingClientRect(),m=Math.round(((ev.clientY-r.top)/HH*60+h0*60)/15)*15;blockSheet(null,{date:o.dk,start:Math.max(0,Math.min(23*60+45,m)),dur:60});});
-    const lanes=[];const ps=o.timed.slice().sort((a,b)=>a.time-b.time).map(e=>{const end=e.time+Math.max(e.dur||30,20);let c=lanes.findIndex(x=>x<=e.time);if(c<0){c=lanes.length;lanes.push(0);}lanes[c]=end;return{e,c,end};});
-    ps.forEach(p=>{const n=Math.max(...ps.filter(q=>q.e.time<p.end&&q.end>p.e.time).map(q=>q.c))+1,e=p.e,top=(e.time-h0*60)/60*HH,ht=Math.max((Math.max(e.dur||30,20))/60*HH-2,18),tr=+(e.rec&&e.rec.travel)||0;const pos=`left:calc(${p.c}/${n}*100% + 1px);width:calc(100%/${n} - 3px)`;
-      if(tr&&e.kind==='block')col.append(el('div',{class:'tltr',style:`top:${top-tr/60*HH}px;height:${tr/60*HH}px;${pos};--c:${e.color||'var(--action)'}`,'aria-hidden':'true'}));
+    const ps=gridLanes(o.timed);
+    ps.forEach(p=>{const n=p.n,e=p.e,top=(e.time-h0*60)/60*HH,ht=Math.max((Math.max(e.dur||30,20))/60*HH-2,18),tr=+(e.rec&&e.rec.travel)||0;const pos=`left:calc(${p.c}/${n}*100% + 1px);width:calc(100%/${n} - 3px)`;
+      {const tb=travelBand(e,top,{pos:pos+';right:auto'});if(tb)col.append(tb);}
       const ev=el('button',{class:'tlev'+(e.done?' done':'')+(e.kind==='task'?' task':''),style:`top:${top}px;height:${ht}px;${pos};--c:${e.color||'var(--action)'}`,onclick:ev2=>{if(ev._dragged){ev._dragged=false;return;}openItem(e,o.dk);},'aria-label':`${fmtT(e.time)} ${e.title}`},el('b',{},e.title),ht>30?el('small',{},fmtT(e.time)):null);col.append(ev);if(e.kind==='block'&&e.rec&&!e.cont)tlDrag(ev,e,o.dk,{h0,HH,grid});});
-    if(o.dk===tk){const nm=nowMin();if(nm>=h0*60&&nm<=h1*60)col.append(el('i',{class:'tlnow',style:`top:${(nm-h0*60)/60*HH}px`}));}
+    if(o.dk===tk){const nm=nowMin();if(nm>=h0*60&&nm<=h1*60)col.append(nowLine((nm-h0*60)/60*HH));}
     grid.append(col);});
-  body.append(el('div',{class:'tlwrap'},head,allRow,grid));}
+  body.append(el('div',{class:'tlwrap'},head,allRow,grid));
+  {const tr=tlTray(days,{h0,HH,grid});if(tr)body.append(tr);}}
 
 /* v238 · drag in the week timeline: press and drag a block to another time or day, or drag its bottom edge */
 function tlDrag(ev,e,dk,{h0,HH,grid}){const r=e.rec,rep=r.repeat&&r.repeat.type!=='never',grip=el('i',{class:'tlgrip','aria-hidden':'true'});ev.append(grip);
@@ -256,3 +259,15 @@ function tlDrag(ev,e,dk,{h0,HH,grid}){const r=e.rec,rep=r.repeat&&r.repeat.type!
     toast(m==='size'?`${r.title} · ${fmtDurS(r.dur)}`:`${r.title} moved to ${nd===dk?'':relDay(nd)+', '}${fmtT(r.start)}`,()=>{Object.assign(r,was);put(r);App.refresh();});App.refresh();};
   ev.addEventListener('pointerup',end);ev.addEventListener('pointercancel',end);
   ev.addEventListener('contextmenu',x=>x.preventDefault());}
+
+/* v239 · a tray of unscheduled to-dos under the week timeline: drag one onto a day and hour */
+function tlTray(days,{h0,HH,grid}){const set=new Set(days),ts=get.all('task').filter(t=>isOpenTask(t)&&t.time==null&&!(t.repeat&&t.repeat.type!=='never')&&(!t.date||set.has(t.date))).sort((a,b)=>(a.date||'9')<(b.date||'9')?-1:1).slice(0,12);
+  if(!ts.length)return null;
+  const chip=t=>{const c=el('button',{type:'button',class:'trchip','aria-label':`${t.title}. Drag onto the timeline to schedule`},t.title,t.date?el('small',{},shortDay(t.date)):null);let ghost=null,sx=0,sy=0,live=false,tm=null;
+    const drop=(x,y)=>{const col=document.elementsFromPoint(x,y).find(n=>n.classList&&n.classList.contains('tlcol'));if(!col)return false;const r=col.getBoundingClientRect(),m=Math.max(0,Math.min(23*60+45,Math.round(((y-r.top)/HH*60+h0*60)/15)*15)),dk=col.dataset.dk,was={date:t.date,time:t.time};
+      t.date=dk;t.time=m;if(!t.dur)t.dur=planMin(t)||30;put(t);toast(`${t.title} · ${relDay(dk)}, ${fmtT(m)}`,()=>{t.date=was.date;t.time=was.time;put(t);App.refresh();});App.refresh();return true;};
+    c.addEventListener('pointerdown',e=>{if(e.button)return;sx=e.clientX;sy=e.clientY;try{c.setPointerCapture(e.pointerId);}catch(err){}tm=setTimeout(()=>{live=true;ghost=c.cloneNode(true);ghost.classList.add('trghost');ghost.style.left=sx+'px';ghost.style.top=sy+'px';document.body.append(ghost);c.classList.add('lifted');buzz(8);grid.classList.add('dropping');},e.pointerType==='mouse'?60:250);});
+    c.addEventListener('pointermove',e=>{if(!live){if(Math.hypot(e.clientX-sx,e.clientY-sy)>8&&e.pointerType!=='mouse')clearTimeout(tm);return;}e.preventDefault();ghost.style.left=e.clientX+'px';ghost.style.top=e.clientY+'px';});
+    const end=e=>{clearTimeout(tm);if(!live)return;live=false;c.classList.remove('lifted');grid.classList.remove('dropping');if(ghost){ghost.remove();ghost=null;}if(e&&e.type==='pointerup')drop(e.clientX,e.clientY);};
+    c.addEventListener('pointerup',end);c.addEventListener('pointercancel',end);c.addEventListener('click',()=>{if(!live)openRec(t);});return c;};
+  return el('div',{class:'tltray'},SectionLabel('Unscheduled',{count:ts.length,action:Caption('Drag onto the timeline')}),el('div',{class:'trlist'},ts.map(chip)));}

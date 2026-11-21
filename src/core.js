@@ -24,13 +24,15 @@ function Chip(label,{variant='filter',selected=false,icon=null,as='button',cls='
   if(icon&&rest.html==null)rest.html=ic(icon,14)+(label!=null&&typeof label!=='object'?esc(String(label)):'');
   return el(as,{...(as==='button'?{type:'button'}:{}),...rest,class:c},rest.html!=null&&icon?null:label);
 }
+/* v239 · the end of a row: a chevron, a value, a count or a small button, always the same distance from the edge */
+function RowEnd(t){if(t==null||t===false)return null;if(t==='chevron')return el('span',{class:'rend chev','aria-hidden':'true',html:ic('chevr',16,2)});if(t&&t.nodeType)return el('span',{class:'rend'},t);if(typeof t==='object'){if('count' in t)return el('span',{class:'rend n tnum'},String(t.count));if('value' in t)return el('span',{class:'rend v tnum'},t.value);if('button' in t)return el('span',{class:'rend'},t.button);}return el('span',{class:'rend v'},String(t));}
 function Row({lead=null,title=null,sub=null,trail=null,onOpen=null,swipe=null,menu=null,as=null,cls='',...rest}={},...kids){
   const tag=as||(onOpen||rest.onclick?'button':'div');
   const n=el(tag,{...(tag==='button'?{type:'button'}:{}),...rest,class:['li',cls].filter(Boolean).join(' '),onclick:onOpen||rest.onclick||null});
-  if(title!=null)n.append(...[lead,el('span',{class:'grow'},el('b',{class:'rt'},title),sub!=null&&sub!==''?el('small',{},sub):null),trail].filter(x=>x!=null&&x!==false));
+  if(title!=null)n.append(...[lead,el('span',{class:'grow'},el('b',{class:'rt'},title),sub!=null&&sub!==''?el('small',{},sub):null),trail&&(typeof trail==='string'||(!trail.nodeType&&!Array.isArray(trail)))?RowEnd(trail):trail].filter(x=>x!=null&&x!==false));
   for(const k of kids.flat(Infinity))if(k!=null&&k!==false)n.append(k.nodeType?k:document.createTextNode(k));
   if(swipe&&typeof swipeAct==='function')swipeAct(n,swipe);
-  if(menu)onPress(n,(x,y)=>openMenu(x,y,typeof menu==='function'?menu():menu));
+  if(menu)holdMenu(n,typeof menu==='function'?()=>menu():menu);
   return n;
 }
 function PageHeader({back=null,title,subtitle=null,actions=null,controls=null,cls='',titleClass='',titleStyle=null,rowClass='',after=null}={}){
@@ -80,6 +82,8 @@ function FloatingBar({content,actions=null,place='bottom',id=null,page=false,cls
   b.close=()=>{if(!b.isConnected)return;b.classList.add('out');setTimeout(()=>{b.remove();onClose&&onClose();},220);};
   floatStack(place).append(b);document.body.classList.add('hasfloat');return b;
 }
+/* v239 · a row of stats: equal columns with dividers; wraps to two rows on a narrow phone */
+function StatRow(stats,{cls='',size='md',...rest}={}){const items=stats.filter(Boolean).map(x=>x&&x.nodeType?x:Array.isArray(x)?Stat({value:x[0],label:x[1],trend:x[2],size}):Stat(Object.assign({size},x)));return el('div',{...rest,class:['statrow',items.length>3?'many':'',cls].filter(Boolean).join(' ')},items);}
 /* v237 · Stat, QuickAdd, IconTile, Stepper and DateBadge (links are Button({variant:'link'})) */
 function Stat({value,label=null,size='md',trend=null,cls='',...rest}={}){
   const tr=trend==null||trend===''?null:typeof trend==='object'?trend:{dir:/^-|^−|▼/.test(String(trend))?'down':'up',text:String(trend).replace(/^[+\-−▲▼]\s*/,'')};
@@ -372,6 +376,7 @@ function allDayOccStart(r,dk,strict=false){const span=r.end?daysBetween(r.start,
 function occursOn(startK,rep,dk,skip){
   if(!startK||dk<startK)return false;
   if(skip&&skip.includes(dk))return false;
+  if(rep&&rep.skipHol&&dk!==startK&&typeof Holidays!=='undefined'&&Holidays.name(dk))return false;
   if(dk===startK)return true;
   const r=rep||{type:'never'};
   if(r.type==='never')return false;
@@ -573,10 +578,14 @@ function askConfirm({title,body,yes='Discard',no='Keep editing',danger=true,alt,
 function closeMenu(){const m=$('.menu'),s=$('.mscrim');m&&m.remove();s&&s.remove();}
 let LASTPT={x:innerWidth/2,y:innerHeight/2};document.addEventListener('pointerdown',e=>{LASTPT={x:e.clientX,y:e.clientY};},true);
 /* four choices or fewer: a small menu where you tapped, not a sheet */
-const menuAt=items=>openMenu(LASTPT.x,LASTPT.y,items);
+const menuAt=items=>Menu(items);
+/* v239 · one menu: Menu(items,{at}) opens it at an element, an event or the last tap; holdMenu() attaches it to hold and right-click */
+function Menu(items,{at=null}={}){let x=LASTPT.x,y=LASTPT.y;if(at&&at.getBoundingClientRect){const r=at.getBoundingClientRect();x=r.right;y=r.bottom+4;}else if(at&&at.clientX!=null){x=at.clientX;y=at.clientY;}else if(at&&at.x!=null){x=at.x;y=at.y;}openMenu(x,y,typeof items==='function'?items():items);}
+function holdMenu(node,items,{skip=null}={}){onPress(node,(x,y)=>typeof items==='function'&&items.length>=2?items(x,y):openMenu(x,y,typeof items==='function'?items():items),skip);node.addEventListener('click',e=>{if(Date.now()-(node._pressed||0)<700){e.stopPropagation();e.preventDefault();}},true);return node;}
 function openMenu(x,y,items){
   closeMenu();{const tEl=$('#toast');if(tEl)tEl.classList.remove('on');}/* the lift of the finger that opened the menu must not close it or pick an item, however long it was held */let armed=false;document.addEventListener('pointerdown',()=>{armed=true;},{capture:true,once:true});const stray=e=>e.detail>0&&!armed;const scrim=el('div',{class:'mscrim',onclick:e=>{if(!stray(e))closeMenu();},oncontextmenu:e=>{e.preventDefault();closeMenu();}}),m=el('div',{class:'menu',role:'menu'});m.addEventListener('click',e=>{if(stray(e)){e.stopPropagation();e.preventDefault();}},true);
   items.filter(Boolean).forEach(it=>m.append(el('button',{role:'menuitem',class:it.danger?'danger':'',html:(it.icon?ic(it.icon,18):'')+`<span>${esc(it.label)}</span>`,onclick:()=>{closeMenu();it.onclick();}})));
+  m.setAttribute('aria-orientation','vertical');m.addEventListener('keydown',e=>{const bs=[...m.querySelectorAll('button')],i=bs.indexOf(document.activeElement);if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();const n=bs[(i+(e.key==='ArrowDown'?1:-1)+bs.length)%bs.length];n&&n.focus();}else if(e.key==='Home'||e.key==='End'){e.preventDefault();(e.key==='Home'?bs[0]:bs[bs.length-1]).focus();}else if(e.key==='Escape'||e.key==='Tab'){e.preventDefault();closeMenu();}});
   document.body.append(scrim,m);const vw=document.documentElement.clientWidth||innerWidth;m.style.left=Math.max(12,Math.min(x,vw-m.offsetWidth-12))+'px';m.style.top=Math.max(8,Math.min(y,innerHeight-m.offsetHeight-8))+'px';const f=m.querySelector('button');f&&f.focus({preventScroll:true});
 }
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -589,6 +598,7 @@ addEventListener('click',e=>{const c=e.target.closest&&e.target.closest('.clip')
 /* paste several lines into an add box: one item per line */
 function pasteLines(e,fn){const t=(e.clipboardData||window.clipboardData)?.getData('text')||'';const ls=t.split(/\r?\n/).map(x=>x.replace(/^\s*(?:[-*•▢☐]|\[[ x]?\]|\d+[.)])\s*/i,'').trim()).filter(Boolean);if(ls.length<2)return;e.preventDefault();fn(ls);}
 function onPress(node,fn,skip){
+  node.addEventListener('keydown',e=>{if(e.key==='ContextMenu'||(e.shiftKey&&e.key==='F10')){if(e.target!==node&&!node.contains(e.target))return;e.preventDefault();const r=(e.target.getBoundingClientRect?e.target:node).getBoundingClientRect();fn(r.left+16,r.bottom);}});
   node.addEventListener('contextmenu',e=>{e.preventDefault();if(lastPointer==='mouse'){markGs('hold');fn(e.clientX,e.clientY);}});
   let t,sx,sy;
   node.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse'||(skip&&e.target.closest(skip)))return;sx=e.clientX;sy=e.clientY;clearTimeout(t);t=setTimeout(()=>{buzz(8);node._pressed=Date.now();try{getSelection().removeAllRanges();}catch(err){}markGs('hold');fn(sx,sy);},420);});
@@ -630,8 +640,11 @@ function draggable(node,{label,start,move,drop,hold,filter,ghost:useGhost=true,c
 const clearPreviewSafe=()=>{const p=document.getElementById('drop-prev');p&&p.remove();};
 const EMPTY_ART='<svg class="eart" width="72" height="56" viewBox="0 0 88 70" aria-hidden="true"><path d="M53 60H24a10 10 0 0 1-10-10V20a10 10 0 0 1 10-10h40a10 10 0 0 1 10 10v19"/><path d="M26 28h36M26 40h22"/><circle cx="66" cy="52" r="11"/><path d="M61.2 52.2l3.3 3.3 6.3-6.8"/></svg>';
 /* v229 · the compact form of the same empty state, for spots inside cards and sheets */
-function emptySm(title,text,action){const n=emptyState(title,text,action);n.classList.add('sm');return n;}
-function emptyState(title,text,action){const art=document.createElement('span');art.innerHTML=EMPTY_ART;return el('div',{class:'empty'},art.firstChild,el('b',{},title),text?el('div',{},text):null,action||null);}
+/* v239 · one empty state: Empty({icon, title, body, action, size}) */
+function Empty({icon=null,title,body=null,action=null,size='lg',cls=''}={}){let art;if(icon)art=IconTile(icon,{size:size==='sm'?'md':'lg',cls:'eic'});else{const a=document.createElement('span');a.innerHTML=EMPTY_ART;art=a.firstChild;}
+  return el('div',{class:['empty',size==='sm'?'sm':'',cls].filter(Boolean).join(' ')},art,el('b',{},title),body?el('div',{},body):null,action?el('div',{class:'eact'},action):null);}
+function emptySm(title,text,action){return Empty({title,body:text,action,size:'sm'});}
+function emptyState(title,text,action){return Empty({title,body:text,action});}
 /* ---------- smooth transitions ----------
    vt(update,{dir}) runs a DOM update inside a View Transition when the browser has one
    (iOS 18+, Chrome), so the page cross-fades and named parts (the segmented thumb, the

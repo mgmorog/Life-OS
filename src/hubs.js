@@ -31,7 +31,7 @@ const lblRow=(t,r)=>SectionLabel(lblClean(t),{sticky:true,count:typeof r==='stri
 const lnk=(label,fn,icon)=>Button(label,{variant:'link',size:'sm',icon,onclick:fn});
 const bigN=(v,rest)=>Stat({value:v,label:rest||null,size:'lg'});
 /* "all is well" labels say nothing; only a status that needs attention gets a pill */
-const pill=(t,c='')=>!t||/^(On track|On pace|Up to date|All good)$/.test(t)?null:el('span',{class:'hpill '+c},t);
+const pill=(t,c='')=>!t||/^(On track|On pace|Up to date|All good)$/.test(t)?null:Chip(t,{variant:'status',as:'span',cls:'hpill '+(c||'neu')});
 const AMBER='#D9A441',RUST='#C76A2E';
 const meter=(f,{c,mark,tall}={})=>Progress(f,{tone:c||null,mark,size:tall?'lg':'md'});
 const paceC=f=>f>=1?RUST:f>=.75?AMBER:null;
@@ -154,7 +154,7 @@ function viewAreas(root){
   page.append(pageHead('Life areas',null,{icon:'heart',actions:IconButton('Manage life areas',{cls:'green',html:ic('gear',22),onclick:()=>App.go('setpage',{id:'areas'})})}));
   const S=App.state,used=a=>{const c=areaRecords(a);return c.tasks.length+c.habits.length+c.goals.length+c.projects.length+c.resources.length>0||get.all('entry').some(x=>x.hub===a&&!isCfg(x))||toolsOf(a).some(t=>!t.hide&&toolOn(a,t.id));};
   const quiet=areas.filter(a=>!used(a)),shown=S.areasAll?areas:areas.filter(used);const nexts=areaNexts();
-  page.append(el('div',{class:'list'},shown.map(a=>{const c=areaRecords(a),n=c.tasks.length+c.habits.length+c.goals.length+c.projects.length+get.all('entry').filter(x=>x.hub===a&&!isCfg(x)).length;const nx=nexts[a];return Row({style:'',onclick:()=>App.go('area',{name:a})},IconTile(null,{html:ic(areaIcon(a),20,1.7)}),el('span',{class:'grow'},el('b',{style:'font-size:var(--fs-headline)'},a),nx?el('small',{},nx):null),el('span',{class:'chev',html:ic('chevr',16,2)}));})));
+  page.append(el('div',{class:'list'},shown.map(a=>{const c=areaRecords(a),n=c.tasks.length+c.habits.length+c.goals.length+c.projects.length+get.all('entry').filter(x=>x.hub===a&&!isCfg(x)).length;const nx=nexts[a];return Row({style:'',onclick:()=>App.go('area',{name:a})},IconTile(null,{html:ic(areaIcon(a),20,1.7)}),el('span',{class:'grow'},el('b',{style:'font-size:var(--fs-headline)'},a),nx?el('small',{},nx):null),RowEnd('chevron'));})));
   if(quiet.length)page.append(Button([S.areasAll?'Hide areas you haven’t started':`${quiet.length} more area${quiet.length===1?'':'s'} you haven’t started`,el('span',{style:'display:grid;'+(S.areasAll?'transform:rotate(-90deg)':'transform:rotate(90deg)'),html:ic('chevr',14,2.2)})],{variant:'link',style:'margin:2px var(--s1) 0',onclick:()=>{S.areasAll=!S.areasAll;App.refresh();}}));
   {const loose=get.all('resource').filter(r=>!r.area&&!r.archived);if(loose.length)page.append(lblRow('Resources without an area'),Caption('Give each one a life area and it moves there.',{as:'p',style:'margin:-2px var(--s1) var(--s2)'}),el('div',{class:'list'},loose.map(r=>resRow(r))));}
   root.append(page);
@@ -224,7 +224,7 @@ function entrySheet(hub,t,rec,{seed=null,after=null,type=null,preset=null}={}){
   formSheet({title:isEdit?`Edit ${word}`:`New ${word}`,addLabel:isEdit?'Save':'Add',D,word,isEdit,canAdd:can,commit:()=>{let r;if(isEdit){rec.f=D;r=rec;put(rec);toast('Saved');}else{r=create('entry',{hub,tool:t.id,f:D});toast('Added',null,'Undo',{open:dest('tool',{hub,tool:t.id})});after&&after();}if(t.after)t.after(r);},build:(body,update,i)=>{body.classList.add('esheet');
     const short=!isEdit&&!(OB_TEST()&&!window.__LIFEOS_INTROS__)&&fields.length>3&&!entries(hub,t.id).some(x=>(x.f.t||'')===(ty||''));
     const first=renderFields(body,short?fields.slice(0,3):fields,D,update);
-    if(short){const more=el('div',{hidden:true});renderFields(more,fields.slice(3),D,update);const tg=el('button',{class:'ob-more','aria-expanded':'false',onclick:()=>{more.hidden=!more.hidden;tg.setAttribute('aria-expanded',String(!more.hidden));tg.querySelector('.chev').style.transform=more.hidden?'':'rotate(90deg)';}},el('span',{class:'grow'},el('b',{style:'font-weight:500'},'More details'),el('small',{},andList(fields.slice(3).map(f=>f.label.replace(/\s*\(.*\)$/,'').toLowerCase())).replace(/^./,c=>c.toUpperCase()))),el('span',{class:'chev',html:ic('chevr',16,2)}));body.append(tg,more);}
+    if(short){const more=el('div',{hidden:true});renderFields(more,fields.slice(3),D,update);const tg=el('button',{class:'ob-more','aria-expanded':'false',onclick:()=>{more.hidden=!more.hidden;tg.setAttribute('aria-expanded',String(!more.hidden));tg.querySelector('.chev').style.transform=more.hidden?'':'rotate(90deg)';}},el('span',{class:'grow'},el('b',{style:'font-weight:500'},'More details'),el('small',{},andList(fields.slice(3).map(f=>f.label.replace(/\s*\(.*\)$/,'').toLowerCase())).replace(/^./,c=>c.toUpperCase()))),RowEnd('chevron'));body.append(tg,more);}
     if(hasPhotos)body.append(SectionLabel('Photos'),photosEditor(D));
     if(isEdit)body.append(el('button',{class:'delete',onclick:()=>{const c=clone(rec),cal=rec.f.calId&&get.id(rec.f.calId),cc=cal&&clone(cal),un=t.onDelete?t.onDelete(rec):null;if(cal)remove(cal.id,{silent:true});remove(rec.id);i.close();toast('Deleted',()=>{put(c);if(cc)put(cc);if(un)un();App.refresh();});}},`Delete ${word}`));else if(first&&!first.value)focusIfKeyboard(first);}});
 }

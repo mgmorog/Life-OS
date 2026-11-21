@@ -35,7 +35,7 @@ function tplView(page,hub,t){const l=entries(hub,t.id),S=App.state;toolHead(page
   const open=x=>()=>t.onOpen?t.onOpen(x,hub,t):entrySheet(hub,t,x);
   const grouped=(list,draw)=>{if(!t.groupKey)return[draw(list)];const g={};list.forEach(x=>{const k2=String(x.f[t.groupKey]||'').trim()||'—';(g[k2]=g[k2]||[]).push(x);});const ks=Object.keys(g).sort((a,b)=>a==='—'?1:b==='—'?-1:a.localeCompare(b));if(ks.length<2)return[draw(list)];return ks.flatMap(k2=>[lblRow(k2==='—'?'Other':k2,`${g[k2].length}`),draw(g[k2])]);};
   if(t.tpl==='log'){const tk2=todayK(),fut=l.filter(x=>x.f.date>tk2).sort((a,b)=>a.f.date<b.f.date?-1:1),past=l.filter(x=>!(x.f.date>tk2)),wk=past.filter(thisWeek),[a]=weekRange(tk2),pa=addK(a,-7),pb=addK(a,-1),lw=past.filter(x=>x.f.date>=pa&&x.f.date<=pb),val=xs=>t.num?xs.reduce((n,x)=>n+(+x.f.n||0),0):xs.length,fmt=v=>t.money?money0(v):`${Math.round(v*10)/10}${t.num&&t.unit?' '+t.unit:''}`;
-    if(!t.head){const cells=[[val(wk),'this week'],[val(lw),'last week'],[val(past.filter(x=>(x.f.date||'').slice(0,4)===String(today().getFullYear()))),'this year']].filter(([v])=>v>0);if(cells.length)page.append(el('div',{class:'stat3'},cells.map(([v,lb])=>el('div',{},el('b',{},fmt(v)),el('small',{},lb)))));}
+    if(!t.head){const cells=[[val(wk),'this week'],[val(lw),'last week'],[val(past.filter(x=>(x.f.date||'').slice(0,4)===String(today().getFullYear()))),'this year']].filter(([v])=>v>0);if(cells.length)page.append(StatRow(cells.map(([v,lb])=>[fmt(v),lb]),{cls:'stat3'}));}
     if(fut.length)page.append(lblRow('Coming up',`${fut.length}`),rows(fut,x=>rowX({l:dtile(x.f.date,daysBetween(tk2,x.f.date)<=2?'due':''),t:t.title(x),s:t.sub(x),on:open(x),r:t.rowR?t.rowR(x):null})));
     const by={};past.slice().sort((x,y)=>(y.f.date||'')<(x.f.date||'')?-1:1).forEach(x=>{const mk=(x.f.date||'').slice(0,7)||'—';(by[mk]=by[mk]||[]).push(x);});
     Object.entries(by).slice(0,8).forEach(([mk,g])=>page.append(lblRow(mk==='—'?'No date':`${MONL[+mk.slice(5)-1]} ${mk.slice(0,4)}`,`${g.length}`),rows(g,x=>rowX({t:t.title(x),s:t.sub(x),on:open(x),r:t.rowR?t.rowR(x):null}))));return;}
@@ -214,7 +214,7 @@ function delMod(hub,t){const l=entries(hub,t.id),on=toolOn(hub,t.id);
 function viewModules(root){const page=el('div',{class:'page'}),{mine,extra}=modAreas(),onN=mine.reduce((n,a)=>n+toolsOf(a).filter(t=>toolOn(a,t.id)).length,0);
   const S=App.state,mf=S.modF||'all',keep=(a,t)=>!t.hide&&(mf==='all'||(mf==='on')===!!toolOn(a,t.id));
   page.append(pageHead('Modules',`${onN} on`,{back:'Settings',to:'prefs',icon:'grid'}));
-  page.append(el('button',{class:'otidy',onclick:()=>modSheet(null)},IconTile(null,{html:ic('plus',20,2)}),el('span',{class:'grow'},el('b',{},'Build your own module')),el('span',{class:'chev',html:ic('chevr',16,2)})));
+  page.append(el('button',{class:'otidy',onclick:()=>modSheet(null)},IconTile(null,{html:ic('plus',20,2)}),el('span',{class:'grow'},el('b',{},'Build your own module')),RowEnd('chevron')));
   page.append(el('div',{class:'chips',style:'margin:2px 0 var(--s1)'},[['all','All'],['on','On'],['off','Off']].map(([v,n])=>el('button',{class:'chip'+(mf===v?' on':''),'aria-pressed':String(mf===v),onclick:()=>{S.modF=v;App.refresh();}},n))));
   const modRow=(a,t)=>{const on=toolOn(a,t.id),n=entries(a,t.id).length,r=Row({as:'div',cls:'modrow',style:''},IconTile(null,{html:ic(t.icon||'grid',20,1.7)}),el('button',{class:'grow',style:'text-align:left',onclick:()=>on?App.go('tool',{hub:a,tool:t.id}):turnOnTool(a,t,{go:true})},el('b',{style:'font-weight:600'},t.name,t.custom?Chip('Yours',{as:'span',variant:'count',cls:'hpill',style:'margin-left:6px;background:var(--selected);color:var(--accent-deep)'}):null)),(()=>{const b=swMake(on,`${t.name} ${on?'on':'off'}`,()=>{if(on){setToolOn(a,t.id,false);toast(`${t.name} is off`,()=>setToolOn(a,t.id,true));App.refresh();}else turnOnTool(a,t);},on);b.append(el('i'));return b;})());return withPress(r,(x,y)=>modMenu(a,t,x,y));};
   /* Settings › Life areas › one area: show it or not, its modules, build one, and (custom areas) name, icon and delete */
@@ -222,12 +222,12 @@ function viewModules(root){const page=el('div',{class:'page'}),{mine,extra}=modA
   if(AREA){page.replaceChildren();const s=get.settings(),onA=(s.areas||AREAS).includes(AREA),custom=(s.areaExtra||[]).includes(AREA)&&!AREAS.includes(AREA)&&!OPT_AREAS.includes(AREA);
     const fromArea=(S.params||{}).from==='area';page.append(pageHead(fromArea?'Modules':AREA,null,{back:fromArea?AREA:'Life areas',to:fromArea?'area':'setpage:areas',icon:fromArea?'grid':areaIcon(AREA)}));
     const g=el('div',{class:'list'});g.append(Switch({on:onA,label:`Show ${AREA}`,onChange:v=>{const c=get.settings(),on=c.areas||AREAS;setSettings({areas:(v?[...on,AREA]:on.filter(x=>x!==AREA)).sort((x,y)=>x.localeCompare(y)),foundation:{...(c.foundation||{}),areas:true}});}}));
-    if(custom)g.append(Row({style:'',onclick:()=>areaEditSheet(AREA)},el('span',{class:'grow',style:'text-align:left'},el('b',{style:'font-weight:500'},'Name and icon')),el('span',{class:'chev',html:ic('chevr',16,2)})));
+    if(custom)g.append(Row({style:'',onclick:()=>areaEditSheet(AREA)},el('span',{class:'grow',style:'text-align:left'},el('b',{style:'font-weight:500'},'Name and icon')),RowEnd('chevron')));
     if(!fromArea)page.append(g);
     const ts=toolsOf(AREA).filter(t=>!t.hide);
     {const allOn=ts.length&&ts.every(t=>toolOn(AREA,t.id));page.append(lblRow('Modules',ts.length?lnk(allOn?'Turn all off':'Turn all on',()=>setAllTools(AREA,ts,!allOn)):null));}
     if(ts.length)page.append(el('div',{class:'list'},ts.map(t=>modRow(AREA,t))));
-    page.append(el('button',{class:'otidy',style:'margin-top:var(--s1)',onclick:()=>modSheet(null)},IconTile(null,{html:ic('plus',20,2)}),el('span',{class:'grow'},el('b',{},'Build your own module')),el('span',{class:'chev',html:ic('chevr',16,2)})));
+    page.append(el('button',{class:'otidy',style:'margin-top:var(--s1)',onclick:()=>modSheet(null)},IconTile(null,{html:ic('plus',20,2)}),el('span',{class:'grow'},el('b',{},'Build your own module')),RowEnd('chevron')));
     if(custom&&!fromArea)page.append(Button('Delete area',{variant:'text',full:true,style:'color:var(--overdue);margin-top:18px',onclick:()=>deleteArea(AREA)}));
     root.append(page);return;}
   mine.forEach(a=>{const ts=toolsOf(a).filter(t=>keep(a,t));if(!ts.length&&mf!=='all')return;page.append(lblRow(a));page.append(ts.length?el('div',{class:'list'},ts.map(t=>modRow(a,t))):Caption('No modules yet. Build one, or plan this area with tasks, habits and goals.',{as:'p',style:'padding:0 6px'}));});

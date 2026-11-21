@@ -50,6 +50,7 @@ function formCtx(rerender){
     if(hasRep){const p=ctx.panel('repeat','wide',ctx.customRepeat(D,dateK()));p&&w.append(p);
       w.append(ctx.row('rend','endrep','End repeat',D.repeat.end?relDay(D.repeat.end):'Never',{valOn:!!D.repeat.end}));
       const pe=ctx.panel('rend','',el('div',{class:'chips'},el('button',{class:'chip'+(!D.repeat.end?' on':''),onclick:e=>{e.stopPropagation();D.repeat.end=null;ctx.open=null;rerender();}},'Never'),el('button',{class:'chip'+(D.repeat.end?' on':''),onclick:e=>{e.stopPropagation();if(!D.repeat.end)D.repeat.end=k(addD(fromK(dateK()),D.repeat.unit==='year'?365:30));rerender();}},'On a date')),D.repeat.end?el('div',{style:'margin-top:var(--s3)'},ctx.calendar(D.repeat.end,dk=>{D.repeat.end=dk;ctx.open=null;rerender();},{minK:dateK()})):null);pe&&w.append(pe);}
+    if(hasRep&&typeof Holidays!=='undefined'&&Holidays.country())w.append(ctx.row('skiphol','cal','Skip holidays',null,{expand:false,trailing:ctx.sw(!!D.repeat.skipHol,'Skip holidays',on=>{D.repeat.skipHol=on||undefined;rerender();})}));
   };
   ctx.followDate=(D,dk)=>{const r=D.repeat;if(!r||r.type==='never'||!dk)return;if(r.unit==='week'&&(r.days||[]).length===1)r.days=[monIdx(fromK(dk))];if(r.end&&r.end<dk)r.end=null;};
   /* v238 · up to two more reminders on the same item, each its own notification */

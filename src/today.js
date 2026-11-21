@@ -1,5 +1,10 @@
 /* ---------- Today ---------- */
 const HH=56;
+/* v239 · one time grid: the hour height, overlap lanes, travel bands and now-line are shared by Today's day and Calendar's week */
+function gridLanes(items,minDur=20){const lanes=[];const ps=items.slice().sort((a,b)=>a.time-b.time).map(e=>{const end=e.time+Math.max(e.dur||30,minDur);let c=lanes.findIndex(x=>x<=e.time);if(c<0){c=lanes.length;lanes.push(0);}lanes[c]=end;return{e,c,end};});
+  ps.forEach(p=>{p.n=Math.max(...ps.filter(q=>q.e.time<p.end&&q.end>p.e.time).map(q=>q.c))+1;});return ps;}
+function travelBand(e,top,{pos='',hh=HH}={}){const tr=+(e.rec&&e.rec.travel)||0;if(!tr||e.kind!=='block'||e.cont)return null;const th=tr/60*hh;return el('div',{class:'travelband','aria-hidden':'true',style:`--c:${e.color||'var(--action)'};top:${top-th}px;height:${th}px;${pos}`},th>=18?el('span',{},`Travel · ${fmtDurS(tr)}`):null);}
+function nowLine(top,{id=null}={}){return el('div',{class:'now',id,style:top!=null?`top:${top}px`:null},id?el('span',{class:'npill',id:'nowpill'}):null,el('span',{class:'bar'}));}
 function snapItem(e){const before=clone(e.rec),ids=new Set(get.all(before.kind).map(r=>r.id));return()=>{put(before,{silent:true});get.all(before.kind).forEach(r=>{if(!ids.has(r.id))remove(r.id,{silent:true});});App.refresh();};}
 function pickProject(r){let inst;const ps=get.all('project').filter(p=>!p.finished&&p.id!==r.part);
   inst=Picker({title:`Add “${r.title}” to`,recentKey:'project',items:ps.map(p=>({value:p.id,label:p.title,sub:p.area||null})),emptyText:'No open projects',onPick:id=>{const p=get.id(id),was=r.part;r.part=p.id;if(!r.area&&p.area)r.area=p.area;put(r);toast(`Added to ${p.title}`,()=>{r.part=was;put(r);},'Undo',{open:dest('plan',{id:p.id})});},
@@ -107,7 +112,7 @@ function viewToday(root){
       el('div',{class:'icons'},
         !isToday?Button('Today',{variant:'link',cls:'hdtoday',onclick:()=>goDay(tk)}):null,
         IconButton(inboxNew()?'Inbox, something new':'Inbox',{html:ic('inbox',24)+(inboxNew()||newVerN()?'<span class="badge dot"></span>':''),onclick:()=>App.go('inbox')}),
-        moreB('Today options',e=>openMenu(e.clientX,e.clientY,[{label:'Share this day',icon:'share',onclick:()=>shareDaySheet(dk)},{label:'Plan tomorrow',icon:'cal',onclick:()=>planTomorrowSheet(todayK())},{label:'Today settings',icon:'gear',onclick:()=>App.go('setpage',{id:'reviews'})}])))),
+        moreB('Today options',e=>Menu([{label:'Share this day',icon:'share',onclick:()=>shareDaySheet(dk)},{label:'Plan tomorrow',icon:'cal',onclick:()=>planTomorrowSheet(todayK())},{label:'Today settings',icon:'gear',onclick:()=>App.go('setpage',{id:'reviews'})}],{at:e})))),
     S.dateDrop?dateDropEl(dk):null,S.dateDrop?null:weekStrip(dk),
     isToday?nextLine(dk):null,isToday?freeLine(dk):null));
   if(S.loading&&!recs.size){page.append(...todaySkeleton());root.append(page);return;}
@@ -121,7 +126,7 @@ function viewToday(root){
   if(isToday){const pe=planEveCard(dk);if(pe)page.append(pe);}
   const rem=reminderCard();if(rem)page.append(rem);
   const look=[];
-  const also=[];const aRow=(t,sub,fn)=>also.push(Row({onclick:fn},el('span',{class:'grow'},el('b',{},t),sub?el('small',{},sub):null),el('span',{class:'chev',html:ic('chevr',16,2)})));
+  const also=[];const aRow=(t,sub,fn)=>also.push(Row({onclick:fn},el('span',{class:'grow'},el('b',{},t),sub?el('small',{},sub):null),RowEnd('chevron')));
   if(isToday&&s.checkinCard&&reviewPeriod(dk)&&sel.getDay()===(s.reviewDay??0)&&s.checkinDone!==dk&&!(s.onboardedAt&&Date.now()-s.onboardedAt<6*864e5))aRow('Weekly review','A few minutes on the week behind and ahead',()=>App.go('review'));
   if(isToday){const gz=goalPulseCard();if(gz)page.append(gz);
     const g=get.all('goal').find(x=>goalCheckDue(x)&&App.state.goalLater!==x.id+todayK());if(g)aRow(`Check in on ${g.title}`,'How is this going?',()=>{const inst=openSheet({title:'Goal check-in',left:{label:'Close'},build:b=>{const c=goalCheckCard();if(c){c.style.boxShadow='none';c.style.padding='0';b.append(c);b.addEventListener('click',e=>{if(e.target.closest('.chip'))setTimeout(()=>inst.close(),150);});}}});});
@@ -363,7 +368,7 @@ function dayCard(dk){
   {const sel=fromK(dk),tm=addD(sel,1),tmk=k(tm),td=dayItems(tmk),tl=[...td.allDay,...td.timed,...td.anytime],firstT=td.timed[0];
    out.push(el('section',{class:'card ftm'+fu},el('button',{class:'ftmrow',onclick:()=>{S.sel=tmk;S._fresh=true;S._gridTop=null;S._anim=null;S._noGlide=true;scrollTo(0,0);clearTimeout(App._r);App.render();}},
      el('span',{class:'ftmd'},el('small',{},DOW[tm.getDay()].slice(0,3).toUpperCase()),el('b',{},String(tm.getDate()))),
-     el('span',{class:'grow'},el('b',{},isToday?'Tomorrow':relDay(tmk)),el('small',{},tl.length?`${tl.length} planned${firstT?`, first at ${fmtT(firstT.time)}`:''}`:'Nothing planned yet')),el('span',{class:'chev',html:ic('chevr',16,2.2)}))));}
+     el('span',{class:'grow'},el('b',{},isToday?'Tomorrow':relDay(tmk)),el('small',{},tl.length?`${tl.length} planned${firstT?`, first at ${fmtT(firstT.time)}`:''}`:'Nothing planned yet')),RowEnd('chevron'))));}
   todo.classList.add('feed');
   return out;
 }
@@ -438,7 +443,7 @@ function timeGrid(dk,timed){
     move:(x,y)=>{autoscrollGrid(x,y);const t=gridTimeAt(x,y);if(t==null||a0==null)return;const s=Math.min(a0,t),e=Math.max(a0,t)+15;rng=[s,Math.max(e-s,15)];let p=$('#drop-prev');if(!p){p=el('div',{class:'droptime',id:'drop-prev'});cv.append(p);}p.style.top=s/60*HH+12+'px';p.style.height=Math.max(rng[1]/60*HH-2,20)+'px';p.textContent=fmtRange(s,s+rng[1]);},
     hold:(x,y)=>{clearPreview();if(a0!=null)blockSheet(null,{date:dk,start:a0,dur:60});},
     drop:()=>{clearPreview();if(rng)blockSheet(null,{date:dk,start:rng[0],dur:Math.max(rng[1],15)});}});
-  const cols=[];const placed=[...spill(dk),...timed].sort((a,b)=>a.time-b.time).map(e=>{const dur=Math.max(e.dur||30,20);let c=cols.findIndex(end=>end<=e.time);if(c<0){c=cols.length;cols.push(0);}cols[c]=e.time+dur;return{e,dur,c};});
+  const placed=gridLanes([...spill(dk),...timed]).map(p=>({e:p.e,dur:Math.max(p.e.dur||30,20),c:p.c}));
   placed.forEach(({e,dur,c})=>{
     const overlap=placed.filter(o=>o.e.time<e.time+dur&&o.e.time+o.dur>e.time),n=Math.max(...overlap.map(o=>o.c))+1;
     const top=e.time/60*HH+12,hgt=Math.max(Math.min(dur,1440-e.time)/60*HH-2,26);
@@ -463,10 +468,10 @@ function timeGrid(dk,timed){
       const mv=m=>{nd=Math.max(15,Math.min(1440,Math.round((d0+(m.clientY-y0)/HH*60)/15)*15));b.style.height=Math.max(Math.min(nd,1440-e.time)/60*HH-2,26)+'px';if(bm)bm.textContent=fmtRange(e.time,e.time+nd);if(nd!==lastN){lastN=nd;buzz(4);}showB();};
       const up=()=>{rz._on=false;bub.remove();rz.removeEventListener('pointermove',mv);rz.removeEventListener('pointerup',up);rz.removeEventListener('pointercancel',up);App.dragging=false;App._dragEnd=Date.now();if(nd!==d0){const u=snapItem(e),r=detachIfRepeating(e.rec,dk);r.dur=nd;put(r);toast(`${e.title} now ends ${fmtT((e.time+nd)%1440)}`,u);}else App.refresh();};
       rz.addEventListener('pointermove',mv);rz.addEventListener('pointerup',up);rz.addEventListener('pointercancel',up);});
-    {const tr=+(e.rec&&e.rec.travel)||0;if(tr&&e.kind==='block'&&!e.cont&&e.time-tr>=0){const th=tr/60*HH;cv.append(el('div',{class:'travelband','aria-hidden':'true',style:`--c:${e.color};top:${top-th}px;height:${th}px;`+(n>1?`left:calc(60px + (100% - 70px)/${n}*${c});right:auto;width:calc((100% - 70px)/${n} - 3px);`:'')},th>=18?el('span',{},`Travel · ${fmtDurS(tr)}`):null));}}
+    {const tb=travelBand(e,top,{pos:n>1?`left:calc(60px + (100% - 70px)/${n}*${c});right:auto;width:calc((100% - 70px)/${n} - 3px);`:''});if(tb&&e.time-(+e.rec.travel||0)>=0)cv.append(tb);}
     cv.append(b);
   });
-  if(isToday)cv.append(el('div',{class:'now',id:'now'},el('span',{class:'npill',id:'nowpill'}),el('span',{class:'bar'})));
+  if(isToday)cv.append(nowLine(null,{id:'now'}));
   g.append(cv);gw.append(g);
   /* the whole day shows at its own height (no scroll box inside the page): from 6 AM, or earlier if something starts earlier, to 11 PM or later */
   const sH=Math.max(0,Math.min(6,...timed.map(e=>Math.floor(e.time/60)))),eH=Math.min(24,Math.max(23,...timed.map(e=>Math.ceil(Math.min(1440,e.time+(e.dur||30))/60))));

@@ -119,7 +119,7 @@ function viewStudio(root){
   document.body.classList.remove('has-commit');const cbar=$('#commitbar');if(cbar)cbar.hidden=true;
   const page=el('div',{class:'page studio2'});
   const go=d=>{st.anchor=P.step(d);st.selCard=null;st.ghosts=[];st.open=null;App.refresh();};
-  const menu=e=>openMenu(e.clientX,e.clientY,[st.mode==='w'&&!P.slots.every(x=>x.past)?{label:'Copy last week’s plan',icon:'rep',onclick:()=>copyLastWeek(P)}:null,{label:'New task, habit or goal',icon:'plus',onclick:()=>newCardSheet(st,P)},committed?{label:'Replan',icon:'edit',onclick:()=>{planRec.committed=false;put(planRec);}}:null].filter(Boolean));
+  const menu=e=>Menu([st.mode==='w'&&!P.slots.every(x=>x.past)?{label:'Copy last week’s plan',icon:'rep',onclick:()=>copyLastWeek(P)}:null,{label:'New task, habit or goal',icon:'plus',onclick:()=>newCardSheet(st,P)},committed?{label:'Replan',icon:'edit',onclick:()=>{planRec.committed=false;put(planRec);}}:null].filter(Boolean),{at:e});
   page.append(PageHeader({title:P.head,titleClass:'serif',titleStyle:'font-size:34px;line-height:1.05;letter-spacing:-.01em;margin:0',rowClass:'cal-title',
     controls:el('div',{class:'arrows'},IconButton('Previous',{cls:'green',html:ic('chevl',20,2),onclick:()=>go(-1)}),IconButton('Next',{cls:'green',html:ic('chevr',20,2),onclick:()=>go(1)}),moreB('Studio options',menu)),
     after:[el('span',{class:'hquiet'},P.eyebrow),
@@ -275,7 +275,7 @@ function reviewSheet(P,st,cards){
   const busy=P.slots.filter(s=>slotLoad(s,st,cards)>=P.cap).length;
   const late=cards.filter(c=>c.due&&c.placedIn.some(id=>{const s=P.slots.find(x=>x.id===id);return s&&s.from>c.due;})).length;
   const inst=openSheet({title:`Review ${P.head}`,build:body=>{
-    body.append(el('div',{class:'stat3'},el('div',{},el('b',{},String(placedN)),el('small',{},'planned')),el('div',{},el('b',{},String(fixed)),el('small',{},'commitments')),el('div',{},el('b',{},String(P.slots.filter(s=>!slotLoad(s,st,cards)).length)),el('small',{},`open ${P.unit}s`))));
+    body.append(StatRow([[String(placedN),'planned'],[String(fixed),'commitments'],[String(P.slots.filter(s=>!slotLoad(s,st,cards)).length),`open ${P.unit}s`]],{cls:'stat3'}));
     if(busy)body.append(el('p',{class:'small',style:'color:var(--overdue)'},`${busy} ${P.unit}${busy>1?'s are':' is'} over your capacity.`));
     if(late)body.append(el('p',{class:'small',style:'color:var(--overdue)'},`${late} card${late>1?'s land':' lands'} after the due date.`));
     if(unplaced.length){body.append(SectionLabel(`Not placed · ${unplaced.length}`));body.append(el('div',{class:'list'},unplaced.map(c=>Row({as:'div',style:''},el('span',{class:'grow'},el('b',{style:'font-weight:500'},c.t),el('small',{},c.type==='habit'?'Sessions left this week':'Stays in To plan'))))));}

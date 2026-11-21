@@ -178,7 +178,8 @@ function captureSheet(rec,{from=null,photo=false,listen=false}={}){
       dupe=el('div',{class:'capdupe',hidden:true});sess=el('div',{class:'capsess',hidden:true});ex=isEdit?null:el('p',{class:'capex'},CAP_EX[Math.floor(Math.random()*CAP_EX.length)]);
       const extras=el('div',{class:'capx'},
         el('button',{class:'capxb',onclick:()=>{showNotes=true;touched();const n=$('#f-cap-notes');if(n)n.focus();}},el('span',{style:'display:grid',html:ic('edit',15,2)}),'Note'),
-        el('button',{class:'capxb',onclick:()=>{showPh=true;touched();const pi=ph.querySelector('input[type=file]');if(pi)pi.click();}},el('span',{style:'display:grid',html:ic('image',15,2)}),'Photo'));
+        el('button',{class:'capxb',onclick:()=>{showPh=true;touched();const pi=ph.querySelector('input[type=file]');if(pi)pi.click();}},el('span',{style:'display:grid',html:ic('image',15,2)}),'Photo'),
+        isEdit?null:el('button',{class:'capxb',onclick:()=>importInvite(()=>inst&&inst.close())},el('span',{style:'display:grid',html:ic('cal',15,2)}),'Invite file'));
       const top=topTurns(),row=el('div',{class:'capturn'},top.map(id=>{const t=TURN.find(x=>x[0]===id);return Chip([el('span',{style:'display:grid',html:ic(t[1],15,2)}),t[2]],{'data-k':id,onclick:()=>go(id)});}),
         moreTurn(go,()=>({title:D.title.trim(),notes:D.notes,photos:D.photos}),()=>{if(isEdit)remove(rec.id);else writeDraft(null);inst.close();},top));
       const smart=smartButton(D,()=>ph&&ph._files?ph._files():[],made=>{if(isEdit)remove(rec.id,{silent:true});else writeDraft(null);inst.close();App.refresh();toast(`${made.length} added`,()=>{made.forEach(r=>remove(r.id,{silent:true,hard:true}));if(isEdit)put(rec);App.refresh();});});
@@ -286,3 +287,13 @@ function voicePlayer(a){const au=el('audio',{src:a.url,preload:'none'}),b=el('bu
   au.addEventListener('play',()=>{b.innerHTML=ic('pause',14,2.4);b.setAttribute('aria-label','Pause voice note');});au.addEventListener('pause',()=>{b.innerHTML=ic('play',14,2.4);b.setAttribute('aria-label','Play voice note');});
   au.addEventListener('timeupdate',()=>{const d=au.duration&&isFinite(au.duration)?au.duration:(a.dur||1);bar.style.width=`${Math.min(100,au.currentTime/d*100)}%`;});au.addEventListener('ended',()=>{bar.style.width='0%';});
   return el('span',{class:'vplayer',onclick:e=>e.stopPropagation()},b,el('span',{class:'vtrack'},bar),len,au);}
+
+/* v239 · import an invite (.ics) as a time block or all-day item, ready to edit */
+function importInvite(done){const inp=el('input',{type:'file',accept:'.ics,text/calendar',hidden:true});document.body.append(inp);
+  inp.addEventListener('change',async()=>{const f=inp.files[0];inp.remove();if(!f)return;let evs=[];try{evs=parseIcs(await f.text());}catch(e){}
+    if(!evs.length){toast('That file has no event in it');return;}inviteSheet(evs[0],done);});inp.click();}
+function inviteSheet(ev,done){const notes=String(ev.desc||'').trim();done&&done();
+  if(ev.allDay){const s=ev.s.slice(0,10),e=ev.e?addK(String(ev.e).slice(0,10),-1):s;alldaySheet(null,{title:ev.sum||'Invite',notes,start:s,end:e>s?e:null});return;}
+  const a=new Date(ev.s),b=ev.e?new Date(ev.e):new Date(a.getTime()+36e5),start=a.getHours()*60+a.getMinutes(),dur=Math.max(15,Math.round((b-a)/6e4));
+  blockSheet(null,{title:ev.sum||'Invite',notes,date:k(a),start,dur:Math.min(dur,24*60),place:ev.loc||null});
+  toast('Invite read. Check it, then Add');}

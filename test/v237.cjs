@@ -41,7 +41,7 @@ ok('skip clears the break',await p.evaluate(()=>!window.__lifeos.fx.brkNow()));
 await p.evaluate(()=>{const X=window.__lifeos;X.create('block',{title:'Dentist',date:X.todayK(),start:15*60,dur:60,travel:30,color:'green',repeat:{type:'never'}});X.App.state.cal=null;localStorage.setItem('lifeos-cal-mode','week');X.App.go('calendar');});await p.waitForTimeout(500);
 await p.evaluate(()=>{const b=[...document.querySelectorAll('#view .tlswitch button')].find(x=>x.textContent==='Timeline');b.click();});await p.waitForTimeout(500);
 ok('timeline shows 3 days on iPhone',await p.evaluate(()=>document.querySelectorAll('.tlcol').length===3));
-ok('blocks and travel on the timeline',await p.evaluate(()=>!!document.querySelector('.tlev')&&!!document.querySelector('.tltr')));
+ok('blocks and travel on the timeline',await p.evaluate(()=>!!document.querySelector('.tlev')&&!!document.querySelector('.tlcol .travelband')));
 await p.screenshot({path:'/tmp/v237_tl.png'});
 await p.evaluate(()=>{window.print=()=>{window._printed=document.querySelector('#printweek').textContent;};window.__lifeos.fx.printWeek(window.__lifeos.todayK());});await p.waitForTimeout(400);
 ok('print page built for 7 days',await p.evaluate(()=>window._printed&&document.querySelectorAll('#printweek .pday').length===7));

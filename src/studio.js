@@ -70,7 +70,7 @@ function suggest(cards,P,st,jit=null){
   order.forEach(c=>{
     let cand=open.filter(s=>!c.placedIn.includes(s.id));
     if(c.due)cand=cand.filter(s=>s.from<=c.due).concat(cand.length?[]:[]);
-    if(!cand.length)cand=open;
+    if(!cand.length){if(c.type==='habit')return;cand=open;}
     const roomy=cand.filter(s=>load.get(s.id)<P.cap);if(roomy.length)cand=roomy;
     if(c.type==='habit'){
       const lastWeek=habitPattern(c.rec,P);const n=c.q;let picks=[];
@@ -132,7 +132,7 @@ function viewStudio(root){
   /* ---- what needs a day ---- */
   const ghostIds=new Set(st.ghosts.map(g=>g.card.id));
   const need=cards.filter(c=>c.q>0&&!(ghostIds.has(c.id)&&(c.type!=='habit'||st.ghosts.filter(g=>g.card.id===c.id).length>=c.q))).map(c=>({c,r:stRank(c,P,st)})).sort((a,b)=>a.r[0]-b.r[0]||((a.c.due||'9')<(b.c.due||'9')?-1:1));
-  const habNeed=st.mode==='w'?need.filter(x=>x.c.type==='habit'):[];const seenG=new Set();const need1=need.filter(x=>{if(st.mode==='w'&&x.c.type==='habit')return false;if(x.c.type!=='step')return true;if(seenG.has(x.c.rec.id))return false;seenG.add(x.c.rec.id);x.c.more=need.filter(y=>y.c.type==='step'&&y.c.rec.id===x.c.rec.id).length;return true;});
+  const openW=P.slots.filter(s=>!s.past&&!(st.mode==='w'&&tripBlocked(s.id))).map(s=>s.id);const habNeed=st.mode==='w'?need.filter(x=>x.c.type==='habit'&&openW.some(id=>!x.c.placedIn.includes(id))):[];const seenG=new Set();const need1=need.filter(x=>{if(st.mode==='w'&&x.c.type==='habit')return false;if(x.c.type!=='step')return true;if(seenG.has(x.c.rec.id))return false;seenG.add(x.c.rec.id);x.c.more=need.filter(y=>y.c.type==='step'&&y.c.rec.id===x.c.rec.id).length;return true;});
   const need2=need1.filter(x=>x.r[0]<99),top=need2.filter(x=>x.r[0]<9),back=need2.filter(x=>x.r[0]>=9&&x.r[0]<99),showBack=!!st.showBack;
   if(!allPast){
     if(st.ghosts.length)page.append(el('div',{class:'stghost'},el('span',{class:'grow'},el('b',{},`${st.ghosts.length} suggested`),el('small',{},'Shown in your week below, dashed')),Button('Clear',{variant:'quiet',size:'sm',onclick:()=>{st.ghosts=[];App.refresh();}}),Button('Keep all',{variant:'primary',size:'sm',onclick:()=>{const n=st.ghosts.length,made=st.ghosts;made.forEach(g=>placeCard(g.card,g.slot,st));st.ghosts=[];App.refresh();toast(`${n} placed`,()=>{made.forEach(g=>unplaceCard(g.card,g.slot,st));App.refresh();});}})));

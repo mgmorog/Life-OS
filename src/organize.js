@@ -595,7 +595,7 @@ function shareListSheet(l){const url=()=>`${location.origin}/l/${l.shareToken}`;
 function habitNotePrompt(h,dk){if(get.settings().checkinNotes===false||!habitDone(h,dk))return;const old=$('#hnote-bar');if(old)old.remove();
   const inp=el('input',{placeholder:`Add a note · how did ${h.title.toLowerCase()} go?`,'aria-label':`Note for ${h.title}`,enterkeyhint:'done',maxlength:'140',autocomplete:'off'});
   const save=()=>{const v=inp.value.trim();bar.close();if(!v)return;const x=get.id(h.id)||h;x.logNotes=Object.assign({},x.logNotes,{[dk]:v});put(x,{silent:true});toast('Note saved',()=>{const y=get.id(h.id);if(y&&y.logNotes){delete y.logNotes[dk];put(y,{silent:true});}});};
-  const bar=FloatingBar({id:'hnote-bar',label:'Add a note to this check-in',cls:'hnote',content:el('div',{class:'hnrow'},IconTile('edit',{size:'sm'}),inp,Button('Save',{variant:'link',size:'sm',onpointerdown:e=>e.preventDefault(),onclick:save}),IconButton('Not now',{size:'sm',html:ic('x',14,2.2),onclick:()=>bar.close()}))});
+  const bar=FloatingBar({id:'hnote-bar',page:true,label:'Add a note to this check-in',cls:'hnote',content:el('div',{class:'hnrow'},IconTile('edit',{size:'sm'}),inp,Button('Save',{variant:'link',size:'sm',onpointerdown:e=>e.preventDefault(),onclick:save}),IconButton('Not now',{size:'sm',html:ic('x',14,2.2),onclick:()=>bar.close()}))});
   inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();save();}if(e.key==='Escape')bar.close();});
   if((h.logNotes||{})[dk])inp.value=h.logNotes[dk];
   let t=setTimeout(function hide(){if(!bar.isConnected)return;if(document.activeElement===inp||inp.value){t=setTimeout(hide,4000);return;}bar.close();},6000);}

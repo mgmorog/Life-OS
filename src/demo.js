@@ -63,7 +63,9 @@ const DEMO_F={
   cycle:[{kind:'Period started',flow:'Medium'}],
   prep:[{servings:6,left:3,where:'Fridge'},{servings:8,left:5,where:'Freezer'},{servings:4,left:2,where:'Fridge'},{servings:4,left:4,where:'Freezer'},{servings:6,left:6,where:'Freezer'}],
 };
-const DEMO_NOTES=['','Bring the receipt.','Ask about the weekend rate.','This one keeps slipping — do it first thing.','Compare with last year before deciding. Check the folder in Drive called “Archive 2025” and the email from October.'];
+const DEMO_NOTES=['','','','Follow up next week.','Worth a second look.'];
+/* realistic amounts for named demo items (v247): rent is not $14 */
+const DEMO_AMT={'rent':1450,'national grid electric':96,'spectrum internet':75,'car insurance':142,'phone':65,'gym membership':39,'student loan':285,'paycheck':2680,'freelance invoice #1042':650,'tax refund':820,'venmo from sam':45,'wegmans groceries':118,'gas · sunoco':46,'coffee':6,'amazon order':34,'dinner at oliver’s':82,'uber to airport':38,'target run':57,'spotify':12,'oil change':79,'tire rotation':28,'inspection':21,'registration renewal':120};
 function demoFill(t,i,r,t0){const f={};const fs=Array.isArray(t.fields)?t.fields:[];const bank=DEMO_BANK[t.id]||[];
   const pick=a=>a[Math.floor(r()*a.length)];
   fs.forEach((d,k)=>{const L=(d.label||'').toLowerCase();
@@ -76,6 +78,10 @@ function demoFill(t,i,r,t0){const f={};const fs=Array.isArray(t.fields)?t.fields
     else if(/who|with|person|name|contact/.test(L))f[d.id]=pick(['Sam','Alex','Mom','Priya','Jordan']);
     else if(/where|place|store|location|city/.test(L))f[d.id]=pick(['Buffalo','Elmwood Ave','Wegmans','Downtown','Online']);
   });
+  {const nm=String(f.what||'').toLowerCase(),amt=DEMO_AMT[nm];fs.forEach(d=>{const L=(d.label||'').toLowerCase();
+    if(amt!=null&&d.type==='number'&&/amount|cost|price|paid/.test(L))f[d.id]=amt;
+    if(d.type==='number'&&/odometer|mileage/.test(L))f[d.id]=41200+i*3150+Math.round(r()*400);
+    if(/child|kid/.test(L)&&!f[d.id])f[d.id]=pick(['Maya','Leo']);});}
   if(t.tpl==='log'&&!f.date)f.date=addK(t0,-Math.floor(r()*30));
   if(t.t&&f.t==null)f.t=t.t;
   if(f.left!=null&&f.servings!=null&&+f.left>+f.servings)f.left=f.servings;if(f.saved!=null&&f.target&&+f.saved>=+f.target)f.saved=Math.round(f.target*(.2+r()*.6));if(f.monthly!=null&&f.target)f.monthly=Math.round(f.target/12);
@@ -90,7 +96,7 @@ function loadDemo(quiet){
   const NR={type:'never',end:null},AR=AREAS;
   /* every area on, every module on */
   const allAreas=[...new Set([...AREAS,...OPT_AREAS])];const shown={};allAreas.forEach(a=>shown[a]=toolsOf(a).filter(x=>x.optIn).map(x=>x.id));
-  setSettings({areas:allAreas.slice().sort((a,b)=>a.localeCompare(b)),hubHidden:{},hubShown:shown,introDone:true,foundationOff:true,demoSnap:snap,demoVer:7});
+  setSettings({areas:allAreas.slice().sort((a,b)=>a.localeCompare(b)),hubHidden:{},hubShown:shown,introDone:true,foundationOff:true,demoSnap:snap,demoVer:8});
   if(!Array.isArray(s0.jobs)||!s0.jobs.length)setSettings({jobs:[{id:'work',name:'Roswell Park',flex:false,cycle:'week',shifts:[{id:'s1',days:[0,1,2,3],start:8*60+30,end:17*60},{id:'s2',days:[4],start:8*60+30,end:13*60}]}]});
   /* projects first, so tasks can belong to them */
   const projs=[['Kitchen refresh','Home',['Measure the cabinets','Pick a paint color','Order hardware','Paint weekend']],['Q1 Workday release','Career',['Write test scripts','UAT with grant managers','Sign-off from Finance','Go-live checklist','Train AP team']],['Japan trip','Travel',['Book flights','Book Kyoto ryokan','Get JR pass','Pocket wifi']],['Move to the new office','Career',[]],['Garage cleanout (paused)','Home',['Sort donations','Sell the old bike']]];
@@ -188,4 +194,4 @@ function clearDemo(){const s=get.settings(),snap=s.demoSnap;
     App.refresh();toast('Demo cleared');}});}
 
 /* refresh an already-loaded demo with the current generator, keeping the original settings snapshot */
-function demoRefresh(){const s=get.settings(),keep=s.demoSnap;if(!keep)return;[...recs.values()].filter(r=>r.demo).forEach(r=>remove(r.id,{silent:true,hard:true}));setSettings({demoSnap:null});loadDemo(true);setSettings({demoSnap:keep,demoVer:7});}
+function demoRefresh(){const s=get.settings(),keep=s.demoSnap;if(!keep)return;[...recs.values()].filter(r=>r.demo).forEach(r=>remove(r.id,{silent:true,hard:true}));setSettings({demoSnap:null});loadDemo(true);setSettings({demoSnap:keep,demoVer:8});}

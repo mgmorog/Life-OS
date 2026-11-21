@@ -3613,3 +3613,9 @@ b,strong{font-weight:600}
 .afbody .prwrap{padding-left:var(--pad);padding-right:var(--pad)}
 /* v255 · life areas show their icon, not a colored dot */
 .achip2 i.aic{width:auto;height:auto;background:none;border-radius:0;display:inline-flex;color:var(--text-muted)}
+/* v256 · life areas rail: lighter circles, scroll snaps gently */
+.arail{scroll-snap-type:x proximity;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch}
+.acirc{scroll-snap-align:start;font-size:var(--fs-meta)}
+.acirc .an{max-width:80px}
+.acirc .ic{color:var(--accent-deep)}
+.acirc:active .ic{transform:scale(var(--press))}

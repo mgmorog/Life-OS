@@ -120,11 +120,12 @@ Components use the **Roles**; palettes in Settings change the accent colours und
 | --- | --- | --- |
 | `--fs-cell` | `11px` |  |
 | `--fs-caption` | `12px` |  |
-| `--fs-footnote` | `14px` |  |
-| `--fs-label` | `15px` |  |
-| `--fs-row` | `16px` |  |
-| `--fs-body` | `17px` |  |
-| `--fs-headline` | `18px` |  |
+| `--fs-footnote` | `13px` |  |
+| `--fs-label` | `14px` |  |
+| `--fs-meta` | `13px` |  |
+| `--fs-row` | `15px` |  |
+| `--fs-body` | `16px` |  |
+| `--fs-headline` | `17px` |  |
 | `--fs-title-s` | `20px` |  |
 | `--fs-title` | `22px` |  |
 | `--fs-large-s` | `26px` |  |
@@ -151,7 +152,7 @@ Components use the **Roles**; palettes in Settings change the accent colours und
 | `--s4` | `14px` |  |
 | `--s5` | `18px` |  |
 | `--s6` | `24px` |  |
-| `--pad-card` | `14px` |  |
+| `--pad-card` | `16px` |  |
 | `--pad-row` | `14px` |  |
 | `--pad` | `14px` |  |
 
@@ -180,6 +181,7 @@ Components use the **Roles**; palettes in Settings change the accent colours und
 | `--row` | `56px` |  |
 | `--icon-col` | `40px` |  |
 | `--bar` | `68px` |  |
+| `--track` | `6px` |  |
 | `--hour` | `56px` |  |
 | `--row-2` | `68px` |  |
 

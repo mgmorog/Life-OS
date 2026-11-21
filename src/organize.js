@@ -186,7 +186,7 @@ function viewTasks(root){
     const F=S.taskF.size?S.taskF:new Set(['overdue','today','week','anytime','later']),ta=t=>inA(t.area||areaOfTask(t));let any=false;
     const head=(label,n,right)=>page.append(el('div',{class:'sh2 shstick'},el('span',{class:'lbl'},label),right||null));
     const aRows=l=>l.map(r=>{const w=areaRow(r);w.classList.add('li');return w;});
-    if(F.has('overdue')){const lt=late.filter(ta),la=AIt.filter(r=>r.late&&inA(r.area));if(lt.length||la.length){any=true;head(el('span',{style:'color:var(--overdue)'},'Overdue'),lt.length+la.length,Button('Replan…',{variant:'link',size:'sm',style:'color:var(--overdue)',onclick:()=>replanSheet(lt.filter(t=>t.date&&t.date<tk&&(!t.repeat||t.repeat.type==='never')),tk,{dueLate:lt.filter(t=>!(t.date&&t.date<tk)),area:la})}));
+    if(F.has('overdue')){const lt=late.filter(ta),la=AIt.filter(r=>r.late&&inA(r.area));if(lt.length||la.length){any=true;head('Overdue',lt.length+la.length,Button('Replan…',{variant:'link',size:'sm',onclick:()=>replanSheet(lt.filter(t=>t.date&&t.date<tk&&(!t.repeat||t.repeat.type==='never')),tk,{dueLate:lt.filter(t=>!(t.date&&t.date<tk)),area:la})}));
       /* oldest first: everything overdue, to-dos and life-area items together, by the date it was due */
       const aiDue=r=>{const sb=String(r.sub||'');const m=sb.match(/(\d+) days? (?:overdue|ago)/i);return m?addK(tk,-+m[1]):/yesterday/i.test(sb)?addK(tk,-1):addK(tk,-1);};
       const od=[...lt.map(t=>({t,d:t.date&&t.date<tk?t.date:(t.deadline||tk),n:(()=>{const r=S.taskSel?selRow(t):taskRow(t,t.date&&t.date<tk?t.date:tk,{late:!!(t.date&&t.date<tk)});return r;})()})),...la.map(r=>({d:aiDue(r),n:aRows([r])[0]}))].sort((x,y)=>x.d<y.d?-1:x.d>y.d?1:0);
@@ -295,11 +295,9 @@ function viewHabits(root){
       const fr=page.querySelector('.tstick .fchips');if(aKeys.length>1&&fr)fr.append(el('button',{class:'hafold','aria-label':allShut?'Expand all areas':'Collapse all areas',onclick:()=>{if(allShut)S.habShut.clear();else aKeys.forEach(a=>S.habShut.add(a));App.refresh();}},el('span',{style:'display:grid',html:ic(allShut?'chevd':'chevu',15,2.2)}),allShut?'Expand all':'Collapse all'));
       aKeys.forEach(a=>{const g=byA.get(a),due=g.filter(h=>counts(h,tk)),dn=due.filter(h=>habitDone(h,tk)).length,shut=S.habShut.has(a);
         const ord=[...g.filter(h=>!habitDone(h,tk)),...g.filter(h=>habitDone(h,tk))];
-        page.append(el('div',{class:'card hacard'+(shut?' shut':'')},
-          el('button',{class:'hahead','aria-expanded':String(!shut),onclick:()=>{if(shut)S._reveal='hab'+a;shut?S.habShut.delete(a):S.habShut.add(a);App.refresh();}},
-            Progress(due.length?dn/due.length:0,{kind:'ring',size:'sm',cls:'haring'+(due.length&&dn===due.length?' full':''),icon:ic(areaIcon(a),18,1.9)}),
-            el('span',{class:'hatx'},el('b',{},a),el('small',{},due.length?(dn===due.length?`All ${due.length} done today`:`${dn} of ${due.length} done today`):`${g.length} habit${g.length>1?'s':''}`)),el('span',{class:'hachev',html:ic('chevd',18,2.2)})),
-          shut?null:el('div',{class:'habody'},revealRows(ord.map(oneRow),'hab'+a))));});}
+        /* v252 · flat, like Goals: small area heading (tap to fold) over one plain list */
+        page.append(el('button',{class:'aflat'+(shut?' shut':''),'aria-expanded':String(!shut),onclick:()=>{if(shut)S._reveal='hab'+a;shut?S.habShut.delete(a):S.habShut.add(a);App.refresh();}},el('span',{class:'grow'},a),el('small',{},due.length?(dn===due.length?`All ${due.length} done today`:`${dn} of ${due.length} today`):`${g.length} habit${g.length>1?'s':''}`),el('span',{class:'hachev',html:ic('chevd',14,2.2)})));
+        if(!shut)page.append(el('div',{class:'card flush afbody'},revealRows(ord.map(oneRow),'hab'+a)));});}
   }else{
     const pausedA=paused.filter(inHA);if(pausedA.length){
       pausedA.forEach(h=>{const ps=h.pausedStreak;page.append(Card({as:'div',cls:'ohold'},el('button',{style:'display:block;width:100%;text-align:left',onclick:()=>App.go('habit',{id:h.id})},el('b',{},h.title),el('small',{},[h.pausedAt?`Paused ${relDay(k(new Date(h.pausedAt)))}`:'Paused',!habitWeekly(h)&&ps&&ps.n>1?`${ps.n}-day streak saved`:''].filter(Boolean).join(' · '))),btns(btnP('Resume',()=>{setHabitPaused(h,false);toast('Resumed');}),btnL('Archive',()=>archiveFlow(h)))));});}

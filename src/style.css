@@ -26,18 +26,18 @@
   --overdue:var(--now); --surface:var(--bg); --surface-raised:var(--card); --text:var(--ink);
   --text-muted:var(--ink-2); --border:var(--line); --edge:transparent; --chev:#B9BEB9; --tick-ring:var(--line-strong); --focus:var(--accent);
   /* Type */
-  --fs-cell:11px; --fs-caption:12px; --fs-footnote:14px; --fs-label:15px; --fs-row:16px; --fs-body:17px;
-  --fs-headline:18px; --fs-title-s:20px; --fs-title:22px; --fs-large-s:26px; --fs-large:30px; --fs-stat:28px; --fs-display:44px;
+  --fs-cell:11px; --fs-caption:12px; --fs-footnote:13px; --fs-label:14px; --fs-meta:13px; --fs-row:15px; --fs-body:16px;
+  --fs-headline:17px; --fs-title-s:20px; --fs-title:22px; --fs-large-s:26px; --fs-large:30px; --fs-stat:28px; --fs-display:44px;
   --tr-tight:-.01em; --tr-caps:0em; --label-case:none; --lh-tight:1.1; --lh-ui:1.35; --lh-read:1.5;
   --display:"Newsreader","Iowan Old Style",Palatino,Georgia,serif;
   --body:"Figtree",-apple-system,"Segoe UI",system-ui,sans-serif; --lh-solid:1;
   /* Space */
-  --s1:4px; --s2:8px; --s3:10px; --s4:14px; --s5:18px; --s6:24px; --pad-card:14px; --pad-row:14px; --pad:14px;
+  --s1:4px; --s2:8px; --s3:10px; --s4:14px; --s5:18px; --s6:24px; --pad-card:16px; --pad-row:14px; --pad:14px;
   /* Shape */
   --r-full:999px; --r-chip:8px; --r-row:12px; --r-card:22px; --r-sheet:28px; --r-micro:4px;
   /* Size */
   --icon-sm:14px; --icon:16px; --icon-md:20px; --icon-lg:24px; --ctl-sm:40px; --ctl:44px; --ctl-lg:56px; --row:56px;
-  --icon-col:40px; --bar:68px; --hour:56px; --row-2:68px;
+  --icon-col:40px; --bar:68px; --track:6px; --hour:56px; --row-2:68px;
   /* Depth */
   --e-flat:none; --e-raised:var(--shadow-1); --e-floating:var(--shadow-2); --e-overlay:var(--shadow-3);
   --e-focus:0 0 0 4px color-mix(in srgb,var(--accent) 22%,transparent);
@@ -1406,7 +1406,7 @@ a.linkbtn{text-decoration:none}
 .scv{display:flex;flex-direction:column;align-items:flex-end;min-width:58px}
 .scv b{font-size:var(--fs-title);font-weight:400;line-height:var(--lh-tight)}
 .atr.up{color:var(--action-text)}
-.atr.down{color:var(--overdue)}
+.atr.down{color:var(--ink-3)}
 .feedkey{padding:0 var(--s1);line-height:var(--lh-read)}
 .fdk{display:inline-flex;align-items:center;height:20px;padding:0 var(--s2);border-radius:var(--r-full);background:var(--line-2);color:var(--text-muted);font-size:var(--fs-caption);font-weight:600;margin-right:var(--s1)}
 .fdk.on{background:var(--selected);color:var(--accent-deep)}
@@ -1515,7 +1515,7 @@ p,.sub,small,.li small{text-wrap:pretty}
 .viewin-push{animation:vPush var(--dur-base) var(--ease) both}
 .viewin-pop{animation:vPop var(--dur-base) var(--ease) both}
 .viewin-swiped{animation:vSwiped var(--dur-base) var(--ease) both}
-@keyframes vPush{from{opacity:var(--o-ghost);transform:translate3d(28px,0,0)}to{opacity:1;transform:none}}
+@keyframes vPush{from{opacity:.55;transform:translate3d(44px,0,0)}to{opacity:1;transform:none}}
 @keyframes vPop{from{opacity:var(--o-ghost);transform:translate3d(-22px,0,0)}to{opacity:1;transform:none}}
 @keyframes vSwiped{from{opacity:var(--o-disabled);transform:translateX(-14px)}to{opacity:1;transform:none}}
 html.a-motion .viewin-push,html.a-motion .viewin-pop,html.a-motion .viewin-swiped{animation:viewIn var(--dur-fast) linear both}
@@ -3542,3 +3542,42 @@ body.hasfloat .page{padding-bottom:calc(var(--float-h,0px) + 120px)}
 .pslot:has(.pl-done){min-height:36px}
 .plab.pl-done{text-decoration:none;font-size:var(--fs-footnote);color:var(--ink-3)}
 .pslot:has(.pl-done)>:first-child{transform:scale(.72);transform-origin:center}
+/* v252 · polish round 4 */
+/* active tab: a filled icon, no pill */
+.nav .tab.act .ic{background:transparent}
+.nav .tab.act .ic svg{fill:color-mix(in srgb,currentColor 24%,transparent);stroke-width:2.1}
+@media (max-width:899px){.tab-ind{display:none}}
+/* one progress bar thickness */
+.progress,.hmeter,.hmeter.tall,.hmeter.sm,.bar-track,.ohbar,.stbar,.slot-h .load,.mix{height:var(--track);border-radius:var(--r-full)}
+.progress i,.hmeter i,.bar-track i,.ohbar i,.stbar i{border-radius:var(--r-full)}
+.modtile.num .mtn{color:var(--text-muted);font-weight:500}
+.modtile .mtv{font-style:normal;font-family:var(--display);font-size:var(--fs-title);line-height:var(--lh-tight);color:var(--text);margin-top:2px}
+/* quieter sheet fields: when a field has a placeholder, the placeholder is the label (still read aloud) */
+.sheet label.field:has(>:is(input,textarea)[placeholder]:not([placeholder='']))>.eyebrow{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.sheet label.field:has(>:is(input,textarea)[placeholder]:not([placeholder=''])){padding:var(--s3) var(--s4)}
+.sheet label.field:has(>:is(input,textarea)[placeholder]:not([placeholder='']))>:is(input,textarea){margin-top:0}
+/* one size for secondary text: meta lines, row subtitles and captions under titles */
+.li small,.ometa,.trow .meta,.meta,.strow-h small,.atag,.modtile small,.dfact small,.uprow small,.hdchip,.oquiet,.oquiet .linkbtn{font-size:var(--fs-meta)}
+.tfoot{display:flex;align-items:center;justify-content:space-between;gap:var(--s3);border-top:1px solid var(--line-2)}
+.tfoot .tmorerow,.tfoot .habdone{width:auto;border:0;margin:0}
+.tfoot .tmorerow{color:var(--action-text);font-weight:600;justify-content:flex-start}
+/* past calendar days: no grey circle, just a faded number */
+.qgrid .heat.past .hn{background:none!important;opacity:1;color:var(--ink-faint)}
+/* add bars read as a quiet first row, not a white box */
+.oadd{background:none;border:0;box-shadow:none;height:var(--ctl);padding:0 var(--s1);color:var(--action-text);font-weight:500}
+/* one card padding everywhere */
+.card,.card.t3,.daycard.todo,.habcard,.upcard,.card.withT3,.fcard,.tdcard,.revc{padding-left:var(--pad-card);padding-right:var(--pad-card)}
+.wkpage .sel.has .dn::after{content:"";position:absolute;left:50%;bottom:4px;width:4px;height:4px;margin-left:-2px;border-radius:var(--r-full);background:var(--on-accent);opacity:.8}
+.fcard .fhabs{margin:var(--s2) 0 0}
+/* v252 · lighter: fewer heavy weights, quieter rings and links */
+.linkbtn{font-weight:500}
+:is(.bl,.secl,.slabel,.sect-h,.sh2,.pinh) .linkbtn{color:var(--text-muted)}
+.lbl,.bl .lbl,.slabel .lbl,.seclbl,.aflat,.sh2 .lbl,.sect{font-weight:500}
+b,strong{font-weight:600}
+.odrow2.soft b,.hdchip.next b,.strow-h b,.modtile b,.tab.act{font-weight:500}
+.btn{font-weight:500}
+.pgtitle,.shead h2,.serif,.upn,.card h2,.mtv,.empty b{font-weight:400}
+.pring{border-width:1.5px;border-color:var(--accent-mid)}
+.uprow .tt{font-size:var(--fs-row)}
+.uprow.nextup .tt{font-weight:500}
+.uprow .upt{font-size:var(--fs-label);font-weight:400}

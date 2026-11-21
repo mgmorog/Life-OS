@@ -3581,3 +3581,18 @@ b,strong{font-weight:600}
 .uprow .tt{font-size:var(--fs-row)}
 .uprow.nextup .tt{font-weight:500}
 .uprow .upt{font-size:var(--fs-label);font-weight:400}
+/* v253 · calendar review */
+/* trip days keep the blue ring; the plane glyph overlapped the circle */
+.qgrid .heat.tripfirst::before,#month-grid .heat.tripfirst::before{display:none}
+/* quarter heat one step lighter: busy reads as tinted, not dark */
+.qgrid .heat.l1 .hn{background:var(--h0)}.qgrid .heat.l2 .hn{background:var(--h1)}.qgrid .heat.l3 .hn{background:var(--h2)}
+.qgrid .heat.l4 .hn{background:var(--h3);color:var(--text)}
+/* month: one small dot whose shade shows how busy the day is */
+#month-grid .heat.l1::after,#month-grid .heat.l2::after,#month-grid .heat.l3::after,#month-grid .heat.l4::after{content:'•';color:var(--accent-mid)}
+#month-grid .heat.l1::after{opacity:.45}#month-grid .heat.l2::after{opacity:.7}#month-grid .heat.l4::after{color:var(--accent)}
+/* week list: plain dates, no tinted boxes or dot rows; quieter to-do links and dividers */
+#cal-body .dtile::after{content:none!important}
+.wkrow .dtile{background:none!important;height:auto;width:44px;justify-content:flex-start;padding-top:var(--s1)}
+.wkrow .dtile.today{color:var(--action-text)}
+.wkrow{border-bottom-color:var(--line-2)}
+.wktodo{font-weight:500}

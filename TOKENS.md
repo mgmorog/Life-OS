@@ -19,7 +19,7 @@ Components use the **Roles**; palettes in Settings change the accent colours und
 | `--line` | `#E5E7E1` |  |
 | `--line-2` | `#EFF0EA` |  |
 | `--chip` | `#EFF0EA` |  |
-| `--seg` | `#E6E8E3` |  |
+| `--seg` | `#ECEDE8` |  |
 | `--on-accent` | `#FFFFFF` |  |
 | `--line-3` | `#D7DAD3` |  |
 | `--tint` | `#F8F8F4` |  |
@@ -190,11 +190,11 @@ Components use the **Roles**; palettes in Settings change the accent colours und
 | Token | Value | Resolves to |
 | --- | --- | --- |
 | `--e-flat` | `none` |  |
-| `--e-raised` | `var(--shadow-1)` | `0 1px 3px rgba(20,30,25,.05),0 4px 14px rgba(20,30,25,.05)` |
+| `--e-raised` | `var(--shadow-1)` | `0 1px 2px rgba(20,30,25,.035),0 2px 8px rgba(20,30,25,.025)` |
 | `--e-floating` | `var(--shadow-2)` | `0 10px 30px rgba(20,30,25,.12)` |
 | `--e-overlay` | `var(--shadow-3)` | `0 18px 44px rgba(20,30,25,.2)` |
 | `--e-focus` | `0 0 0 4px color-mix(in srgb,var(--accent) 22%,transparent)` | `0 0 0 4px color-mix(in srgb,#466B5A 22%,transparent)` |
-| `--shadow-1` | `0 1px 3px rgba(20,30,25,.05),0 4px 14px rgba(20,30,25,.05)` |  |
+| `--shadow-1` | `0 1px 2px rgba(20,30,25,.035),0 2px 8px rgba(20,30,25,.025)` |  |
 | `--shadow-2` | `0 10px 30px rgba(20,30,25,.12)` |  |
 | `--shadow-3` | `0 18px 44px rgba(20,30,25,.2)` |  |
 

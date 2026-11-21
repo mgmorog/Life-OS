@@ -3,7 +3,7 @@
   /* Colour · paper, ink and lines */
   --on-dark:#FFFFFF; --on-dark-muted:rgba(255,255,255,.8); --on-dark-line:rgba(255,255,255,.18); --bg:#F4F4EF;
   --card:#FFFFFF; --ink:#1E2622; --ink-2:#5B6560; --ink-3:var(--ink-2); --line:#E5E7E1; --line-2:#EFF0EA;
-  --chip:#EFF0EA; --seg:#E6E8E3; --on-accent:#FFFFFF; --line-3:#D7DAD3; --tint:#F8F8F4; --ink-soft:#66706B;
+  --chip:#EFF0EA; --seg:#ECEDE8; --on-accent:#FFFFFF; --line-3:#D7DAD3; --tint:#F8F8F4; --ink-soft:#66706B;
   --ink-faint:#A8AEA9; --line-strong:#C9CDC7; --hover:#F6F7F3; --scrim:rgba(20,28,24,.38);
   /* Colour · accent (set by the palette in Settings) */
   --accent:#466B5A; --accent-text:#3E6252; --accent-deep:#2F4A3D; --accent-soft:#E2EBE6; --accent-wash:#ECF3EE;
@@ -41,7 +41,7 @@
   /* Depth */
   --e-flat:none; --e-raised:var(--shadow-1); --e-floating:var(--shadow-2); --e-overlay:var(--shadow-3);
   --e-focus:0 0 0 4px color-mix(in srgb,var(--accent) 22%,transparent);
-  --shadow-1:0 1px 3px rgba(20,30,25,.05),0 4px 14px rgba(20,30,25,.05); --shadow-2:0 10px 30px rgba(20,30,25,.12);
+  --shadow-1:0 1px 2px rgba(20,30,25,.035),0 2px 8px rgba(20,30,25,.025); --shadow-2:0 10px 30px rgba(20,30,25,.12);
   --shadow-3:0 18px 44px rgba(20,30,25,.2);
   /* Layers */
   --z-base:0; --z-raised:2; --z-sticky:10; --z-bar:30; --z-sheet:40; --z-toast:80; --z-overlay:90;
@@ -3596,3 +3596,18 @@ b,strong{font-weight:600}
 .wkrow .dtile.today{color:var(--action-text)}
 .wkrow{border-bottom-color:var(--line-2)}
 .wktodo{font-weight:500}
+/* v254 · calmer and lighter, app-wide */
+/* page actions are soft green; solid green is kept for the + button, the selected day and a sheet's main action */
+#view .btn.primary{background:var(--selected);color:var(--accent-deep)}
+/* selected filters and tabs: a soft pill, not a solid one */
+.chip.on,.fchip.on,.ochip.on{background:var(--selected);color:var(--accent-deep);border-color:transparent}
+.fchip.red{background:var(--danger-soft);color:var(--overdue)}
+/* habit history and small pickers: done days in a mid tone */
+.calgrid button.on{background:var(--accent-mid);color:var(--text)}
+/* icons sit plainly in rows, without tinted circles */
+.itile{background:none!important;color:var(--text-muted)}
+.modtile .mti{background:none;width:auto;height:auto;justify-content:flex-start;color:var(--text-muted);margin-bottom:0}
+/* smaller page titles */
+.pgtitle,.hd .date,.cal-title .tbtn{font-size:var(--fs-large)}
+#view .chip.on,#view .chip.filter.on,.fchips .chip.on{background:var(--selected);color:var(--accent-deep);border-color:transparent}
+.afbody .prwrap{padding-left:var(--pad);padding-right:var(--pad)}

@@ -27,7 +27,7 @@ const later=()=>setTimeout(()=>App.refresh(),820);
 /* a section label's right side keeps actions and real figures; hints ("Bars fill until…") and bare counts ("2 dates") go */
 const lblQuiet=r=>{const x=r.trim();return !/\d/.test(x)||/^\d+( [A-Za-z]+){0,2}$/.test(x);};
 const lblClean=t=>typeof t!=='string'||/overdue|late|due/i.test(t)?t:t.replace(/ · \d+( of \d+)?( (left|more|planned|saved|ideas?|items?|portions?|dates?|done))?$/i,'');
-const lblRow=(t,r)=>el('div',{class:'sh2 shstick'},el('span',{class:'lbl'},lblClean(t)),typeof r==='string'?(lblQuiet(r)?null:el('span',{class:'small muted'},r)):typeof r==='number'?null:r||null);
+const lblRow=(t,r)=>SectionLabel(lblClean(t),{sticky:true,count:typeof r==='string'&&/^\d+$/.test(r.trim())&&!lblQuiet(r)?r.trim():null,action:typeof r==='string'?(lblQuiet(r)||/^\d+$/.test(r.trim())?null:Caption(r)):typeof r==='number'?null:r||null});
 const lnk=(label,fn,icon)=>Button(label,{variant:'link',size:'sm',icon,onclick:fn});
 const bigN=(v,rest)=>Stat({value:v,label:rest||null,size:'lg'});
 /* "all is well" labels say nothing; only a status that needs attention gets a pill */
@@ -38,7 +38,7 @@ const paceC=f=>f>=1?RUST:f>=.75?AMBER:null;
 const tk=(on,fn,label)=>el('span',{class:'tick-hit'},tickBtn(on,fn,label));
 const rowX=({l,t,s,sc,r,on,strike,big,hold})=>{const n=Row({as:'div',style:''},l||null,el(on?'button':'div',{class:'grow',style:'text-align:left',onclick:on||null},el('b',{style:`font-weight:${big?600:500}${strike?';color:var(--ink-3);text-decoration:line-through':''}`},t),s?el('small',{class:sc||null},s):null),r||null);return hold?withPress(n,hold):n;};
 const rows=(list,fn)=>el('div',{class:'list'},list.map(fn));
-const chipsH=(items,val,on)=>el('div',{class:'hscroll'},items.map(([v,l,n])=>el('button',{class:'chip line'+(v===val?' on':''),onclick:()=>on(v)},l,n?el('i',{class:'hcnt'},String(n)):null)));
+const chipsH=(items,val,on)=>FilterRow(items,val,on,{cls:'hscroll'});
 const btnP=(label,fn,extra={})=>{const{icon,...x}=extra;return Button(icon?[el('span',{style:'display:grid',html:ic(icon,16,2.2)}),label]:label,{variant:'primary',onclick:fn,...x});};
 const btnL=(label,fn,extra={})=>Button(label,{variant:'secondary',onclick:fn,...extra});
 const btns=(...b)=>el('div',{class:'btnrow2'},b);
@@ -156,7 +156,7 @@ function viewAreas(root){
   const quiet=areas.filter(a=>!used(a)),shown=S.areasAll?areas:areas.filter(used);const nexts=areaNexts();
   page.append(el('div',{class:'list'},shown.map(a=>{const c=areaRecords(a),n=c.tasks.length+c.habits.length+c.goals.length+c.projects.length+get.all('entry').filter(x=>x.hub===a&&!isCfg(x)).length;const nx=nexts[a];return Row({style:'',onclick:()=>App.go('area',{name:a})},IconTile(null,{html:ic(areaIcon(a),20,1.7)}),el('span',{class:'grow'},el('b',{style:'font-size:var(--fs-headline)'},a),nx?el('small',{},nx):null),el('span',{class:'chev',html:ic('chevr',16,2)}));})));
   if(quiet.length)page.append(Button([S.areasAll?'Hide areas you haven’t started':`${quiet.length} more area${quiet.length===1?'':'s'} you haven’t started`,el('span',{style:'display:grid;'+(S.areasAll?'transform:rotate(-90deg)':'transform:rotate(90deg)'),html:ic('chevr',14,2.2)})],{variant:'link',style:'margin:2px var(--s1) 0',onclick:()=>{S.areasAll=!S.areasAll;App.refresh();}}));
-  {const loose=get.all('resource').filter(r=>!r.area&&!r.archived);if(loose.length)page.append(lblRow('Resources without an area'),el('p',{class:'small muted',style:'margin:-2px var(--s1) var(--s2)'},'Give each one a life area and it moves there.'),el('div',{class:'list'},loose.map(r=>resRow(r))));}
+  {const loose=get.all('resource').filter(r=>!r.area&&!r.archived);if(loose.length)page.append(lblRow('Resources without an area'),Caption('Give each one a life area and it moves there.',{as:'p',style:'margin:-2px var(--s1) var(--s2)'}),el('div',{class:'list'},loose.map(r=>resRow(r))));}
   root.append(page);
 }
 /* the next thing coming up in each life area over the next two weeks, and how many land this week */
@@ -165,7 +165,7 @@ function areaNexts(){const tk=todayK(),we=k(addD(weekStartOf(today()),6)),first=
   const out={};Object.keys(first).forEach(a=>{const f=first[a];out[a]=`${f.t} ${f.d===tk?(f.tm!=null?'at '+fmtT(f.tm):'today'):relDay(f.d).replace(/^Tomorrow$/,'tomorrow')}${(n[a]||0)>1?` · ${n[a]} this week`:''}`;});return out;}
 function areaRecords(a){return{tasks:get.all('task').filter(r=>r.area===a&&isOpenTask(r)),habits:get.all('habit').filter(r=>r.area===a),goals:get.all('goal').filter(r=>r.area===a),projects:get.all('project').filter(r=>r.area===a),resources:get.all('resource').filter(r=>r.area===a)};}
 function hubHidden(name){const s=get.settings(),off=(s.hubHidden||{})[name]||[],on=(s.hubShown||{})[name]||[];return[...off,...toolsOf(name).filter(t=>t.optIn&&!on.includes(t.id)).map(t=>t.id)];}
-function editToolsSheet(name,hub){const inst=openSheet({title:'Modules',left:{label:'Done'},build:b=>{const draw=()=>{b.innerHTML='';b.append(el('p',{class:'muted small'},'Turn off a module you don’t use. Nothing in it is deleted.'),el('div',{class:'list'},toolsOf(name).filter(t=>!t.hide).map(t=>{const on=toolOn(name,t.id);return Switch({on,label:t.name,weight:400,lead:el('span',{style:'display:grid;color:var(--action-text)',html:ic(t.icon,20)}),onChange:v=>{setToolOn(name,t.id,v);draw();}});})),Button('Build your own module',{variant:'secondary',full:true,style:'margin-top:var(--s3)',onclick:()=>{inst.close();App.state.params={name};modSheet(null);}}),Button('All modules',{variant:'link',size:'sm',style:'margin-top:var(--s1)',onclick:()=>{inst.close();App.go('modules');}}));};draw();}});}
+function editToolsSheet(name,hub){const inst=openSheet({title:'Modules',left:{label:'Done'},build:b=>{const draw=()=>{b.innerHTML='';b.append(Caption('Turn off a module you don’t use. Nothing in it is deleted.',{as:'p'}),el('div',{class:'list'},toolsOf(name).filter(t=>!t.hide).map(t=>{const on=toolOn(name,t.id);return Switch({on,label:t.name,weight:400,lead:el('span',{style:'display:grid;color:var(--action-text)',html:ic(t.icon,20)}),onChange:v=>{setToolOn(name,t.id,v);draw();}});})),Button('Build your own module',{variant:'secondary',full:true,style:'margin-top:var(--s3)',onclick:()=>{inst.close();App.state.params={name};modSheet(null);}}),Button('All modules',{variant:'link',size:'sm',style:'margin-top:var(--s1)',onclick:()=>{inst.close();App.go('modules');}}));};draw();}});}
 function toolTile(name,t){const l=entries(name,t.id),d=t.tile?t.tile(l,name):{v:String(l.length),sub:l.length?t.sum(l):'Nothing yet'};
   return el('button',{class:'tc'+(d.off?' off':''),'aria-label':`${t.name}${d.sub?', '+d.sub:''}`,onclick:()=>App.go('tool',{hub:name,tool:t.id})},
     el('span',{class:'tt2'},IconTile(null,{html:ic(t.icon||'grid',19)}),d.tag?pill(d.tag,d.tagc||''):null),
@@ -225,11 +225,11 @@ function entrySheet(hub,t,rec,{seed=null,after=null,type=null,preset=null}={}){
     const short=!isEdit&&!(OB_TEST()&&!window.__LIFEOS_INTROS__)&&fields.length>3&&!entries(hub,t.id).some(x=>(x.f.t||'')===(ty||''));
     const first=renderFields(body,short?fields.slice(0,3):fields,D,update);
     if(short){const more=el('div',{hidden:true});renderFields(more,fields.slice(3),D,update);const tg=el('button',{class:'ob-more','aria-expanded':'false',onclick:()=>{more.hidden=!more.hidden;tg.setAttribute('aria-expanded',String(!more.hidden));tg.querySelector('.chev').style.transform=more.hidden?'':'rotate(90deg)';}},el('span',{class:'grow'},el('b',{style:'font-weight:500'},'More details'),el('small',{},andList(fields.slice(3).map(f=>f.label.replace(/\s*\(.*\)$/,'').toLowerCase())).replace(/^./,c=>c.toUpperCase()))),el('span',{class:'chev',html:ic('chevr',16,2)}));body.append(tg,more);}
-    if(hasPhotos)body.append(el('div',{class:'sect'},'Photos'),photosEditor(D));
+    if(hasPhotos)body.append(SectionLabel('Photos'),photosEditor(D));
     if(isEdit)body.append(el('button',{class:'delete',onclick:()=>{const c=clone(rec),cal=rec.f.calId&&get.id(rec.f.calId),cc=cal&&clone(cal),un=t.onDelete?t.onDelete(rec):null;if(cal)remove(cal.id,{silent:true});remove(rec.id);i.close();toast('Deleted',()=>{put(c);if(cc)put(cc);if(un)un();App.refresh();});}},`Delete ${word}`));else if(first&&!first.value)focusIfKeyboard(first);}});
 }
 function wheelSheet(hub,t,rec){const areas=(get.settings().areas||AREAS),D=rec?clone(rec.f):{date:todayK(),scores:Object.fromEntries(areas.map(a=>[a,5]))},isEdit=!!rec;let box;const ctx=formCtx(()=>draw());const draw=()=>{box.innerHTML='';areas.forEach(a=>box.append(ctx.row(a,'leaf',a,null,{expand:false,trailing:ctx.stepper(D.scores[a]??5,1,10,v=>{D.scores[a]=v;draw();})})));};
-  const inst=openSheet({title:'Rate your life areas',left:{label:'Cancel'},right:{label:'Save',onclick:()=>{if(isEdit){rec.f=D;put(rec);}else create('entry',{hub,tool:t.id,f:D});inst.close();toast('Saved');}},build:b=>{box=el('div',{class:'group'});b.append(el('p',{class:'muted small'},'1 is struggling. 10 is thriving. Be honest, it’s only for you.'),box);draw();}});}
+  const inst=openSheet({title:'Rate your life areas',left:{label:'Cancel'},right:{label:'Save',onclick:()=>{if(isEdit){rec.f=D;put(rec);}else create('entry',{hub,tool:t.id,f:D});inst.close();toast('Saved');}},build:b=>{box=el('div',{class:'group'});b.append(Caption('1 is struggling. 10 is thriving. Be honest, it’s only for you.',{as:'p'}),box);draw();}});}
 function viewTool(root,hub,id){
   const t=toolOf(hub,id);if(!t){App.back('areas');return;}const page=el('div',{class:'page'});
   App.state.params=Object.assign({},App.state.params,{name:hub});

@@ -17,8 +17,8 @@ await p.screenshot({path:'/tmp/v236_field.png'});
 await p.keyboard.press('Escape');await p.waitForTimeout(400);await p.keyboard.press('Escape');await p.waitForTimeout(400);
 // Picker
 await p.evaluate(()=>{window._pick=null;window.__lifeos.fx.Picker({title:'Pick',items:Array.from({length:12},(_,i)=>[i,'Item '+i]),onPick:v=>window._pick=v});});await p.waitForTimeout(400);
-ok('picker has search past 8',await p.evaluate(()=>!!document.querySelector('.sheet .psearch')));
-await p.fill('.sheet .psearch','m 11');await p.waitForTimeout(200);
+ok('picker has search past 8',await p.evaluate(()=>!!document.querySelector('.sheet .sfield input')));
+await p.fill('.sheet .sfield input','m 11');await p.waitForTimeout(200);
 await p.evaluate(()=>{const r=[...document.querySelectorAll('.sheet .li')].find(x=>x.textContent.includes('Item 11'));r&&r.click();});await p.waitForTimeout(400);
 ok('picker returns pick',await p.evaluate(()=>window._pick===11),await p.evaluate(()=>window._pick));
 await p.evaluate(()=>{window.__lifeos.fx.scPickSheet();});await p.waitForTimeout(400);

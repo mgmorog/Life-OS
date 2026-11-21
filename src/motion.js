@@ -304,9 +304,9 @@ function dayPeek(dk,sq){
   di.allDay.forEach(e=>lines.push(['All day',e.title,e.color]));di.timed.forEach(e=>lines.push([fmtT(e.time),e.title,e.color]));di.anytime.forEach(e=>lines.push(['Anytime',e.title]));
   const dim=el('div',{class:'peek-dim',onclick:()=>closePeek()});
   const go=fn=>()=>{closePeek(true);fn();};
-  const card=el('div',{class:'peek',role:'dialog','aria-label':shortDay(dk)},el('div',{class:'lbl'},shortDay(dk)),
+  const card=el('div',{class:'peek',role:'dialog','aria-label':shortDay(dk)},SectionLabel(shortDay(dk)),
     lines.length?lines.slice(0,5).map(([t,ti,c])=>el('div',{class:'pk-l'},el('time',{},t),c?el('i',{style:`background:${c}`}):null,el('span',{},ti))):el('div',{class:'pk-l muted'},'Nothing planned'),
-    lines.length>5?el('div',{class:'small muted',style:'padding-top:var(--s1)'},`+${lines.length-5} more`):null,
+    lines.length>5?Caption(`+${lines.length-5} more`,{as:'div',style:'padding-top:var(--s1)'}):null,
     el('div',{class:'pk-a'},Chip('Open in Today',{onclick:go(()=>{App.state.sel=dk;App.state._fresh=true;App.go('today');})}),Chip('+ Task',{onclick:go(()=>taskSheet(null,{date:dk}))}),Chip('+ Block',{onclick:go(()=>blockSheet(null,{date:dk,start:nextFreeSlot(dk)}))})));
   document.body.append(dim,card);
   const w=Math.min(310,innerWidth-24),h=card.offsetHeight,left=Math.max(12,Math.min(innerWidth-w-12,r.left+r.width/2-w/2)),above=r.top-h-10>12,top=above?r.top-h-10:Math.min(innerHeight-h-12,r.bottom+10);

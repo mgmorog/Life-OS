@@ -260,10 +260,10 @@ function placedSheet(c,sl,st,P){
   const inst=openSheet({title:c.t,build:body=>{
     const ctx=formCtx(()=>{});
     const moves=P.slots.filter(s=>!s.past&&s.id!==sl.id);
-    body.append(el('div',{class:'sect'},'Move to'),el('div',{class:'chips'},moves.map(s=>Chip(s.label,{onclick:()=>{unplaceCard(c,sl.id,st);placeCard(c,s.id,st);inst.close();toast(`Moved to ${s.label}`);}}))),
-      el('p',{class:'small muted'},`Tip: you can also drag it straight to another ${P.unit}.`));
+    body.append(SectionLabel('Move to'),el('div',{class:'chips'},moves.map(s=>Chip(s.label,{onclick:()=>{unplaceCard(c,sl.id,st);placeCard(c,s.id,st);inst.close();toast(`Moved to ${s.label}`);}}))),
+      Caption(`Tip: you can also drag it straight to another ${P.unit}.`,{as:'p'}));
     if(st.mode==='w'){const seT=c.type==='habit'?(c.rec.sessions[sl.id]||{}).time:c.type==='task'?c.rec.time:c.step.time;
-      body.append(el('div',{class:'sect'},'Time (optional)'),el('p',{class:'small muted'},'Leave it blank and it waits at the top of that day’s Today page, ready to drag onto a time.'),
+      body.append(SectionLabel('Time (optional)'),Caption('Leave it blank and it waits at the top of that day’s Today page, ready to drag onto a time.',{as:'p'}),
         Button(seT!=null?`Set for ${fmtT(seT)}. Open in Today`:'Open that day in Today',{variant:'secondary',full:true,onclick:()=>{inst.close();const e=dayItems(sl.id);const it=[...e.timed,...e.anytime].find(x=>x.id===(c.type==='step'?c.step.id:c.rec.id));App.state.sel=sl.id;App.state._fresh=true;App.go('today');}}));}
     body.append(Button('Back to To plan',{variant:'quiet',full:true,onclick:()=>{unplaceCard(c,sl.id,st);inst.close();toast('Back in To plan',()=>{placeCard(c,sl.id,st);App.refresh();});}}),
       Button(`Edit ${({habit:'habit',task:'task',step:c.rec.kind})[c.type]}`,{variant:'text',onclick:()=>{inst.close();if(c.type==='habit')App.go('habit',{id:c.rec.id});else if(c.type==='task')taskSheet(c.rec);else App.go('plan',{id:c.rec.id});}}));
@@ -278,7 +278,7 @@ function reviewSheet(P,st,cards){
     body.append(el('div',{class:'stat3'},el('div',{},el('b',{},String(placedN)),el('small',{},'planned')),el('div',{},el('b',{},String(fixed)),el('small',{},'commitments')),el('div',{},el('b',{},String(P.slots.filter(s=>!slotLoad(s,st,cards)).length)),el('small',{},`open ${P.unit}s`))));
     if(busy)body.append(el('p',{class:'small',style:'color:var(--overdue)'},`${busy} ${P.unit}${busy>1?'s are':' is'} over your capacity.`));
     if(late)body.append(el('p',{class:'small',style:'color:var(--overdue)'},`${late} card${late>1?'s land':' lands'} after the due date.`));
-    if(unplaced.length){body.append(el('div',{class:'sect'},`Not placed · ${unplaced.length}`));body.append(el('div',{class:'list'},unplaced.map(c=>Row({as:'div',style:''},el('span',{class:'grow'},el('b',{style:'font-weight:500'},c.t),el('small',{},c.type==='habit'?'Sessions left this week':'Stays in To plan'))))));}
+    if(unplaced.length){body.append(SectionLabel(`Not placed · ${unplaced.length}`));body.append(el('div',{class:'list'},unplaced.map(c=>Row({as:'div',style:''},el('span',{class:'grow'},el('b',{style:'font-weight:500'},c.t),el('small',{},c.type==='habit'?'Sessions left this week':'Stays in To plan'))))));}
     body.append(Button(P.commit,{variant:'primary',full:true,onclick:()=>{const r=get.id('plan-'+P.key)||{id:'plan-'+P.key,kind:'plan',key:P.key};r.committed=true;r.committedAt=Date.now();App.state._commitSweep=true;put(r);if(st.mode==='w')setSettings({checkinDone:todayK()});inst.close();buzz(12);toast(P.doneL);}}),Button('Keep planning',{variant:'quiet',full:true,onclick:()=>inst.close()}));
   }});
 }
@@ -286,9 +286,9 @@ function checkinSheet(P,st,cards){
   const made=repeatLast(P,st,cards);const late=cards.filter(c=>c.tag==='Carried over');
   const inst=openSheet({title:'Sunday check-in',build:body=>{
     body.append(
-      el('div',{class:'cistep'},el('i',{},'1'),el('div',{},el('b',{},'Repeat last week’s rhythm'),el('p',{class:'small muted',style:'margin-top:2px'},made.length?made.map(m=>`${m.card.t} on ${m.slot&&DOW[fromK(m.slot).getDay()].slice(0,3)}`).join(', '):'No habit pattern from last week yet.'),made.length?Button('Repeat it',{variant:'secondary',style:'margin-top:var(--s2)',onclick:()=>{inst.close();studioMark();made.forEach(g=>placeCard(g.card,g.slot,st));App.refresh();toast(`${made.length} placed`);}}):null)),
-      el('div',{class:'cistep'},el('i',{},'2'),el('div',{},el('b',{},'Check what carried over'),el('p',{class:'small muted',style:'margin-top:2px'},late.length?late.map(c=>c.t).join(', '):'Nothing carried over.'))),
-      el('div',{class:'cistep'},el('i',{},'3'),el('div',{},el('b',{},'Fill the rest'),el('p',{class:'small muted',style:'margin-top:2px'},'Suggest uses your usual days, spaces habits out, skips full days and lands things before they’re due.'),Button('Suggest the rest',{variant:'secondary',style:'margin-top:var(--s2)',onclick:()=>{arcMark();const c2=stCards(st,P);st.ghosts=suggest(c2,P,st);inst.close();App.refresh();}}))),
+      el('div',{class:'cistep'},el('i',{},'1'),el('div',{},el('b',{},'Repeat last week’s rhythm'),Caption(made.length?made.map(m=>`${m.card.t} on ${m.slot&&DOW[fromK(m.slot).getDay()].slice(0,3)}`).join(', '):'No habit pattern from last week yet.',{as:'p',style:'margin-top:2px'}),made.length?Button('Repeat it',{variant:'secondary',style:'margin-top:var(--s2)',onclick:()=>{inst.close();studioMark();made.forEach(g=>placeCard(g.card,g.slot,st));App.refresh();toast(`${made.length} placed`);}}):null)),
+      el('div',{class:'cistep'},el('i',{},'2'),el('div',{},el('b',{},'Check what carried over'),Caption(late.length?late.map(c=>c.t).join(', '):'Nothing carried over.',{as:'p',style:'margin-top:2px'}))),
+      el('div',{class:'cistep'},el('i',{},'3'),el('div',{},el('b',{},'Fill the rest'),Caption('Suggest uses your usual days, spaces habits out, skips full days and lands things before they’re due.',{as:'p',style:'margin-top:2px'}),Button('Suggest the rest',{variant:'secondary',style:'margin-top:var(--s2)',onclick:()=>{arcMark();const c2=stCards(st,P);st.ghosts=suggest(c2,P,st);inst.close();App.refresh();}}))),
       Button('Go to my week',{variant:'primary',full:true,onclick:()=>{setSettings({checkinDone:todayK()});inst.close();}}));
   }});
 }

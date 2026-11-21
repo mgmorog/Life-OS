@@ -172,7 +172,7 @@ function captureSheet(rec,{from=null,photo=false,listen=false}={}){
       T=fieldTitle('f-cap-title','',"What's on your mind?",D.title,v=>{D.title=v;D.keep=D.keep.filter(w=>v.includes(w));if(!v.trim())multi=false;touched();},()=>{if(isEdit){if(can()){commit();inst.close();}return;}saveNext();});
       T.wrap.classList.add('capone');
       /* v235 · talk to capture: a mic beside the field (where the device supports speech), and holding + opens this sheet already listening */
-      if(voiceOK()){const mic=el('button',{class:'capmic',type:'button','aria-label':'Talk','aria-pressed':'false',html:ic('mic',20,1.8),onclick:e=>{e.preventDefault();voiceToggle(T.input,mic);}});T.wrap.append(mic);T.wrap.classList.add('hasmic');if(listen)setTimeout(()=>voiceStart(T.input,mic),120);}
+      if(voiceOK()||recOK()){const mic=el('button',{class:'capmic',type:'button','aria-label':voiceOK()?'Talk, or hold to record a voice note':'Hold to record a voice note','aria-pressed':'false',html:ic('mic',20,1.8),onclick:e=>{e.preventDefault();if(mic._held){mic._held=false;return;}if(voiceOK())voiceToggle(T.input,mic);else toast('Hold the mic to record a voice note');}});micHold(mic,T.wrap,()=>inst);T.wrap.append(mic);T.wrap.classList.add('hasmic');if(listen&&voiceOK())setTimeout(()=>voiceStart(T.input,mic),120);}
       notesBox=fieldNotes('f-cap-notes','Notes','Details or a link',D.notes,v=>{D.notes=v;touched();},{rows:1,min:26});
       ph=photosEditor(D,{compact:true,onChange:touched});hint=el('div',{class:'caphint',hidden:true});chips=el('div',{class:'capchips',hidden:true});
       dupe=el('div',{class:'capdupe',hidden:true});sess=el('div',{class:'capsess',hidden:true});ex=isEdit?null:el('p',{class:'capex'},CAP_EX[Math.floor(Math.random()*CAP_EX.length)]);
@@ -182,7 +182,7 @@ function captureSheet(rec,{from=null,photo=false,listen=false}={}){
       const top=topTurns(),row=el('div',{class:'capturn'},top.map(id=>{const t=TURN.find(x=>x[0]===id);return Chip([el('span',{style:'display:grid',html:ic(t[1],15,2)}),t[2]],{'data-k':id,onclick:()=>go(id)});}),
         moreTurn(go,()=>({title:D.title.trim(),notes:D.notes,photos:D.photos}),()=>{if(isEdit)remove(rec.id);else writeDraft(null);inst.close();},top));
       const smart=smartButton(D,()=>ph&&ph._files?ph._files():[],made=>{if(isEdit)remove(rec.id,{silent:true});else writeDraft(null);inst.close();App.refresh();toast(`${made.length} added`,()=>{made.forEach(r=>remove(r.id,{silent:true,hard:true}));if(isEdit)put(rec);App.refresh();});});
-      body.append(T.wrap,ex,chips,dupe,hint,sess,extras,notesBox,ph,smart,el('div',{class:'sect'},isEdit?'Or turn into':'Or save as'),row);
+      body.append(T.wrap,ex,chips,dupe,hint,sess,extras,notesBox,ph,smart,SectionLabel(isEdit?'Or turn into':'Or save as'),row);
       if(!isEdit)body.closest('.sheet').classList.add('pinned');
       kbTurnRow(body.closest('.sheet'),go,top,()=>{const m=body.querySelector('.capmore');if(m)m.click();});
       if(draft&&(draft.title||draft.notes))body.prepend(el('div',{class:'note good',role:'status',html:ic('undo',16,2)+'<span>Picked up where you left off.</span>'}));
@@ -225,8 +225,8 @@ function moreTurn(on,getP,done,top=null){return el('button',{class:top?'chip cap
   const tools={};(get.settings().areas||AREAS).forEach(hub=>{toolsOf(hub).filter(t=>!t.wheel&&t.id!=='checkin'&&toolOn(hub,t.id)).forEach(t=>{tools[`${hub}|${t.id}`]={hub,t};});});
   const label=(hub,t)=>{const all=toolsOf(hub).filter(x=>x.word===t.word).length;return /^(entry|item|note|record|log)$/i.test(t.word)||all>1?t.name:cap(t.word);};
   /* search, then what you used last, then the basic types, then every life area */
-  const q=el('input',{class:'mtsearch',type:'search',placeholder:'Search types',autocomplete:'off','aria-label':'Search types',oninput:()=>{const v=q.value.trim().toLowerCase();secs.forEach(n=>{let any=false;n._chips.forEach(c=>{const on=!v||c._w.includes(v);c.style.display=on?'':'none';if(on)any=true;});n.style.display=!any||(n._recent&&!!v)?'none':'';});}});
-  b.append(q);
+  const qf=SearchField({placeholder:'Search types',cls:'mtsearch',onInput:()=>qf.input.dispatchEvent(new Event('qin'))}),q=qf.input;q.addEventListener('qin',()=>{const v=q.value.trim().toLowerCase();secs.forEach(n=>{let any=false;n._chips.forEach(c=>{const on=!v||c._w.includes(v);c.style.display=on?'':'none';if(on)any=true;});n.style.display=!any||(n._recent&&!!v)?'none':'';});});
+  b.append(qf);
   const rec=((turnUse().r)||[]).map(id=>{if(tools[id]){const{hub,t}=tools[id];return chip(label(hub,t),t.icon,()=>pickTool(hub,t),hub);}const x=TURN.find(y=>y[0]===id);return x?chip(x[2],x[1],()=>pickBasic(x[0]),x[3]):null;}).filter(Boolean).slice(0,5);
   const rs=section('Recent',null,rec);if(rs){rs._recent=true;b.append(rs);}
   const bs=top&&section('Basics','plus',TURN.filter(x=>!(top||[]).includes(x[0])).map(x=>chip(x[2],x[1],()=>pickBasic(x[0]),x[3])));if(bs)b.append(bs);
@@ -258,3 +258,31 @@ function voiceStart(inp,btn){if(!SR||VOICE)return;try{const r=new SR();r.lang=na
   r.start();VOICE={r,btn};if(btn){btn.classList.add('on');btn.setAttribute('aria-pressed','true');btn.setAttribute('aria-label','Stop listening');}buzz(6);}catch(e){VOICE=null;toast('Talking isn’t available here.');}}
 function voiceStop(){if(!VOICE)return;const{r,btn}=VOICE;VOICE=null;try{r.stop();}catch(e){}if(btn){btn.classList.remove('on');btn.setAttribute('aria-pressed','false');btn.setAttribute('aria-label','Talk');}}
 function voiceToggle(inp,btn){VOICE?voiceStop():voiceStart(inp,btn);}
+
+/* v238 · voice notes: hold the mic to record; let go to keep it in Inbox, slide away to cancel */
+const recOK=()=>!!(window.MediaRecorder&&navigator.mediaDevices&&navigator.mediaDevices.getUserMedia);
+function micHold(mic,host,getInst){if(!recOK())return;let t=null,held=false,sx=0,sy=0,cancel=false,R=null,ui=null,tick=null,t0=0;
+  const fmt=s=>`${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;
+  const show=()=>{ui=el('div',{class:'vrec',role:'status'},el('i',{class:'vdot','aria-hidden':'true'}),el('b',{class:'tnum'},'0:00'),el('span',{},'Let go to keep · slide away to cancel'));host.after(ui);tick=setInterval(()=>{if(ui)ui.querySelector('b').textContent=fmt(Math.floor((Date.now()-t0)/1000));},250);};
+  const start=async()=>{held=true;mic._held=true;if(VOICE)voiceStop();try{const stream=await navigator.mediaDevices.getUserMedia({audio:true});if(!held){stream.getTracks().forEach(x=>x.stop());return;}
+      const mt=['audio/mp4','audio/webm;codecs=opus','audio/webm'].find(x=>MediaRecorder.isTypeSupported&&MediaRecorder.isTypeSupported(x))||'';const rec=new MediaRecorder(stream,mt?{mimeType:mt}:{}),chunks=[];rec.ondataavailable=e=>{if(e.data&&e.data.size)chunks.push(e.data);};
+      R={rec,stream,chunks};t0=Date.now();rec.start(250);buzz(10);mic.classList.add('on','rec');show();}
+    catch(e){held=false;toast(e&&e.name==='NotAllowedError'?'Allow the microphone for Life OS to record voice notes.':'Couldn’t start recording on this device');}};
+  const stop=()=>{clearInterval(tick);const r=R;R=null;held=false;mic.classList.remove('on','rec');if(ui){ui.remove();ui=null;}if(!r)return;const dur=Math.round((Date.now()-t0)/1000);
+    r.rec.onstop=async()=>{r.stream.getTracks().forEach(x=>x.stop());if(cancel){toast('Recording discarded');return;}if(dur<1){toast('Hold a little longer to record');return;}
+      const blob=new Blob(r.chunks,{type:r.rec.mimeType||'audio/mp4'});saveVoiceNote(blob,dur).then(ok=>{if(ok){const i=getInst();i&&i.close&&i.close();}});};try{r.rec.stop();}catch(e){}};
+  mic.addEventListener('pointerdown',e=>{if(e.button)return;sx=e.clientX;sy=e.clientY;cancel=false;try{mic.setPointerCapture(e.pointerId);}catch(err){}t=setTimeout(start,450);});
+  mic.addEventListener('pointermove',e=>{if(!held)return;const far=Math.hypot(e.clientX-sx,e.clientY-sy)>70;if(far!==cancel){cancel=far;if(ui){ui.classList.toggle('cancel',far);ui.querySelector('span').textContent=far?'Let go to cancel':'Let go to keep · slide away to cancel';}}});
+  const up=()=>{clearTimeout(t);if(held)stop();};mic.addEventListener('pointerup',up);mic.addEventListener('pointercancel',()=>{cancel=true;up();});}
+async function saveVoiceNote(blob,dur){let audio=null;
+  try{if(store.assets){const a=await store.assets.upload(blob);audio={id:a.id,url:a.url};}}catch(e){}
+  if(!audio){if(blob.size>3e6){toast('That recording is too long to keep on this device');return false;}audio={url:await new Promise(r=>{const f=new FileReader();f.onload=()=>r(f.result);f.readAsDataURL(blob);})};}
+  Object.assign(audio,{dur,type:blob.type});const at=new Date();
+  const r=create('idea',{title:`Voice note · ${fmtT(at.getHours()*60+at.getMinutes())}`,notes:'',photos:[],audio,source:'voice'});
+  toast('Voice note saved to Inbox',()=>remove(r.id,{hard:true}),'Undo',{open:()=>App.go('inbox')});return true;}
+/* a small player for a voice note */
+function voicePlayer(a){const au=el('audio',{src:a.url,preload:'none'}),b=el('button',{type:'button',class:'vplay','aria-label':'Play voice note',html:ic('play',14,2.4)}),bar=el('i'),len=el('b',{class:'tnum'},`${Math.floor((a.dur||0)/60)}:${String((a.dur||0)%60).padStart(2,'0')}`);
+  b.addEventListener('click',e=>{e.stopPropagation();if(au.paused){$$('audio').forEach(x=>{if(x!==au)x.pause();});au.play().catch(()=>toast('Couldn’t play this note'));}else au.pause();});
+  au.addEventListener('play',()=>{b.innerHTML=ic('pause',14,2.4);b.setAttribute('aria-label','Pause voice note');});au.addEventListener('pause',()=>{b.innerHTML=ic('play',14,2.4);b.setAttribute('aria-label','Play voice note');});
+  au.addEventListener('timeupdate',()=>{const d=au.duration&&isFinite(au.duration)?au.duration:(a.dur||1);bar.style.width=`${Math.min(100,au.currentTime/d*100)}%`;});au.addEventListener('ended',()=>{bar.style.width='0%';});
+  return el('span',{class:'vplayer',onclick:e=>e.stopPropagation()},b,el('span',{class:'vtrack'},bar),len,au);}

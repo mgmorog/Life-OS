@@ -20,6 +20,7 @@ const App={
   render(){
     const S=this.state,root=$('#view');
     if(this.dragging)return;
+    $$('.floatstack>[data-page]').forEach(n=>n.remove());
     applyPrefs();migrate();
     // keep focus and text while someone is typing in the page itself
     const act=document.activeElement;

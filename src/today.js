@@ -160,10 +160,12 @@ function nextLine(dk){const nowM=nowMin(),t=dayItems(dk).timed.filter(e=>!e.done
   return el('button',{class:'nextline',onclick:()=>openItem(e,dk)},el('span',{class:'nl1'},el('b',{},during?'Now':'Next'),' ',e.title),el('span',{class:'nl2 tnum'},during?`Until ${fmtT(end)} · ${fmtDurS(end-nowM)} left`:`${fmtT(e.time)} · in ${fmtDurS(e.time-nowM)}`));}
 /* the Inbox dot: only for ideas that arrived since you last opened it */
 const inboxNew=()=>{let seen=0;try{seen=+localStorage.getItem('lifeos-inboxSeen')||0;}catch(e){}return get.all('idea').some(x=>(x.createdAt||0)>seen);};
+/* v250 · a dot marks a day that matters: an all-day item or a deadline, not just any item */
+function sigDay(xk){try{const d=dayItems(xk);if(d.allDay.length)return true;return get.all('task').some(t=>t.deadline===xk&&isOpenTask(t))||get.all('goal').some(g=>g.deadline===xk&&!g.finished)||get.all('project').some(p=>p.deadline===xk&&!p.finished);}catch(e){return false;}}
 function weekStrip(dk){
   const sel=fromK(dk),start=weekStartOf(sel),tk=todayK();
   const strip=el('div',{class:'weekstrip',id:'week-strip','aria-label':'Choose a day'});
-  [-7,0,7].forEach(off=>{const pg=el('div',{class:'wkpage'});for(let i=0;i<7;i++){const x=addD(start,off+i),xk=k(x),has=dayItems(xk),any=has.timed.length+has.anytime.length+has.allDay.length;
+  [-7,0,7].forEach(off=>{const pg=el('div',{class:'wkpage'});for(let i=0;i<7;i++){const x=addD(start,off+i),xk=k(x),any=sigDay(xk);
     pg.append(el('button',{class:(xk===dk?'sel ':'')+(xk===tk?'today ':'')+(any?'has':''),'aria-label':shortDay(xk),'aria-current':xk===dk?'date':null,onclick:()=>{if(strip._moved)return;goDay(xk);}},el('span',{class:'dl'},DOW[x.getDay()][0]),el('span',{class:'dn'},String(x.getDate())),el('span',{class:'dd','aria-hidden':'true'},'•'.repeat(any>=7?3:any>=3?2:any?1:0))));}strip.append(pg);});
   requestAnimationFrame(()=>{strip.scrollLeft=strip.clientWidth;strip._ready=true;});
   let t;strip.addEventListener('scroll',()=>{if(!strip._ready||strip._drag)return;clearTimeout(t);t=setTimeout(()=>{if(!strip.isConnected)return;const w=strip.clientWidth;if(!w)return;const p=Math.round(strip.scrollLeft/w);if((p!==0&&p!==2)||Math.abs(strip.scrollLeft-p*w)>2)return;goDay(addK(App.state.sel,p===0?-7:7));},110);},{passive:true});

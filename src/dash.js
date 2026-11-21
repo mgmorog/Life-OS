@@ -38,7 +38,7 @@ function dGest(node,r,kind){const tk=todayK();
 /* what every dashboard ends with: linked items, tools, notes */
 function dashLinked(page,name){const c=areaRecords(name),d=todayK(),n=[];
   c.goals.forEach(r=>{const p=goalProgress(r);n.push(dGest(el('button',{class:'dfact',onclick:()=>App.go('plan',{id:r.id})},el('span',{class:'grow'},el('b',{},r.title),el('span',{class:'mrow',style:'margin-top:6px'},meter(p)))),r,'goal'));});
-  c.projects.forEach(r=>{const ts=projectTasks(r),dn=ts.filter(taskDone).length;n.push(dGest(dFact({onclick:()=>App.go('plan',{id:r.id})},r.title,'Project',el('span',{class:'dfv tnum'},`${dn} of ${ts.length}`)),r,'project'));});
+  c.projects.forEach(r=>{const ts=projectTasks(r),dn=ts.filter(taskDone).length;n.push(dGest(dFact({onclick:()=>App.go('plan',{id:r.id})},r.title,'Project',el('span',{class:'dfv tnum'},ts.length?`${dn} of ${ts.length}`:'No tasks yet')),r,'project'));});
   c.habits.forEach(r=>n.push(dGest(dFact({onclick:()=>App.go('habit',{id:r.id})},r.title,'Habit',el('span',{class:'dfv tnum'},`${habitWeek(r,d)} of ${r.target} this week`)),r,'habit')));
   c.tasks.slice(0,6).forEach(r=>n.push(dGest(dFact({onclick:()=>openRec(r)},r.title,r.deadline?`Due ${relDay(r.deadline)}`:r.date?relDay(r.date):'Task',null,(r.deadline&&r.deadline<d)||(r.date&&r.date<d)?'late':null),r,'task')));
   if(n.length)page.append(el('div',{class:'lbl dhead'},'Goals, habits and tasks'),el('div',{class:'list'},capRows(n,'al'+name,5)));

@@ -46,7 +46,7 @@ function viewMore(root){
   if(absent.length)page.append(SectionLabel('Main views'),el('div',{class:'list'},absent.map(x=>Row({style:'',onclick:()=>App.go(x)},IconTile(null,{html:ic(PLACES[x].i,20,1.7)}),el('span',{class:'grow'},el('b',{},PLACES[x].n)),RowEnd('chevron')))));
   /* your life areas, one tap away */
   {const areas=(S.areas||AREAS);page.append(el('div',{class:'sh2'},el('span',{class:'lbl'},'Life areas'),lnk('All',()=>App.go('areas'))),
-    el('div',{class:'arail'},areas.map(a=>el('button',{class:'acirc',onclick:()=>App.go('area',{name:a})},el('span',{class:'ic',html:ic(areaIcon(a),20,1.8)}),el('span',{class:'an'},a)))));}
+    el('div',{class:'achips'},areas.map(a=>el('button',{class:'achip2',onclick:()=>App.go('area',{name:a})},el('i',{style:`background:${AREA_COLOR[a]||'var(--a-personal)'}`}),a))));}
   const row=(i,n,sub,on,subCls)=>Row({style:'',onclick:on},IconTile(null,{html:ic(i,20,1.7)}),el('span',{class:'grow'},el('b',{style:'font-size:var(--fs-headline)'},n),sub?el('small',{class:subCls||null},sub):null),RowEnd('chevron'));
   const place=id=>id==='reviews'?(()=>{const nr=nextReviewLine();return row(PLACES[id].i,PLACES[id].n,nr&&nr[0],()=>App.go(id),nr&&nr[1]?'duenow':null);})():row(PLACES[id].i,PLACES[id].n,null,()=>App.go(id));
   /* anything pinned above isn't listed a second time below */
@@ -433,7 +433,11 @@ function pendingReviews(){const s=get.settings(),f=rvFirstActive();if(!f)return[
 const rvLabel=x=>{const d=fromK(x.a);return x.per==='week'?`Week of ${shortDay(x.a)}`:x.per==='month'?`${MONL[d.getMonth()]} ${d.getFullYear()}`:`Q${quarterOf(d)+1} ${d.getFullYear()}`;};
 function skipReviews(ids){const s=get.settings(),was=s.rvSkip||[];setSettings({rvSkip:[...new Set([...was,...ids])]});App.refresh();toast(ids.length>1?`${ids.length} reviews skipped`:'Review skipped',()=>{setSettings({rvSkip:was});App.refresh();});}
 function pendingCard(pr){const old=pr.filter(x=>x.a<k(addD(today(),-31)));
-  return el('div',{},lblRow('Pending',old.length>2?lnk('Skip all older than a month',()=>skipReviews(old.map(x=>x.id))):null),el('div',{class:'list'},capRows(pr.map(x=>Row({as:'div',style:''},el('button',{class:'grow',style:'text-align:left',onclick:()=>App.go('review',{period:x.per,at:x.a})},el('b',{style:'font-weight:500'},rvLabel(x)),el('small',{},x.per==='week'?'Weekly review':x.per==='month'?'Monthly review':'Quarterly review')),Button('Skip',{variant:'link',size:'sm',onclick:()=>skipReviews([x.id])}))),'rvp',4)));}
+  /* v250 · one quiet line; the list opens only when you ask */
+  const S=App.state,open=!!S.rvPendOpen;
+  const line=el('div',{class:'oquiet'},el('span',{class:'grow'},pr.length===1?'1 past review':`${pr.length} past reviews`),Button('Skip all',{variant:'link',size:'sm',onclick:()=>skipReviews(pr.map(x=>x.id))}),el('span',{class:'oqdot','aria-hidden':'true'},'·'),Button(open?'Hide':'Open',{variant:'link',size:'sm',onclick:()=>{S.rvPendOpen=!open;App.refresh();}}));
+  if(!open)return line;
+  return el('div',{},line,el('div',{class:'list'},capRows(pr.map(x=>Row({as:'div',style:''},el('button',{class:'grow',style:'text-align:left',onclick:()=>App.go('review',{period:x.per,at:x.a})},el('b',{style:'font-weight:500'},rvLabel(x)),el('small',{},x.per==='week'?'Weekly review':x.per==='month'?'Monthly review':'Quarterly review')),Button('Skip',{variant:'link',size:'sm',onclick:()=>skipReviews([x.id])}))),'rvp',4)));}
 
 /* v239 · import tasks from Todoist, TickTick, any CSV with a title column, or a pasted list; preview first, Undo after */
 function importRowsFromCsv(txt,fileName=''){const rows=parseCSV(txt.replace(/^﻿/,''));if(!rows.length)return{tasks:[],src:'CSV'};

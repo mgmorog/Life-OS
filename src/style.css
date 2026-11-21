@@ -18,7 +18,7 @@
   --a-recreation-soft:#F0EBE4; --a-travel:#3F7680; --a-travel-soft:#E6EDEE; --a-personal:#5D6573;
   --a-personal-soft:#EAEBED;
   /* Colour · heat map and charts */
-  --h0:#E8EAE4; --h1:#DCE5DF; --h2:#BCD0C4; --h3:#8FB09E; --h4:#4E6E5E; --chart-1:var(--accent);
+  --h0:#EEF2EE; --h1:#E2EBE6; --h2:#CFE1D7; --h3:#9DBFAE; --h4:#4E6E5E; --chart-1:var(--accent);
   --chart-2:var(--a-career); --chart-3:var(--a-recreation); --chart-4:var(--a-learning);
   --chart-5:var(--a-relationships); --chart-6:var(--a-finances); --chart-other:var(--ink-faint);
   /* Roles · what components use (palettes change these through the colours above) */
@@ -3022,9 +3022,9 @@ input[type=color]{width:40px;height:40px;border:0;border-radius:var(--r-full);pa
 #month-grid .heat.l4{background:none}
 /* Quarter keeps a soft heat map on the circles */
 .qgrid .heat{height:40px}
-.qgrid .heat.l1 .hn,.qgrid .heat.l2 .hn{background:color-mix(in srgb,var(--action) 10%,transparent)}
-.qgrid .heat.l3 .hn{background:color-mix(in srgb,var(--action) 22%,transparent)}
-.qgrid .heat.l4 .hn{background:color-mix(in srgb,var(--action) 38%,transparent)}
+.qgrid .heat.l1 .hn{background:var(--h1)}.qgrid .heat.l2 .hn{background:var(--h2)}
+.qgrid .heat.l3 .hn{background:var(--h3)}
+.qgrid .heat.l4 .hn{background:color-mix(in srgb,var(--h3) 75%,var(--h4));color:var(--text)}
 .qgrid .heat.past .hn{opacity:var(--o-subtle)}
 .qgrid .heat .adbars{display:none}
 .heat-key i{border-radius:var(--r-full)}
@@ -3476,3 +3476,37 @@ body.hasfloat .page{padding-bottom:calc(var(--float-h,0px) + 120px)}
 .modtile b{font-weight:600;font-size:var(--fs-row);line-height:var(--lh-ui)}
 .modtile small{display:block;font-size:var(--fs-footnote);color:var(--text-muted);line-height:var(--lh-ui);overflow-wrap:anywhere}
 @media (min-width:700px){.modgrid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+/* v250 · polish round 2 */
+.toast{background:var(--surface-raised);color:var(--text);box-shadow:var(--e-floating)}
+.toast button{color:var(--action-text)}
+.shead h2{font-size:var(--fs-title-s)}
+.slabel .linkbtn,.daycard .bl .linkbtn,.daycard .bl .blr .linkbtn,.upcard .bl .linkbtn,.habcard .bl .linkbtn,.sect-h .linkbtn{color:var(--text-muted);font-weight:500}
+.oh3{display:block;margin-top:2px}
+.oh3 small{display:block;font-size:var(--fs-footnote);color:var(--text-muted)}
+.ohbar{display:block;height:4px;border-radius:var(--r-micro);background:var(--line-2);margin-top:var(--s1);overflow:hidden}
+.ohbar i{display:block;height:100%;border-radius:var(--r-micro);background:var(--done);transition:width var(--dur-slow) var(--ease)}
+.aflat{display:flex;align-items:center;gap:var(--s2);width:100%;min-height:var(--ctl-sm);padding:var(--s2) var(--s1) 0;text-align:left;font-size:var(--fs-footnote);font-weight:600;color:var(--text-muted)}
+.aflat small{font-weight:500;color:var(--ink-faint)}
+.aflat .hachev{display:grid;color:var(--ink-faint);transition:transform var(--dur-fast) var(--ease)}
+.aflat.shut .hachev{transform:rotate(-90deg)}
+.afbody{margin-top:calc(var(--s1) * -1)}
+/* empty states inside a card or list: one quiet line and the action */
+:is(.card,.list,.group) .empty{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:var(--s2);text-align:left;padding:var(--s3) var(--s4)}
+:is(.card,.list,.group) .empty>:first-child:not(b){display:none}
+:is(.card,.list,.group) .empty>b{font-family:var(--body);font-size:var(--fs-row);font-weight:400;color:var(--text-muted)}
+:is(.card,.list,.group) .empty>div:not(.eact){display:none}
+:is(.card,.list,.group) .empty .eact{margin:0}
+/* More: pinned are white tiles, life areas are colour-dot chips */
+.pins{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:var(--s2)}
+.ptile{width:auto;min-height:84px;background:var(--surface-raised);border:1px solid var(--edge);border-radius:var(--r-card);box-shadow:var(--e-raised);padding:var(--s3) var(--s1);gap:var(--s2);color:var(--text);font-size:var(--fs-footnote);font-weight:500}
+.ptile .ic{width:28px;height:28px;background:none}
+.achips{display:flex;flex-wrap:wrap;gap:var(--s2)}
+.achip2{display:inline-flex;align-items:center;gap:var(--s2);height:var(--ctl-sm);padding:0 var(--s4) 0 var(--s3);border-radius:var(--r-full);background:var(--surface-raised);border:1px solid var(--edge);box-shadow:var(--e-raised);font-size:var(--fs-label);font-weight:500;color:var(--text);transition:transform var(--dur-fast) var(--ease)}
+.achip2:active{transform:scale(var(--press))}
+.achip2 i{width:8px;height:8px;border-radius:var(--r-full);flex:none}
+.stbar.over{background:var(--amber-soft)}.stbar.over i{background:var(--amber);opacity:1}
+.stslot-h small.warn{color:var(--amber)}
+/* finished priorities step back: one small muted line */
+.t3row.done{min-height:40px}
+.t3row.done .tt{font-size:var(--fs-footnote);color:var(--ink-3);background-size:0 0}
+.t3row.done .tick,.t3row.done .t3n{transform:scale(.72);transform-origin:center}

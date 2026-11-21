@@ -681,7 +681,7 @@ function dateDropEl(dk){
   /* Month chips + big day circles + quick jumps (v104). Paging months redraws only this box. */
   const close=go=>dateDrop(false,go),tK=todayK(),sel=fromK(dk);
   let ym={y:sel.getFullYear(),m:sel.getMonth()};const dots=new Map();
-  const has=key=>{if(!dots.has(key)){let v=false;try{const d=dayItems(key);v=!!(d.allDay.length||d.timed.length||d.anytime.length);}catch(e){}dots.set(key,v);}return dots.get(key);};
+  const has=key=>{if(!dots.has(key)){let v=false;try{const d=dayItems(key);v=sigDay(key);}catch(e){}dots.set(key,v);}return dots.get(key);};
   const yr=el('div',{class:'dp-yr'}),chips=el('div',{class:'dp-chips',role:'tablist','aria-label':'Months'}),grid=el('div',{class:'dp-grid'});
   const t0=today(),base={y:t0.getFullYear(),m:t0.getMonth()};
   const list=[];for(let i=-6;i<=18;i++){const d=new Date(base.y,base.m+i,1);list.push({y:d.getFullYear(),m:d.getMonth()});}

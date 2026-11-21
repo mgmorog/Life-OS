@@ -25,9 +25,9 @@ function areaOnly(list,key){const S=App.state,cur=S['af'+key];if(!(cur instanceo
 const areaNote=()=>null;
 /* a life-area card with a fold, the same shape Habits uses */
 function areaFold(page,key,a,rows,sub){const S=App.state;S['fold'+key]=S['fold'+key]||new Set();const shut=S['fold'+key].has(a);
-  page.append(el('div',{class:'card hacard'+(shut?' shut':'')},el('button',{class:'hahead','aria-expanded':String(!shut),onclick:()=>{if(shut)S._reveal='af'+key+a;shut?S['fold'+key].delete(a):S['fold'+key].add(a);App.refresh();}},
-    Progress(sub.p,{kind:'ring',size:'sm',cls:'haring',icon:ic(a==='No area'?'grid':areaIcon(a),18,1.9)}),
-    el('span',{class:'hatx'},el('b',{},a),el('small',{},sub.t)),el('span',{class:'hachev',html:ic('chevd',18,2.2)})),shut?null:el('div',{class:'habody'},Array.isArray(rows)?revealRows(capRows(rows,'af'+key+a,6),'af'+key+a):rows)));}
+  /* v250 · flat: a small area heading (tap to fold) over one plain list, no ring card */
+  page.append(el('button',{class:'aflat'+(shut?' shut':''),'aria-expanded':String(!shut),onclick:()=>{if(shut)S._reveal='af'+key+a;shut?S['fold'+key].delete(a):S['fold'+key].add(a);App.refresh();}},el('span',{class:'grow'},a),el('small',{},sub.t),el('span',{class:'hachev',html:ic('chevd',14,2.2)})));
+  if(!shut)page.append(el('div',{class:'card flush afbody'},Array.isArray(rows)?revealRows(capRows(rows,'af'+key+a,6),'af'+key+a):rows));}
 function byArea(list){const m=new Map();list.forEach(r=>{const a=r.area||'No area';if(!m.has(a))m.set(a,[]);m.get(a).push(r);});return[...m.entries()].sort((a,b)=>a[0]==='No area'?1:b[0]==='No area'?-1:a[0].localeCompare(b[0]));}
 const withPress=(node,fn)=>holdMenu(node,fn,{skip:'.tick-hit'});
 /* an empty hub says so in one quiet line under its Add bar, not a big illustrated card */
@@ -94,7 +94,7 @@ function viewInbox(root){
   }),'inbox',25)));
   root.append(page);
 }
-const shortAgo=t=>{const m=Math.max(0,(Date.now()-(t||0))/6e4);return m<60?`${Math.max(1,Math.round(m))}m`:m<1440?`${Math.round(m/60)}h`:m<10080?`${Math.round(m/1440)}d`:m<525600?`${Math.round(m/10080)}w`:`${Math.round(m/525600)}y`;};
+const shortAgo=t=>{const m=Math.max(0,(Date.now()-(t||0))/6e4),pl=(n,w)=>`${n} ${w}${n===1?'':'s'}`;if(m<2)return'Just now';if(m<60)return pl(Math.round(m),'min').replace('mins','min');if(m<1440)return pl(Math.round(m/60),'hour');const d=Math.round(m/1440);if(d===1)return'Yesterday';if(d<7)return pl(d,'day');if(d<30)return pl(Math.round(d/7),'week');if(d<365)return pl(Math.round(d/30.4),'month');return pl(Math.round(d/365),'year');};
 /* text and small nodes joined with a middle dot */
 function joinMeta(parts){const out=[];parts.filter(Boolean).forEach((p,i)=>{if(i)out.push(' · ');out.push(p);});return out;}
 
@@ -157,9 +157,18 @@ function viewTasks(root){
   const wk=addK(tk,7),cnt={overdue:late.length+AIt.filter(r=>r.late).length,today:todayOpen.length+AIt.filter(r=>!r.late&&!r.done).length,week:upcoming.filter(([,d])=>d<=wk).length,anytime:anytime.length};
   const fchip=(k,l,n,cls='')=>el('button',{class:'fchip'+cls+(k==='all'?(!S.taskF.size&&S.taskTab==='all'?' on':''):['waiting','done','hold'].includes(k)?(S.taskTab===k?' on':''):(S.taskTab==='all'&&S.taskF.has(k)?' on':'')),'aria-pressed':'false',onclick:()=>{if(k==='all'){S.taskF.clear();S.taskTab='all';}else if(['waiting','done','hold'].includes(k)){S.taskTab=S.taskTab===k?'all':k;S.taskF.clear();}else{S.taskTab='all';S.taskF.has(k)?S.taskF.delete(k):S.taskF.add(k);}App.refresh();}},l,n!=null?el('span',{class:'n'},String(n)):null);
   page.append(el('div',{class:'tstick'},
-    el('div',{class:'fchips'},fchip('all','All',null),fchip('overdue','Overdue',null,cnt.overdue?' red':''),fchip('today','Today',null),fchip('week','Next 7',null),areaMenuChip(S.taskA,areaSet),
-      (()=>{const views=[['anytime','Anytime'],['priority','Priority grid'],get.all('wait').length||S.taskTab==='waiting'?['waiting','Waiting']:null,held||S.taskTab==='hold'?['hold','On hold']:null,['done','Done']].filter(Boolean),cur=views.find(([k])=>k==='anytime'?S.taskF.has('anytime'):S.taskTab===k);
-        return el('button',{class:'fchip amenu'+(cur?' on':''),'aria-haspopup':'menu',onclick:e=>{const r=e.currentTarget.getBoundingClientRect();openMenu(r.left,r.bottom+4,views.map(([k,l])=>({label:l,icon:(cur&&cur[0]===k)?'check':null,onclick:()=>{if(k==='anytime'){S.taskTab='all';S.taskF.has(k)?S.taskF.delete(k):(S.taskF.clear(),S.taskF.add(k));}else{S.taskTab=S.taskTab===k?'all':k;S.taskF.clear();}App.refresh();}})));}},cur?cur[1]:'More',el('span',{style:'display:grid',html:ic('chevd',14,2.2)}));})())));
+    (()=>{const VIEWS=[['anytime','Anytime'],['priority','Priority grid'],get.all('wait').length||S.taskTab==='waiting'?['waiting','Waiting']:null,held||S.taskTab==='hold'?['hold','On hold']:null,['done','Done']].filter(Boolean),SHOW=[['overdue','Overdue'],['today','Today'],['week','Next 7 days']];
+      const active=[];SHOW.forEach(([k2,l])=>{if(S.taskTab==='all'&&S.taskF.has(k2))active.push([l,()=>S.taskF.delete(k2)]);});
+      VIEWS.forEach(([k2,l])=>{if(k2==='anytime'?S.taskF.has('anytime'):S.taskTab===k2)active.push([l,()=>{if(k2==='anytime')S.taskF.delete(k2);else S.taskTab='all';}]);});
+      [...S.taskA].forEach(a=>active.push([a,()=>S.taskA.delete(a)]));
+      const sheet=()=>{const inst=openSheet({title:'Filter tasks',left:{label:'Done'},build:b=>{const draw=()=>{b.innerHTML='';const grp=(t,items)=>{b.append(el('div',{class:'lbl',style:'margin:var(--s3) var(--s1) var(--s2)'},t),el('div',{class:'chips'},items));};
+        grp('Show',SHOW.map(([k2,l])=>Chip(l,{selected:S.taskTab==='all'&&S.taskF.has(k2),onclick:()=>{S.taskTab='all';S.taskF.has(k2)?S.taskF.delete(k2):S.taskF.add(k2);App.refresh();draw();}})));
+        grp('View',VIEWS.map(([k2,l])=>Chip(l,{selected:k2==='anytime'?S.taskF.has('anytime'):S.taskTab===k2,onclick:()=>{if(k2==='anytime'){S.taskTab='all';S.taskF.has(k2)?S.taskF.delete(k2):(S.taskF.clear(),S.taskF.add(k2));}else{S.taskTab=S.taskTab===k2?'all':k2;S.taskF.clear();}App.refresh();draw();}})));
+        if(areaSet.length>1)grp('Life areas',areaSet.map(a=>Chip(a,{selected:S.taskA.has(a),onclick:()=>{S.taskA.has(a)?S.taskA.delete(a):S.taskA.add(a);App.refresh();draw();}})));
+        if(active.length||S.taskF.size||S.taskA.size||S.taskTab!=='all')b.append(el('div',{style:'margin-top:var(--s4)'},Button('Clear filters',{variant:'link',onclick:()=>{S.taskF.clear();S.taskA.clear();S.taskTab='all';App.refresh();draw();}})));};draw();}});};
+      return el('div',{class:'fchips'},el('button',{class:'fchip ffilter','aria-haspopup':'dialog',onclick:sheet},el('span',{style:'display:grid',html:ic('filter',14,2.2)}),active.length?`Filter · ${active.length}`:'Filter'),
+        ...active.map(([l,off])=>el('button',{class:'fchip on','aria-label':`Remove filter ${l}`,onclick:()=>{off();App.refresh();}},l,el('span',{style:'display:grid',html:ic('x',12,2.4)}))),
+        cnt.overdue&&!(S.taskTab==='all'&&S.taskF.has('overdue'))?el('button',{class:'fchip red',onclick:()=>{S.taskTab='all';S.taskF.add('overdue');App.refresh();}},`${cnt.overdue} overdue`):null);})()));
   const note=areaNote('task');if(note)page.append(note);
   if(S.taskTab==='priority'){page.append(priorityGrid(all.filter(t=>isOpenTask(t)&&inA(t.area))));root.append(page);return;}
   
@@ -276,8 +285,9 @@ function viewHabits(root){
         const tick=el('span',{class:'tick-hit'},tickBtn(dn,on=>{if(h.track==='count'||h.track==='time'){h.logs=h.logs||{};if(on)h.logs[tk]=h.goalN||1;else delete h.logs[tk];put(h);}else toggleItem({kind:'habit',rec:h},tk);if(on){const n=habitStreak(h);toast(n.n>1?`${h.title} · ${streakText(n)} in a row`:`${h.title} done`,()=>{if(h.track==='count'||h.track==='time'){delete h.logs[tk];put(h);}else toggleItem({kind:'habit',rec:h},tk);App.refresh();});}setTimeout(()=>App.refresh(),700);}));
         const sh=(()=>{const n=h.target||1;return h.track==='count'?`${h.goalN}× a day`:habitWeekly(h)?(n>=7?'Daily':`${n}×/wk`):h.days.length===7?'Daily':`${h.days.length}×/wk`;})();
         return el('div',{class:'li ohab2 tick-host'+(dn?' done':'')},tick,el('button',{class:'grow ohbody',onclick:()=>App.go('habit',{id:h.id})},
-          el('span',{class:'oh1'},el('b',{},h.title),s.n>1?el('span',{class:'ohs2','aria-label':`${streakText(s)} in a row`},flameI(),String(s.n)):null),
-          el('span',{class:'oh2'},el('span',{class:'odots','aria-hidden':'true','data-dk':h.id},rw.map(d=>el('i',{class:habitDotState(h,d)+(d===tk?' td':'')}))),el('small',{},sh))));};
+          el('span',{class:'oh1'},el('b',{},h.title)),
+          (()=>{const cnt=h.track==='count',tgt=cnt?(h.goalN||1):(habitWeekly(h)?(h.target||1):(h.days&&h.days.length?h.days.length:7)),got=cnt?(+((h.logs||{})[tk])||0):habitWeek(h,tk),pc=Math.min(1,got/tgt);
+            return el('span',{class:'oh3'},el('small',{},`${Math.min(got,cnt?got:got)} of ${tgt} ${cnt?'today':'this week'}${s.n>1?` · ${streakText(s)} streak`:''}`),el('span',{class:'ohbar','aria-hidden':'true'},el('i',{style:`width:${Math.round(pc*100)}%`})));})()));};
       /* grouped by life area: each area is a card with a ring for today, and folds when you tap its name */
       if(!(S.habShut instanceof Set))S.habShut=new Set();
       const L=active.filter(inHA),byA=new Map();L.forEach(h=>{const a=h.area||'Other';if(!byA.has(a))byA.set(a,[]);byA.get(a).push(h);});
@@ -467,7 +477,7 @@ function viewLists(root){
   if(!ls.length){page.append(emptyOf('Your first list','Groceries, packing, gift ideas, anything.'));{const mine=userTpls().filter(t=>t.kind==='list');if(mine.length)page.append(lblRow('Your templates'),el('div',{class:'chips'},mine.map(t=>tplChip(t,()=>addTemplate(t)))));}root.append(page);return;}
   const go=l=>App.go('list',{id:l.id}),del=l=>{const c=clone(l);remove(l.id);toast('List deleted',()=>put(c));};
   if(pinned.length)page.append(lblRow('Pinned'),el('div',{class:'ogrid'},pinned.map(l=>{const it=l.items||[],open=it.filter(i=>!i.d);return withPress(el('button',{class:'opin','data-k':'lst:'+l.id,onclick:()=>go(l)},el('span',{class:'opinic','aria-hidden':'true',html:ic('pin',14,2)}),el('b',{},l.title),el('small',{class:'opc'},listSub(l)),l.reusable&&it.length?(open.length?meter((it.length-open.length)/it.length):Chip('Reset',{as:'span',role:'button',style:'height:30px;margin-top:6px;align-self:flex-start',onclick:e=>{e.stopPropagation();const b=clone(l.items);l.items.forEach(i=>i.d=false);put(l);toast(`${l.title} reset`,()=>{l.items=b;put(l);});}})):el('span',{class:'oprev'},open.slice(0,3).map(i=>el('span',{},el('i'),i.t)))),listMenu(l));})));
-  if(rest.length){if(pinned.length)page.append(lblRow('All lists'));page.append(el('div',{class:'list'},rest.map(l=>{const when=timeAgo(l.updatedAt||l.createdAt),row=withPress(Row({as:'div',style:'padding-right:6px','data-k':'lst:'+l.id},el('button',{class:'grow',style:'text-align:left;min-width:0',onclick:()=>go(l)},el('b',{},l.title),el('small',{},[listSub(l),when==='Today'?'':`Updated ${when.toLowerCase()}`,l.reusable?'Reusable':''].filter(Boolean).join(' · '))),el('span',{class:'aichev',html:ic('chevr',16,2.2)})),listMenu(l));swipeRow(row,l.title,()=>del(l));return row;})));}
+  if(rest.length){if(pinned.length)page.append(lblRow('All lists'));page.append(el('div',{class:'list'},rest.map(l=>{const when=timeAgo(l.updatedAt||l.createdAt),row=withPress(Row({as:'div',style:'padding-right:6px','data-k':'lst:'+l.id},el('button',{class:'grow',style:'text-align:left;min-width:0',onclick:()=>go(l)},el('b',{},l.title),el('small',{},[listSub(l),when==='Today'?'':`Updated ${when.toLowerCase()}`,l.reusable?'Reusable':''].filter(Boolean).join(' · ')),(l.items||[]).length?el('span',{class:'ohbar','aria-hidden':'true'},el('i',{style:`width:${Math.round((l.items.filter(i=>i.d).length/l.items.length)*100)}%`})):null),el('span',{class:'aichev',html:ic('chevr',16,2.2)})),listMenu(l));swipeRow(row,l.title,()=>del(l));return row;})));}
   root.append(page);
 }
 function viewList(root,id){

@@ -28,8 +28,8 @@ const later=()=>setTimeout(()=>App.refresh(),820);
 const lblQuiet=r=>{const x=r.trim();return !/\d/.test(x)||/^\d+( [A-Za-z]+){0,2}$/.test(x);};
 const lblClean=t=>typeof t!=='string'||/overdue|late|due/i.test(t)?t:t.replace(/ · \d+( of \d+)?( (left|more|planned|saved|ideas?|items?|portions?|dates?|done))?$/i,'');
 const lblRow=(t,r)=>el('div',{class:'sh2 shstick'},el('span',{class:'lbl'},lblClean(t)),typeof r==='string'?(lblQuiet(r)?null:el('span',{class:'small muted'},r)):typeof r==='number'?null:r||null);
-const lnk=(label,fn,icon)=>el('button',{class:'linkbtn small',style:'min-height:44px;margin:calc(var(--s2) * -1) 0',onclick:fn},icon?el('span',{style:'display:grid',html:ic(icon,16,2)}):null,label);
-const bigN=(v,rest)=>el('p',{class:'bign'},el('span',{class:'serif n'},String(v)),rest?el('span',{class:'muted'},' '+rest):null);
+const lnk=(label,fn,icon)=>Button(label,{variant:'link',size:'sm',icon,onclick:fn});
+const bigN=(v,rest)=>Stat({value:v,label:rest||null,size:'lg'});
 /* "all is well" labels say nothing; only a status that needs attention gets a pill */
 const pill=(t,c='')=>!t||/^(On track|On pace|Up to date|All good)$/.test(t)?null:el('span',{class:'hpill '+c},t);
 const AMBER='#D9A441',RUST='#C76A2E';
@@ -39,10 +39,10 @@ const tk=(on,fn,label)=>el('span',{class:'tick-hit'},tickBtn(on,fn,label));
 const rowX=({l,t,s,sc,r,on,strike,big,hold})=>{const n=Row({as:'div',style:''},l||null,el(on?'button':'div',{class:'grow',style:'text-align:left',onclick:on||null},el('b',{style:`font-weight:${big?600:500}${strike?';color:var(--ink-3);text-decoration:line-through':''}`},t),s?el('small',{class:sc||null},s):null),r||null);return hold?withPress(n,hold):n;};
 const rows=(list,fn)=>el('div',{class:'list'},list.map(fn));
 const chipsH=(items,val,on)=>el('div',{class:'hscroll'},items.map(([v,l,n])=>el('button',{class:'chip line'+(v===val?' on':''),onclick:()=>on(v)},l,n?el('i',{class:'hcnt'},String(n)):null)));
-const btnP=(label,fn,extra={})=>el('button',Object.assign({class:'btn primary',onclick:fn},extra),extra.icon?el('span',{style:'display:grid',html:ic(extra.icon,16,2.2)}):null,label);
-const btnL=(label,fn,extra={})=>el('button',Object.assign({class:'btn line',onclick:fn},extra),label);
+const btnP=(label,fn,extra={})=>{const{icon,...x}=extra;return Button(icon?[el('span',{style:'display:grid',html:ic(icon,16,2.2)}),label]:label,{variant:'primary',onclick:fn,...x});};
+const btnL=(label,fn,extra={})=>Button(label,{variant:'secondary',onclick:fn,...extra});
 const btns=(...b)=>el('div',{class:'btnrow2'},b);
-const dtile=(dk,c='')=>{const d=fromK(dk),n=daysBetween(todayK(),dk);return el('span',{class:'hdtile '+c},el('i',{},(n>=0&&n<=6?DOW[d.getDay()].slice(0,3):MON[d.getMonth()]).toUpperCase()),el('b',{},String(d.getDate())));};
+const dtile=(dk,c='')=>DateBadge(dk,{tone:c==='warn'||c==='due'?'warn':null});const dtile0=(dk,c='')=>{const d=fromK(dk),n=daysBetween(todayK(),dk);return el('span',{class:'hdtile '+c},el('i',{},(n>=0&&n<=6?DOW[d.getDay()].slice(0,3):MON[d.getMonth()]).toUpperCase()),el('b',{},String(d.getDate())));};
 const wkDays=dk=>{const a=weekRange(dk)[0];return Array.from({length:7},(_,i)=>addK(a,i));};
 const PAL=['#F1D9C6','#DCE6F0','#E7E0F0','#E1EDE4','#F3E6CF','#DDE7EC','#EFDCE2'];
 const avatar=(name,sz=36)=>{const s=String(name||'?'),h=[...s].reduce((n,c)=>n+c.charCodeAt(0),0);return el('span',{class:'avi',style:`width:${sz}px;height:${sz}px;background:${PAL[h%PAL.length]}`,'aria-hidden':'true'},s[0].toUpperCase());};
@@ -52,7 +52,7 @@ const nextYearly=d=>{const t=today(),x=fromK(d);let n=new Date(t.getFullYear(),x
 const seasonOf=d=>['Winter','Winter','Spring','Spring','Spring','Summer','Summer','Summer','Fall','Fall','Fall','Winter'][d.getMonth()];
 const seasonEnd=d=>{const m=d.getMonth(),y=d.getFullYear();const e={Winter:new Date(m===11?y+1:y,1,28),Spring:new Date(y,4,31),Summer:new Date(y,7,31),Fall:new Date(y,10,30)}[seasonOf(d)];return k(e);};
 const everyWord=n=>({1:'Daily',7:'Weekly',14:'Every 2 weeks',30:'Monthly',60:'Every 2 months',90:'Every 3 months',180:'Every 6 months',365:'Yearly'}[+n]||(+n%365===0?`Every ${+n/365} years`:+n%30===0?`Every ${+n/30} months`:+n%7===0?`Every ${+n/7} weeks`:`Every ${n} days`));
-const stepper=(val,lo,hi,step,on,fmt=v=>v)=>el('span',{class:'stp'},el('button',{'aria-label':'Lower',html:ic('minus',16,2),onclick:()=>on(Math.max(lo,val-step))}),el('span',{class:'sv tnum'},String(fmt(val))),el('button',{'aria-label':'Raise',html:ic('plus',16,2),onclick:()=>on(Math.min(hi,val+step))}));
+const stepper=(val,lo,hi,step,on,fmt=v=>v)=>Stepper(val,{min:lo,max:hi,step,format:fmt,onChange:on});
 /* a module's line under its title earns its place only with a real figure: taglines and bare counts of what's listed below are left out */
 const toolSub=s=>typeof s!=='string'?s:(!/\d/.test(s)||/^\d+ [A-Za-z]+(?: [A-Za-z]+)?\.?$/.test(s.trim()))?null:s;
 const toolHead=(page,hub,t,{sub,actions}={})=>page.append(pageHead(t.name,toolSub(sub)||null,{back:hub,to:'area',icon:t.icon,actions:actions||plusB(t.word,()=>entrySheet(hub,t))}));
@@ -154,8 +154,8 @@ function viewAreas(root){
   page.append(pageHead('Life areas',null,{icon:'heart',actions:IconButton('Manage life areas',{cls:'green',html:ic('gear',22),onclick:()=>App.go('setpage',{id:'areas'})})}));
   const S=App.state,used=a=>{const c=areaRecords(a);return c.tasks.length+c.habits.length+c.goals.length+c.projects.length+c.resources.length>0||get.all('entry').some(x=>x.hub===a&&!isCfg(x))||toolsOf(a).some(t=>!t.hide&&toolOn(a,t.id));};
   const quiet=areas.filter(a=>!used(a)),shown=S.areasAll?areas:areas.filter(used);const nexts=areaNexts();
-  page.append(el('div',{class:'list'},shown.map(a=>{const c=areaRecords(a),n=c.tasks.length+c.habits.length+c.goals.length+c.projects.length+get.all('entry').filter(x=>x.hub===a&&!isCfg(x)).length;const nx=nexts[a];return Row({style:'',onclick:()=>App.go('area',{name:a})},el('span',{class:'sq',html:ic(areaIcon(a),20,1.7)}),el('span',{class:'grow'},el('b',{style:'font-size:var(--fs-headline)'},a),nx?el('small',{},nx):null),el('span',{class:'chev',html:ic('chevr',16,2)}));})));
-  if(quiet.length)page.append(el('button',{class:'linkbtn',style:'margin:2px var(--s1) 0;min-height:44px',onclick:()=>{S.areasAll=!S.areasAll;App.refresh();}},S.areasAll?'Hide areas you haven’t started':`${quiet.length} more area${quiet.length===1?'':'s'} you haven’t started`,el('span',{style:'display:grid;'+(S.areasAll?'transform:rotate(-90deg)':'transform:rotate(90deg)'),html:ic('chevr',14,2.2)})));
+  page.append(el('div',{class:'list'},shown.map(a=>{const c=areaRecords(a),n=c.tasks.length+c.habits.length+c.goals.length+c.projects.length+get.all('entry').filter(x=>x.hub===a&&!isCfg(x)).length;const nx=nexts[a];return Row({style:'',onclick:()=>App.go('area',{name:a})},IconTile(null,{html:ic(areaIcon(a),20,1.7)}),el('span',{class:'grow'},el('b',{style:'font-size:var(--fs-headline)'},a),nx?el('small',{},nx):null),el('span',{class:'chev',html:ic('chevr',16,2)}));})));
+  if(quiet.length)page.append(Button([S.areasAll?'Hide areas you haven’t started':`${quiet.length} more area${quiet.length===1?'':'s'} you haven’t started`,el('span',{style:'display:grid;'+(S.areasAll?'transform:rotate(-90deg)':'transform:rotate(90deg)'),html:ic('chevr',14,2.2)})],{variant:'link',style:'margin:2px var(--s1) 0',onclick:()=>{S.areasAll=!S.areasAll;App.refresh();}}));
   {const loose=get.all('resource').filter(r=>!r.area&&!r.archived);if(loose.length)page.append(lblRow('Resources without an area'),el('p',{class:'small muted',style:'margin:-2px var(--s1) var(--s2)'},'Give each one a life area and it moves there.'),el('div',{class:'list'},loose.map(r=>resRow(r))));}
   root.append(page);
 }
@@ -165,10 +165,10 @@ function areaNexts(){const tk=todayK(),we=k(addD(weekStartOf(today()),6)),first=
   const out={};Object.keys(first).forEach(a=>{const f=first[a];out[a]=`${f.t} ${f.d===tk?(f.tm!=null?'at '+fmtT(f.tm):'today'):relDay(f.d).replace(/^Tomorrow$/,'tomorrow')}${(n[a]||0)>1?` · ${n[a]} this week`:''}`;});return out;}
 function areaRecords(a){return{tasks:get.all('task').filter(r=>r.area===a&&isOpenTask(r)),habits:get.all('habit').filter(r=>r.area===a),goals:get.all('goal').filter(r=>r.area===a),projects:get.all('project').filter(r=>r.area===a),resources:get.all('resource').filter(r=>r.area===a)};}
 function hubHidden(name){const s=get.settings(),off=(s.hubHidden||{})[name]||[],on=(s.hubShown||{})[name]||[];return[...off,...toolsOf(name).filter(t=>t.optIn&&!on.includes(t.id)).map(t=>t.id)];}
-function editToolsSheet(name,hub){const inst=openSheet({title:'Modules',left:{label:'Done'},build:b=>{const draw=()=>{b.innerHTML='';b.append(el('p',{class:'muted small'},'Turn off a module you don’t use. Nothing in it is deleted.'),el('div',{class:'list'},toolsOf(name).filter(t=>!t.hide).map(t=>{const on=toolOn(name,t.id);return Switch({on,label:t.name,weight:400,lead:el('span',{style:'display:grid;color:var(--action-text)',html:ic(t.icon,20)}),onChange:v=>{setToolOn(name,t.id,v);draw();}});})),Button('Build your own module',{variant:'secondary',full:true,style:'margin-top:var(--s3)',onclick:()=>{inst.close();App.state.params={name};modSheet(null);}}),el('button',{class:'linkbtn small',style:'margin-top:var(--s1)',onclick:()=>{inst.close();App.go('modules');}},'All modules'));};draw();}});}
+function editToolsSheet(name,hub){const inst=openSheet({title:'Modules',left:{label:'Done'},build:b=>{const draw=()=>{b.innerHTML='';b.append(el('p',{class:'muted small'},'Turn off a module you don’t use. Nothing in it is deleted.'),el('div',{class:'list'},toolsOf(name).filter(t=>!t.hide).map(t=>{const on=toolOn(name,t.id);return Switch({on,label:t.name,weight:400,lead:el('span',{style:'display:grid;color:var(--action-text)',html:ic(t.icon,20)}),onChange:v=>{setToolOn(name,t.id,v);draw();}});})),Button('Build your own module',{variant:'secondary',full:true,style:'margin-top:var(--s3)',onclick:()=>{inst.close();App.state.params={name};modSheet(null);}}),Button('All modules',{variant:'link',size:'sm',style:'margin-top:var(--s1)',onclick:()=>{inst.close();App.go('modules');}}));};draw();}});}
 function toolTile(name,t){const l=entries(name,t.id),d=t.tile?t.tile(l,name):{v:String(l.length),sub:l.length?t.sum(l):'Nothing yet'};
   return el('button',{class:'tc'+(d.off?' off':''),'aria-label':`${t.name}${d.sub?', '+d.sub:''}`,onclick:()=>App.go('tool',{hub:name,tool:t.id})},
-    el('span',{class:'tt2'},el('span',{class:'ib',html:ic(t.icon||'grid',19)}),d.tag?pill(d.tag,d.tagc||''):null),
+    el('span',{class:'tt2'},IconTile(null,{html:ic(t.icon||'grid',19)}),d.tag?pill(d.tag,d.tagc||''):null),
     el('span',{class:'tb'},d.v!=null?el('span',{class:'tv serif'},String(d.v),d.small?el('small',{},' '+d.small):null):null,el('span',{class:'tn'},t.name),d.sub?el('span',{class:'ts clip'},d.sub):null,d.viz?el('span',{class:'vz'},d.viz):null));}
 function viewArea(root,name){
   if(!name){viewAreas(root);return;}

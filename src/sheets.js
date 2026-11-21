@@ -14,7 +14,7 @@ function formCtx(rerender){
   };
   ctx.panel=(id,cls,...kids)=>{if(ctx.open!==id)return null;const fresh=ctx._shown!==id;ctx._shown=id;return el('div',{class:'panel '+cls+(fresh?'':' still')},kids);};
   ctx.sw=(on,label,fn)=>swMake(on,label,v=>fn(v));
-  ctx.stepper=(v,min,max,fn)=>el('span',{class:'stepper'},el('button',{'aria-label':'Less',disabled:v<=min,onclick:e=>{e.stopPropagation();fn(v-1);}},'−'),el('b',{'data-roll':'stp'+min+'-'+max},String(v)),el('button',{'aria-label':'More',disabled:v>=max,onclick:e=>{e.stopPropagation();fn(v+1);}},'+'));
+  ctx.stepper=(v,min,max,fn,o={})=>Stepper(v,{min,max,onChange:fn,...o});
   ctx.calendar=(val,fn,{noDate=false,minK=null,range=null}={})=>{
     const base=val?fromK(val):today();let vy=base.getFullYear(),vm=base.getMonth();const wrap=el('div',{class:'cal',onclick:e=>e.stopPropagation()});
     const draw=()=>{wrap.innerHTML='';const first=new Date(vy,vm,1),ws=get.settings().weekStart??1,lead=(first.getDay()-ws+7)%7,start=addD(first,-lead),tk=todayK();
@@ -22,7 +22,7 @@ function formCtx(rerender){
       const g=el('div',{class:'cg'},labels.map(l=>el('span',{},l)));
       for(let i=0;i<42;i++){const d=addD(start,i),dk=k(d);if(i>=35&&d.getMonth()!==vm)break;g.append(el('button',{class:(d.getMonth()!==vm?'out ':'')+(dk===tk?'td ':'')+(dk===val?'on ':'')+(range&&dk>=range[0]&&dk<=range[1]?'inrange':''),disabled:!!(minK&&dk<minK),'aria-label':shortDay(dk),onclick:e=>{e.stopPropagation();fn(dk);}},String(d.getDate())));}
       wrap.append(el('div',{class:'ch'},el('button',{'aria-label':'Previous month',html:ic('chevl',20,2),onclick:e=>{e.stopPropagation();vm--;if(vm<0){vm=11;vy--;}draw();}}),el('span',{},`${MONL[vm]} ${vy}`),el('button',{'aria-label':'Next month',html:ic('chevr',20,2),onclick:e=>{e.stopPropagation();vm++;if(vm>11){vm=0;vy++;}draw();}})),g,
-        noDate?el('button',{class:'linkbtn',style:'margin-top:6px',onclick:e=>{e.stopPropagation();fn(null);}},'No date'):null);};
+        noDate?Button('No date',{variant:'link',style:'margin-top:6px',onclick:e=>{e.stopPropagation();fn(null);}}):null);};
     draw();return wrap;
   };
   ctx.wheel=(get_,set)=>{
@@ -61,7 +61,7 @@ function formCtx(rerender){
     g.append(ctx.row('part','layers','Part of',p?el('span',{class:'on clip',style:'max-width:170px;display:flex;gap:var(--s2);align-items:center'},p.title):'None'));
     if(ctx.open==='part'){const pick=o=>e=>{e.stopPropagation();const prev=D.part?get.id(D.part):null;D.part=o&&D.part!==o.id?o.id:null;if(!D.area&&o&&o.area&&D.part)D.area=o.area;ctx.open=null;onPick&&onPick(D.part?o:null,prev);rerender();};const any=types.some(t=>get.all(t).length);const name={goal:'Goals',project:'Projects',habit:'Habits'};
       const pp=ctx.panel('part','',any?partPicker(types,name,D,pick):emptySm(`No ${types.map(t=>name[t].toLowerCase()).join(' or ')} yet`),
-        el('div',{style:'display:flex;flex-wrap:wrap;gap:var(--s1) 18px;margin-top:var(--s2)'},D.part?el('button',{class:'linkbtn',onclick:pick(null)},'None'):null,types.includes('goal')?el('button',{class:'linkbtn',onclick:e=>{e.stopPropagation();goalSheet(null,{after:r=>{D.part=r.id;rerender();}});}},'+ New goal'):null,types.includes('project')?el('button',{class:'linkbtn',onclick:e=>{e.stopPropagation();projectSheet(null,{after:r=>{D.part=r.id;rerender();}});}},'+ New project'):null));g.append(pp);}
+        el('div',{style:'display:flex;flex-wrap:wrap;gap:var(--s1) 18px;margin-top:var(--s2)'},D.part?Button('None',{variant:'link',onclick:pick(null)}):null,types.includes('goal')?Button('+ New goal',{variant:'link',onclick:e=>{e.stopPropagation();goalSheet(null,{after:r=>{D.part=r.id;rerender();}});}}):null,types.includes('project')?Button('+ New project',{variant:'link',onclick:e=>{e.stopPropagation();projectSheet(null,{after:r=>{D.part=r.id;rerender();}});}}):null));g.append(pp);}
   };
   ctx.areaRow=(g,D)=>{g.append(ctx.row('area',D.area?areaIcon(D.area):'leaf','Life area',D.area||'None',{valOn:!!D.area}));
     if(ctx.open==='area')g.append(ctx.panel('area','wide',el('div',{class:'chips'},(get.settings().areas||AREAS).map(a=>el('button',{class:'chip ichip'+(D.area===a?' on':''),'aria-pressed':String(D.area===a),onclick:e=>{e.stopPropagation();D.area=D.area===a?null:a;ctx.open=null;rerender();}},areaChipIc(a),a)))));};
@@ -369,7 +369,7 @@ function pickListSheet(text,done,photos=[]){
     const need=()=>{if(item.trim())return true;I.input.focus();return false;};
     const addTo=l=>{if(!need())return;l.items=l.items||[];l.items.push({id:uid('i'),t:item.trim(),d:false,photos});put(l);inst.close();done&&done();toast(`Added to ${l.title}`,null,'Undo',{open:dest('list',{id:l.id})});};
     body.append(I.wrap);
-    if(lists.length)body.append(el('div',{class:'sect'},'Choose a list'),el('div',{class:'list'},lists.map(l=>Row({onclick:()=>addTo(l)},el('span',{class:'sq',html:ic('list',20)}),el('span',{class:'grow'},el('b',{},l.title),el('small',{},`${(l.items||[]).length} items`))))));
+    if(lists.length)body.append(el('div',{class:'sect'},'Choose a list'),el('div',{class:'list'},lists.map(l=>Row({onclick:()=>addTo(l)},IconTile(null,{html:ic('list',20)}),el('span',{class:'grow'},el('b',{},l.title),el('small',{},`${(l.items||[]).length} items`))))));
     const nameT=fieldTitle('f-newlist','New list','Shopping, packing, anything','',v=>{nameT.v=v;mk.disabled=!v.trim();},()=>make());
     const make=()=>{const n=(nameT.v||'').trim();if(!n){nameT.input.focus();return;}if(!need())return;const nl=create('list',{title:n,items:[{id:uid('i'),t:item.trim(),d:false,photos}]});inst.close();done&&done();toast(`Added to ${n}`,null,'Undo',{open:dest('list',{id:nl.id})});};
     const mk=Button('Create list and add',{variant:'primary',full:true,disabled:true,onclick:make});body.append(nameT.wrap,mk);

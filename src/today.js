@@ -105,7 +105,7 @@ function viewToday(root){
     el('div',{class:'hd'},
       el('button',{class:'date'+(S.dateDrop?' open':''),'aria-label':'Pick a date','aria-expanded':String(!!S.dateDrop),onclick:()=>dateDrop(),html:`<span>${isToday?DOW[sel.getDay()]:DOW[sel.getDay()].slice(0,3)}, ${mdS(sel)}${sel.getFullYear()!==today().getFullYear()?`, ${sel.getFullYear()}`:''}</span>`+ic('chevd',18,2)}),
       el('div',{class:'icons'},
-        !isToday?el('button',{class:'linkbtn hdtoday',onclick:()=>goDay(tk)},'Today'):null,
+        !isToday?Button('Today',{variant:'link',cls:'hdtoday',onclick:()=>goDay(tk)}):null,
         IconButton(inboxNew()?'Inbox, something new':'Inbox',{html:ic('inbox',24)+(inboxNew()||newVerN()?'<span class="badge dot"></span>':''),onclick:()=>App.go('inbox')}),
         moreB('Today options',e=>openMenu(e.clientX,e.clientY,[{label:'Share this day',icon:'share',onclick:()=>shareDaySheet(dk)},{label:'Plan tomorrow',icon:'cal',onclick:()=>planTomorrowSheet(todayK())},{label:'Today settings',icon:'gear',onclick:()=>App.go('setpage',{id:'reviews'})}])))),
     S.dateDrop?dateDropEl(dk):null,S.dateDrop?null:weekStrip(dk),
@@ -277,7 +277,7 @@ function dayCard(dk){
   /* Priorities as three rings; the first one not done sits under them as Up next; everything else folds away */
   const t3=t3on&&get.settings().top3On!==false;
   const nx0=isToday&&t3on&&get.settings().top3On!==false?t3es.find(e=>!e.done):null,foc=nx0&&frNow()&&t3es.some(e=>e.id===frNow().id);
-  const FOCUSBTN=foc?el('span',{class:'prfocus3 on'},el('button',{class:'linkbtn small tnum',id:'fr-chip',onclick:()=>App.go('timer')},(()=>{const fr=frNow(),tx=frText(fr);setTimeout(frTicker,0);return fr.pausedAt?'Paused':`${tx.big} ${tx.over?'over':'left'}`;})()),el('button',{class:'linkbtn small',onclick:()=>finishFocus()},'Stop')):nx0?el('button',{class:'linkbtn small prfocus3',onclick:()=>prFocusSheet(dk)},'Focus'):null;
+  const FOCUSBTN=foc?el('span',{class:'prfocus3 on'},Button((()=>{const fr=frNow(),tx=frText(fr);setTimeout(frTicker,0);return fr.pausedAt?'Paused':`${tx.big} ${tx.over?'over':'left'}`;})(),{variant:'link',size:'sm',cls:'tnum',id:'fr-chip',onclick:()=>App.go('timer')}),Button('Stop',{variant:'link',size:'sm',onclick:()=>finishFocus()})):nx0?Button('Focus',{variant:'link',size:'sm',cls:'prfocus3',onclick:()=>prFocusSheet(dk)}):null;
   const todo=el('section',{class:'card daycard todo rcard'+fu},
     el('div',{class:'bl'},el('span',{class:'lbl'},(()=>{const d=isToday?'Today':relDay(dk);return t3?(['Today','Tomorrow','Yesterday'].includes(d)?`${d}’s priorities`:`Priorities · ${d}`):d;})()),el('span',{class:'blr'},FOCUSBTN)),
 );
@@ -310,14 +310,16 @@ function dayCard(dk){
   [a,dn].forEach(box=>box.querySelectorAll(':scope>.trow-wrap').forEach(w=>{if(w.classList.contains('aitem'))return;const id=w.querySelector('.trow')?.dataset.id;const r=id&&get.id(id);w.classList.add('dragrow');w.dataset.id=id||'';w.dataset.can=r&&r.kind==='task'?'1':'0';}));
   const nDone=dn.querySelectorAll(':scope>.trow-wrap').length;
   /* a thin line and a Tasks label keep the rings and the list apart */
-  if(t3&&(shownC.length||!t3es.length||nLate))todo.append(el('div',{class:'secl tdiv'},'Tasks'));
+  const canPlan=dk>=tk&&!isPast&&planDayTasks(dk).length>0;
+  if(t3&&(shownC.length||!t3es.length||nLate))todo.append(el('div',{class:'secl tdiv'},'Tasks',canPlan?Button('Plan my day',{variant:'link',size:'sm',cls:'pmday',onclick:()=>planDaySheet(dk)}):null));
+  else if(canPlan)todo.append(el('div',{class:'pmdrow'},Button('Plan my day',{variant:'link',size:'sm',cls:'pmday',onclick:()=>planDaySheet(dk)})));
   if(odBtn)todo.append(el('button',{class:'odrow2',onclick:()=>replanSheet(lateList,dk,{missed:missedL,dueLate,area:aiLate})},el('span',{class:'grow'},`${nLate} overdue · Reschedule`),el('span',{style:'display:grid',html:ic('chevr',14,2.4)})));
   if(shownC.length)todo.append(a);
   if(!shownC.length&&!t3es.length&&!nLate)todo.append(el('p',{class:'sub',style:'margin:6px 0 0'},isPast?'Nothing was left open.':total?'All done. Nice work.':'Nothing to do yet.'));
   const canAdd=!isPast||!total;
   /* the bottom: add a task, and the rest of today's list in place */
-  if(canAdd){const inp=el('input',{class:'taddin',placeholder:dk===tk?'Add a task for today':'Add a task',enterkeyhint:'done',autocomplete:'off','aria-label':'Add a task',onkeydown:ev=>{if(ev.key!=='Enter'||ev.isComposing)return;ev.preventDefault();const raw=inp.value.trim();if(!raw)return;const w=parseWhen(raw,fromK(dk));const t=newTask(w.title||raw,{date:w.date||dk,time:w.time??null,deadline:w.deadline||null,color:defCol()});inp.value='';S._taddFocus=true;toast(`Added${t.date!==dk?` for ${relDay(t.date)}`:''}`,()=>remove(t.id,{hard:true}));}});
-    todo.append(el('div',{class:'taddrow'},el('span',{class:'pplus',html:ic('plus',14,2.4)}),inp,el('button',{class:'linkbtn small',onclick:()=>taskSheet(null,Object.assign({date:dk},inp.value.trim()?{title:inp.value.trim()}:{}))},'More options')));
+  if(canAdd){const qa=QuickAdd({id:'tadd-'+dk,placeholder:dk===tk?'Add a task for today':'Add a task',label:'Add a task',base:dk,cls:'taddrow',onAdd:(title,w)=>{const t=newTask(title,{date:w.date||dk,time:w.time??null,deadline:w.deadline||null,color:defCol()});toast(`Added${t.date!==dk?` for ${relDay(t.date)}`:''}`,()=>remove(t.id,{hard:true}));}}),inp=qa.input;inp.classList.add('taddin');
+    todo.append(el('div',{class:'taddrow'},qa,Button('More options',{variant:'link',size:'sm',onclick:()=>taskSheet(null,Object.assign({date:dk},inp.value.trim()?{title:inp.value.trim()}:{}))})));
     if(S._taddFocus){S._taddFocus=false;setTimeout(()=>{const n=document.querySelector('.taddin');if(n)n.focus({preventScroll:true});},60);}}
   if(more>0||allOpen)todo.append(el('button',{class:'tmorerow',onclick:()=>{S._moreOpen[dk]=!S._moreOpen[dk];App.refresh();}},allOpen?'Show fewer':`Show ${more} more`));
   const doneEls=[];if(nDone){S._doneOpen=S._doneOpen||{};const op=!!S._doneOpen[dk];doneEls.push(el('button',{class:'habdone','aria-expanded':String(op),onclick:()=>{S._doneOpen[dk]=!op;App.refresh();}},op?'Hide done':`${nDone} done today`,el('span',{style:'display:grid',html:ic(op?'chevu':'chevr',14,2.2)})));if(op)doneEls.push(dn);}
@@ -328,7 +330,7 @@ function dayCard(dk){
   const habE=[...habAny,...habTimed];
   if(habE.length||loose.length){
     /* one feed: habits are a quiet row of rings inside the same card */
-    const hcard=el('section',{class:'card fcard'+fu},el('div',{class:'bl'},el('span',{class:'lbl'},'Habits'),el('button',{class:'linkbtn small',style:'min-height:28px',onclick:()=>App.go('habits')},'All habits')));
+    const hcard=el('section',{class:'card fcard'+fu},el('div',{class:'bl'},el('span',{class:'lbl'},'Habits'),Button('All habits',{variant:'link',size:'sm',onclick:()=>App.go('habits')})));
     const l=el('div',{class:'fhabs'});
     const items=[...habE.map(e=>({e,loose:false})),...loose.map(h=>({e:{kind:'habit',id:h.id,rec:h,title:h.title,time:null},loose:true}))];
     /* keep the order steady while you tap; done ones sort to the end on the next visit */
@@ -352,7 +354,7 @@ function dayCard(dk){
     rows.append(el('button',{class:'uprow'+(gone?' gone':'')+(isNext?' nextup':''),style:`--c:${e.color||'var(--action)'}`,onclick:()=>openItem(e,dk)},el('span',{class:'upt tnum'},fmtT(e.time)),el('span',{class:'upbar'}),el('span',{class:'grow'},el('span',{class:'tt'},e.title),el('span',{class:'meta'},+(e.rec&&e.rec.travel)&&e.kind==='block'&&!gone&&!during?el('span',{class:'trleave'},`Leave by ${fmtT(e.time-e.rec.travel)} · `):null,sched.some(f=>f!==e&&f.kind!=='task'&&e.kind!=='task'&&f.time<e.time+(e.dur||30)&&e.time<f.time+(f.dur||30))?el('span',{class:'ovtag'},'Overlaps · '):null,e.kind==='task'?'':`Until ${fmtT(end)}`,during?el('b',{class:'upnow'},` · ${fmtDurS(end-nowM)} left`):isToday&&e===upcoming[0]?` · in ${fmtDurS(e.time-nowM)}`:''))));});
   if(!showE.length)rows.append(el('p',{class:'sub',style:'margin:2px 0 0'},sched.length?'Nothing else scheduled today.':isPast?'Nothing was scheduled.':'Nothing scheduled. Open the day to block time.'));
   cu.append(rows);
-  cu.append(el('button',{class:'linkbtn small uptoggle','aria-expanded':String(open),onclick:()=>{S.gridOpen=!S.gridOpen;S._gridTop=null;App.refresh();}},open?'Hide full day':'See full day',el('span',{style:`display:grid;transition:transform .25s var(--ease);${open?'transform:rotate(90deg)':''}`,html:ic('chevr',16,2.2)})));
+  cu.append(Button([open?'Hide full day':'See full day',el('span',{style:`display:grid;transition:transform .25s var(--ease);${open?'transform:rotate(90deg)':''}`,html:ic('chevr',16,2.2)})],{variant:'link',size:'sm',cls:'uptoggle','aria-expanded':String(open),onclick:()=>{S.gridOpen=!S.gridOpen;S._gridTop=null;App.refresh();}}));
   if(open){const gw=el('div',{class:'gridin'});gw.append(timeGrid(dk,timed));cu.append(gw);}
   todo.append(...doneEls);
   out.push(cu);
@@ -380,7 +382,7 @@ function plateCard(dk){
   const S=App.state,list=get.all('task').filter(t=>!t.date&&isOpenTask(t)&&!(t.deadline&&t.deadline<=dk));if(!list.length)return null;
   const open=!!S.plateOpen;
   const c=Card({'data-k':'plate'},el('button',{class:'tmr',style:'min-height:48px','aria-expanded':String(open),onclick:()=>{S.plateOpen=!S.plateOpen;App.refresh();}},el('span',{class:'grow'},el('b',{style:'font-weight:600'},'On your plate'),el('span',{class:'small muted',style:'margin-left:var(--s2)'},`${list.length} unscheduled`)),el('span',{class:'chev'+(open?' open':''),style:open?'transform:rotate(90deg)':null,html:ic('chevr',16,2.2)})));
-  if(open){const w=el('div',{class:'anytime',style:'margin-top:0'});list.slice(0,8).forEach(t=>{const e={kind:'task',id:t.id,rec:t,title:t.title,time:null,done:false};w.append(anyRow(e,dk,{target:dk,addToday:true}));});c.append(w,el('div',{style:'display:flex;justify-content:space-between;align-items:center;min-height:44px'},list.length>8?el('button',{class:'linkbtn small',onclick:()=>{App.go('tasks',{tab:'all'});}},`All ${list.length}`):el('span'),el('button',{class:'linkbtn small',onclick:()=>{S.studio=Object.assign(S.studio||{},{mode:'w',anchor:null});App.go('studio');}},'Plan in Studio ›')));}
+  if(open){const w=el('div',{class:'anytime',style:'margin-top:0'});list.slice(0,8).forEach(t=>{const e={kind:'task',id:t.id,rec:t,title:t.title,time:null,done:false};w.append(anyRow(e,dk,{target:dk,addToday:true}));});c.append(w,el('div',{style:'display:flex;justify-content:space-between;align-items:center;min-height:44px'},list.length>8?Button(`All ${list.length}`,{variant:'link',size:'sm',onclick:()=>{App.go('tasks',{tab:'all'});}}):el('span'),Button('Plan in Studio ›',{variant:'link',size:'sm',onclick:()=>{S.studio=Object.assign(S.studio||{},{mode:'w',anchor:null});App.go('studio');}})));}
   return c;
 }
 function anyRow(e,dk,{late,target,addToday,slim}={}){
@@ -636,7 +638,7 @@ function replanSheet(tasks,dk,ex){ex=ex||{};const tk=todayK(),sat=(()=>{const d=
     const pickable=items.filter(x=>canAct(x,act)),all=pickable.length&&pickable.every(x=>sel().has(x.key));
     const seg=el('div',{class:'rpseg',role:'tablist'},[['replan','Replan'],['done','Mark complete']].map(([k,t])=>el('button',{class:act===k?'on':'',role:'tab','aria-selected':String(act===k),disabled:k==='replan'&&!items.some(x=>x.move)?'':null,onclick:()=>{if(act===k)return;act=k;draw(b);}},t)));
     const hint=act==='replan'&&items.some(x=>!x.move)?el('p',{class:'rpnote2'},'Grayed items follow their own schedule, so they can’t be replanned. Switch to Mark complete to finish them.'):null;
-    b.append(...[seg,el('div',{class:'rpbar'},el('span',{class:'small muted'},sel().size&&n?`${n} selected`:act==='replan'?'Pick to-dos to replan':'Pick what you finished'),pickable.length?el('button',{class:'linkbtn small',onclick:()=>{if(all)sel().clear();else pickable.forEach(x=>sel().add(x.key));draw(b);}},all?'Clear':'Select all'):null),
+    b.append(...[seg,el('div',{class:'rpbar'},el('span',{class:'small muted'},sel().size&&n?`${n} selected`:act==='replan'?'Pick to-dos to replan':'Pick what you finished'),pickable.length?Button(all?'Clear':'Select all',{variant:'link',size:'sm',onclick:()=>{if(all)sel().clear();else pickable.forEach(x=>sel().add(x.key));draw(b);}}):null),
       el('div',{class:'list rplist'},items.map(x=>{const ok=canAct(x,act),on=ok&&sel().has(x.key);
         if(x.open)return el('button',{class:'rprow nomove op',onclick:()=>{inst.close();setTimeout(()=>x.area.go&&x.area.go(),260);}},el('span',{class:'rpck op',html:ic('chevr',14,2.4)}),el('span',{class:'grow'},el('span',{class:'tt'},x.title),el('small',{},x.sub)));
         return el('button',{class:'rprow'+(on?' on':'')+(ok?'':' nomove'),disabled:ok?null:'','aria-pressed':ok?String(on):null,onclick:()=>{if(!ok)return;sel().has(x.key)?sel().delete(x.key):sel().add(x.key);draw(b);}},

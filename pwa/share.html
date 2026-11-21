@@ -27,11 +27,21 @@ button.row:focus-visible{outline:2px solid var(--acc);outline-offset:-2px}
 .tick svg{opacity:0;transition:opacity .2s}.row.d .tick svg{opacity:1}
 .msg{color:var(--ink2);text-align:center;padding:48px 16px}
 .foot{color:var(--ink2);font-size:13px;text-align:center;margin-top:20px}
+.by{display:block;color:var(--ink2);font-size:12.5px;margin-top:1px}
+#add{max-width:560px;margin:-36px auto 0;padding:0 16px 48px}
+#add form{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:0 8px 0 16px;min-height:52px}
+#add form:focus-within{border-color:var(--acc)}
+#add .plus{width:24px;height:24px;border-radius:999px;border:1.6px dashed #A9B0AA;display:grid;place-items:center;color:var(--acc);flex:none;font-weight:700}
+#add input{flex:1;min-width:0;border:0;outline:0;background:none;font:inherit;color:var(--ink);padding:12px 0}
+#add button{all:unset;cursor:pointer;color:var(--acc);font-weight:600;padding:8px 10px;border-radius:10px}
+#add .who{color:var(--ink2);font-size:13px;margin:8px 6px 0}
+#add .who button{color:var(--acc);font-size:13px;padding:0}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
 <body>
 <main id="m"><p class="msg">Loading…</p></main>
+<div id="add" hidden><form autocomplete="off"><span class="plus" aria-hidden="true">+</span><input id="addin" placeholder="Add an item" aria-label="Add an item" enterkeyhint="done" maxlength="200"><button type="submit">Add</button></form><p class="who"></p><p class="foot">Anyone with this link can add items and check them off. Changes show up for the owner right away.</p></div>
 <script>
 {
 const tok = location.pathname.split('/').filter(Boolean)[1] || '';
@@ -39,7 +49,7 @@ const m = document.getElementById('m');
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const CHECK = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg>';
 let data = null, busy = false;
-const rowHtml = i => `<button class="row${i.d ? ' d' : ''}" data-id="${esc(i.id)}" role="checkbox" aria-checked="${i.d}"><span class="tick">${CHECK}</span><span class="t">${esc(i.t)}</span></button>`;
+const rowHtml = i => `<button class="row${i.d ? ' d' : ''}" data-id="${esc(i.id)}" role="checkbox" aria-checked="${i.d}"><span class="tick">${CHECK}</span><span><span class="t">${esc(i.t)}</span>${i.by ? `<span class="by">Added by ${esc(i.by)}</span>` : ''}</span></button>`;
 function draw() {
   if (!data) return;
   document.title = data.title + ' · Life OS';
@@ -47,7 +57,8 @@ function draw() {
   const groups = [{ id: null, name: '' }, ...data.sections].map(s => ({ s, items: data.items.filter(i => (i.sec || null) === s.id) })).filter(g => g.items.length);
   m.innerHTML = `<h1>${esc(data.title)}</h1><p class="sub">${data.items.length ? (left ? `${left} left` : 'All checked') : 'Empty'} · shared from Life OS</p>` +
     (groups.length ? groups.map(g => (g.s.name ? `<div class="sec">${esc(g.s.name)}</div>` : '') + `<div class="card">${g.items.map(rowHtml).join('')}</div>`).join('') : '<p class="msg">Nothing on this list yet.</p>') +
-    '<p class="foot">Anyone with this link can check items off. Changes show up for the owner right away.</p>';
+    '';
+  addBox.hidden = false;
 }
 async function load() {
   try { const r = await fetch('/api/list?t=' + encodeURIComponent(tok)); if (r.status === 404) { m.innerHTML = '<p class="msg">This link has been turned off, or it isn’t right.</p>'; data = null; return; } data = await r.json(); if (!busy) draw(); }
@@ -61,6 +72,21 @@ m.addEventListener('click', async e => {
   catch (err) { it.d = !it.d; }
   busy = false; draw();
 });
+const addBox = document.getElementById('add'), addIn = document.getElementById('addin'), who = addBox.querySelector('.who');
+const nameOf = () => { try { return localStorage.getItem('lifeos-share-name') || ''; } catch (e) { return ''; } };
+const drawWho = () => { const n = nameOf(); who.innerHTML = n ? `Adding as <b>${esc(n)}</b> · <button type="button">Change</button>` : ''; addIn.placeholder = n ? `Add an item, as ${n}` : 'Add an item'; };
+const askName = () => { const n = (prompt('Your name, so the owner knows who added it (optional)', nameOf()) || '').trim().slice(0, 40); try { localStorage.setItem('lifeos-share-name', n || ' '); } catch (e) {} drawWho(); };
+who.addEventListener('click', e => { if (e.target.closest('button')) askName(); });
+addBox.querySelector('form').addEventListener('submit', async e => {
+  e.preventDefault(); const t = addIn.value.trim(); if (!t || !data) return;
+  try { if (localStorage.getItem('lifeos-share-name') == null) askName(); } catch (err) {}
+  const by = nameOf().trim(); addIn.value = ''; busy = true;
+  data.items.push({ id: 'tmp' + Date.now(), t, d: false, by: by || null, sec: null }); draw();
+  try { const r = await fetch('/api/list', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ t: tok, add: t, by }) }); if (r.ok) data = await r.json(); else { addIn.value = t; } }
+  catch (err) { addIn.value = t; }
+  busy = false; draw(); addIn.focus();
+});
+drawWho();
 load(); setInterval(() => { if (!document.hidden) load(); }, 5000);
 document.addEventListener('visibilitychange', () => { if (!document.hidden) load(); });
 }

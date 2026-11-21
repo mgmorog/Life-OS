@@ -1,0 +1,60 @@
+const {chromium}=require('playwright');
+(async()=>{const b=await chromium.launch();const ctx=await b.newContext({viewport:{width:390,height:844},hasTouch:true});const p=await ctx.newPage();
+const errs=[];p.on('pageerror',e=>errs.push(e.message));
+await p.goto('file://'+__dirname+'/page.html');await p.waitForTimeout(800);
+await p.evaluate(()=>window.__lifeos.loadDemo&&window.__lifeos.loadDemo());await p.waitForTimeout(400);
+const ok=(n,v,x)=>console.log((v?'PASS ':'FAIL ')+n+(x!==undefined&&!v?' → '+JSON.stringify(x):''));
+const X='window.__lifeos.fx';
+// components
+ok('link button',await p.evaluate(()=>{const b=window.__lifeos.fx.Button('See all',{variant:'link',size:'sm',chevron:true});document.body.append(b);const h=b.getBoundingClientRect().height;const r=b.className==='linkbtn small'&&!!b.querySelector('.lchev')&&h>=44;b.remove();return r;}));
+ok('stat with trend',await p.evaluate(()=>{const s=window.__lifeos.fx.Stat({value:612,label:'tasks done',trend:'-3'});return s.querySelector('.stv').textContent==='612'&&s.querySelector('.str.down').textContent.includes('3');}));
+const qa=await p.evaluate(async()=>{const got=[];const q=window.__lifeos.fx.QuickAdd({placeholder:'Add',onAdd:(t,w)=>got.push([t,w.date||null])});document.body.append(q);const i=q.input;i.value='Pick up dry cleaning friday';i.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true}));const dt=new DataTransfer();dt.setData('text/plain','Eggs\nMilk\nBread');i.dispatchEvent(new ClipboardEvent('paste',{clipboardData:dt,bubbles:true,cancelable:true}));q.remove();return {got,val:i.value};});
+ok('quick add parses dates and pasted lines',qa.got.length===4&&qa.got[0][0]==='Pick up dry cleaning'&&!!qa.got[0][1]&&qa.val==='',qa);
+const sp=await p.evaluate(()=>{let v=null;const s=window.__lifeos.fx.Stepper(3,{min:0,max:5,onChange:x=>v=x});document.body.append(s);const up=s.querySelectorAll('button')[1];up.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true}));up.dispatchEvent(new PointerEvent('pointerup',{bubbles:true}));const out=[v,s.querySelector('.sv').textContent,s.querySelector('.sv').getAttribute('aria-live')];s.remove();return out;});
+ok('stepper updates itself',sp[0]===4&&sp[1]==='4'&&sp[2]==='polite',sp);
+const hold=await p.evaluate(async()=>{let v=0;const s=window.__lifeos.fx.Stepper(0,{min:0,max:50,onChange:x=>v=x});document.body.append(s);const up=s.querySelectorAll('button')[1];up.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true}));await new Promise(r=>setTimeout(r,1000));up.dispatchEvent(new PointerEvent('pointerup',{bubbles:true}));s.remove();return v;});
+ok('stepper repeats while held',hold>=4,hold);
+ok('date badge words and overdue',await p.evaluate(()=>{const X=window.__lifeos,F=X.fx,t=F.DateBadge(X.todayK()),y=new Date();y.setDate(y.getDate()-3);const k=`${y.getFullYear()}-${String(y.getMonth()+1).padStart(2,'0')}-${String(y.getDate()).padStart(2,'0')}`,o=F.DateBadge(k,{tone:'warn'});return t.querySelector('i').textContent==='Today'&&o.classList.contains('late');}));
+ok('icon tile is a circle',await p.evaluate(()=>{const t=window.__lifeos.fx.IconTile('task');document.body.append(t);const cs=getComputedStyle(t),r=[cs.borderRadius,t.offsetWidth];t.remove();return parseFloat(r[0])>=18&&r[1]===36;}));
+// plan my day
+const pd=await p.evaluate(()=>{const X=window.__lifeos;const tk=X.todayK();X.create('task',{title:'Expense report',date:tk,dur:45,time:null,repeat:{type:'never'}});X.create('task',{title:'Reply to Sam',date:tk,dur:15,time:null,priority:'high',repeat:{type:'never'}});const P=X.fx.planDay(tk);return {n:P.placed.length,left:P.left.length,overlap:P.placed.some((a,i)=>P.placed.some((b,j)=>i!==j&&a.time<b.time+b.dur&&b.time<a.time+a.dur))};});
+ok('plan my day places without overlaps',pd.n>=1&&!pd.overlap,pd);
+await p.evaluate(()=>{const X=window.__lifeos;X.App.state.sel=X.todayK();X.App.go('today');});await p.waitForTimeout(500);
+ok('Plan my day link on Today',await p.evaluate(()=>[...document.querySelectorAll('#view .pmday')].length===1));
+await p.evaluate(()=>document.querySelector('#view .pmday').click());await p.waitForTimeout(500);
+ok('preview sheet lists times',await p.evaluate(()=>{const s=[...document.querySelectorAll('.sheet')].pop();return s&&s.textContent.includes('Plan my day')&&/\d:\d\d/.test(s.textContent);}));
+await p.evaluate(()=>{const s=[...document.querySelectorAll('.sheet')].pop();[...s.querySelectorAll('button')].find(b=>b.textContent.trim()==='Keep').click();});await p.waitForTimeout(500);
+ok('Keep sets the times',await p.evaluate(()=>{const X=window.__lifeos;return X.get.all('task').filter(t=>['Expense report','Reply to Sam'].includes(t.title)&&t.time!=null).length>=1;}));
+// focus breaks
+await p.evaluate(()=>{const X=window.__lifeos;const t=X.create('task',{title:'Deep work',date:X.todayK()});X.fx.startFocus(t,25);const s=X.get.settings();s.focusRun.start=Date.now()-26*60000;X.put(s);});await p.waitForTimeout(200);
+await p.evaluate(()=>window.__lifeos.fx.finishFocus());await p.waitForTimeout(400);
+ok('break starts after a session',await p.evaluate(()=>{const b=window.__lifeos.fx.brkNow();return b&&b.min===5;}));
+await p.evaluate(()=>window.__lifeos.App.go('lists'));await p.waitForTimeout(500);
+ok('break countdown in top bar',await p.evaluate(()=>{const n=document.querySelector('#fr-top.brk');return n&&/\d:\d\d/.test(n.textContent);}));
+await p.evaluate(()=>window.__lifeos.App.go('timer'));await p.waitForTimeout(500);
+ok('break page with Skip',await p.evaluate(()=>document.body.textContent.includes('Skip break')));
+ok('break-over notification scheduled',await p.evaluate(()=>window.__lifeos.fx.PWA.upcoming().some(x=>x.key.startsWith('break|'))));
+await p.screenshot({path:'/tmp/v237_break.png'});
+await p.evaluate(()=>[...document.querySelectorAll('#view button')].find(b=>b.textContent.trim()==='Skip break').click());await p.waitForTimeout(300);
+ok('skip clears the break',await p.evaluate(()=>!window.__lifeos.fx.brkNow()));
+// week timeline + print
+await p.evaluate(()=>{const X=window.__lifeos;X.create('block',{title:'Dentist',date:X.todayK(),start:15*60,dur:60,travel:30,color:'green',repeat:{type:'never'}});X.App.state.cal=null;localStorage.setItem('lifeos-cal-mode','week');X.App.go('calendar');});await p.waitForTimeout(500);
+await p.evaluate(()=>{const b=[...document.querySelectorAll('#view .tlswitch button')].find(x=>x.textContent==='Timeline');b.click();});await p.waitForTimeout(500);
+ok('timeline shows 3 days on iPhone',await p.evaluate(()=>document.querySelectorAll('.tlcol').length===3));
+ok('blocks and travel on the timeline',await p.evaluate(()=>!!document.querySelector('.tlev')&&!!document.querySelector('.tltr')));
+await p.screenshot({path:'/tmp/v237_tl.png'});
+await p.evaluate(()=>{window.print=()=>{window._printed=document.querySelector('#printweek').textContent;};window.__lifeos.fx.printWeek(window.__lifeos.todayK());});await p.waitForTimeout(400);
+ok('print page built for 7 days',await p.evaluate(()=>window._printed&&document.querySelectorAll('#printweek .pday').length===7));
+await p.emulateMedia({media:'print'});await p.screenshot({path:'/tmp/v237_print.png',fullPage:true});await p.emulateMedia({media:'screen'});
+await p.setViewportSize({width:1100,height:900});await p.evaluate(()=>{document.querySelector('#printweek')&&document.querySelector('#printweek').remove();document.body.classList.remove('printing');window.__lifeos.App.refresh();});await p.waitForTimeout(600);
+ok('timeline shows 7 days on a wide screen',await p.evaluate(()=>document.querySelectorAll('.tlcol').length===7));
+await p.screenshot({path:'/tmp/v237_tlw.png'});await p.setViewportSize({width:390,height:844});
+// check-in notes
+const hid=await p.evaluate(()=>{const X=window.__lifeos;const h=X.create('habit',{title:'Run',days:[0,1,2,3,4,5,6],logs:{},target:7});X.fx.toggleItem({kind:'habit',rec:h,id:h.id},X.todayK());return h.id;});await p.waitForTimeout(1000);
+ok('note bar appears after check-in',await p.evaluate(()=>!!document.querySelector('#hnote-bar')));
+await p.fill('#hnote-bar input','3 miles, knee fine');await p.press('#hnote-bar input','Enter');await p.waitForTimeout(300);
+ok('note saved on the check-in',await p.evaluate(id=>{const h=window.__lifeos.get.id(id);return h.logNotes&&Object.values(h.logNotes)[0]==='3 miles, knee fine';},hid));
+await p.evaluate(id=>window.__lifeos.App.go('habit',{id}),hid);await p.waitForTimeout(500);
+ok('notes on the habit page',await p.evaluate(()=>document.body.textContent.includes('Check-in notes')&&document.body.textContent.includes('3 miles, knee fine')));
+ok('no page errors',errs.length===0,errs.slice(0,3));
+await b.close();})();

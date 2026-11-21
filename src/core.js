@@ -6,8 +6,10 @@ const $=(s,r=document)=>r.querySelector(s);
 const $$=(s,r=document)=>[...r.querySelectorAll(s)];
 const el=(t,a={},...kids)=>{const e=document.createElement(t);for(const k in a){const v=a[k];if(v==null||v===false)continue;if(k==='class')e.className=v;else if(k==='html')e.innerHTML=v;else if(k==='style')e.setAttribute('style',v);else if(k==='value')e.value=v;else if(k.startsWith('on'))e.addEventListener(k.slice(2),v);else e.setAttribute(k,v===true?'':v);}for(const c of kids.flat(Infinity)){if(c==null||c===false)continue;e.append(c.nodeType?c:document.createTextNode(c));}return e;};
 /* ---- Components: every button, row, chip, icon button and page header in the app is drawn by one of these ---- */
-const BTN_V={primary:'primary',secondary:'line',quiet:'quiet',danger:'line danger',text:'text'};
+const BTN_V={primary:'primary',secondary:'line',quiet:'quiet',danger:'line danger',text:'text',link:'link'};
 function Button(label,{variant='secondary',size='md',icon=null,full=false,tone=null,cls='',...rest}={}){
+  if(variant==='link'){const chev=rest.chevron;delete rest.chevron;const k=['linkbtn',size==='sm'?'small':'',tone==='danger'?'danger':'',cls].filter(Boolean).join(' ');
+    return el(rest.href?'a':'button',{type:rest.href?null:'button',...rest,class:k},icon?el('span',{style:'display:grid',html:ic(icon,size==='sm'?14:16,2.2)}):null,label,chev?el('span',{class:'lchev',html:ic('chevr',size==='sm'?12:14,2.4)}):null);}
   const c=['btn',BTN_V[variant]||'line',size==='sm'?'sm':size==='lg'?'lg':'',full?'block':'',tone==='danger'&&variant!=='danger'?'danger':'',cls].filter(Boolean).join(' ');
   if(icon&&rest.html==null)rest.html=ic(icon,size==='sm'?14:16)+(label!=null&&typeof label!=='object'?esc(String(label)):'');
   return el(rest.href?'a':'button',{type:rest.href?null:'button',...rest,class:c},rest.html!=null&&icon?null:label);
@@ -37,6 +39,42 @@ function PageHeader({back=null,title,subtitle=null,actions=null,controls=null,cl
   const top=bk||acts.length?el('div',{class:'pghead'},bk||el('span'),acts.length?el('div',{class:'pgacts'},...acts):null):null;
   const h=el('h1',{class:['pgtitle',titleClass].filter(Boolean).join(' '),style:titleStyle},title);
   return el('header',{class:['phead',cls].filter(Boolean).join(' ')},top,el('div',{class:[controls?'otitle phead-ctl':'otitle',rowClass].filter(Boolean).join(' ')},h,controls),subtitle?el('div',{class:'small muted pgsub'},subtitle):null,after);
+}
+/* v237 · Stat, QuickAdd, IconTile, Stepper and DateBadge (links are Button({variant:'link'})) */
+function Stat({value,label=null,size='md',trend=null,cls='',...rest}={}){
+  const tr=trend==null||trend===''?null:typeof trend==='object'?trend:{dir:/^-|^−|▼/.test(String(trend))?'down':'up',text:String(trend).replace(/^[+\-−▲▼]\s*/,'')};
+  return el('div',{...rest,class:['stat',size,cls].filter(Boolean).join(' ')},el('b',{class:'stv tnum'},value==null?'–':String(value)),label!=null||tr?el('span',{class:'stl'},label,tr?el('em',{class:'str '+tr.dir,'aria-label':`${tr.dir==='down'?'down':'up'} ${tr.text}`},`${tr.dir==='down'?'▼':'▲'} ${tr.text}`):null):null);
+}
+/* one add row: Return adds and keeps the keyboard up, pasted lines add one each, dates like "Friday" are picked up */
+function QuickAdd({placeholder='Add',onAdd,parse=true,id=null,base=null,value='',label=null,cls='',oninput=null}={}){
+  const inp=el('input',{id,placeholder,'aria-label':label||placeholder,enterkeyhint:'done',autocomplete:'off',autocapitalize:'sentences',value,oninput});
+  const add=raw=>{raw=String(raw||'').trim();if(!raw)return false;const w=parse?parseWhen(raw,base?fromK(base):new Date()):{};return onAdd(w.title||raw,Object.assign({raw},w))!==false;};
+  const refocus=()=>{if(!id)return;App.state._qaFocus=id;};
+  inp.addEventListener('keydown',e=>{if(e.key!=='Enter'||e.isComposing)return;e.preventDefault();if(add(inp.value)){inp.value='';refocus();if(inp.isConnected)inp.focus({preventScroll:true});}});
+  inp.addEventListener('paste',e=>{const t=(e.clipboardData||window.clipboardData)?.getData('text')||'';if(!/\n/.test(t.trim()))return;pasteLines(e,ls=>{let n=0;ls.forEach(l=>{if(add(l))n++;});if(n>1)toast(`${n} added`);refocus();});});
+  const row=el('label',{class:['qadd-row',cls].filter(Boolean).join(' ')},el('span',{class:'pplus',html:ic('plus',14,2.4)}),inp);row.input=inp;return row;
+}
+function IconTile(icon,{size='md',tone=null,html=null,cls='',style=null,...rest}={}){
+  const px={sm:14,md:18,lg:24}[size]||18;
+  return el('span',{...rest,class:['itile',size,cls].filter(Boolean).join(' '),style:[tone?`--c:${tone}`:'',style||''].filter(Boolean).join(';')||null,html:html!=null?html:(icon?ic(icon,px,1.9):'')});
+}
+/* a stepper that updates as you tap, repeats while held, and says its value */
+function Stepper(value,{min=0,max=999,step=1,format=v=>v,onChange=null,label='Value',cls=''}={}){
+  let v=+value||0;const out=el('b',{class:'sv tnum','aria-live':'polite'},String(format(v)));
+  const lo=el('button',{type:'button','aria-label':`Less ${label.toLowerCase()}`,html:ic('minus',16,2.2)}),hi=el('button',{type:'button','aria-label':`More ${label.toLowerCase()}`,html:ic('plus',16,2.2)});
+  const sync=()=>{out.textContent=String(format(v));lo.disabled=v<=min;hi.disabled=v>=max;};
+  const go=d=>{const n=Math.max(min,Math.min(max,Math.round((v+d*step)*1000)/1000));if(n===v)return false;v=n;sync();out.classList.remove('bump');void out.offsetWidth;out.classList.add('bump');buzz&&buzz(4);onChange&&onChange(v);return true;};
+  [[lo,-1],[hi,1]].forEach(([b,d])=>{let t,iv;const stop=()=>{clearTimeout(t);clearInterval(iv);};
+    b.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();go(d);t=setTimeout(()=>{iv=setInterval(()=>{if(!b.isConnected||!go(d))stop();},110);},420);});
+    ['pointerup','pointerleave','pointercancel'].forEach(x=>b.addEventListener(x,stop));
+    b.addEventListener('click',e=>{e.stopPropagation();if(e.detail===0)go(d);});});
+  const n=el('span',{class:['stp',cls].filter(Boolean).join(' '),role:'group','aria-label':label},lo,out,hi);sync();n.value=()=>v;return n;
+}
+/* month over day number; Today and Tomorrow in words; red when it's overdue */
+function DateBadge(dk,{tone=null,cls='',...rest}={}){
+  const d=fromK(dk),n=daysBetween(todayK(),dk),top=n===0?'Today':n===1?'Tmrw':MON[d.getMonth()].slice(0,3);
+  const t=n<0?'late':(tone||(n===0?'today':''));
+  return el('span',{...rest,class:['dbadge',t,cls].filter(Boolean).join(' '),'aria-label':shortDay(dk)},el('i',{},top),el('b',{class:'tnum'},String(d.getDate())));
 }
 /* v236 · Card, Field, Switch, Segmented, Progress and Picker: the rest of the shared pieces */
 function Card({title=null,action=null,onAction=null,tone='plain',flush=false,as='section',cls='',...rest}={},...kids){
@@ -91,7 +129,7 @@ function Picker({title,items,search=null,multi=false,selected=[],onPick,recentKe
     let xs=f?its.map(x=>[x,Math.max(fuzzyScore(String(x.label),f),x.sub?fuzzyScore(String(x.sub),f)*.6:0)]).filter(p=>p[1]>0).sort((a,b)=>b[1]-a[1]).map(p=>p[0]):its;
     const recent=!f&&rec.length&&its.length>6?rec.map(v=>its.find(x=>x.value===v)).filter(Boolean):[];
     const row=x=>{const on=multi?sel.has(x.value):selected.includes(x.value);return Row({style:'','aria-pressed':multi||selected.length?String(on):null,cls:x.cls||'',onclick:()=>{if(x.disabled)return;if(multi){if(on)sel.delete(x.value);else{if(max&&sel.size>=max){toast(`${max} at most`);return;}sel.add(x.value);}draw();return;}remember(x.value);inst.close();onPick(x.value);}},
-      multi?el('span',{class:'ckb'+(on?' on':''),html:on?ic('check',14,3):''}):(x.icon?el('span',{class:'ib',html:ic(x.icon,18)}):null),el('span',{class:'grow'},el('b',{style:'font-weight:500'},x.label),x.sub?el('small',{},x.sub):null),!multi&&on?el('span',{style:'color:var(--action-text);display:grid',html:ic('check',18,2.6)}):(x.trail||null));};
+      multi?el('span',{class:'ckb'+(on?' on':''),html:on?ic('check',14,3):''}):(x.icon?IconTile(null,{html:ic(x.icon,18)}):null),el('span',{class:'grow'},el('b',{style:'font-weight:500'},x.label),x.sub?el('small',{},x.sub):null),!multi&&on?el('span',{style:'color:var(--action-text);display:grid',html:ic('check',18,2.6)}):(x.trail||null));};
     if(recent.length){box.append(el('div',{class:'sect'},'Recent'),el('div',{class:'list'},recent.map(row)),el('div',{class:'sect'},'All'));}
     box.append(xs.length?el('div',{class:'list'},xs.map(row)):el('p',{class:'small muted',style:'margin:var(--s2) 2px'},emptyText));};
   inst=openSheet({title,left:{label:left},right:multi?{label:'Done',onclick:()=>{if(sel.size<min){toast(`Pick at least ${min}`);return;}inst.close();onPick([...sel]);}}:null,build:b=>{
@@ -356,7 +394,7 @@ function toggleItem(e,dk){
   if(e.kind==='gcal')return false;
   if(e.kind==='routine'){const r=e.rec;r.runs=r.runs||{};if(r.runs[dk])delete r.runs[dk];else r.runs[dk]=Date.now();put(r,{silent:true});return !!r.runs[dk];}
   if(e.kind==='habit'&&e.rec.link&&e.rec.link.log&&(!e.rec.track||e.rec.track==='check')&&typeof wkHabitToggle==='function')return wkHabitToggle(e.rec,dk);
-  if(e.kind==='habit'){const h=e.rec;h.logs=h.logs||{};if(habitDone(h,dk))delete h.logs[dk];else{h.logs[dk]=h.track==='count'||h.track==='time'?(h.goalN||1):true;if(h.skips)delete h.skips[dk];if(dk===todayK()){const n=new Date();h.logT=Object.assign({},h.logT,{[dk]:n.getHours()*60+n.getMinutes()});}}put(h,{silent:true});syncHabitGoals(h);celebrateStreak(h,dk);return habitDone(h,dk);}
+  if(e.kind==='habit'){const h=e.rec;h.logs=h.logs||{};if(habitDone(h,dk))delete h.logs[dk];else{h.logs[dk]=h.track==='count'||h.track==='time'?(h.goalN||1):true;if(h.skips)delete h.skips[dk];if(dk===todayK()){const n=new Date();h.logT=Object.assign({},h.logT,{[dk]:n.getHours()*60+n.getMinutes()});}}put(h,{silent:true});syncHabitGoals(h);celebrateStreak(h,dk);const dn=habitDone(h,dk);if(dn&&typeof habitNotePrompt==='function')setTimeout(()=>habitNotePrompt(h,dk),700);return dn;}
   const r=e.rec;if(e.kind==='task'){const d=e.occ||dk;return setTaskDone(r,d,!(r.doneDates&&r.doneDates[d]));}r.doneDates=r.doneDates||{};if(r.doneDates[dk])delete r.doneDates[dk];else r.doneDates[dk]=Date.now();
   if(e.kind==='block'&&r.part){const h=get.id(r.part);if(h&&h.kind==='habit'){h.logs=h.logs||{};if(r.doneDates[dk])h.logs[dk]=true;else delete h.logs[dk];put(h,{silent:true});}}
   put(r,{silent:true});return !!r.doneDates[dk];

@@ -500,7 +500,7 @@ button.dtile{text-align:center}
 html.t-large #view,html.t-large #layers{zoom:1.1}
 html.t-larger #view,html.t-larger #layers{zoom:1.22}
 html.a-bold body{font-weight:500}
-html.a-borders{--line:#B9BDB6;--line-2:var(--line-strong)}
+html.a-borders{--line:#B9BDB6;--line-2:var(--line-strong);--edge:var(--line)}
 html.a-contrast{--ink-2:#3F4944;--ink-3:#4F5954}
 html.a-motion *,html.a-motion *::before,html.a-motion *::after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-property:opacity,color,background-color,border-color,fill,stroke,stroke-dashoffset,width,box-shadow!important;transition-duration:.2s!important;transition-timing-function:linear!important;transition-delay:0s!important}
 html.a-motion .viewin,html.a-motion .viewin-push,html.a-motion .viewin-pop,html.a-motion .viewin-swiped,html.a-motion .fade-up{animation-name:rmFade!important;animation-duration:.2s!important;animation-timing-function:linear!important}
@@ -1172,7 +1172,7 @@ h1,h2,h3,.pgtitle,.oserif,.tt,b,small,p{overflow-wrap:anywhere}
 .tick,.tick-hit,.oric,.ozi,.ring,.onum,.obadge,.iconbtn,.grip,.oix,.oplus,.oplay,.ofilter,.chev,.ic{flex:none}
 .fx>time{flex:none;white-space:nowrap}
 /* v31 */
-.sheet-up .toast{bottom:calc(14px + var(--kb,0px) + env(safe-area-inset-bottom,0px))}
+.sheet-up .toast{bottom:calc(var(--ctl-lg) + var(--s6) + var(--kb,0px) + env(safe-area-inset-bottom,0px))}
 .page>header+.lbl{margin-top:var(--s3)}
 .btn.primary:disabled{background:var(--chip);color:var(--ink-3);box-shadow:var(--e-flat);opacity:1}
 .kb-up .nav{display:none}
@@ -1287,8 +1287,9 @@ a.linkbtn{text-decoration:none}
 .ob-check{display:flex;gap:var(--s3);align-items:center;font-size:var(--fs-label)}
 .ob-check input{width:20px;height:20px;accent-color:var(--action)}
 .ob-add{display:flex;gap:var(--s2)}
-.ob-add input{flex:1;min-width:0;height:var(--ctl-lg);border-radius:var(--r-row);border:2px solid var(--action);background:var(--surface-raised);padding:0 var(--s4);font:400 17px var(--body);color:var(--text)}
-.ob-add .btn{width:52px;height:52px;padding:0;border-radius:var(--r-row);flex:none}
+.ob-add input{flex:1;min-width:0;height:var(--ctl-lg);border-radius:var(--r-full);border:1px solid var(--edge);box-shadow:var(--e-raised);background:var(--surface-raised);padding:0 var(--s4);font:400 17px var(--body);color:var(--text)}
+.ob-add .btn{width:var(--ctl-lg);height:var(--ctl-lg);padding:0;border-radius:var(--r-full);flex:none}
+.ob-add input:focus{border-color:var(--action);outline:0}
 .ob-ideas{display:flex;flex-direction:column;gap:var(--s2)}
 .ob-ideas .ob-pill{font-weight:500;border-radius:var(--r-card);min-height:40px}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}

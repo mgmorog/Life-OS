@@ -8,7 +8,7 @@ const App={
     /* v232 · remember the row this page grows out of */
     try{const tp=App._tap;S._zoomFrom=null;if(tp&&Date.now()-tp.t<900&&tp.el.isConnected&&!TOPS.includes(view)&&motionOK()){const r=tp.el.getBoundingClientRect(),tt=tp.el.querySelector('b,.tt,.t3n')||tp.el;const tr=tt.getBoundingClientRect();if(r.height<160&&r.bottom>0&&r.top<innerHeight)S._zoomFrom={r,tr,fs:parseFloat(getComputedStyle(tt).fontSize)||16,label:(tt.textContent||'').trim().slice(0,80)};}App._tap=null;}catch(e){S._zoomFrom=null;}
     try{const pg0=$('#view')&&$('#view').firstElementChild;if(pg0&&!TOPS.includes(view)){(this._snaps=this._snaps||{})[(S.stack||[]).length+1]={node:pg0.cloneNode(true),view:S.view,y};}}catch(e){}
-    (S.stack=S.stack||[]).push({view:S.view,params:S.params,y});if(S.stack.length>30)S.stack.shift();
+    (S.stack=S.stack||[]).push({view:S.view,params:S.params,y,t:(()=>{try{const h=$('#view .pgtitle');const n=h?h.textContent.trim():({today:'Today',studio:'Studio',calendar:'Calendar',more:'More',search:'Search'})[S.view];return n&&n.length<=28?n:null;}catch(e){return null;}})()});if(S.stack.length>30)S.stack.shift();
     if(view==='tasks')S.taskTab=params.tab||'all';S.view=view;S.params=params;S.entering=true;S.dir=TOPS.includes(view)?'tab':'push';
     try{if(/^[a-z-]+$/.test(view))history.replaceState(null,'','#'+(view==='settings'?'prefs':view));}catch(e){}
     this.render();window.scrollTo(0,0);

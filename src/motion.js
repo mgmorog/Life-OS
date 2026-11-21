@@ -174,7 +174,7 @@ function todayHeaderScroll(){
   const m=$('#mini');if(!m)return;
   if(sheetStack.length){m.style.cssText='';return;}
   if(App.state.view!=='today'){pageTitleScroll(m);return;}
-  const d=$('#view .hd .date'),eb=$('#view .hd-eyebrow'),p=Math.max(0,Math.min(1,scrollY/110));
+  const d=$('#view .hd .date'),eb=$('#view .hd-eyebrow'),p=Math.max(0,Math.min(1,scrollY/64));
   if(d){d.style.transformOrigin='left center';d.style.transform=motionOK()?`scale(${1-.28*p})`:'';d.style.opacity=String(1-Math.max(0,(p-.55)/.45));}
   if(eb)eb.style.opacity=String(1-Math.min(1,p*1.8));
   Object.assign(m.style,{visibility:p>.02?'visible':'hidden',color:`rgba(30,38,34,${Math.max(0,(p-.6)/.4)})`,backgroundColor:`rgba(244,244,239,${p*.78})`,borderBottomColor:`rgba(229,231,225,${p})`,pointerEvents:p>.9?'auto':'none',boxShadow:p>=1?'0 6px 14px -10px rgba(20,30,25,.22)':'none',transition:'none'});
@@ -183,7 +183,7 @@ function todayHeaderScroll(){
 function pageTitleScroll(m){const h=$('#view .pgtitle');if(!h){if(m._pg){m.style.cssText='';m.textContent='';m.onclick=null;m._pg=null;}return;}
   const t=h.textContent.trim(),bk=$('#view .back');if(m._pg!==t){m._pg=t;m.replaceChildren(t);if(bk){const lab=bk.textContent.trim()||'Back';m.append(el('button',{class:'mback','aria-label':'Back to '+lab,html:ic('chevl',20,2.2),onclick:e=>{e.stopPropagation();const b=$('#view .back');if(b)b.click();}}));}m.onclick=()=>scrollTo({top:0,behavior:motionOK()?'smooth':'auto'});}
   const top=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--sat'))||0,r=h.getBoundingClientRect(),bar=52+top;
-  const start=Math.max(0,r.top+scrollY-bar),p=Math.max(0,Math.min(1,(scrollY-start)/(r.height*.8)));
+  const p=Math.max(0,Math.min(1,(scrollY-4)/44));
   h.style.transformOrigin='left center';h.style.transform=motionOK()&&p>0?`scale(${1-.12*p})`:'';h.style.opacity=p>0?String(1-p):'';
   Object.assign(m.style,{visibility:p>.02?'visible':'hidden',color:`rgba(30,38,34,${Math.max(0,(p-.5)/.5)})`,backgroundColor:`rgba(244,244,239,${p*.78})`,borderBottomColor:`rgba(229,231,225,${p})`,pointerEvents:p>.9?'auto':'none',boxShadow:p>=1?'0 6px 14px -10px rgba(20,30,25,.22)':'none',transition:'none'});
 }

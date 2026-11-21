@@ -114,14 +114,14 @@ function viewToday(root){
         IconButton(inboxNew()?'Inbox, something new':'Inbox',{html:ic('inbox',24)+(inboxNew()||newVerN()?'<span class="badge dot"></span>':''),onclick:()=>App.go('inbox')}),
         moreB('Today options',e=>Menu([{label:'Share this day',icon:'share',onclick:()=>shareDaySheet(dk)},{label:'Plan tomorrow',icon:'cal',onclick:()=>planTomorrowSheet(todayK())},{label:'Today settings',icon:'gear',onclick:()=>App.go('setpage',{id:'reviews'})}],{at:e})))),
     S.dateDrop?dateDropEl(dk):null,S.dateDrop?null:weekStrip(dk),
-    isToday?nextLine(dk):null,isToday?freeLine(dk):null));
+    hdChips(dk,isToday)));
   if(S.loading&&!recs.size){page.append(...todaySkeleton());root.append(page);return;}
   const s=get.settings();
   {const fr=frNow(),onPrio=fr&&isToday&&t3Get(dk).some(x=>x.id===fr.id);const fc=onPrio?null:focusRunChip();if(fc)page.append(fc);}
   {try{const yc=yirNudge(dk);if(yc)page.append(yc);}catch(e){}}
   if(!s.introDone&&!recs.size)page.append(introCard());
   if(isToday){const gc=gsCard();if(gc)page.append(gc);}
-  {const ad=alldayRow(dk);if(ad)page.append(ad);}
+
   page.append(...dayCard(dk));
   if(isToday){const pe=planEveCard(dk);if(pe)page.append(pe);}
   const rem=reminderCard();if(rem)page.append(rem);
@@ -148,6 +148,13 @@ function freeLine(dk){try{const nowM=nowMin(),s=get.settings(),sh=shiftsOn(dk);l
   sh.forEach(x=>cut(x.start,x.end>x.start?x.end:1440));if(s.protectEvenings&&sh.some(x=>!x.carry))cut(Math.max(...sh.filter(x=>!x.carry).map(x=>x.end>x.start?x.end:1440)),1440);
   dayItems(dk).timed.filter(e=>e.kind!=='habit'&&e.kind!=='task').forEach(e=>cut(e.time,e.time+(e.dur||30)));const f=awake.reduce((n,[a,b])=>n+b-a,0);
   return f>=15?el('span',{class:'freeline'},`${fmtDurS(f)} free today, outside work and meetings`):null;}catch(e){return null;}}
+/* v249 · one row of chips under the week strip: what's next, free time, all-day items */
+function hdChips(dk,isToday){const out=[];
+  if(isToday){const nowM=nowMin(),e=dayItems(dk).timed.filter(x=>!x.done&&x.kind!=='habit'&&x.time+(x.dur||30)>nowM).sort((a,b)=>a.time-b.time)[0];
+    if(e){const during=e.time<=nowM;out.push(el('button',{class:'hdchip next','aria-label':`${during?'Now':'Next'}: ${e.title} at ${fmtT(e.time)}`,onclick:()=>openItem(e,dk)},el('b',{},during?'Now':`Next ${fmtT(e.time)}`),el('span',{class:'clip'},e.title)));}
+    const f=freeLine(dk);if(f){const m=f.textContent.match(/^(.*?) free/);out.push(el('span',{class:'hdchip',title:'Free today, outside work and meetings'},`${m?m[1]:''} free`));}}
+  const{allDay}=dayItems(dk);allDay.filter(x=>!(x.rec&&x.rec.tripId)).forEach(x=>{const b=el('button',{class:'hdchip'},el('span',{class:'clip'},x.title));b.onclick=()=>openItem(x,dk);onPress(b,(mx,my)=>itemMenu(x,dk,mx,my));out.push(b);});
+  return out.length?el('div',{class:'hdchips'},...out):null;}
 function nextLine(dk){const nowM=nowMin(),t=dayItems(dk).timed.filter(e=>!e.done&&e.kind!=='habit'&&e.time+(e.dur||30)>nowM).sort((a,b)=>a.time-b.time),e=t[0];if(!e)return null;
   const during=e.time<=nowM,end=e.time+(e.dur||30);
   return el('button',{class:'nextline',onclick:()=>openItem(e,dk)},el('span',{class:'nl1'},el('b',{},during?'Now':'Next'),' ',e.title),el('span',{class:'nl2 tnum'},during?`Until ${fmtT(end)} · ${fmtDurS(end-nowM)} left`:`${fmtT(e.time)} · in ${fmtDurS(e.time-nowM)}`));}

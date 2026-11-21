@@ -765,7 +765,7 @@ function a11yPass(root){if(!root||!root.querySelectorAll)return;
   root.querySelectorAll('[role=button]:not([tabindex])').forEach(n=>n.setAttribute('tabindex','0'));}
 document.addEventListener('keydown',e=>{const t=e.target;if((e.key==='Enter'||e.key===' ')&&!e.defaultPrevented&&t&&t.getAttribute&&t.getAttribute('role')==='button'&&t.tagName!=='BUTTON'){e.preventDefault();t.click();}});
 
-function toastRestack(){const l=[...document.querySelectorAll('.toast.tstk')];while(l.length>2)l.shift().remove();l.reverse().forEach((n,i)=>n.style.setProperty('--i',i+1));}
+function toastRestack(){const l=[...document.querySelectorAll('.toast.tstk')];while(l.length>0)l.shift().remove();l.reverse().forEach((n,i)=>n.style.setProperty('--i',i+1));}
 
 /* v232 · forgiving match: every word can match anywhere, in any order, with a small typo; lower score = better, -1 = no match */
 function editDist(a,b){if(a===b)return 0;const m=Array.from({length:a.length+1},(_,i)=>[i]);for(let j=1;j<=b.length;j++)m[0][j]=j;for(let i=1;i<=a.length;i++)for(let j=1;j<=b.length;j++)m[i][j]=Math.min(m[i-1][j]+1,m[i][j-1]+1,m[i-1][j-1]+(a[i-1]===b[j-1]?0:1));return m[a.length][b.length];}

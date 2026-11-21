@@ -3131,8 +3131,8 @@ input,textarea,[contenteditable]{caret-color:var(--action)}
 ::selection{background:var(--accent-pale);color:var(--text)}
 /* Increase Contrast (iPhone Settings › Accessibility): darker lines and edges, muted text near black, outlined chips */
 @media(prefers-contrast:more){
-  :root{--line:#9AA19C;--line-2:#C3C8C3;--line-3:#8E958F;--line-strong:#7A817C;--seg:#D6D9D3;--ink-2:#3B433F;--ink-3:#3B433F;--ink-soft:#3B433F;--ink-faint:#5B6560;--accent-text:#2F4A3D}
-  .card,.list,.sheet,.confirm,.menu{border-color:var(--border)}
+  :root{--line:#9AA19C;--line-2:#C3C8C3;--line-3:#8E958F;--line-strong:#7A817C;--seg:#D6D9D3;--ink-2:#3B433F;--ink-3:#3B433F;--ink-soft:#3B433F;--ink-faint:#5B6560;--accent-text:#2F4A3D;--edge:rgba(20,30,25,.12)}
+  .sheet,.confirm,.menu{border-color:var(--border)}
   .chip:not(.on),.fchip:not(.on),.achip:not(.on){box-shadow:inset 0 0 0 1px var(--border)}
   .tick:not(.on){border-color:#6E7671}
 }

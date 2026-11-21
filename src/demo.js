@@ -90,7 +90,7 @@ function loadDemo(quiet){
   const NR={type:'never',end:null},AR=AREAS;
   /* every area on, every module on */
   const allAreas=[...new Set([...AREAS,...OPT_AREAS])];const shown={};allAreas.forEach(a=>shown[a]=toolsOf(a).filter(x=>x.optIn).map(x=>x.id));
-  setSettings({areas:allAreas.slice().sort((a,b)=>a.localeCompare(b)),hubHidden:{},hubShown:shown,introDone:true,foundationOff:true,demoSnap:snap,demoVer:6});
+  setSettings({areas:allAreas.slice().sort((a,b)=>a.localeCompare(b)),hubHidden:{},hubShown:shown,introDone:true,foundationOff:true,demoSnap:snap,demoVer:7});
   if(!Array.isArray(s0.jobs)||!s0.jobs.length)setSettings({jobs:[{id:'work',name:'Roswell Park',flex:false,cycle:'week',shifts:[{id:'s1',days:[0,1,2,3],start:8*60+30,end:17*60},{id:'s2',days:[4],start:8*60+30,end:13*60}]}]});
   /* projects first, so tasks can belong to them */
   const projs=[['Kitchen refresh','Home',['Measure the cabinets','Pick a paint color','Order hardware','Paint weekend']],['Q1 Workday release','Career',['Write test scripts','UAT with grant managers','Sign-off from Finance','Go-live checklist','Train AP team']],['Japan trip','Travel',['Book flights','Book Kyoto ryokan','Get JR pass','Pocket wifi']],['Move to the new office','Career',[]],['Garage cleanout (paused)','Home',['Sort donations','Sell the old bike']]];
@@ -160,6 +160,25 @@ function loadDemo(quiet){
    {hub:'Learning',tool:'paths',f:{what:'Systems thinking',why:'Better process design at work',note:'Book: Thinking in Systems\nVideo: Donella Meadows lecture\nPractice: map the AP intake loop',cur:1}}].forEach(o=>{mk('entry',o);n++;});
   /* area notes */
   allAreas.forEach(a=>{if(!get.id('area-'+a))put(Object.assign({id:'area-'+a,kind:'areanote',text:pick(['','Focus this quarter: consistency over intensity.','Keep it simple.'])},ex),{silent:true});});
+  /* wider spread (v246): next quarter and next year, older history, finished and paused goals and projects, period focuses */
+  {const FAR=['Dentist six-month checkup','Renew passport','File quarterly estimated taxes','Plan spring garden','Book summer vacation','Annual performance review prep','Car inspection','Replace running shoes','Mid-year budget check','Clean out garage','Schedule HVAC service','Renew CRA credential','Plan Mom’s 70th','Review 401(k) allocation','Spring closet swap'];
+   for(let i=35;i<=180;i+=3+Math.floor(r()*4))T(pick(FAR),{date:addK(t,i),area:pick(AR),priority:r()<.2?'high':'normal',time:r()<.2?(9+Math.floor(r()*8))*60:null});
+   T('Renew driver’s license',{date:addK(t,400),area:'Home'});T('Workday Pro recertification',{date:addK(t,365),area:'Career',priority:'high'});T('Plan 2028 goals',{date:addK(t,410),area:'Personal growth'});
+   for(let d=61;d<=180;d+=2+Math.floor(r()*3))T(pick(TASKS),{date:addK(t,-d),area:pick(AR),doneDates:done(addK(t,-d))});
+   T('Old task that slipped through',{date:addK(t,-21),area:pick(AR)});T('Deadline next week, no date yet',{area:'Career',deadline:addK(t,8),priority:'high'});
+   for(let i=35;i<=95;i+=4+Math.floor(r()*5))B(pick(BL),addK(t,i),(8+Math.floor(r()*10))*60,pick([45,60,90]),{area:pick(AR)});
+   A('New Year’s Day',addK(t,41),null,{color:'blue'});A('Ski weekend',addK(t,70),addK(t,72),{area:'Recreation',color:'blue',icon:'plane'});A('Wedding · Jordan & Kai',addK(t,200),null,{area:'Relationships',color:'plum',icon:'cake'});A('Tax day',addK(t,145),null,{area:'Finances'});
+   const fin=(x,daysAgo)=>{x.finished=true;x.finishedAt=fromK(addK(t,-daysAgo)).getTime();(x.steps||[]).forEach(st=>st.d=true);put(x,{silent:true});};
+   fin(G('Run a 10K','Health',addK(t,-40),['Pick a plan','Run 5K','Run 8K','Race day']),35);
+   fin(G('Finish CRA certification','Career',addK(t,-90),['Study plan','Practice exam','Sit the exam']),88);
+   const pz=G('Learn conversational Spanish','Learning',addK(t,240),['Finish Duolingo unit 5','10 tutor sessions','Watch a show without subtitles']);pz.paused=true;put(pz,{silent:true});
+   const PP=(title,area,steps,o={})=>mk('project',Object.assign({title,notes:'',area,deadline:null,color:pick(['sage','blue','plum']),steps:steps.map((x,i)=>({id:uid('s'),t:x,d:false}))},o));
+   fin(PP('Move AP intake to Workday','Career',['Map the current form','Build the intake BP','Pilot with two depts','Go live']),20);
+   fin(PP('Bathroom caulk and grout','Home',['Buy supplies','Scrape old caulk','Re-caulk']),50);
+   const pp=PP('Build a home server','Learning',['Pick hardware','Install Proxmox','Back up photos']);pp.paused=true;put(pp,{silent:true});
+   PP('Plan the Japan trip','Travel',['Pick cities','Book flights','JR pass','Hotels'],{deadline:addK(t,110)});
+   const wk=d=>weekKey(fromK(d)),FC=(fk,areas)=>{if(!get.id('focus-'+fk))put(Object.assign({id:'focus-'+fk,kind:'focus',areas},ex),{silent:true});};
+   const nowD=fromK(t);FC('w-'+wk(t),['Health','Career']);FC('w-'+wk(addK(t,7)),['Home']);FC('m-'+monthKey(nowD),['Finances','Health','Career']);FC('q-'+nowD.getFullYear()+'-'+quarterOf(nowD),['Career','Health']);}
   App.refresh();toast(`Demo loaded: ${n} module entries plus tasks, habits, goals and more`);
 }
 function clearDemo(){const s=get.settings(),snap=s.demoSnap;
@@ -169,4 +188,4 @@ function clearDemo(){const s=get.settings(),snap=s.demoSnap;
     App.refresh();toast('Demo cleared');}});}
 
 /* refresh an already-loaded demo with the current generator, keeping the original settings snapshot */
-function demoRefresh(){const s=get.settings(),keep=s.demoSnap;if(!keep)return;[...recs.values()].filter(r=>r.demo).forEach(r=>remove(r.id,{silent:true,hard:true}));setSettings({demoSnap:null});loadDemo(true);setSettings({demoSnap:keep,demoVer:6});}
+function demoRefresh(){const s=get.settings(),keep=s.demoSnap;if(!keep)return;[...recs.values()].filter(r=>r.demo).forEach(r=>remove(r.id,{silent:true,hard:true}));setSettings({demoSnap:null});loadDemo(true);setSettings({demoSnap:keep,demoVer:7});}

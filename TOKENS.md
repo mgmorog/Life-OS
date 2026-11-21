@@ -143,13 +143,13 @@ Components use the **Roles**; palettes in Settings change the accent colours und
 | --- | --- | --- |
 | `--s1` | `4px` |  |
 | `--s2` | `8px` |  |
-| `--s3` | `12px` |  |
-| `--s4` | `16px` |  |
-| `--s5` | `24px` |  |
-| `--s6` | `32px` |  |
-| `--pad-card` | `18px` |  |
-| `--pad-row` | `16px` |  |
-| `--pad` | `18px` |  |
+| `--s3` | `10px` |  |
+| `--s4` | `14px` |  |
+| `--s5` | `18px` |  |
+| `--s6` | `24px` |  |
+| `--pad-card` | `14px` |  |
+| `--pad-row` | `14px` |  |
+| `--pad` | `14px` |  |
 
 ## Shape
 

@@ -46,7 +46,7 @@ function viewMore(root){
   if(absent.length)page.append(SectionLabel('Main views'),el('div',{class:'list'},absent.map(x=>Row({style:'',onclick:()=>App.go(x)},IconTile(null,{html:ic(PLACES[x].i,20,1.7)}),el('span',{class:'grow'},el('b',{},PLACES[x].n)),RowEnd('chevron')))));
   /* your life areas, one tap away */
   {const areas=(S.areas||AREAS);page.append(el('div',{class:'sh2'},el('span',{class:'lbl'},'Life areas'),lnk('All',()=>App.go('areas'))),
-    el('div',{class:'achips'},areas.map(a=>el('button',{class:'achip2',onclick:()=>App.go('area',{name:a})},el('i',{style:`background:${AREA_COLOR[a]||'var(--a-personal)'}`}),a))));}
+    el('div',{class:'achips'},areas.map(a=>el('button',{class:'achip2',onclick:()=>App.go('area',{name:a})},el('i',{class:'aic','aria-hidden':'true',html:ic(areaIcon(a),16,1.8)}),a))));}
   const row=(i,n,sub,on,subCls)=>Row({style:'',onclick:on},IconTile(null,{html:ic(i,20,1.7)}),el('span',{class:'grow'},el('b',{style:'font-size:var(--fs-headline)'},n),sub?el('small',{class:subCls||null},sub):null),RowEnd('chevron'));
   const place=id=>id==='reviews'?(()=>{const nr=nextReviewLine();return row(PLACES[id].i,PLACES[id].n,nr&&nr[0],()=>App.go(id),nr&&nr[1]?'duenow':null);})():row(PLACES[id].i,PLACES[id].n,null,()=>App.go(id));
   /* anything pinned above isn't listed a second time below */

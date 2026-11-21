@@ -3611,3 +3611,5 @@ b,strong{font-weight:600}
 .pgtitle,.hd .date,.cal-title .tbtn{font-size:var(--fs-large)}
 #view .chip.on,#view .chip.filter.on,.fchips .chip.on{background:var(--selected);color:var(--accent-deep);border-color:transparent}
 .afbody .prwrap{padding-left:var(--pad);padding-right:var(--pad)}
+/* v255 · life areas show their icon, not a colored dot */
+.achip2 i.aic{width:auto;height:auto;background:none;border-radius:0;display:inline-flex;color:var(--text-muted)}

@@ -617,7 +617,7 @@ function areaTag(a){return el('span',{class:'atag'},el('span',{style:'display:gr
 function lateWord(n){return n<=1?'1 day late':n<14?`${n} days late`:`${Math.round(n/7)} weeks late`;}
 const lateWords=t=>String(t).replace(/(\d+) days? (late|ago)/i,(m,n)=>lateWord(+n));
 function areaRow(r,slim){const sub=String(r.sub||'').replace(new RegExp('^'+(r.kind||'').replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\s*·\\s*','i'),'');const subT=lateWords((sub===r.kind?'':sub).replace(/(\d+ days?) overdue/i,'$1 late'));
-  const meta=subT?el('span',{class:'meta'},subT):null;
+  const meta=subT?el('span',{class:'meta'},...(/\blate\b|past due|past its date/i.test(subT)&&!/\bago\b/.test(subT)?[el('span',{class:'olate'},subT)]:[subT])):null;
   const row=el('div',{class:'trow tick-host'+(r.done?' done':''),'data-id':r.rid||''},
     r.tick?el('span',{class:'tick-hit'},r.tick):el('span',{class:'tick-hit aiopen','aria-hidden':'true',html:ic(areaIcon(r.area||''),IC.sm)}),
     el('button',{class:'t',onclick:r.go},el('span',{class:'tt'},r.title),slim&&r.sub?el('span',{class:'meta'},String(r.sub).replace(/(\d+ days?) overdue/i,'$1 late')):meta),

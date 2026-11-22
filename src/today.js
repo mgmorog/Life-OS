@@ -66,12 +66,14 @@ function habitPlanSheet(h){
   let inst,moving=null;const c=formCtx(()=>{});const tk=todayK();
   inst=openSheet({title:'Plan a session',left:{label:'Close'},build:b=>{
     const draw=()=>{b.innerHTML='';const up=Object.keys(h.sessions||{}).filter(d=>d>=tk).sort();
-      b.append(Caption('Pick days for this habit. Hold one on Today to set a time.',{as:'p'}));
+      b.append(Caption('Tap a day to plan it, tap it again to take it off. Hold one on Today to set a time.',{as:'p'}));
       if(up.length)b.append(SectionLabel('Planned'),el('div',{class:'list'},up.map(d=>{const se=h.sessions[d]||{},mv=moving===d;return el('div',{class:'li'+(mv?' moving':''),style:''},el('span',{class:'grow'},el('b',{style:'font-weight:500'},relDay(d)),el('small',{},mv?'Now tap its new day below':se.time!=null?fmtT(se.time):'Any time')),
         el('button',{class:'chip'+(mv?' on':''),onclick:()=>{moving=mv?null:d;draw();}},mv?'Cancel':'Move'),
-        mv?null:Chip('Remove',{onclick:()=>{const x=h.sessions[d];delete h.sessions[d];put(h);draw();App.refresh();toast('Session removed',()=>{h.sessions[d]=x;put(h);draw();App.refresh();});}}));})));
+        mv?null:Chip('Remove',{onclick:()=>{delete h.sessions[d];put(h);draw();App.refresh();}}));})));
       b.append(SectionLabel(moving?`Move ${relDay(moving)} to`:up.length?'Add another':'Pick a day'),Card({as:'div'},c.calendar(null,d=>{if(!d)return;if(d<tk){toast('That day has passed');return;}
         if(moving){if(d!==moving){const x=h.sessions[moving];delete h.sessions[moving];h.sessions[d]=x||{time:null};put(h);toast(`Moved to ${relDay(d)}`);}moving=null;draw();App.refresh();return;}
+        /* tapping a shaded (planned) day takes it off the plan */
+        if(h.sessions&&h.sessions[d]){delete h.sessions[d];put(h);draw();App.refresh();return;}
         planHabitDay(h,d);draw();},{minK:tk,marks:new Set(up),ring:moving})));};
     draw();}});
 }

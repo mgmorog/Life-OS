@@ -160,7 +160,7 @@ function viewReviews(root){
   page.append(pageHead('Reviews',get.settings().weeklyReview===false?null:(doneW?`This week’s review is done`:`Weekly review due ${DOW[rd]}${lastW?` · last one ${relDay(k(new Date(lastW.createdAt)))}`:''}`)+(stk>1?` · ${stk} weeks in a row`:''),{back:'More',to:'more',icon:'clip'}));
   const wkOn=get.settings().weeklyReview!==false;
   if(wkOn)page.append(el('button',{class:doneW?'btn line block':'btn primary block',onclick:()=>App.go('review')},doneW?'Review this week again':'Start weekly review'));
-  page.append(el('div',{style:'display:flex;gap:var(--s2)'},el('button',{class:wkOn?'btn line':'btn primary',style:'flex:1',onclick:()=>App.go('review',{period:'month'})},'Monthly'),Button('Quarterly',{variant:'secondary',style:'flex:1',onclick:()=>App.go('review',{period:'quarter'})})));
+  page.append(wkOn?el('div',{class:'revlinks'},lnk('Monthly review',()=>App.go('review',{period:'month'})),lnk('Quarterly review',()=>App.go('review',{period:'quarter'}))):el('div',{style:'display:flex;gap:var(--s2)'},el('button',{class:'btn primary',style:'flex:1',onclick:()=>App.go('review',{period:'month'})},'Monthly'),Button('Quarterly',{variant:'secondary',style:'flex:1',onclick:()=>App.go('review',{period:'quarter'})})));
   {const pr=pendingReviews();if(pr.length)page.append(pendingCard(pr));}
   {const sc=scorecardCard();if(sc)page.append(sc);}
   {const tmp=el('div');viewInsights(tmp);const ip=tmp.firstChild;if(ip){ip.firstChild&&ip.firstChild.remove();[...ip.children].forEach(c=>{if(c.querySelector&&c.querySelector('.empty'))c.remove();});if(ip.children.length)page.append(SectionLabel('Insights'),...ip.children);}}

@@ -149,7 +149,7 @@ function photosEditor(D,{compact=false,onChange=null}={}){
   const draw=()=>{box.innerHTML='';(D.photos||[]).forEach((p,i)=>{const open=()=>photoViewer(D.photos,i,{onRemove:removeAt});box.append(el('div',{class:'photo',style:`background-image:url("${p.url}")`,role:'button',tabindex:0,'aria-label':`Open photo ${i+1}`,onclick:open,onkeydown:e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();open();}}},el('button',{'aria-label':`Remove photo ${i+1}`,html:ic('x',12,2.6),onclick:e=>{e.preventDefault();e.stopPropagation();removeAt(i);}})));});
     for(let n=0;n<pending;n++)box.append(el('div',{class:'photo loading',role:'status','aria-label':'Uploading photo'},el('i')));
     const inp=el('input',{type:'file',accept:'image/*',multiple:true,hidden:true,id:'photo-input-'+uid('p'),onchange:e=>add(e.target.files)});
-    box.append(el('label',{class:'addphoto',html:ic('image',20)+'<span>Add photo</span>'},inp));const tot=(D.photos||[]).length+pending;for(let k=shownN;k<tot;k++)born[k]=performance.now()+(k-shownN)*110;born.length=Math.min(born.length,tot);shownN=tot;photoDrop(box,born);};
+    box.append(el('label',{class:'addphoto',html:ic('image',20)+'<span>Add a photo</span>'},inp));const tot=(D.photos||[]).length+pending;for(let k=shownN;k<tot;k++)born[k]=performance.now()+(k-shownN)*110;born.length=Math.min(born.length,tot);shownN=tot;photoDrop(box,born);};
   box._files=()=>lastFiles;box._busy=()=>pending>0;box._redraw=draw;box._add=add;
   draw();return box;
 }

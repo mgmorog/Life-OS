@@ -1,5 +1,6 @@
 /* Layout: one phone column on a sage-tinted paper ground, bottom bar + capture button. From 900px a left rail replaces the bar and the column widens. Light only, white and green. */
 :root{
+  --chart-bar:var(--h2); --chart-now:var(--h3); --amber-mid:#E2C68E; --trip-band:#B9C9DC; --fs-lede:var(--fs-headline); --circle:48px;
   --ic-row:24px; --ic-tile:28px; --ic-pin:28px;
   /* Colour · paper, ink and lines */
   --on-dark:#FFFFFF; --on-dark-muted:rgba(255,255,255,.8); --on-dark-line:rgba(255,255,255,.18); --bg:#F4F4EF;
@@ -3628,3 +3629,48 @@ b,strong{font-weight:600}
 .ptile .ic{width:auto;height:auto}
 .ptile .ic svg{width:var(--ic-pin);height:var(--ic-pin)}
 .row>.ic svg{width:var(--ic-row)!important;height:var(--ic-row)!important}
+/* v259 · polish round 5 */
+/* 1 pinned as circles, same as the life areas rail */
+.pins{display:flex;gap:var(--s2);grid-template-columns:none}
+.pins .ptile{flex:none;width:72px;background:none;box-shadow:none;border:0;padding:var(--s1) 0;gap:var(--s2);font-size:var(--fs-meta);color:var(--text-muted);font-weight:400}
+.pins .ptile .ic{width:var(--circle);height:var(--circle);border-radius:var(--r-full);background:var(--selected);color:var(--accent-deep);display:grid;place-items:center}
+.pins .ptile .ic svg{width:26px;height:26px}
+.acirc .ic{width:var(--circle);height:var(--circle)}
+/* 2 one color for habit rings on Today */
+.fhab,.fhab .hring{--c:var(--accent-mid)!important}
+.fhab .hring-in{color:var(--accent-deep)}
+/* 3 the count sits under the habit name */
+.fhabt{display:flex;flex-direction:column;min-width:0;text-align:left}
+.fhabt .hcnt{font-size:var(--fs-meta);color:var(--text-muted);font-weight:400;position:static;margin:0;text-align:left;align-self:flex-start}
+/* 4 today's chips stay on one line and swipe */
+.hdchips{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin-inline:calc(var(--pad) * -1);padding-inline:var(--pad);-webkit-mask:linear-gradient(90deg,transparent,#000 var(--pad),#000 88%,transparent);mask:linear-gradient(90deg,transparent,#000 var(--pad),#000 88%,transparent)}
+.hdchips::-webkit-scrollbar{display:none}
+.hdchips>*{flex:none}
+/* 6 plain icons in Studio rows */
+.stai{background:none;color:var(--text-muted);width:24px;height:24px}
+/* 7 over capacity is a soft amber bar, not a warning */
+.stbar.over{background:var(--line-2)}.stbar.over i{background:var(--amber-mid)}
+/* 8 trips: a thin band under the dates */
+.heat.tripday,.heat.tripday .hn,.heat.tripday.today .hn{box-shadow:none}
+.heat.tripday.today .hn{box-shadow:0 0 0 2px var(--surface)}
+.heat.tripday{background-image:linear-gradient(var(--trip-band),var(--trip-band));background-size:calc(100% - 8px) 3px;background-position:center calc(100% - 1px);background-repeat:no-repeat}
+.heat.tripfirst::before{display:none}
+.tripname{color:var(--text-muted);font-weight:500}.tripname i{display:none}
+/* 10 overdue rows line up */
+.swr>.li.tick-host{gap:var(--s3)}
+.tick-hit.aiopen{background:none;color:var(--text-muted)}
+/* 12 modules with nothing logged sit on one quiet line */
+.modquiet{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px var(--s1);margin:var(--s3) 2px 0;font-size:var(--fs-meta);color:var(--text-muted)}
+.mqlab{margin-right:2px}
+.mqb{color:var(--accent-deep);font-weight:500;padding:4px 0}
+/* 14 the summary line under a life area title */
+.dlede{font-size:var(--fs-lede);line-height:1.4;color:var(--text-muted);font-weight:400}
+/* 15 review links */
+.revlinks{display:flex;gap:var(--s5);margin:var(--s1) 2px 0}
+/* 16 soft play buttons */
+.oplay{border:0;background:var(--selected);color:var(--accent-deep)}
+/* 18 money figures share one size */
+.money b,b.money{font-size:var(--fs-row);font-weight:500;color:var(--text)}
+/* 19 add photo as a quiet row */
+.photos.compact .addphoto{display:flex;width:100%;height:var(--row);justify-content:flex-start;gap:var(--s3);padding:0 var(--pad);border:0;border-radius:var(--r-card);background:var(--surface-raised);color:var(--text);font-weight:400;font-size:var(--fs-row)}
+.photos.compact .addphoto svg{color:var(--text-muted);width:var(--ic-row);height:var(--ic-row)}

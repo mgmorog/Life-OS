@@ -160,7 +160,7 @@ function scIds(){const s=get.settings();if(Array.isArray(s.scorecard)&&s.scoreca
 function scWeeks(n=8,end=todayK()){const ws=weekStartOf(fromK(end));return Array.from({length:n},(_,i)=>{const a=k(addD(ws,-7*(n-1-i)));return[a,k(addD(fromK(a),6))];});}
 function scorecardCard({a,b,title='Scorecard',always=false}={}){const ids=scIds(),wk=scWeeks(8,b||todayK());if(!always&&!ids.some(id=>wk.some(([x,y])=>+SC[id].v(x,y)>0)))return null;
   return Card({title,action:Button('Choose',{variant:'link',size:'sm',onclick:scPickSheet}),cls:'scorec'},el('div',{class:'scrows'},ids.map(id=>{const M=SC[id],vals=wk.map(([x,y])=>M.v(x,y)),cur=vals[vals.length-1],prev=vals[vals.length-2],fmt=M.fmt||(v=>String(Math.round(v))),d=cur-prev,good=M.low?d<0:d>0,dir=Math.abs(d)<1e-9?'flat':good?'up':'down';
-      return el('div',{class:'scrow'},el('span',{class:'grow'},el('span',{class:'tt'},M.n),el('small',{},`Last week ${fmt(prev)}`)),dSpark(vals,64,24),el('span',{class:'scv'},el('b',{class:'serif tnum'},fmt(cur)),el('span',{class:'atr '+dir},dir==='flat'?'Same':d>0?'▲':'▼')));})));}
+      return el('div',{class:'scrow'},el('span',{class:'grow'},el('span',{class:'tt'},M.n),el('small',{},`Last week ${fmt(prev)}`)),dSpark(vals,64,24),el('span',{class:'scv'},el('b',{class:'serif tnum'},fmt(cur)),el('span',{class:'atr '+dir},dir==='flat'?'Same':`${d>0?'+':'−'}${fmt(Math.abs(d))}`)));})));}
 function scPickSheet(){Picker({title:'Your scorecard',multi:true,min:3,max:5,selected:scIds().slice(),note:'Pick 3 to 5 numbers to watch each week.',items:Object.entries(SC).map(([id,M])=>({value:id,label:M.n,sub:M.has()?null:'Nothing logged yet'})),onPick:D=>setSettings({scorecard:D})});}
 
 /* ---------- Studio and Insights extras ---------- */

@@ -3851,3 +3851,20 @@ input[type=search]::-webkit-search-cancel-button{-webkit-appearance:none;display
 /* trip days keep a blue load dot in month and quarter */
 #month-grid .heat.tripday::after,.qgrid .heat.tripday::after{content:'•';color:var(--trip)}
 .dpad{margin-top:var(--s3)}
+/* v279 · Month · Calendar view */
+.mcal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));border-top:var(--hairline) solid var(--divider)}
+.mcc{display:flex;flex-direction:column;align-items:stretch;gap:2px;min-height:92px;padding:var(--s1) 2px var(--s1);border-bottom:var(--hairline) solid var(--divider);text-align:left;min-width:0;border-radius:0}
+.mcc.out{background:none}
+.mcc.past{opacity:var(--o-strong,.75)}
+.mcc.sel{background:var(--selected)}
+.mcn{align-self:center;display:grid;place-items:center;width:26px;height:26px;margin-bottom:2px;border-radius:var(--r-full);font-size:var(--fs-small);font-variant-numeric:tabular-nums;color:var(--text)}
+.mcc.today .mcn{background:var(--action);color:var(--on-accent);font-weight:var(--fw-medium)}
+.mcn.hol{box-shadow:inset 0 0 0 var(--hol-ring) var(--hol)}
+.mcc.today .mcn.hol{box-shadow:none}
+.mcl{display:block;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:clip;font-size:10.5px;line-height:15px;padding:0 3px;border-radius:4px;color:var(--text)}
+.mcl.ad{background:color-mix(in srgb,var(--c,var(--ink-3)) 16%,var(--surface-raised));}
+.mcl.ad.hol{background:var(--selected);color:var(--accent-deep)}
+.mcl.trip{background:var(--trip-soft,#E6EEF7);color:var(--text)}
+.mcl.ev{border-left:2px solid var(--c,var(--action));border-radius:0;padding-left:3px}
+.mcl.td{color:var(--text-muted)}
+.mcm{font-size:10.5px;line-height:15px;padding:0 3px;color:var(--ink-3)}

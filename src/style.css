@@ -53,6 +53,7 @@
   --toast-bg:var(--surface-raised); --toast-fg:var(--text); --toast-action:var(--action-text);
   --menu-shadow:0 0 0 1px var(--card-edge),var(--shadow-2);
   --row-lead:24px; --row-gap:var(--s3); --divider:var(--line-2); --done-opacity:var(--o-muted);
+  --hol:var(--accent-deep); --hol-ring:1.5px; /* holiday mark: a hollow ring, never the busy dot */
 
   /* ───────────── Type: nine sizes, three weights ───────────── */
   --fs-micro:11px; --fs-small:13px; --fs-label:14px; --fs-row:15px; --fs-headline:17px;
@@ -3772,7 +3773,6 @@ input[type=search]::-webkit-search-cancel-button{-webkit-appearance:none;display
 .pdp-week.cur:not(.sel){background:var(--selected)}
 .pdp .dp-quick>*{flex:1;justify-content:center}
 /* v267 · holidays: one quiet mark everywhere, a hollow ring so it never reads as the busy dot */
-:root{--hol:var(--accent-deep);--hol-ring:1.5px}
 .holdot{display:inline-block;flex:none;width:8px;height:8px;border-radius:var(--r-full);box-shadow:inset 0 0 0 var(--hol-ring) var(--hol)}
 .wkpage .hol:not(.sel) .dn::after{width:6px;height:6px;margin-left:-3px;bottom:3px;background:none;box-shadow:inset 0 0 0 var(--hol-ring) var(--hol);opacity:1}
 .dp-d i.hol{width:6px;height:6px;margin-left:-3px;background:none;box-shadow:inset 0 0 0 var(--hol-ring) var(--hol)}

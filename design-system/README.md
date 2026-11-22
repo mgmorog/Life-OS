@@ -40,6 +40,8 @@ Lines: `line-2` is the hairline between rows, `line` outlines controls, `line-st
 
 Each life area has a colour at one even lightness (`a-health`, `a-home`…) and a soft fill (`a-health-soft`…). They appear in charts and on habits you colour; they never replace `accent` for actions. Trips use `a-travel`.
 
+Holidays get one mark everywhere: a hollow `hol` ring (`hol-ring` wide) around the date or as a small dot, so it never reads as the filled busy dot. Heads-ups about holidays sit on the soft `selected` fill.
+
 ## Type
 
 Serif only for page titles and big numbers; Figtree for everything you read and tap. Sentence case everywhere.

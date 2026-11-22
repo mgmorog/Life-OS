@@ -187,6 +187,8 @@ Components use the **Roles**; palettes in Settings change the accent colours und
 | `--row-gap` | `var(--s3)` | `12px` |
 | `--divider` | `var(--line-2)` | `#EFF0EA` |
 | `--done-opacity` | `var(--o-muted)` | `.6` |
+| `--hol` | `var(--accent-deep)` | `#2F4A3D` |
+| `--hol-ring` | `1.5px` |  |
 
 ## Type: nine sizes, three weights
 

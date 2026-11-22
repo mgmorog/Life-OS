@@ -120,7 +120,7 @@ function reorderable(h,row,box,commit){
 function stepsEditor(D,{tick=true,word='step'}={}){const Word=word[0].toUpperCase()+word.slice(1);
   const wrap=el('div',{style:'display:grid;gap:var(--s2)'}),box=el('div',{class:'steps'});
   const newStep=()=>({id:uid('s'),t:'',d:false});
-  const count=el('div',{class:'eyebrow',style:'font-size:var(--fs-caption);padding:0 var(--s1)',hidden:true});
+  const count=el('div',{class:'eyebrow',style:'font-size:var(--fs-small);padding:0 var(--s1)',hidden:true});
   const recount=()=>{const t=D.steps.filter(x=>x.t.trim()),show=tick&&!(D.repeat&&D.repeat.type!=='never')&&t.length;count.hidden=!show;if(show)count.textContent=`${Word}s · ${t.filter(x=>x.d).length} of ${t.length} done`;};
   const draw=focus=>{box.innerHTML='';recount();const showTick=tick&&!(D.repeat&&D.repeat.type!=='never');D.steps.forEach((s,i)=>{
     const inp=el('input',{value:s.t,placeholder:Word,'aria-label':`${Word} ${i+1}`,enterkeyhint:'next',autocapitalize:'sentences'});
@@ -339,7 +339,7 @@ function alldaySheet(rec,seed={}){
   const inst=formSheet({title:isEdit?'Edit all-day item':'New all-day item',addLabel:isEdit?'Save':'Add',D,word:'all-day item',isEdit,canAdd:()=>!!D.title.trim(),commit:()=>commit(),
     build:(body,update)=>{
       const ctx=formCtx(()=>render());
-      const chip=()=>el('span',{class:'adchip',style:`--c:${colorHex(D.color)};height:28px;font-size:var(--fs-footnote)`,html:(D.icon?glyph(D.icon,14,2):'')+`<span>${esc(D.title.trim()||'Preview')}</span>`});
+      const chip=()=>el('span',{class:'adchip',style:`--c:${colorHex(D.color)};height:28px;font-size:var(--fs-small)`,html:(D.icon?glyph(D.icon,14,2):'')+`<span>${esc(D.title.trim()||'Preview')}</span>`});
       const refreshPv=()=>ctx.refreshLook&&ctx.refreshLook();
       const T=fieldTitle('f-ad-title','Title','Birthday, trip, day off…',D.title,v=>{D.title=v;update();refreshPv();},()=>{if(isTouch()){T.input.blur();return;}if(D.title.trim()&&commit()!==false)inst.close();});
       const when=el('div',{class:'group'}),det=el('div',{class:'group'});

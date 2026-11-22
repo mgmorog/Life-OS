@@ -67,7 +67,7 @@ const PWA={
       if(!p.supported()){g.append(Row({as:'div',style:''},el('span',{class:'grow'},el('b',{style:'font-weight:500'},'Notifications'),el('small',{},p.why()))));return;}
       const on=p.wanted();
       setToggle(ctx,g,null,'Reminders when the app is closed','Sent to this device',on,async v=>{if(v){const r=await p.enable();if(r!=='ok'){toast(r==='denied'?'Notifications are off for Life OS in your phone’s Settings.':'Couldn’t turn on notifications. Try again.');App.refresh();return;}this._sig.r=null;this.afterChange();toast('Reminders will reach you here');}else{await p.disable();toast('Notifications off on this device');}App.refresh();});
-      if(on)g.append(condRow(Row({style:'color:var(--action-text);font-weight:600',onclick:async()=>{const r=await p.test();toast(r?'Sent. It should arrive in a few seconds.':'Couldn’t send a test. Check your connection.');}},'Send a test notification')));
+      if(on)g.append(condRow(Row({style:'color:var(--action-text);font-weight:500',onclick:async()=>{const r=await p.test();toast(r?'Sent. It should arrive in a few seconds.':'Couldn’t send a test. Check your connection.');}},'Send a test notification')));
       {const gh=group('Evening habit nudge'),hn=s.habitNudge||{};setToggle(ctx,gh,null,'Evening habit nudge','Habits still open that day, once. Nothing if they’re all done.',hn.on!==false,v=>{setSettings({habitNudge:{...hn,on:v}});App.refresh();});
         if(hn.on!==false){const t=hn.time!=null?hn.time:1200,inp=pickControl('time',fromMinT(t),v=>{const m=toMinT(v);if(m!=null)setSettings({habitNudge:{...hn,time:m}});},{label:'Nudge time',clear:false,cls:'tinput'});gh.append(Row({as:'div'},el('span',{class:'grow'},el('b',{style:'font-weight:500'},'Send at')),inp));}}
       {const g3=group('Morning digest'),dg=s.digest||{};
@@ -84,7 +84,7 @@ const PWA={
       else{const url=this.feedUrl(s.icsToken);
         const markF=()=>setSettings({icsAdded:true,foundation:{...(get.settings().foundation||{}),calendar:true}});
         const added=s.icsAdded===true||(s.icsAdded==null&&!!s.icsToken);/* links made before v66 were already subscribed */
-        if(!added)g.append(Row({as:'a',href:url,style:'color:var(--action-text);font-weight:600;text-decoration:none',onclick:()=>setTimeout(markF,400)},'Subscribe in Calendar'));
+        if(!added)g.append(Row({as:'a',href:url,style:'color:var(--action-text);font-weight:500;text-decoration:none',onclick:()=>setTimeout(markF,400)},'Subscribe in Calendar'));
         else g.append(Row({as:'div',style:''},el('span',{class:'tick on',html:ic('check',14,3)}),el('span',{class:'grow'},el('b',{style:'font-weight:500'},'Added to Apple Calendar'),el('small',{},'Shows as “Life OS” in the Calendar app'))));
         g.append(setRow('Calendar link',null,null,e=>Menu([
           {label:'Copy the link',icon:'copy',onclick:async()=>{try{await navigator.clipboard.writeText(url.replace('webcal://','https://'));toast('Link copied');}catch(e){toast(url);}setSettings({foundation:{...(get.settings().foundation||{}),calendar:true}});}},
@@ -93,7 +93,7 @@ const PWA={
         page.append(Caption('Read-only. Changes in Life OS show up the next time your phone refreshes the calendar.',{as:'p',style:'padding:0 var(--s1)'}));}
     }else if(id==='data'){
       const g=group('Account');window.__acctG=g;g.append(Row({as:'div',style:''},el('span',{class:'grow'},el('b',{style:'font-weight:500'},'Signed in'),el('small',{},a.email()||''))),
-        Row({style:'color:var(--overdue);font-weight:600',onclick:()=>askConfirm({title:'Sign out?',body:'Your data stays in your account. Unsynced changes on this device are sent first.',yes:'Sign out',no:'Stay signed in',onYes:async()=>{flushAll();await new Promise(r=>setTimeout(r,900));try{localStorage.removeItem(CACHE);}catch(e){}await a.signOut();location.reload();}})},'Sign out'));
+        Row({style:'color:var(--overdue);font-weight:500',onclick:()=>askConfirm({title:'Sign out?',body:'Your data stays in your account. Unsynced changes on this device are sent first.',yes:'Sign out',no:'Stay signed in',onYes:async()=>{flushAll();await new Promise(r=>setTimeout(r,900));try{localStorage.removeItem(CACHE);}catch(e){}await a.signOut();location.reload();}})},'Sign out'));
     }
   },
 };

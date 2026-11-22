@@ -3799,3 +3799,15 @@ input[type=search]::-webkit-search-cancel-button{-webkit-appearance:none;display
 /* v272 · the chip row under the week strip scrolls sideways only, at one fixed height */
 .hdchips{height:var(--ctl);align-items:center;overflow-x:auto;overflow-y:hidden;touch-action:pan-x;overscroll-behavior:contain}
 .hdchips>*{max-height:var(--chip-h)}
+/* v273 · habit By month: rows with a meter, not a bar chart */
+.hmonths{padding:var(--s2) var(--s3) var(--s3)}
+.hmrows{display:grid;gap:var(--nudge)}
+.hmr{display:grid;grid-template-columns:minmax(84px,auto) 1fr 48px;align-items:center;gap:var(--s3);min-height:var(--ctl);padding:0 var(--s2);border-radius:var(--r-row);text-align:left}
+.hmr.on{background:var(--selected)}
+.hmn{font-size:var(--fs-row);color:var(--text)}
+.hmt{display:block;height:6px;border-radius:var(--r-full);background:var(--track-bg,var(--line-2));overflow:hidden}
+.hmt i{display:block;height:100%;border-radius:var(--r-full);background:var(--action)}
+.hmr:not(.on) .hmt i{background:var(--sage-400)}
+.hmp{justify-self:end;font-size:var(--fs-small);color:var(--text-muted)}
+.hmr.on .hmp{color:var(--accent-deep);font-weight:var(--fw-medium)}
+.hmcap{margin:var(--s2) var(--s2) 0;font-size:var(--fs-small)}

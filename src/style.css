@@ -1,5 +1,6 @@
 /* Layout: one phone column on a sage-tinted paper ground, bottom bar + capture button. From 900px a left rail replaces the bar and the column widens. Light only, white and green. */
 :root{
+  --ic-row:24px; --ic-tile:28px; --ic-pin:28px;
   /* Colour · paper, ink and lines */
   --on-dark:#FFFFFF; --on-dark-muted:rgba(255,255,255,.8); --on-dark-line:rgba(255,255,255,.18); --bg:#F4F4EF;
   --card:#FFFFFF; --ink:#1E2622; --ink-2:#5B6560; --ink-3:var(--ink-2); --line:#E5E7E1; --line-2:#EFF0EA;
@@ -3619,3 +3620,11 @@ b,strong{font-weight:600}
 .acirc .an{max-width:80px}
 .acirc .ic{color:var(--accent-deep)}
 .acirc:active .ic{transform:scale(var(--press))}
+/* v258 · bigger icons app-wide (tokens --ic-row, --ic-tile, --ic-pin) */
+.itile.md svg,.itile.sm svg,.dlic svg,.sfrow>svg:first-child,.sheet .frow>.fic svg{width:var(--ic-row);height:var(--ic-row)}
+.itile.md,.itile.sm{min-width:var(--ic-row)}
+.mti svg{width:var(--ic-tile);height:var(--ic-tile)}
+.modtile .mti{margin-bottom:var(--s1)}
+.ptile .ic{width:auto;height:auto}
+.ptile .ic svg{width:var(--ic-pin);height:var(--ic-pin)}
+.row>.ic svg{width:var(--ic-row)!important;height:var(--ic-row)!important}

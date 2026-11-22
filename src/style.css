@@ -3814,3 +3814,40 @@ input[type=search]::-webkit-search-cancel-button{-webkit-appearance:none;display
 /* v274 · planned sessions are softly shaded on the Plan a session calendar; the one you're moving gets a ring */
 .cal .cg button.mark:not(.on){background:var(--sage-200);color:var(--accent-deep);font-weight:var(--fw-medium)}
 .cal .cg button.ringd{box-shadow:inset 0 0 0 var(--ring-strong) var(--action)}
+/* v277 · week view: all-day pills, timed events with a colour bar, timed to-dos with a circle */
+.wkadrow{display:flex;flex-wrap:wrap;gap:var(--s1) var(--s2);margin-bottom:var(--nudge)}
+.wkadc{display:inline-flex;align-items:center;gap:var(--s2);max-width:100%;height:var(--size-28,28px);padding:0 var(--s3) 0 var(--s2);border-radius:var(--r-full);background:var(--chip);color:var(--text);font-size:var(--fs-small);font-weight:var(--fw-medium);position:relative}
+.wkadc::before{content:"";position:absolute;left:0;right:0;top:50%;height:var(--ctl);transform:translateY(-50%)}
+.wkadd{width:8px;height:8px;flex:none;border-radius:var(--r-full);background:var(--c)}
+.wkadi{display:grid;color:var(--accent-deep)}
+.wkitems .it{align-items:center}
+.wkitems .it time{min-width:72px}
+.wkitems .it .itb{flex:none;width:3px;height:1.1em;border-radius:var(--r-full);background:var(--c)}
+.wkitems .it .itc{flex:none;width:10px;height:10px;border-radius:var(--r-full);box-shadow:inset 0 0 0 var(--ring) var(--ink-3)}
+.wkitems .it.task .itt{color:var(--text-muted)}
+.wkitems .it.done .itt{text-decoration:line-through;color:var(--ink-3)}
+.wkitems .it.done .itc{background:var(--done);box-shadow:none}
+/* v278 · month and quarter share one day cell: the date, a quiet load dot under it, a ring for holidays, solid for the selected day */
+.qgrid .heat,.qgrid .heat.l1 .hn,.qgrid .heat.l2 .hn,.qgrid .heat.l3 .hn,.qgrid .heat.l4 .hn{background:none!important}
+.qgrid .heat{height:auto;color:var(--text);text-align:center;padding:var(--s1) 0 0;flex-direction:column;align-items:center}
+.qgrid .heat .hn{margin:0;width:var(--size-32);color:var(--text)}
+.qgrid .heat::after{content:'';display:block;height:var(--dot);margin-top:var(--hairline);font-size:var(--fs-micro);line-height:var(--lh-solid);color:var(--accent-mid)}
+.qgrid .heat.l1::after,.qgrid .heat.l2::after,.qgrid .heat.l3::after,.qgrid .heat.l4::after{content:'•'}
+.qgrid .heat.l4::after{color:var(--accent)}
+.qgrid .heat.past{opacity:var(--o-muted)}
+.qgrid .heat.today .hn{background:var(--action)!important;color:var(--on-accent);border-radius:var(--r-full);aspect-ratio:1}
+/* quarter month names sit one step below the page title */
+.m-head{font-size:var(--fs-title)}
+/* the trip already has its own line at the top, so the grids keep only the underline */
+#month-grid .tripname,.qgrid .tripname{display:none}
+/* holidays under a month: small pills with their icon */
+.qhol{display:flex;flex-wrap:wrap;gap:var(--s1) var(--s2);margin:var(--s3) 0 0}
+.qholc{display:inline-flex;align-items:center;gap:var(--s2);height:28px;padding:0 var(--s3) 0 var(--s2);border-radius:var(--r-full);background:var(--chip);font-size:var(--fs-small);color:var(--text);position:relative}
+.qholc::before{content:"";position:absolute;left:0;right:0;top:50%;height:var(--ctl);transform:translateY(-50%)}
+/* day panel: events carry a colour bar where to-dos have a tick */
+.dayline .dlbar{flex:none;width:3px;height:1.3em;border-radius:var(--r-full);background:var(--c)}
+.dayline .tm{flex:0 0 76px;min-width:0}
+.dayline.ev .tm{order:-1;margin-left:calc(var(--size-44) - var(--s3) * 2)}
+/* trip days keep a blue load dot in month and quarter */
+#month-grid .heat.tripday::after,.qgrid .heat.tripday::after{content:'•';color:var(--trip)}
+.dpad{margin-top:var(--s3)}

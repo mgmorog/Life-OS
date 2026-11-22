@@ -170,6 +170,8 @@ Components use the **Roles**; palettes in Settings change the accent colours und
 | `--seg-on-fg` | `var(--text)` | `#1E2622` |
 | `--prio-ring` | `var(--sage-300)` | `#B3CEC0` |
 | `--prio-fg` | `var(--accent-text)` | `#3E6252` |
+| `--prio-set-ring` | `var(--sage-400)` | `#9DBFAE` |
+| `--prio-set-w` | `var(--ring)` | `1.5px` |
 | `--field-h` | `var(--size-48)` | `48px` |
 | `--field-bg` | `var(--surface-raised)` | `#FFFFFF` |
 | `--field-radius` | `var(--r-row)` | `14px` |

@@ -47,6 +47,7 @@
   --fab-size:var(--size-52); --fab-shadow:0 4px 14px var(--focus-ring);
   --chip-h:var(--size-36); --seg-track:var(--chip-bg); --seg-fg:var(--text-muted); --seg-on-fg:var(--text);
   --prio-ring:var(--sage-300); --prio-fg:var(--accent-text);
+  --prio-set-ring:var(--sage-400); --prio-set-w:var(--ring); /* v270 trial: lighter, thinner set rings · to revert: var(--action) and var(--ring-strong) */
   --field-h:var(--size-48); --field-bg:var(--surface-raised); --field-radius:var(--r-row); --field-edge:var(--card-edge); --placeholder:var(--ink-faint);
   --tab-on-bg:var(--selected); --back-fg:var(--text-muted);
   --bar-bg:color-mix(in srgb,var(--surface) 82%,transparent); --bar-edge:var(--card-edge);
@@ -3790,3 +3791,7 @@ input[type=search]::-webkit-search-cancel-button{-webkit-appearance:none;display
 .holnote small{color:var(--text-muted);font-size:var(--fs-small)}
 .holnote .btn{align-self:center}
 .sthab .linkbtn.small{min-height:var(--size-40)}
+
+/* v270 · a set priority wears a lighter, thinner ring; done keeps its filled circle */
+.pring.pr-set{border-width:var(--prio-set-w);border-color:var(--prio-set-ring);color:var(--prio-fg)}
+@media(prefers-contrast:more){:root{--prio-set-ring:var(--action);--prio-set-w:var(--ring-strong)}}

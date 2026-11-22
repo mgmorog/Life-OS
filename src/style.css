@@ -3779,7 +3779,8 @@ input[type=search]::-webkit-search-cancel-button{-webkit-appearance:none;display
 .heat.hol .hn{aspect-ratio:1;border-radius:var(--r-full);box-shadow:inset 0 0 0 var(--hol-ring) var(--hol)}
 .heat.hol.sel .hn,.heat.hol.today .hn{box-shadow:none}
 .qhol{display:flex;align-items:center;gap:var(--s2);margin:var(--s2) 0 0;font-size:var(--fs-small);color:var(--text-muted)}
-.hdchip.hol{gap:var(--s2)}
+.hdchip.hol{gap:var(--s2);padding-left:var(--s3)}
+.hdchip.hol .holi{display:grid;color:var(--accent-deep)}
 .upwork.hol{color:var(--accent-deep)}
 .sthtag{display:inline-flex;align-items:center;height:var(--size-24);margin-left:var(--s2);padding:0 var(--s2);border-radius:var(--r-full);background:var(--selected);color:var(--accent-deep);font-size:var(--fs-micro);font-weight:var(--fw-medium);vertical-align:middle}
 .holnote{display:flex;align-items:flex-start;gap:var(--s3);padding:var(--s3) var(--s4);border-radius:var(--card-radius);background:var(--selected)}

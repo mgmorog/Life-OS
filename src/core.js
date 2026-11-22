@@ -801,3 +801,6 @@ function nextFreeSlot(dk,dur=30){try{if(typeof Holidays!=='undefined'&&Holidays.
 const tok=(n,fb='')=>{try{return getComputedStyle(document.documentElement).getPropertyValue(n).trim()||fb;}catch(e){return fb;}};
 /* v286 · chip rows that run past the edge fade out on the right, so you know there's more */
 (()=>{let t=0;const mark=()=>{document.querySelectorAll('.fchips,.ibfilters,.ibstart').forEach(n=>{n.classList.remove('ovf');n.classList.toggle('ovf',n.scrollWidth>n.clientWidth+2);});};const go=()=>{clearTimeout(t);t=setTimeout(mark,60);};try{new MutationObserver(go).observe(document.documentElement,{childList:true,subtree:true});addEventListener('resize',go);}catch(e){}})();
+
+/* v290 · life-area choices carry their icons */
+function areaOpts(){return [{value:'',label:'None',icon:'leaf'},...(get.settings().areas||AREAS).map(a=>({value:a,label:a,icon:areaIcon(a)}))];}

@@ -2,7 +2,7 @@
 const TOPS=['today','studio','calendar','more'];
 const App={
   state:{view:'today',sel:todayK(),params:{},loading:true,_fresh:true},
-  go(view,params={}){const S=this.state;if(view!==S.view)S.trashSel=null;try{const tt=$('#toast');if(tt&&tt.classList.contains('on')&&Date.now()-toastAt>1200)tt.classList.remove('on');}catch(e){}if(S.view==='today'){const g=$('#grid');if(g)S._gridTop=g.scrollTop;}
+  go(view,params={}){const S=this.state;if(view!==S.view){S.trashSel=null;S.pdrop=null;}try{const tt=$('#toast');if(tt&&tt.classList.contains('on')&&Date.now()-toastAt>1200)tt.classList.remove('on');}catch(e){}if(S.view==='today'){const g=$('#grid');if(g)S._gridTop=g.scrollTop;}
     const y=scrollY;S.scrolls=S.scrolls||{};S.scrolls[S.view]=y;
     if(view==='today')S._fresh=S._fresh||S.view!=='today';
     /* v232 · remember the row this page grows out of */
@@ -45,7 +45,7 @@ const App={
     animateFills(root,S);
     listPlay(root,listBefore);
     rollCounts(root,`${S.view}|${S.sel}`);
-    swipeArrive();settleBlock();todayHeaderScroll();meterPops(root,`${S.view}|${S.sel}`);try{focusTopBar();}catch(e){}if(S._qaFocus){const id=S._qaFocus;S._qaFocus=null;setTimeout(()=>{const n=document.getElementById(id);if(n&&document.activeElement!==n)n.focus({preventScroll:true});},30);}studioPop();if(opened){countUp(root);chartsIn(root);}milestones(root);skeletonMelt(skelG,root);chipChecks(root);segFill(root);studioCascade();arcPlay();weekBandGlide();commitSweep();streakRoll(root);emptyDraw(root);dotRun(root);ideaMorph(root);stepIn(root);panelIn(root);searchGrow(root);wkRefocus(root);hcFill(root);msLine(root);blkFlip(blkBefore);dateDropIn(root);heldPlay(root);t3Roll(root);pinDropIn(root);
+    swipeArrive();settleBlock();todayHeaderScroll();meterPops(root,`${S.view}|${S.sel}`);try{focusTopBar();}catch(e){}if(S._qaFocus){const id=S._qaFocus;S._qaFocus=null;setTimeout(()=>{const n=document.getElementById(id);if(n&&document.activeElement!==n)n.focus({preventScroll:true});},30);}studioPop();if(opened){countUp(root);chartsIn(root);}milestones(root);skeletonMelt(skelG,root);chipChecks(root);segFill(root);studioCascade();arcPlay();weekBandGlide();commitSweep();streakRoll(root);emptyDraw(root);dotRun(root);ideaMorph(root);stepIn(root);panelIn(root);searchGrow(root);wkRefocus(root);hcFill(root);msLine(root);blkFlip(blkBefore);dateDropIn(root);try{periodDropIn(root);}catch(e){}heldPlay(root);t3Roll(root);pinDropIn(root);
     if(depthGhost){depthSlide(depthGhost,root.firstElementChild,depthDir);S.dir=null;S.entering=false;}
     if(S.entering){const pg=root.firstElementChild;if(pg&&S._painted&&(S.view!=='today'||S.dir==='pop'||S.dir==='swiped'))if(S._noAnim){S._noAnim=false;}else if(S.dir==='push'&&S._zoomFrom&&pg&&S._painted){rowZoomIn(pg,S._zoomFrom);(S._zoomStack=S._zoomStack||[]).push({view:S.lastView,label:S._zoomFrom.label});S._zoomFrom=null;}else if(!(S.dir==='swiped'&&S._under))pg.classList.add(S.dir==='push'?'viewin-push':S.dir==='pop'?'viewin-pop':S.dir==='swiped'?'viewin-swiped':'viewin');S._under=false;S.dir=null;S.entering=false;}
     S.lastView=S.view;

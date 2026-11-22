@@ -25,11 +25,12 @@ function viewCalendar(root){
   const pill=()=>!current?Chip('Today',{variant:'status',cls:'pill-today',onclick:calNow}):null;
   const page=el('div',{class:'page'});
   page.append(el('header',{class:'phead cal-h',id:'cal-h'},
-    el('div',{class:'cal-title'},el('button',{class:'tbtn'+(mode==='week'?' mid':''),'aria-label':`Choose ${mode}`,onclick:e=>pickPeriod(e.currentTarget.getBoundingClientRect()),html:`<span>${esc(title)}</span>`+ic('chevd',IC.md)}),arrows()),
+    el('div',{class:'cal-title'},el('button',{class:'tbtn ptitle'+(mode==='week'?' mid':'')+(App.state.pdrop==='cal'?' open':''),'aria-label':`Choose ${mode}`,'aria-expanded':App.state.pdrop==='cal'?'true':'false',onclick:()=>periodDrop('cal'),html:`<span>${esc(title)}</span>`+ic('chevd',IC.md)}),arrows()),
     eyebrow||!current?el('div',{class:'cal-eyebrow hq'},eyebrow?el('span',{class:'hquiet'},eyebrow):el('span'),pill()):null,
+    App.state.pdrop==='cal'?periodDropEl(mode,C.anchor,key=>{C.anchor=key;if(mode==='month')C.sel=isCurrentFor('month',fromK(key))?todayK():key;if(mode==='week'){C.sel=key;C.weekOpen=null;}periodDrop('cal',false);setTimeout(calCommit,MOT.base);}):null,
     el('div',{style:'margin-top:var(--s2)'},modeSeg())));
   const compact=el('div',{class:'cal-compact',id:'cal-compact'},el('div',{class:'cc-in'},
-    el('div',{class:'cal-title',style:'min-height:var(--size-44)'},el('button',{class:'tbtn cc-title','aria-label':`Choose ${mode}`,onclick:e=>pickPeriod(e.currentTarget.getBoundingClientRect()),html:`<span>${esc(miniTitle)}</span>`+ic('chevd',IC.sm)}),el('span',{style:'display:flex;align-items:center;gap:var(--nudge)'},pill(),arrows())),
+    el('div',{class:'cal-title',style:'min-height:var(--size-44)'},el('button',{class:'tbtn cc-title ptitle','aria-label':`Choose ${mode}`,onclick:()=>{scrollTo({top:0,behavior:motionOK()?'smooth':'auto'});if(App.state.pdrop!=='cal')periodDrop('cal',true);},html:`<span>${esc(miniTitle)}</span>`+ic('chevd',IC.sm)}),el('span',{style:'display:flex;align-items:center;gap:var(--nudge)'},pill(),arrows())),
     modeSeg(),mode==='month'?el('div',{class:'wd-row'},wdLabels().map(l=>el('span',{},l))):null));
   const body=el('div',{class:'page '+(C.anim||''),id:'cal-body'});C.anim=null;
   const fk=mode==='quarter'?`q-${y}-${q}`:mode==='month'?`m-${monthKey(a)}`:`w-${weekKey(a)}`;

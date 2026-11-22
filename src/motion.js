@@ -782,3 +782,45 @@ document.addEventListener('click',e=>{const t=e.target.closest&&e.target.closest
   /* mutation callbacks run right after the redraw, before the browser paints it */
   const mo=new MutationObserver(()=>{if(!moChanged(S))return;mo.disconnect();moApply(S);});
   mo.observe(document.body,{childList:true,subtree:true,characterData:true});setTimeout(()=>mo.disconnect(),1200);},true);
+/* Studio and Calendar: tapping the title drops a picker for the week, month or quarter, the same way Today's date does */
+function periodDropEl(mode,anchorK,pick){
+  const tK=todayK(),t0=today(),a=fromK(anchorK);let vy=a.getFullYear(),vm=a.getMonth();
+  const box=el('div',{class:'ddin dp pdp'}),yr=el('div',{class:'dp-yr'}),body=el('div',{}),quick=el('div',{class:'dp-quick'});
+  const wk0=weekKey(a),q0=Math.floor(a.getMonth()/3);
+  const nav=(lab,fn)=>el('div',{class:'dp-nav'},el('button',{class:'dp-arw','aria-label':'Previous '+lab,onclick:()=>fn(-1),html:ic('chevl',IC.md)}),el('button',{class:'dp-arw','aria-label':'Next '+lab,onclick:()=>fn(1),html:ic('chevr',IC.md)}));
+  const draw=()=>{
+    if(mode==='week'){
+      yr.textContent=`${MONL[vm]} ${vy}`;
+      const first=new Date(vy,vm,1),start=weekStartOf(first),days=new Date(vy,vm+1,0).getDate();
+      const weeks=Math.ceil((Math.round((first-start)/864e5)+days)/7),rows=[];
+      const head=el('div',{class:'pdp-dow','aria-hidden':'true'},...Array.from({length:7},(_,i)=>el('span',{},DOW[addD(start,i).getDay()].slice(0,1))));
+      for(let w=0;w<weeks;w++){const ws=addD(start,w*7),wk=k(ws),cur=weekKey(t0)===wk;
+        rows.push(el('button',{class:'pdp-week'+(wk===wk0?' sel':'')+(cur?' cur':''),'aria-label':`Week of ${MONL[ws.getMonth()]} ${ws.getDate()}`,'aria-pressed':wk===wk0?'true':'false',onclick:()=>pick(wk)},
+          ...Array.from({length:7},(_,i)=>{const d=addD(ws,i);return el('span',{class:'pdp-d'+(d.getMonth()!==vm?' out':'')+(k(d)===tK?' today':'')},String(d.getDate()));})));}
+      body.replaceChildren(head,el('div',{class:'pdp-weeks'},...rows));
+      quick.replaceChildren(...[['This week',weekKey(t0)],['Next week',weekKey(addD(t0,7))],['In 2 weeks',weekKey(addD(t0,14))]].map(([l,key])=>el('button',{class:'dp-q'+(key===wk0?' on':''),onclick:()=>pick(key)},l)));
+    }else if(mode==='month'){
+      yr.textContent=String(vy);
+      body.replaceChildren(el('div',{class:'pdp-grid m'},...MONL.map((n,i)=>{const on=vy===a.getFullYear()&&i===a.getMonth(),cur=vy===t0.getFullYear()&&i===t0.getMonth();return el('button',{class:'pdp-c'+(on?' sel':'')+(cur?' cur':''),'aria-pressed':on?'true':'false',onclick:()=>pick(k(new Date(vy,i,1)))},n.slice(0,3));})));
+      quick.replaceChildren(...[['This month',new Date(t0.getFullYear(),t0.getMonth(),1)],['Next month',new Date(t0.getFullYear(),t0.getMonth()+1,1)]].map(([l,d])=>el('button',{class:'dp-q'+(monthKey(d)===monthKey(a)?' on':''),onclick:()=>pick(k(d))},l)));
+    }else{
+      yr.textContent=String(vy);
+      body.replaceChildren(el('div',{class:'pdp-grid q'},...[0,1,2,3].map(q=>{const on=vy===a.getFullYear()&&q===q0,cur=vy===t0.getFullYear()&&q===Math.floor(t0.getMonth()/3);return el('button',{class:'pdp-c'+(on?' sel':'')+(cur?' cur':''),'aria-pressed':on?'true':'false',onclick:()=>pick(k(new Date(vy,q*3,1)))},el('b',{},`Q${q+1}`),el('small',{},`${MON[q*3]} – ${MON[q*3+2]}`));})));
+      const tq=Math.floor(t0.getMonth()/3);
+      quick.replaceChildren(...[['This quarter',new Date(t0.getFullYear(),tq*3,1)],['Next quarter',new Date(t0.getFullYear(),tq*3+3,1)]].map(([l,d])=>el('button',{class:'dp-q'+(quarterKey(d)===quarterKey(a)?' on':''),onclick:()=>pick(k(d))},l)));
+    }
+  };
+  const step=n=>{if(mode==='week'){const d=new Date(vy,vm+n,1);vy=d.getFullYear();vm=d.getMonth();}else vy+=n;draw();};
+  draw();
+  box.append(el('div',{class:'dp-top'},yr,nav(mode==='week'?'month':'year',step)),body,quick);
+  return el('div',{class:'ddrop pdrop'},box);
+}
+/* open with the same drop-in as Today; the page re-renders with the picker in place */
+function periodDropIn(root){const d=root.querySelector('.pdrop');if(!d||!App.state._pdIn)return;App.state._pdIn=false;if(!motionOK())return;const h=d.offsetHeight;
+  d.animate([{height:'0px',opacity:0},{height:h+'px',opacity:1}],{duration:MOT.slow,easing:SOFT});d.querySelectorAll('.ddin>*').forEach((n,i)=>n.animate([{opacity:0,transform:'translateY(-8px)'},{opacity:1,transform:'none'}],{duration:MOT.base,delay:60+i*50,easing:SOFT,fill:'backwards'}));}
+function periodDrop(key,want){const S=App.state,open=want===undefined?S.pdrop!==key:want;
+  if(open){S.pdrop=key;S._pdIn=true;App.refresh();return;}
+  const d=$('.pdrop'),fin=()=>{S.pdrop=null;App.refresh();};
+  if(!d||!motionOK()){fin();return;}const h=d.offsetHeight;d.style.overflow='hidden';
+  d.animate([{height:h+'px',opacity:1,transform:'none'},{height:'0px',opacity:0,transform:'scale(.98)'}],{duration:MOT.base,easing:EASE,fill:'forwards'}).onfinish=fin;}
+document.addEventListener('pointerdown',e=>{if(!App.state.pdrop)return;if(e.target.closest('.pdrop,.ptitle'))return;periodDrop(App.state.pdrop,false);},true);

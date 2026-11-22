@@ -3734,3 +3734,26 @@ input[type=search]::-webkit-search-cancel-button{-webkit-appearance:none;display
 .fhab .fhabt .hcnt{padding-left:0}
 /* "Show n more" reads as a link everywhere */
 .tfoot>.linkbtn:first-child,.tfoot>button:first-child{color:var(--action-text);font-weight:var(--fw-medium)}
+/* Studio and Calendar: the period picker under the title */
+.ptitle svg{transition:transform var(--dur-base) var(--ease)}
+.ptitle.open svg{transform:rotate(180deg)}
+.pgtitle .ptitle{font:inherit;color:inherit;display:inline-flex;align-items:center;gap:var(--s2);padding:0;background:none;text-align:left}
+.pgtitle .ptitle svg{color:var(--text-muted);flex:none}
+.pdrop{margin-top:var(--s3)}
+.pdp-dow{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;font-size:var(--fs-small);color:var(--text-muted);margin:var(--s3) 0 var(--s1)}
+.pdp-weeks{display:flex;flex-direction:column;gap:var(--s1)}
+.pdp-week{display:grid;grid-template-columns:repeat(7,1fr);align-items:center;min-height:var(--ctl);border-radius:var(--r-full);font-size:var(--fs-row);color:var(--text);transition:background var(--dur-fast) var(--ease)}
+.pdp-week:active{background:var(--hover)}
+.pdp-week.cur{background:var(--accent-wash)}
+.pdp-week.sel{background:var(--accent);color:var(--on-accent)}
+.pdp-week .pdp-d.out{opacity:var(--o-faint)}
+.pdp-week:not(.sel) .pdp-d.today{color:var(--accent-text);font-weight:var(--fw-strong)}
+.pdp-grid{display:grid;gap:var(--s2);margin-top:var(--s3)}
+.pdp-grid.m{grid-template-columns:repeat(4,1fr)}
+.pdp-grid.q{grid-template-columns:repeat(2,1fr)}
+.pdp-c{min-height:var(--ctl);border-radius:var(--r-row);background:var(--chip-bg);color:var(--text);font-size:var(--fs-row);font-weight:var(--fw-medium);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:var(--s2)}
+.pdp-grid.q .pdp-c{min-height:var(--size-56)}
+.pdp-c small{font-size:var(--fs-small);color:var(--text-muted);font-weight:var(--fw-regular)}
+.pdp-c.cur{box-shadow:inset 0 0 0 var(--ring) var(--sage-300)}
+.pdp-c.sel{background:var(--accent);color:var(--on-accent);box-shadow:none}
+.pdp-c.sel small{color:var(--on-dark-muted)}

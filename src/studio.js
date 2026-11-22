@@ -122,9 +122,11 @@ function viewStudio(root){
   const page=el('div',{class:'page studio2'});
   const go=d=>{st.anchor=P.step(d);st.selCard=null;st.ghosts=[];st.open=null;App.refresh();};
   const menu=e=>Menu([st.mode==='w'&&!P.slots.every(x=>x.past)?{label:'Copy last week’s plan',icon:'rep',onclick:()=>copyLastWeek(P)}:null,{label:'New task, habit or goal',icon:'plus',onclick:()=>newCardSheet(st,P)},committed?{label:'Replan',icon:'edit',onclick:()=>{planRec.committed=false;put(planRec);}}:null].filter(Boolean),{at:e});
-  page.append(PageHeader({title:P.head,titleClass:'serif',titleStyle:'font-size:34px;line-height:1.05;letter-spacing:-.01em;margin:0',rowClass:'cal-title',
+  const MODEN={w:'week',m:'month',q:'quarter'},pdOn=App.state.pdrop==='studio';
+  page.append(PageHeader({title:el('button',{class:'tbtn ptitle'+(pdOn?' open':''),'aria-label':`Choose ${MODEN[st.mode]}`,'aria-expanded':pdOn?'true':'false',onclick:()=>periodDrop('studio'),html:`<span>${esc(P.head)}</span>`+ic('chevd',IC.md)}),titleClass:'serif',titleStyle:'font-size:34px;line-height:1.05;letter-spacing:-.01em;margin:0',rowClass:'cal-title',
     controls:el('div',{class:'arrows'},IconButton('Previous',{cls:'green',html:ic('chevl',IC.md),onclick:()=>go(-1)}),IconButton('Next',{cls:'green',html:ic('chevr',IC.md),onclick:()=>go(1)}),moreB('Studio options',menu)),
     after:[el('span',{class:'hquiet'},P.eyebrow),
+    pdOn?periodDropEl(MODEN[st.mode],/* the period on screen, which can differ from today (Studio opens on next week late on Sundays) */(()=>{const [m,rest]=[P.key[0],P.key.slice(2)];if(m==='w')return rest;if(m==='m')return rest+'-01';const [y,q]=rest.split('-Q');return k(new Date(+y,(+q-1)*3,1));})(),key=>{periodDrop('studio',false);setTimeout(()=>{st.anchor=key;st.selCard=null;st.ghosts=[];st.open=null;App.refresh();},MOT.base);}):null,
     el('div',{style:'margin-top:var(--s3)'},seg([['w','Week'],['m','Month'],['q','Quarter']],st.mode,v=>{st.mode=v;st.anchor=null;st.selCard=null;st.ghosts=[];st.open=null;App.refresh();}))]}));
   const fk=st.mode==='q'?P.key.replace(/^q-(\d+)-Q(\d)/,(m,y,q)=>`q-${y}-${q-1}`):P.key;
   page.append(focusChip(fk,st.mode==='q'?`${P.head.split(' ')[0]} focus`:st.mode==='m'?`${P.head} focus`:'Week focus',st.mode==='q'?'quarter':st.mode==='m'?'month':'week',st.mode==='m'?[`${P.key.slice(2)}-01`,k(new Date(+P.key.slice(2,6),+P.key.slice(7),0))]:[P.slots[0].from,P.slots[P.slots.length-1].to]));

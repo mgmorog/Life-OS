@@ -4049,3 +4049,26 @@ textarea.big.gstep{font-size:var(--fs-row);font-family:inherit}
 .ohtap{display:grid;gap:3px;text-align:left;width:100%;min-width:0}
 .ohbody{display:grid;gap:3px;min-width:0}
 .ibhome.ico{display:inline-flex;align-items:center;white-space:nowrap;flex-wrap:nowrap}
+/* v287 · Inbox grouped, tidy folded, add box stays put; even dividers */
+.list>.trow-wrap::before{right:0}
+.ibcapw{display:grid;gap:var(--s2)}
+
+.ibtidy{padding:0 var(--s4)}
+.ibtidyh{display:flex;align-items:center;gap:var(--s3);width:100%;min-height:var(--size-48);text-align:left;font-size:var(--fs-row);font-weight:var(--fw-medium);margin:0}
+.ibtidyic{display:grid;color:var(--action-text)}
+.ibtn{min-width:22px;height:22px;padding:0 6px;border-radius:var(--r-full);background:var(--selected);color:var(--action-text);font-size:var(--fs-small);display:grid;place-items:center}
+.ibtidy.open{padding-bottom:var(--s1)}
+.ibcard{padding-block:var(--s1)}
+.ibgh{display:flex;align-items:center;gap:var(--s2);padding-right:var(--s3)}
+.ibgf{display:flex;align-items:center;gap:var(--s2);flex:1;min-width:0;min-height:var(--ctl);text-align:left;color:inherit}
+.ibgf b{font-weight:var(--fw-medium);color:var(--text);font-size:var(--fs-label)}
+.ibgn{color:var(--text-muted);font-size:var(--fs-small)}
+.ibgf .hachev{margin-left:var(--s1)}
+.ibgall{flex:none}
+.ibgh+*::before,.ibolds+*::before{display:none!important}
+.list>.ibgh:not(:first-child){border-top:var(--hairline) solid var(--line-2);margin-top:var(--s1)}
+.ibolds{padding:var(--s2) var(--pad) var(--s1);font-size:var(--fs-small);color:var(--text-muted)}
+.ibhome.ico{gap:2px;padding-inline:var(--s3) var(--s2)}
+.hwdots i.fut{background:var(--line-2);box-shadow:none;opacity:.55}
+.list>.trow-wrap{border-bottom:0}
+.tstick{top:calc(env(safe-area-inset-top,0px) + var(--ctl-lg))}

@@ -153,7 +153,7 @@ function hdChips(dk,isToday){const out=[];
   if(isToday){const nowM=nowMin(),e=dayItems(dk).timed.filter(x=>!x.done&&x.kind!=='habit'&&x.time+(x.dur||30)>nowM).sort((a,b)=>a.time-b.time)[0];
     if(e){const during=e.time<=nowM;out.push(el('button',{class:'hdchip next','aria-label':`${during?'Now':'Next'}: ${e.title} at ${fmtT(e.time)}`,onclick:()=>openItem(e,dk)},el('b',{},during?'Now':`Next ${fmtT(e.time)}`),el('span',{class:'clip'},e.title)));}
     const f=freeLine(dk);if(f){const m=f.textContent.match(/^(.*?) free/);out.push(el('span',{class:'hdchip',title:'Free today, outside work and meetings'},`${m?m[1]:''} free`));}}
-  const{allDay}=dayItems(dk);allDay.filter(x=>!(x.rec&&x.rec.tripId)).forEach(x=>{const b=el('button',{class:'hdchip'},el('span',{class:'clip'},x.title));b.onclick=()=>openItem(x,dk);onPress(b,(mx,my)=>itemMenu(x,dk,mx,my));out.push(b);});
+  const{allDay}=dayItems(dk);allDay.filter(x=>!(x.rec&&x.rec.tripId)).forEach(x=>{const b=x.holiday?el('button',{class:'hdchip hol'},el('span',{class:'holdot','aria-hidden':'true'}),el('span',{class:'clip'},Holidays.name(dk)+(x.dayoff?' · day off':''))):el('button',{class:'hdchip'},el('span',{class:'clip'},x.title));b.onclick=()=>openItem(x,dk);onPress(b,(mx,my)=>itemMenu(x,dk,mx,my));out.push(b);});
   return out.length?el('div',{class:'hdchips'},...out):null;}
 function nextLine(dk){const nowM=nowMin(),t=dayItems(dk).timed.filter(e=>!e.done&&e.kind!=='habit'&&e.time+(e.dur||30)>nowM).sort((a,b)=>a.time-b.time),e=t[0];if(!e)return null;
   const during=e.time<=nowM,end=e.time+(e.dur||30);
@@ -166,7 +166,7 @@ function weekStrip(dk){
   const sel=fromK(dk),start=weekStartOf(sel),tk=todayK();
   const strip=el('div',{class:'weekstrip',id:'week-strip','aria-label':'Choose a day'});
   [-7,0,7].forEach(off=>{const pg=el('div',{class:'wkpage'});for(let i=0;i<7;i++){const x=addD(start,off+i),xk=k(x),any=sigDay(xk);
-    pg.append(el('button',{class:(xk===dk?'sel ':'')+(xk===tk?'today ':'')+(any?'has':''),'aria-label':shortDay(xk),'aria-current':xk===dk?'date':null,onclick:()=>{if(strip._moved)return;goDay(xk);}},el('span',{class:'dl'},DOW[x.getDay()][0]),el('span',{class:'dn'},String(x.getDate()))));}strip.append(pg);});
+    const hn=typeof Holidays!=='undefined'&&Holidays.name(xk);pg.append(el('button',{class:(xk===dk?'sel ':'')+(xk===tk?'today ':'')+(any?'has ':'')+(hn?'hol':''),'aria-label':shortDay(xk)+(hn?`, ${hn}`:''),'aria-current':xk===dk?'date':null,onclick:()=>{if(strip._moved)return;goDay(xk);}},el('span',{class:'dl'},DOW[x.getDay()][0]),el('span',{class:'dn'},String(x.getDate()))));}strip.append(pg);});
   requestAnimationFrame(()=>{strip.scrollLeft=strip.clientWidth;strip._ready=true;});
   let t;strip.addEventListener('scroll',()=>{if(!strip._ready||strip._drag)return;clearTimeout(t);t=setTimeout(()=>{if(!strip.isConnected)return;const w=strip.clientWidth;if(!w)return;const p=Math.round(strip.scrollLeft/w);if((p!==0&&p!==2)||Math.abs(strip.scrollLeft-p*w)>2)return;goDay(addK(App.state.sel,p===0?-7:7));},110);},{passive:true});
   // mouse: drag the strip the way a finger does
@@ -363,7 +363,8 @@ function dayCard(dk){
   const cu=el('section',{class:'card upcard'+fu},el('div',{class:'bl'},el('span',{class:'lbl'},'Schedule')));
   const rows=el('div',{class:'uplist'});
   /* work: one quiet line for the day's shifts, or a nudge to add flexible hours */
-  {const sh=shiftsOn(dk),fl=isToday?flexDue():[];if(sh.length)rows.append(el('div',{class:'upwork'},el('span',{style:'display:grid',html:glyph('brief',15,2)}),el('span',{},`At ${sh.length===1?(sh[0].job==='Work'?'work':sh[0].job):'work'} · `+sh.map(x=>x.carry?`until ${fmtT(x.end)}`:`${fmtT(x.start)}–${fmtT(x.end)}`).join(', '))));
+  {const sh=shiftsOn(dk),fl=isToday?flexDue():[];if(sh.holiday&&sh.had)rows.append(el('div',{class:'upwork hol'},el('span',{style:'display:grid',html:glyph('brief',15,2)}),el('span',{},`${sh.holiday.replace(/ \(observed\)$/,'')} · day off`)));
+   if(sh.length)rows.append(el('div',{class:'upwork'},el('span',{style:'display:grid',html:glyph('brief',15,2)}),el('span',{},`At ${sh.length===1?(sh[0].job==='Work'?'work':sh[0].job):'work'} · `+sh.map(x=>x.carry?`until ${fmtT(x.end)}`:`${fmtT(x.start)}–${fmtT(x.end)}`).join(', '))));
    fl.forEach(f=>rows.append(el('button',{class:'upwork due',onclick:()=>flexWeekSheet(f.job.id,f.from)},el('span',{style:'display:grid',html:ic('plus',IC.sm)}),el('span',{},`Add your ${f.job.name&&f.job.name!=='Work'?f.job.name+' ':'work '}hours for ${mdS(fromK(f.from))}–${mdS(fromK(f.to))}`))));}
   const pastE=isToday?sched.filter(e=>e.kind!=='task'&&e.time+(e.dur||30)<=nowM):[],upN=Math.min(upcoming.length,Math.max(3,6-Math.min(pastE.length,3))),showE=[...pastE.slice(-(6-upN)),...upcoming.slice(0,upN)].slice(0,6);
   showE.forEach(e=>{const end=e.time+(e.dur||30),gone=isToday&&end<=nowM,during=isToday&&!gone&&e.time<=nowM,isNext=e===upcoming[0];

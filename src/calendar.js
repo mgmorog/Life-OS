@@ -78,9 +78,9 @@ function dayMenu(dk,x,y){openMenu(x,y,[{label:'Open in Today',icon:'sun',onclick
 function heatCell(d,{month,tk,C,onTap,bars=false,showSel=true}){
   const dk=k(d),out=month!=null&&d.getMonth()!==month,past=dk<tk;
   if(out)return el('span',{class:'heat out','aria-hidden':'true'});
-  const L=dayLoad(dk),isSel=showSel&&C.sel===dk;
+  const L=dayLoad(dk),isSel=showSel&&C.sel===dk,hn=typeof Holidays!=='undefined'?Holidays.name(dk):null;
   const unit=get.settings().capacity?.mode==='hours'?'hours':'items';
-  const btn=el('button',{class:'heat '+(L.level?'l'+L.level+' ':'')+(past?'past ':'')+(dk===tk?'today ':'')+(isSel?'sel':''),'data-slot':dk,'aria-label':`${shortDay(dk)}, ${Math.round(L.value*10)/10} ${unit}`,'aria-current':dk===tk?'date':null,'aria-pressed':showSel?String(isSel):null,onclick:()=>onTap(dk,false)},el('span',{class:'hn'},String(d.getDate())));
+  const btn=el('button',{class:'heat '+(hn?'hol ':'')+(L.level?'l'+L.level+' ':'')+(past?'past ':'')+(dk===tk?'today ':'')+(isSel?'sel':''),'data-slot':dk,'aria-label':`${shortDay(dk)}${hn?`, ${hn}`:''}, ${Math.round(L.value*10)/10} ${unit}`,'aria-current':dk===tk?'date':null,'aria-pressed':showSel?String(isSel):null,onclick:()=>onTap(dk,false)},el('span',{class:'hn'},String(d.getDate())));
   const adB=L.allDay.filter(e=>!(e.rec&&e.rec.tripId));if(bars&&adB.length)btn.append(el('span',{class:'adbars'},adB.slice(0,2).map(e=>el('i',{style:`--c:${e.color}`}))));
   onPress(btn,(x,y)=>dayPeek(dk,btn));
   return btn;
@@ -100,7 +100,7 @@ function quarterBody(body,y,months,C){
     sec.append(el('div',{class:'wd-row',style:'margin:0 0 var(--s2)'},wdLabels().map(l=>el('span',{},l))));firstShown=false;
     const grid=el('div',{class:'qgrid',style:'display:grid;gap:var(--s2)'});
     weeks.forEach(w=>{const row=el('div',{class:'heat-row'+(k(w[0])===curW?' curwk':'')});w.forEach(d=>row.append(heatCell(d,{month:m,tk,C,showSel:false,onTap:()=>{C.mode='week';C.anchor=k(d);C.sel=k(d);C.weekOpen=k(d);calCommit();}})));grid.append(row);{const tl=tripBand(row,w);if(tl)grid.append(tl);}});
-    sec.append(grid);body.append(sec);
+    sec.append(grid);{const hs=typeof Holidays!=='undefined'?Holidays.recs(y).filter(r=>fromK(r.dk).getMonth()===m):[];if(hs.length)sec.append(el('p',{class:'qhol'},el('span',{class:'holdot','aria-hidden':'true'}),hs.map(r=>`${r.n}, ${mdS(fromK(r.off))}${r.off!==r.dk?' (observed)':''}`).join(' · ')));}body.append(sec);
   });
 }
 function monthBody(body,a,C){

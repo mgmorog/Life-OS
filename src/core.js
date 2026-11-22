@@ -461,7 +461,7 @@ const stepDone=(r,st,dk)=>r.repeat&&r.repeat.type!=='never'?!!((r.stepDone||{})[
 function setStepDone(r,st,dk,on){if(r.repeat&&r.repeat.type!=='never'){r.stepDone=r.stepDone||{};const m=Object.assign({},r.stepDone[dk]);if(on)m[st.id]=true;else delete m[st.id];r.stepDone[dk]=m;}else{st.d=on;st.doneAt=on?Date.now():null;}}
 function isOpenTask(t){if(!t.date)return !(t.doneDates&&Object.keys(t.doneDates).length);return (!t.repeat||t.repeat.type==='never')?!isDone(t,t.date):true;}
 /* heat level 0-4 */
-function dayLoad(dk,filters=true){const{allDay,timed,anytime}=dayItems(dk,{filters});const c=get.settings().capacity||DEFAULT_SETTINGS.capacity;const wk=[0,6].includes(fromK(dk).getDay())&&c.lightWeekends?.5:1;
+function dayLoad(dk,filters=true){const{allDay,timed,anytime}=dayItems(dk,{filters});const c=get.settings().capacity||DEFAULT_SETTINGS.capacity;const wk=([0,6].includes(fromK(dk).getDay())&&c.lightWeekends?.5:1)*(typeof holCapFactor==='function'?Math.max(holCapFactor(dk),.25):1);
   if(c.mode==='hours'){const mins=timed.filter(e=>e.kind!=='habit').reduce((n,e)=>n+(e.dur||30),0);return{value:mins/60,level:levelOf(mins/60,(c.hours||8)*wk),allDay};}
   /* habits repeat every day, so they don't make a day look busier */const n=timed.filter(e=>e.kind!=='habit').length+anytime.filter(e=>e.kind!=='habit').length;return{value:n,level:levelOf(n,(c.full||6)*wk),allDay};}
 function levelOf(v,full){if(v<=0)return 0;const r=v/Math.max(full,.5);return r>=1?4:r>=.66?3:r>=.33?2:1;}
@@ -760,7 +760,9 @@ function jobsOf(s){if(Array.isArray(s.jobs)&&s.jobs.length)return s.jobs;const w
 function jobsSummary(s){const J=jobsOf(s),f=J.filter(j=>j.flex).length;if(J.length===1&&!f){const sh=J[0].shifts;return sh.length===1?`${workDaysText(sh[0].days)} · ${fmtT(sh[0].start)} – ${fmtT(sh[0].end)}`:`${sh.length} shifts`;}return[`${J.length} job${J.length>1?'s':''}`,f?`${f} flexible`:null].filter(Boolean).join(' · ');}
 const flexStart=(j,dk)=>{const ws=weekStartOf(fromK(dk));if(j.cycle!=='2week')return k(ws);const ref=weekStartOf(new Date(2026,0,5)),n=Math.round((ws-ref)/(7*864e5));return k(((n%2)+2)%2===0?ws:addD(ws,-7));};
 /* shifts on a day: [{job,start,end}] ; null means a flexible job whose hours aren't in yet */
-function shiftsOn(dk){const s=get.settings(),d=fromK(dk),mi=monIdx(d),out=[];let unknown=false;
+/* v267 · a holiday you take off has no shifts; .holiday names it and .had says work was due that day */
+function shiftsOn(dk,raw){if(!raw&&typeof Holidays!=='undefined'&&Holidays.off(dk)){const r=shiftsOn(dk,true),o=[];o.unknown=false;o.holiday=Holidays.name(dk);o.had=r.length>0||!!r.unknown;return o;}
+  const s=get.settings(),d=fromK(dk),mi=monIdx(d),out=[];let unknown=false;
   jobsOf(s).forEach(j=>{if(j.flex){const m=(s.flexHours||{})[j.id]||{};if(m[dk])m[dk].forEach(x=>out.push({job:j.name||'Work',start:x.start,end:x.end}));else if(!m['_'+flexStart(j,dk)])unknown=true;}
     else{const pm=(mi+6)%7;j.shifts.forEach(x=>{if(x.days.includes(mi))out.push({job:j.name||'Work',start:x.start,end:x.end});
       /* an overnight shift from yesterday runs into this morning */

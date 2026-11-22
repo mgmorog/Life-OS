@@ -57,6 +57,9 @@ function slotLoad(s,st,cards){
   else{let dk=s.from;while(dk<=s.to){n+=planned(dayItems(dk));dk=addK(dk,1);}cards.forEach(c=>{if(c.placedIn.includes(s.id))n++;});}
   return n;
 }
+/* v267 · a day off plans to a smaller capacity (Settings › Holidays) */
+function slotCap(sl,st,P){const c=P.cap||6;return st.mode==='w'?Math.round(c*holCapFactor(sl.id)):c;}
+const workCard=c=>stArea(c)==='Career';
 /* Suggest: usual days first, habits spaced out, nothing past a due date, lightest slots win */
 /* free time on a day: waking hours minus every shift (and, with Protect evenings, the time after the last shift);
    a flexible job with no hours yet counts as half the day so Studio doesn't plan on it either way */
@@ -66,14 +69,14 @@ function freeMinutes(dk){const s=get.settings(),sh=shiftsOn(dk);let awake=[[420,
   if(s.protectEvenings&&sh.some(x=>!x.carry)){const last=Math.max(...sh.filter(x=>!x.carry).map(x=>x.end>x.start?x.end:1440));cut(last,1440);}
   let free=awake.reduce((n,[a,b])=>n+Math.max(0,b-a),0);if(sh.unknown)free=Math.round(free/2);dayItems(dk).timed.forEach(e=>{awake.forEach(([a,b])=>{const o=Math.max(0,Math.min(b,e.time+(e.dur||30))-Math.max(a,e.time));free-=o;});});return Math.max(0,free);}
 function suggest(cards,P,st,jit=null){
-  const load=new Map(P.slots.map(s=>[s.id,slotLoad(s,st,cards)])),open=P.slots.filter(s=>!s.past&&!(st.mode==='w'&&tripBlocked(s.id))),out=[];if(jit)open.forEach(s=>load.set(s.id,load.get(s.id)+jit(s.id)));
+  const load=new Map(P.slots.map(s=>[s.id,slotLoad(s,st,cards)])),open=P.slots.filter(s=>!s.past&&!(st.mode==='w'&&tripBlocked(s.id))&&slotCap(s,st,P)>0),out=[];if(jit)open.forEach(s=>load.set(s.id,load.get(s.id)+jit(s.id)));
   if(!open.length)return out;
   const order=cards.filter(c=>c.q>0).sort((a,b)=>(b.due?1:0)-(a.due?1:0)||(b.q-a.q));
   order.forEach(c=>{
-    let cand=open.filter(s=>!c.placedIn.includes(s.id));
+    let cand=open.filter(s=>!c.placedIn.includes(s.id)&&!(st.mode==='w'&&workCard(c)&&Holidays.off(s.id)));
     if(c.due)cand=cand.filter(s=>s.from<=c.due).concat(cand.length?[]:[]);
     if(!cand.length){if(c.type==='habit')return;cand=open;}
-    const roomy=cand.filter(s=>load.get(s.id)<P.cap);if(roomy.length)cand=roomy;
+    const roomy=cand.filter(s=>load.get(s.id)<slotCap(s,st,P));if(roomy.length)cand=roomy;
     if(c.type==='habit'){
       const lastWeek=habitPattern(c.rec,P);const n=c.q;let picks=[];
       lastWeek.forEach(i=>{const s=open.find(x=>monIdx(fromK(x.id))===i&&!c.placedIn.includes(x.id));if(s&&picks.length<n&&!picks.includes(s))picks.push(s);});
@@ -104,9 +107,9 @@ function stAi(c){return el('span',{class:'stai','aria-hidden':'true',html:ic(are
 function stOpen(c){if(c.type==='habit')App.go('habit',{id:c.rec.id});else if(c.type==='task')taskSheet(c.rec);else App.go('plan',{id:c.rec.id});}
 function stFreeBar(dk,over,frac){const f=frac!=null?frac:freeMinutes(dk)/900;return el('span',{class:'stbar'+(over?' over':''),'aria-hidden':'true'},el('i',{style:`width:${Math.max(over?100:0,Math.min(100,f*100)).toFixed(0)}%`}));}
 /* Fill my week: tasks and goal steps only, two a slot at most, freest slots first, before any due date */
-function fillFew(list,P,st){const open=P.slots.filter(x=>!x.past&&!(st.mode==='w'&&tripBlocked(x.id)));const used=new Map(),out=[];
+function fillFew(list,P,st){const open=P.slots.filter(x=>!x.past&&!(st.mode==='w'&&tripBlocked(x.id))&&slotCap(x,st,P)>0);const used=new Map(),out=[];
   const fr=x=>st.mode==='w'?freeMinutes(x.id):-(slotLoad(x,st,[])||0);
-  list.forEach(c=>{let cand=open.filter(x=>(used.get(x.id)||0)<2&&!c.placedIn.includes(x.id));const before=c.due?cand.filter(x=>x.from<=c.due):cand;if(before.length)cand=before;if(!cand.length)return;
+  list.forEach(c=>{let cand=open.filter(x=>(used.get(x.id)||0)<(st.mode==='w'&&holCapFactor(x.id)<1?1:2)&&!c.placedIn.includes(x.id)&&!(st.mode==='w'&&workCard(c)&&Holidays.off(x.id)));const before=c.due?cand.filter(x=>x.from<=c.due):cand;if(before.length)cand=before;if(!cand.length)return;
     const x=cand.slice().sort((a,b)=>fr(b)-fr(a)||(a.from<b.from?-1:1))[0];used.set(x.id,(used.get(x.id)||0)+1);
     out.push({card:c,slot:x.id,why:c.due?`Lands before ${relDay(c.due)}`:st.mode==='w'?`${fmtDurS(freeMinutes(x.id))} free that day`:`Lightest ${P.unit} with room`});});
   return out;}
@@ -160,7 +163,7 @@ function viewStudio(root){
     const lab=st.mode==='w'?`${nm(a0)}–${nm(a1)}`:st.mode==='m'?`${shortDay(a0.from)} – ${shortDay(a1.to)} · ${dCount(past.length,'week')}`:past.length>1?`${a0.label}–${a1.label}`:a0.a;
     box.append(el('button',{class:'stpastline','aria-expanded':String(!!st.showPast),onclick:()=>{st.showPast=!st.showPast;App.refresh();}},el('span',{class:'grow'},`${lab}${nd?` · ${nd} done`:''}`),el('span',{style:'display:grid',html:ic(st.showPast?'chevu':'chevr',IC.xs)})));
     P.slots.forEach(sl=>{if(sl.past&&!st.showPast)return;box.append(slotRow(sl,st,P,cards));});}
-  else P.slots.forEach(sl=>box.append(slotRow(sl,st,P,cards)));page.append(box);
+  else P.slots.forEach(sl=>box.append(slotRow(sl,st,P,cards)));{const hn=st.mode==='w'&&!allPast?holNote(P.slots[0].id,P.slots[6].id):null;if(hn)page.append(hn);}page.append(box);
   if(st.mode==='w'){const n0=addK(P.slots[6].id,1),n6=addK(n0,6),sp=stSpan(n0,n6),pw=get.all('task').filter(t=>isOpenTask(t)&&!t.date&&t.planWeek===n0).length,np=sp.td+pw;
     const hi=(()=>{for(let d=n0;d<=n6;d=addK(d,1)){const a=dayItems(d).allDay.find(e=>e.kind!=='trip'&&!/work/i.test(e.title));if(a)return `${a.title} ${DOW[fromK(d).getDay()].slice(0,3)}`;}return '';})();
     box.append(el('button',{class:'stpastline stnext',onclick:()=>go(1)},el('span',{class:'grow'},['Next week',np?`${np} planned`:'nothing planned yet',hi].filter(Boolean).join(' · ')),el('span',{style:'display:grid',html:ic('chevr',IC.xs)})));}
@@ -182,13 +185,14 @@ function slotRow(sl,st,P,cards){
   if(sl.past&&!placed.length)return el('div',{class:'stslot past','data-slot':sl.id},el('div',{class:'stslot-h'},el('b',{},st.mode==='w'?`${sl.a.slice(0,1)+sl.a.slice(1).toLowerCase()} ${sl.b}`:sl.label),el('small',{},'Passed')));
   let fixed='';if(st.mode==='w'){const d=dayItems(sl.id),busy=d.timed.filter(e=>e.kind==='block'||e.kind==='gcal'),ad=d.allDay.map(e=>e.title);const nt=placed.filter(c=>c.type!=='habit').length;fixed=[ad[0]||null,busy.length?dCount(busy.length,'event'):null,nt?dCount(nt,'to-do'):null].filter(Boolean).join(' · ');}
   /* v250 · the bar shows what's planned against your daily capacity, not free hours */
-  const ld=sl.past?0:slotLoad(sl,st,cards),cap=P.cap||6;let [fr,frc]=st.mode==='w'&&!sl.past?[ld>cap?`${ld} planned · room for ${cap}`:ld?`${ld} of ${cap} planned`:'Nothing planned','']:['',''];const over=st.mode==='w'&&!sl.past&&(ld>cap||(placed.length&&stNeedMin(placed)>freeMinutes(sl.id)));
+  const ld=sl.past?0:slotLoad(sl,st,cards),cap=Math.max(slotCap(sl,st,P),0),hol=st.mode==='w'&&Holidays.off(sl.id);let [fr,frc]=st.mode==='w'&&!sl.past?[cap===0?(ld?`${ld} planned · day off`:'Day off'):ld>cap?`${ld} planned · room for ${cap}`:ld?`${ld} of ${cap} planned`:'Nothing planned','']:['',''];const over=st.mode==='w'&&!sl.past&&(ld>cap||(placed.length&&stNeedMin(placed)>freeMinutes(sl.id)));
   let span=null;if(st.mode==='m'){span=stSpan(sl.from,sl.to);const nt=span.td+placed.filter(c=>c.type!=='habit').length;fixed=[span.ad[0]||null,span.ev?dCount(span.ev,'event'):null,nt?dCount(nt,'to-do'):null].filter(Boolean).join(' · ');if(!sl.past&&span.n)fr=`${fmtDurS(span.fr)} free`;}
   const dues=st.mode==='w'?get.all('task').filter(t=>t.deadline===sl.id&&isOpenTask(t)).map(t=>t.title):[];
-  const node=el('section',{class:'stslot'+(isToday?' istoday':'')+(sl.past?' past':'')+(st.mode==='m'&&!sl.past?' tapweek':''),'data-slot':sl.id,onclick:st.mode==='m'&&!sl.past?ev=>{if(ev.target.closest('button'))return;st.mode='w';st.anchor=sl.from;st.ghosts=[];st.open=null;App.refresh();}:null},
-    el('div',{class:'stslot-h'},el('b',{},st.mode==='w'?`${sl.a.slice(0,1)+sl.a.slice(1).toLowerCase()} ${sl.b}`:st.mode==='m'?`${sl.a} – ${sl.b.replace(/^to /,'')}`:sl.a),el('small',{class:frc==='full'?'warn':null},fr),sl.past?null:IconButton(`Add to ${sl.label}`,{size:'sm',cls:'green',style:'margin-right:calc(var(--s2) * -1)',html:ic('plus',IC.md),onclick:()=>st.mode==='w'?commitmentSheet(sl,st):newCardSheet(st,P)})),
-    st.mode==='w'&&!sl.past?stFreeBar(sl.id,over,ld/cap):st.mode==='m'&&!sl.past&&span&&span.n?stFreeBar(null,false,span.fr/(span.n*900)):null,
+  const node=el('section',{class:'stslot'+(hol?' hol':'')+(isToday?' istoday':'')+(sl.past?' past':'')+(st.mode==='m'&&!sl.past?' tapweek':''),'data-slot':sl.id,onclick:st.mode==='m'&&!sl.past?ev=>{if(ev.target.closest('button'))return;st.mode='w';st.anchor=sl.from;st.ghosts=[];st.open=null;App.refresh();}:null},
+    el('div',{class:'stslot-h'},el('b',{},st.mode==='w'?`${sl.a.slice(0,1)+sl.a.slice(1).toLowerCase()} ${sl.b}`:st.mode==='m'?`${sl.a} – ${sl.b.replace(/^to /,'')}`:sl.a,hol?el('span',{class:'sthtag'},'Holiday'):null),el('small',{class:frc==='full'?'warn':null},fr),sl.past?null:IconButton(`Add to ${sl.label}`,{size:'sm',cls:'green',style:'margin-right:calc(var(--s2) * -1)',html:ic('plus',IC.md),onclick:()=>st.mode==='w'?commitmentSheet(sl,st):newCardSheet(st,P)})),
+    st.mode==='w'&&!sl.past?stFreeBar(sl.id,over,cap?ld/cap:0):st.mode==='m'&&!sl.past&&span&&span.n?stFreeBar(null,false,span.fr/(span.n*900)):null,
     fixed?el('p',{class:'stfixed'},fixed):null,
+    hol&&!sl.past&&placed.filter(workCard).length?el('p',{class:'stdue'},`${dCount(placed.filter(workCard).length,'work to-do')} on a day off`):null,
     dues.length?el('p',{class:'stdue'},`Due: ${dues.slice(0,2).join(', ')}${dues.length>2?` +${dues.length-2}`:''}`):null);
   if(isToday){node.append(Button('Open Today ›',{variant:'link',size:'sm',cls:'stopen',onclick:()=>App.go('today',{})}));placed=[];}
   const hab=placed.filter(c=>c.type==='habit');placed=placed.filter(c=>c.type!=='habit');

@@ -697,7 +697,7 @@ function dateDropEl(dk){
     const weeks=Math.ceil((Math.round((first-start)/864e5)+new Date(ym.y,ym.m+1,0).getDate())/7);
     for(let i=0;i<weeks*7;i++){const d=addD(start,i),key=k(d),inM=d.getMonth()===ym.m;
       if(!inM){cells.push(el('span',{class:'dp-d dp-blank','aria-hidden':'true'}));continue;}
-      cells.push(el('button',{class:'dp-d'+(inM?'':' out')+(key===dk?' sel':'')+(key===tK?' today':''),'aria-label':`${DOW[d.getDay()]}, ${MONL[d.getMonth()]} ${d.getDate()}`,'aria-current':key===dk?'date':null,onclick:()=>close(key)},String(d.getDate()),inM&&has(key)?el('i',{'aria-hidden':'true'}):null));}
+      cells.push(el('button',{class:'dp-d'+(inM?'':' out')+(key===dk?' sel':'')+(key===tK?' today':''),'aria-label':`${DOW[d.getDay()]}, ${MONL[d.getMonth()]} ${d.getDate()}${typeof Holidays!=='undefined'&&Holidays.name(key)?', '+Holidays.name(key):''}`,'aria-current':key===dk?'date':null,onclick:()=>close(key)},String(d.getDate()),inM&&has(key)?el('i',{class:typeof Holidays!=='undefined'&&Holidays.name(key)?'hol':null,'aria-hidden':'true'}):null));}
     const body=el('div',{class:'dp-days'},...cells);
     grid.replaceChildren(el('div',{class:'dp-wd','aria-hidden':'true'},...wdMap(w=>el('span',{},w))),body);
     if(dir&&motionOK())body.animate([{opacity:0,transform:`translateX(${dir*24}px)`},{opacity:1,transform:'none'}],{duration:MOT.base,easing:EASE});

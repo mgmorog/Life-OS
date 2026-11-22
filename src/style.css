@@ -3771,3 +3771,21 @@ input[type=search]::-webkit-search-cancel-button{-webkit-appearance:none;display
 .pdp-c.cur:not(.sel){background:var(--selected);color:var(--accent-deep);box-shadow:none}
 .pdp-week.cur:not(.sel){background:var(--selected)}
 .pdp .dp-quick>*{flex:1;justify-content:center}
+/* v267 · holidays: one quiet mark everywhere, a hollow ring so it never reads as the busy dot */
+:root{--hol:var(--accent-deep);--hol-ring:1.5px}
+.holdot{display:inline-block;flex:none;width:8px;height:8px;border-radius:var(--r-full);box-shadow:inset 0 0 0 var(--hol-ring) var(--hol)}
+.wkpage .hol:not(.sel) .dn::after{width:6px;height:6px;margin-left:-3px;bottom:3px;background:none;box-shadow:inset 0 0 0 var(--hol-ring) var(--hol);opacity:1}
+.dp-d i.hol{width:6px;height:6px;margin-left:-3px;background:none;box-shadow:inset 0 0 0 var(--hol-ring) var(--hol)}
+.heat.hol .hn{aspect-ratio:1;border-radius:var(--r-full);box-shadow:inset 0 0 0 var(--hol-ring) var(--hol)}
+.heat.hol.sel .hn,.heat.hol.today .hn{box-shadow:none}
+.qhol{display:flex;align-items:center;gap:var(--s2);margin:var(--s2) 0 0;font-size:var(--fs-small);color:var(--text-muted)}
+.hdchip.hol{gap:var(--s2)}
+.upwork.hol{color:var(--accent-deep)}
+.sthtag{display:inline-flex;align-items:center;height:var(--size-24);margin-left:var(--s2);padding:0 var(--s2);border-radius:var(--r-full);background:var(--selected);color:var(--accent-deep);font-size:var(--fs-micro);font-weight:var(--fw-medium);vertical-align:middle}
+.holnote{display:flex;align-items:flex-start;gap:var(--s3);padding:var(--s3) var(--s4);border-radius:var(--card-radius);background:var(--selected)}
+.holnote .holi{display:grid;place-items:center;flex:none;width:var(--size-32);height:var(--size-32);border-radius:var(--r-full);background:var(--surface-raised);color:var(--accent-deep)}
+.holnote .grow{display:grid;gap:var(--nudge);min-width:0}
+.holnote b{font-weight:var(--fw-medium);font-size:var(--fs-row)}
+.holnote small{color:var(--text-muted);font-size:var(--fs-small)}
+.holnote .btn{align-self:center}
+.sthab .linkbtn.small{min-height:var(--size-40)}

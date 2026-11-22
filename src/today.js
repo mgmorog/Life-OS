@@ -327,7 +327,7 @@ function dayCard(dk){
   const canPlan=dk>=tk&&!isPast&&planDayTasks(dk).length>0;
   if(t3&&(shownC.length||!t3es.length||nLate))todo.append(el('div',{class:'secl tdiv'},'Tasks',canPlan?Button('Plan my day',{variant:'link',size:'sm',cls:'pmday',onclick:()=>planDaySheet(dk)}):null));
   else if(canPlan)todo.append(el('div',{class:'pmdrow'},Button('Plan my day',{variant:'link',size:'sm',cls:'pmday',onclick:()=>planDaySheet(dk)})));
-  if(odBtn)todo.append((()=>{const ds=(lateList||[]).map(x=>(x&&(x.date||(x.rec&&x.rec.date)))||null).filter(Boolean).sort();return el('button',{class:'odrow2 soft',onclick:()=>replanSheet(lateList,dk,{missed:missedL,dueLate,area:aiLate})},el('span',{class:'grow'},el('b',{},`${nLate} carried over`),ds.length?el('small',{},`Oldest from ${mdS(fromK(ds[0]))}`):null),el('span',{class:'odpill'},'Review'));})());
+  if(odBtn)todo.append((()=>{const ds=(lateList||[]).map(x=>(x&&(x.date||(x.rec&&x.rec.date)))||null).filter(Boolean).sort();return el('button',{class:'odrow2 soft',onclick:()=>replanSheet(lateList,dk,{missed:missedL,dueLate,area:aiLate})},el('span',{class:'grow'},el('b',{},`${nLate} carried over`),el('small',{},joinMeta([/* the same split Reviews uses: tasks, then everything else */lateList.length?dCount(lateList.length,'task'):null,nLate-lateList.length>0?`${nLate-lateList.length} other${nLate-lateList.length>1?'s':''}`:null,ds.length?`oldest ${mdS(fromK(ds[0]))}`:null]))),el('span',{class:'odpill'},'Review'));})());
   if(shownC.length)todo.append(a);
   if(!shownC.length&&!t3es.length&&!nLate)todo.append(el('p',{class:'sub',style:'margin:var(--s2) 0 0'},isPast?'Nothing was left open.':total?'All done. Nice work.':'Nothing to do yet.'));
   const canAdd=!isPast||!total;
@@ -352,7 +352,9 @@ function dayCard(dk){
     const ord=S._habOrd[key];items.sort((x,y)=>ord.indexOf(x.e.id)-ord.indexOf(y.e.id));
     const doneH=items.filter(({e})=>habitDone(e.rec,dk)),openH=items.filter(({e})=>!habitDone(e.rec,dk));S._habDone=S._habDone||{};const hOpen=!!S._habDone[dk];
     (hOpen?[...openH,...doneH]:openH).forEach(({e})=>l.append(habDot(e,dk)));
-    hcard.append(l);if(doneH.length)hcard.append(el('button',{class:'habdone',onclick:()=>{S._habDone[dk]=!hOpen;App.refresh();}},hOpen?'Hide done':`${doneH.length} done today`,el('span',{style:'display:grid',html:ic(hOpen?'chevu':'chevr',IC.xs)})));out.push(hcard);
+    /* everything done: a quiet row of ticked circles and an "All done today" note */
+    if(!openH.length&&doneH.length&&!hOpen){const bl=hcard.querySelector('.bl');bl.insertBefore(el('span',{class:'small muted habnote'},'All done today'),bl.lastChild);l.classList.add('alldone');doneH.forEach(({e})=>l.append(el('span',{class:'hdmini','aria-label':`${e.title}, done`,title:e.title,html:ic('check',IC.xs)})));}
+    hcard.append(l);if(doneH.length&&openH.length)hcard.append(el('button',{class:'habdone',onclick:()=>{S._habDone[dk]=!hOpen;App.refresh();}},hOpen?'Hide done':`${doneH.length} done today`,el('span',{style:'display:grid',html:ic(hOpen?'chevu':'chevr',IC.xs)})));out.push(hcard);
   }
   /* Coming up, with the full day inline */
   const sched=timed;

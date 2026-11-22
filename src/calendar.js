@@ -21,7 +21,7 @@ function viewCalendar(root){
   const miniTitle=mode==='quarter'?`Q${q+1} ${y}`:mode==='month'?`${MONL[a.getMonth()]} ${y}`:`${rangeD}, ${wE.getFullYear()}`;
   const f=get.settings().filters||{},filtered=(f.areas&&f.areas.length)||Object.values(f.types||{}).some(v=>v===false);
   const arrows=()=>el('div',{class:'arrows'},IconButton(`Previous ${mode}`,{cls:'green',html:ic('chevl',IC.md),onclick:()=>calStep(-1)}),IconButton(`Next ${mode}`,{cls:'green',html:ic('chevr',IC.md),onclick:()=>calStep(1)}),IconButton('Filters',{cls:'green',html:ic('filter',IC.md)+(filtered?'<span class="dot"></span>':''),onclick:e=>filterSheet({anchor:e.currentTarget.getBoundingClientRect()})}),moreB('Calendar options',e=>{const r=e.currentTarget.getBoundingClientRect(),ws=weekStartOf(fromK(C.sel||C.anchor||todayK()));openMenu(r.right,r.bottom+4,[mode==='week'?{label:C.timeline?'Show as a list':'Show as a timeline',icon:C.timeline?'list':'time',onclick:()=>{C.timeline=!C.timeline;try{localStorage.setItem('lifeos-cal-tl',C.timeline?'1':'');}catch(e){}calCommit();}}:null,{label:'Print this week',icon:'share',onclick:()=>printWeek(k(ws))}]);}));
-  const ORDERM=['quarter','month','week'];const modeSeg=()=>seg([['quarter','Quarter'],['month','Month'],['week','Week']],mode,v=>{const[s,e]=calRange(C);if(C.sel&&C.sel>=s&&C.sel<=e)C.anchor=C.sel;const dir=ORDERM.indexOf(v)>ORDERM.indexOf(C.mode)?1:-1;C.mode=v;C.weekOpen=null;try{localStorage.setItem('lifeos-cal-mode',v);}catch(e){}glideSwap(()=>calCommit(),[['#cal-body','x'],['#cal-h .tbtn span','y'],['#cal-h .cal-eyebrow','y']],dir);});
+  const ORDERM=['week','month','quarter'];const modeSeg=()=>seg([['week','Week'],['month','Month'],['quarter','Quarter']],mode,v=>{const[s,e]=calRange(C);if(C.sel&&C.sel>=s&&C.sel<=e)C.anchor=C.sel;const dir=ORDERM.indexOf(v)>ORDERM.indexOf(C.mode)?1:-1;C.mode=v;C.weekOpen=null;try{localStorage.setItem('lifeos-cal-mode',v);}catch(e){}glideSwap(()=>calCommit(),[['#cal-body','x'],['#cal-h .tbtn span','y'],['#cal-h .cal-eyebrow','y']],dir);});
   const pill=()=>!current?Chip('Today',{variant:'status',cls:'pill-today',onclick:calNow}):null;
   const page=el('div',{class:'page'});
   page.append(el('header',{class:'phead cal-h',id:'cal-h'},
@@ -53,7 +53,7 @@ function focusChip(fk,label,mode,range){
   return el('div',{class:'bars'},
     el('div',{style:'display:flex;justify-content:space-between;align-items:center'},el('span',{class:'fl seclbl'},label),Button('Edit',{variant:'link',size:'sm',onclick:()=>focusSheet(fk,label)})),
     el('div',{class:'bars-plan'},Button('Plan in Studio ›',{variant:'link',size:'sm',onclick:()=>{App.state.studio=Object.assign(App.state.studio||{},{mode:mode==='quarter'?'q':mode==='month'?'m':'w',anchor:range[0]});App.go('studio');}})),
-    areas.map(ar=>{const list=steps.filter(s=>s.parent.kind==='goal'&&s.parent.area===ar),done=list.filter(s=>s.step.d&&inRange(s.step)).length,open=list.filter(s=>!s.step.d).length,tot=done+open;return el('div',{class:'bar-row'},el('span',{class:'clip'},ar),Progress(tot?done/tot:0,{size:'lg','aria-label':`${done} of ${tot} goal steps finished this period`}),el('span',{class:'small muted tnum'},tot?`${done}/${tot}`:'No open steps'));}));
+    areas.map(ar=>{const list=steps.filter(s=>s.parent.kind==='goal'&&s.parent.area===ar),done=list.filter(s=>s.step.d&&inRange(s.step)).length,open=list.filter(s=>!s.step.d).length,tot=done+open;return el('div',{class:'bar-row'},el('span',{class:'clip'},ar),Progress(tot?done/tot:0,{size:'lg','aria-label':`${done} of ${tot} goal steps finished this period`}),el('span',{class:'small muted tnum'},tot?`${done}/${tot}`:'—'));}));
 }
 function focusSheet(fk,label){
   const f=focusRec(fk)||{id:'focus-'+fk,kind:'focus',areas:[]};let D=[...(f.areas||[])],inst;
@@ -134,13 +134,13 @@ function weekBody(body,start,C){
       const pv=items.filter(e=>!(e.rec&&daily.includes(e.rec.id))),ev=pv.filter(e=>e.kind!=='task'&&e.kind!=='habit'),nTodo=pv.filter(e=>e.kind==='task'&&!e.done).length;
       C.wkMore=C.wkMore||{};const mo=!!C.wkMore[dk],lim=mo?99:3;
       ev.slice(0,lim).forEach(e=>{const r=el('span',{class:'it'},el('time',{},e.time!=null?fmtT(e.time):'All day'),el('span',{},e.title));calGestures(r,e,dk);main.append(r);});
-      if(ev.length>3)main.append(el('button',{class:'wkmore',onclick:ev2=>{ev2.stopPropagation();C.wkMore[dk]=!mo;App.refresh();}},mo?'Show less':`+${ev.length-3} more`));
+      if(ev.length>3)main.append(el('button',{class:'wkmore',onclick:ev2=>{ev2.stopPropagation();C.wkMore[dk]=!mo;App.refresh();}},mo?'Show less':`Show ${ev.length-3} more`));
       if(nTodo)main.append(el('button',{class:'wktodo',onclick:ev2=>{ev2.stopPropagation();App.state.sel=dk;App.state._fresh=true;App.go('today');}},`${dCount(nTodo,'to-do')} ›`));
       if(!ev.length&&!nTodo&&!adS0(allDay)&&!empty&&!trW)main.append(el('span',{class:'ph'},'Habits only'));
       if(empty&&!trW)main.append(el('span',{class:'ph'+(past?'':' plan')},past?'':'Tap to plan'));
     }
     const r=el('div',{class:'wkrow'+(empty&&!open&&!trW?' slim':'')+(open?' sel open':'')+(trW?' wkaway':''),'data-slot':dk,onclick:ev=>{if(ev.target.closest('button,.dayline,.adchip'))return;toggle();}},
-      el('button',{class:'dtile '+(L.level?'l'+L.level+' ':'')+(past?'past ':'')+(dk===tk?'today ':'')+(trW?'tripd':''),'aria-label':shortDay(dk),'aria-expanded':String(open),'aria-current':dk===tk?'date':null,onclick:toggle},el('small',{},DOW[d.getDay()].slice(0,3).toUpperCase()),el('b',{},String(d.getDate()))),
+      el('button',{class:'dtile '+(L.level?'l'+L.level+' ':'')+(past?'past ':'')+(dk===tk?'today ':'')+(trW?'tripd':''),'aria-label':shortDay(dk),'aria-expanded':String(open),'aria-current':dk===tk?'date':null,onclick:toggle},el('small',{},DOW[d.getDay()].slice(0,3)),el('b',{},String(d.getDate()))),
       main);
     onPress(r,(x,y)=>dayMenu(dk,x,y),'.it,.minichip,.dayline,.adchip,.chip,.linkbtn');
     list.append(r);

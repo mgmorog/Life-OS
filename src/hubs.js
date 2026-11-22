@@ -184,10 +184,14 @@ function renderFields(body,fields,D,update){
   let firstInput=null;
   fields.forEach(f=>{const id=`f-x-${f.id}`;let input;
     if(f.type==='select'&&f.id==='mood'&&optsOf(f).join()===MOODS.join()){body.append(el('div',{class:'field'},el('span',{class:'eyebrow'},f.label),moodPicker(D[f.id],v=>{D[f.id]=v;update();})));return;}
-    if(f.type==='date'||f.type==='time'){body.append(Field({label:f.label,type:f.type,id,value:D[f.id]||'',hint:f.hint||null,clear:f.blank||f.type==='time'||f.id==='last',onInput:v=>{D[f.id]=v;update();}}));return;}
+    if(f.type==='date'||f.type==='time'){body.append(Field({label:f.label,type:f.type,id,value:D[f.id]||'',hint:(/^(ready|due|decide)$/.test(f.id)&&D[f.id]&&D[f.id]<todayK()?'This date has passed':null)||f.hint||null,clear:f.blank||f.type==='time'||f.id==='last',onInput:v=>{D[f.id]=v;update();}}));return;}
+    /* short choices (up to three) are a segmented control, not a system picker */
+    if(f.type==='select'&&!f.multi){const o=optsOf(f);if(o.length>=2&&o.length<=3&&o.every(x=>String(x).length<=12)){if(!o.includes(D[f.id]))D[f.id]=o[0];body.append(el('div',{class:'field segfield'},el('span',{class:'eyebrow'},f.label),seg(o.map(x=>[x,x]),D[f.id],v=>{D[f.id]=v;update();})));return;}}
     if(f.type==='select'){const o=optsOf(f);input=el('select',{id,onchange:e=>{D[f.id]=e.target.value;update();}},o.map(x=>{const op=el('option',{value:x},x);if(D[f.id]===x)op.selected=true;return op;}));}
     else if(f.type==='area'){body.append(fieldNotes(id,f.label,f.ph||'',D[f.id]||'',v=>{D[f.id]=v;update();}));return;}
     else{const kb=fieldKeyboard(f);input=el('input',{id,type:kb.type,inputmode:kb.mode,autocapitalize:kb.cap,autocorrect:kb.cap?'off':null,spellcheck:kb.cap?'false':null,value:D[f.id]??'',autocomplete:'off',oninput:e=>{D[f.id]=f.type==='number'?numIn(e.target.value):e.target.value;update();}});if(!firstInput&&f.type==='text')firstInput=input;}
+    /* money fields show the currency in front */
+    if(f.type==='number'&&/^(price|amount|cost|budget|value)$/i.test(f.id))input=el('span',{class:'moneyin'},el('span',{class:'cur','aria-hidden':'true'},get.settings().currency||'$'),input);
     body.append(Field({label:f.label,control:input,hint:f.hint||null}));});
   chainEnter(body);
   return firstInput;

@@ -184,8 +184,11 @@ function pageTitleScroll(m){const h=$('#view .pgtitle');if(!h){if(m._pg){m.style
   const t=h.textContent.trim(),bk=$('#view .back');if(m._pg!==t){m._pg=t;m.replaceChildren(t);if(bk){const lab=bk.textContent.trim()||'Back';m.append(el('button',{class:'mback','aria-label':'Back to '+lab,html:ic('chevl',IC.md),onclick:e=>{e.stopPropagation();const b=$('#view .back');if(b)b.click();}}));}m.onclick=()=>scrollTo({top:0,behavior:motionOK()?'smooth':'auto'});}
   const top=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--sat'))||0,r=h.getBoundingClientRect(),bar=52+top;
   const p=Math.max(0,Math.min(1,(scrollY-4)/44));
-  h.style.transformOrigin='left center';h.style.transform=motionOK()&&p>0?`scale(${1-.12*p})`:'';h.style.opacity=p>0?String(1-p):'';
-  Object.assign(m.style,{visibility:p>.02?'visible':'hidden',color:`rgba(30,38,34,${Math.max(0,(p-.5)/.5)})`,backgroundColor:`rgba(244,244,239,${p*.78})`,borderBottomColor:`rgba(229,231,225,${p})`,pointerEvents:p>.9?'auto':'none',boxShadow:p>=1?'0 6px 14px -10px rgba(20,30,25,.22)':'none',transition:'none'});
+  /* the big title is gone before the small one appears, so there's never a half-faded copy of both */
+  const big=Math.max(0,1-p*1.7),small=Math.max(0,(p-.7)/.3);
+  h.style.transformOrigin='left center';h.style.transform=motionOK()&&p>0?`scale(${1-.12*p})`:'';h.style.opacity=p>0?String(big):'';
+  Object.assign(m.style,{visibility:p>.02?'visible':'hidden',color:`color-mix(in srgb,var(--text) ${Math.round(small*100)}%,transparent)`,backgroundColor:`color-mix(in srgb,var(--surface) ${Math.round(p*82)}%,transparent)`,borderBottomColor:`color-mix(in srgb,var(--card-edge) ${Math.round(p*100)}%,transparent)`,pointerEvents:p>.9?'auto':'none',boxShadow:'none',transition:'none'});
+  {const mb=m.querySelector('.mback');if(mb)mb.style.opacity=String(small);}
 }
 addEventListener('scroll',todayHeaderScroll,{passive:true});
 
@@ -586,7 +589,7 @@ function photoClose(box,before,gone){if(!motionOK())return;const now=[...box.que
 (function pullTomorrow(){let y0=null,d=0,card=null,full=false;const C=2*Math.PI*10;
   const atBottom=()=>scrollY+innerHeight>=document.documentElement.scrollHeight-4;
   const make=()=>{const t=addK(App.state.sel||todayK(),1),dt=fromK(t),n=dayItems?(()=>{try{const x=dayItems(t);return x.timed.length+x.anytime.length+x.allDay.length;}catch(e){return 0;}})():0;
-    card=el('div',{class:'tpeek','aria-hidden':'true'},el('span',{class:'dt'},el('small',{},DOW[dt.getDay()].slice(0,3).toUpperCase()),el('b',{},String(dt.getDate()))),el('span',{class:'grow'},el('b',{class:'serif'},App.state.sel===todayK()?'Tomorrow':DOW[dt.getDay()]),el('small',{class:'tpl'},n?`${n} planned · keep pulling`:'Keep pulling')));
+    card=el('div',{class:'tpeek','aria-hidden':'true'},el('span',{class:'dt'},el('small',{},DOW[dt.getDay()].slice(0,3)),el('b',{},String(dt.getDate()))),el('span',{class:'grow'},el('b',{class:'serif'},App.state.sel===todayK()?'Tomorrow':DOW[dt.getDay()]),el('small',{class:'tpl'},n?`${n} planned · keep pulling`:'Keep pulling')));
     card.insertAdjacentHTML('beforeend',`<svg class="tring" viewBox="0 0 26 26" width="26" height="26"><circle cx="13" cy="13" r="10" class="tr"/><circle cx="13" cy="13" r="10" class="fl" stroke-dasharray="${C}" stroke-dashoffset="${C}" transform="rotate(-90 13 13)"/></svg>`);document.body.append(card);};
   const set=()=>{const p=Math.min(1,d/90);card.style.transform=`translateY(${-Math.min(d*.9,96)}px)`;card.style.opacity=Math.min(1,d/24);card.querySelector('.fl').setAttribute('stroke-dashoffset',C*(1-p));const wasFull=full;full=p>=1;if(full&&!wasFull){buzz(8);card.animate([{scale:'1'},{scale:'1.04'},{scale:'1'}],{duration:MOT.base,easing:SPRING});}if(full!==wasFull){const s=card.querySelector('.tpl');s.textContent=full?'Let go to open':s.textContent.replace('Let go to open','Keep pulling');}$('#view').style.transform=`translateY(${-Math.min(d,170)*.25}px)`;};
   const end=go=>{const c=card,v=$('#view');card=null;y0=null;if(v){v.style.transition='transform var(--dur-base) var(--ease)';v.style.transform='';setTimeout(()=>{v.style.transition='';},380);}if(!c)return;
@@ -698,7 +701,7 @@ function dateDropEl(dk){
     const body=el('div',{class:'dp-days'},...cells);
     grid.replaceChildren(el('div',{class:'dp-wd','aria-hidden':'true'},...wdMap(w=>el('span',{},w))),body);
     if(dir&&motionOK())body.animate([{opacity:0,transform:`translateX(${dir*24}px)`},{opacity:1,transform:'none'}],{duration:MOT.base,easing:EASE});
-    const on=chips.querySelector('.on');if(on)requestAnimationFrame(()=>{const L=on.offsetLeft-(chips.clientWidth-on.offsetWidth)/2;if(scroll&&motionOK())chips.scrollTo({left:L,behavior:'smooth'});else chips.scrollLeft=L;});
+    const on=chips.querySelector('.on');if(on){const ctr=sm=>{if(!chips.clientWidth)return;const L=on.offsetLeft-(chips.clientWidth-on.offsetWidth)/2;if(sm&&motionOK())chips.scrollTo({left:L,behavior:'smooth'});else chips.scrollLeft=L;};requestAnimationFrame(()=>ctr(scroll));/* the picker may still be opening: centre again once it has its width */if(!scroll){setTimeout(()=>ctr(false),80);setTimeout(()=>ctr(false),MOT.slow);}}
   };
   const step=n=>{const d=new Date(ym.y,ym.m+n,1),nx={y:d.getFullYear(),m:d.getMonth()};if(!list.some(x=>x.y===nx.y&&x.m===nx.m)){if(n>0)list.push(nx);else list.unshift(nx);}ym=nx;draw(n,true);};
   /* swipe the days sideways to change month */
@@ -715,7 +718,7 @@ function dateDropEl(dk){
 function dateDrop(want,go){const S=App.state,open=want===undefined?!S.dateDrop:want;
   if(open){S.dateDrop=true;S._ddIn=true;clearTimeout(App._r);App.render();return;}
   const d=$('.ddrop'),fin=()=>{S.dateDrop=false;if(go&&go!==S.sel)goDay(go);else{clearTimeout(App._r);App.render();}};
-  if(!d||!motionOK()){fin();return;}const h=d.offsetHeight;$('.hd .date')&&$('.hd .date').classList.remove('open');d.animate([{height:h+'px',opacity:1},{height:'0px',opacity:0}],{duration:MOT.base,easing:EASE,fill:'forwards'}).onfinish=fin;}
+  if(!d||!motionOK()){fin();return;}const h=d.offsetHeight;$('.hd .date')&&$('.hd .date').classList.remove('open');d.style.overflow='hidden';/* contents and card leave together: no empty box */d.animate([{height:h+'px',opacity:1,transform:'none'},{height:'0px',opacity:0,transform:'scale(.98)'}],{duration:MOT.base,easing:EASE,fill:'forwards'}).onfinish=fin;}
 function dateDropIn(root){if(!App.state._ddIn)return;App.state._ddIn=false;const d=root.querySelector('.ddrop');if(!d||!motionOK())return;const h=d.offsetHeight;
   d.animate([{height:'0px',opacity:0},{height:h+'px',opacity:1}],{duration:MOT.slow,easing:SOFT});d.querySelectorAll('.ddin>*').forEach((n,i)=>n.animate([{opacity:0,transform:'translateY(-8px)'},{opacity:1,transform:'none'}],{duration:MOT.base,delay:60+i*50,easing:EASE,fill:'backwards'}));}
 document.addEventListener('pointerdown',e=>{if(!App.state.dateDrop||App.state.view!=='today')return;if(e.target.closest('.ddrop,.hd .date'))return;dateDrop(false);},true);

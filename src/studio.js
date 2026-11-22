@@ -51,8 +51,10 @@ function unplaceCard(card,slotId,st){
   else{const s=card.step;if(st.mode==='w'){s.date=null;s.time=null;}else if(st.mode==='m')s.planWeek=null;else s.planMonth=null;put(card.rec,{silent:true});}
 }
 function slotLoad(s,st,cards){
-  let n=0;if(st.mode==='w'){const d=dayItems(s.id);n=d.timed.length+d.anytime.length;}
-  else{let dk=s.from;while(dk<=s.to){const d=dayItems(dk);n+=d.timed.length+d.anytime.length;dk=addK(dk,1);}cards.forEach(c=>{if(c.placedIn.includes(s.id))n++;});}
+  /* what you planned: open to-dos and steps (the same ones the day card lists); events, blocks and habits don't use up capacity */
+  const planned=d=>[...d.timed,...d.anytime].filter(e=>(e.kind==='task'||e.kind==='step')&&!e.done).length;
+  let n=0;if(st.mode==='w'){n=planned(dayItems(s.id));}
+  else{let dk=s.from;while(dk<=s.to){n+=planned(dayItems(dk));dk=addK(dk,1);}cards.forEach(c=>{if(c.placedIn.includes(s.id))n++;});}
   return n;
 }
 /* Suggest: usual days first, habits spaced out, nothing past a due date, lightest slots win */
@@ -144,7 +146,7 @@ function viewStudio(root){
     if(!more&&!showBack&&nTop>5)list.append(el('button',{class:'addset muted',onclick:()=>{st.showMore=true;App.refresh();}},`Show ${nTop-5} more`));
     else if(back.length&&top.length)list.append(el('button',{class:'addset muted',onclick:()=>{st.showBack=!showBack;if(showBack)st.showMore=false;App.refresh();}},showBack?'Hide the backlog':`Backlog · ${back.length} more without a date`));
     else if(more&&nTop>5)list.append(el('button',{class:'addset muted',onclick:()=>{st.showMore=false;App.refresh();}},'Show fewer'));
-    if(habNeed.length){const hb=Row({as:'div',cls:'strow sthab'},el('button',{class:'strow-h','aria-expanded':String(!!st.habOpen),onclick:()=>{st.habOpen=!st.habOpen;App.refresh();}},el('span',{class:'stai','aria-hidden':'true',html:ic('rep',IC.xs)}),el('span',{class:'grow'},el('b',{},`${dCount(habNeed.length,'habit')} to spread`),el('small',{},st.habOpen?'Tap one to place it':habNeed.slice(0,2).map(x=>x.c.t).join(', ')+(habNeed.length>2?` and ${habNeed.length-2} more`:'')))),Button('Spread them',{variant:'link',size:'sm',onclick:ev=>{ev.stopPropagation();const g=suggest(habNeed.map(x=>x.c),P,st);if(!g.length){toast('No open days left');return;}g.forEach(x=>placeCard(x.card,x.slot,st));App.refresh();toast(`${g.length} sessions placed`,()=>{g.forEach(x=>unplaceCard(x.card,x.slot,st));App.refresh();});}}));
+    if(habNeed.length){const hb=Row({as:'div',cls:'strow sthab'},el('button',{class:'strow-h','aria-expanded':String(!!st.habOpen),onclick:()=>{st.habOpen=!st.habOpen;App.refresh();}},el('span',{class:'stai','aria-hidden':'true',html:ic('rep',IC.xs)}),el('span',{class:'grow'},el('b',{},`${dCount(habNeed.length,'habit')} to spread`),el('small',{},st.habOpen?'Tap one to place it':habNeed.slice(0,2).map(x=>x.c.t).join(', ')+(habNeed.length>2?` and ${habNeed.length-2} more`:'')))),Button('Spread',{variant:'link',size:'sm',onclick:ev=>{ev.stopPropagation();const g=suggest(habNeed.map(x=>x.c),P,st);if(!g.length){toast('No open days left');return;}g.forEach(x=>placeCard(x.card,x.slot,st));App.refresh();toast(`${g.length} sessions placed`,()=>{g.forEach(x=>unplaceCard(x.card,x.slot,st));App.refresh();});}}));
       list.prepend(hb);}
     if(st.habOpen&&habNeed.length){const anchor=list.querySelector('.sthab');[...habNeed].reverse().forEach(({c,r})=>{const n=stRow(c,r[1],st,P);n.classList.add('sthabrow');anchor.after(n);});}
     if(need2.length||habNeed.length)page.append(list);

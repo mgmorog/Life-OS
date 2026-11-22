@@ -38,6 +38,7 @@ function viewMore(root){
   if(App.state.loading&&!recs.size){root.append(tabSkeleton('more'));return;}
   const S=get.settings(),page=el('div',{class:'page'});
   page.append(el('div',{class:'pghead'},el('h1',{class:'pgtitle'},'More'),IconButton('Settings',{cls:'green',html:ic('gear',IC.lg),onclick:()=>App.go('prefs')})));
+  {const wn=whatsNewCard();if(wn)page.append(wn);}
   page.append(el('button',{class:'searchbox',style:'color:var(--ink-3);width:100%;flex:none',onclick:e=>{searchFrom(e.currentTarget);App.state.qType='All';App.go('search');},html:ic('search',IC.md)+'<span>Search everything</span>'}));
   const PE=!!App.state.pinEdit;
   page.append(el('div',{class:'sh2 pinh'},el('span',{class:'lbl'},'Pinned'),el('span',{style:'display:flex;gap:var(--s5)'},PE?Button('Add',{variant:'link',onclick:editPins}):null,Button(PE?'Done':'Edit',{variant:'link',onclick:()=>{App.state.pinEdit=!PE;App.refresh();}}))));
@@ -46,14 +47,14 @@ function viewMore(root){
   if(absent.length)page.append(SectionLabel('Main views'),el('div',{class:'list'},absent.map(x=>Row({style:'',onclick:()=>App.go(x)},IconTile(null,{html:ic(PLACES[x].i,IC.md)}),el('span',{class:'grow'},el('b',{},PLACES[x].n)),RowEnd('chevron')))));
   /* your life areas, one tap away */
   {const areas=(S.areas||AREAS);page.append(el('div',{class:'sh2'},el('span',{class:'lbl'},'Life areas'),lnk('All',()=>App.go('areas'))),
-    el('div',{class:'arail'},areas.map(a=>el('button',{class:'acirc',onclick:()=>App.go('area',{name:a})},el('span',{class:'ic',html:ic(areaIcon(a),IC.xl)}),el('span',{class:'an'},a)))));}
+    (rail=>{/* coming back to More, the rail starts at the beginning again */try{let was=true;new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting&&!was)rail.scrollLeft=0;was=e.isIntersecting;})).observe(rail);}catch(e){}return rail;})(el('div',{class:'arail'},areas.map(a=>el('button',{class:'acirc',onclick:()=>App.go('area',{name:a})},el('span',{class:'ic',html:ic(areaIcon(a),IC.xl)}),el('span',{class:'an'},a))))));}
   const row=(i,n,sub,on,subCls)=>Row({style:'',onclick:on},IconTile(null,{html:ic(i,IC.md)}),el('span',{class:'grow'},el('b',{style:'font-size:var(--fs-headline)'},n),sub?el('small',{class:subCls||null},sub):null),RowEnd('chevron'));
   const place=id=>id==='reviews'?(()=>{const nr=nextReviewLine();return row(PLACES[id].i,PLACES[id].n,nr&&nr[0],()=>App.go(id),nr&&nr[1]?'duenow':null);})():row(PLACES[id].i,PLACES[id].n,null,()=>App.go(id));
   /* anything pinned above isn't listed a second time below */
   const pinS=new Set(S.pinned||[]),planL=['inbox','tasks','habits','goals','routines','projects','lists','reviews'].filter(x=>!pinS.has(x));
   if(planL.length)page.append(SectionLabel('Plan'),el('div',{class:'list'},planL.map(place)));
   page.append(SectionLabel('Saved'),el('div',{class:'list'},row('image','Photos',null,()=>App.go('photos')),row('archive','Archive',null,()=>App.go('archive')),row('share','Import tasks','From Todoist, TickTick or a list',importTasksSheet)));
-  page.append(el('div',{class:'morefoot'},Button('Recently deleted',{variant:'link',size:'sm',onclick:()=>App.go('trash')}),el('span',{'aria-hidden':'true'},'·'),Button('Settings',{variant:'link',size:'sm',onclick:()=>App.go('prefs')})));
+  page.append(el('div',{class:'morefoot'},Button('Recently deleted',{variant:'link',size:'sm',onclick:()=>App.go('trash')})));
   root.append(page);
 }
 /* choose a few places and put them in order: used by pins and the bottom bar */
@@ -64,10 +65,10 @@ function orderSheet({title,init,max,word,limit,groups,info,exact=false,onDone}){
   var box;
   function toTop(){const sb=box.closest('.sbody');if(sb)sb.scrollTop=0;}
   function draw(){if(!box)return;box.innerHTML='';const full=D.length>=max;
-    box.append(el('p',{class:'small',role:'status',style:nudge?'font-weight:500;color:var(--now)':'color:var(--ink-2)'},nudge||`${D.length} of ${max} ${word}. Drag to set the order.`));
+    box.append(el('p',{class:'small',role:'status',style:nudge?'font-weight:500;color:var(--now)':'color:var(--ink-2)'},nudge||(full?`${D.length} of ${max} ${word}. Remove one to add another.`:`${D.length} of ${max} ${word}. Drag to set the order.`)));
     const icon=id=>IconTile(null,{html:ic(info(id).i,IC.md)});
     if(D.length){const list=el('div',{class:'list'});D.forEach((id,i)=>{const r=Row({as:'div',style:'','data-i':String(i)},icon(id),el('span',{class:'grow'},el('b',{style:'font-weight:500'},info(id).n)),IconButton(`Remove ${info(id).n}`,{style:'color:var(--ink-3)',html:ic('x',IC.sm),onclick:()=>{D=D.filter(x=>x!==id);nudge='';draw();}}));const h=el('span',{class:'grip','aria-label':`Drag ${info(id).n} to reorder`,html:sv('<circle cx="9" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="18" r="1"/>',18)});r.append(h);list.append(r);reorderable(h,r,list,()=>{const c=D.slice();D=[...list.children].map(n=>c[+n.dataset.i]);draw();});});box.append(list);}
-    const pickRow=id=>el('button',{class:'li'+(full?' pinfull':''),style:'',onclick:()=>{if(full){nudge=limit;draw();toTop();return;}D.push(id);nudge='';draw();toTop();}},icon(id),el('span',{class:'grow'},el('b',{style:'font-weight:500'},info(id).n)),el('span',{style:'display:grid;color:var(--action-text)',html:ic('plus',IC.md)}));
+    const pickRow=id=>el('button',{class:'li'+(full?' pinfull':''),style:'',onclick:()=>{if(full){nudge=limit;draw();toTop();return;}D.push(id);nudge='';draw();toTop();}},icon(id),el('span',{class:'grow'},el('b',{style:'font-weight:500'},info(id).n)),el('span',{style:`display:grid;color:${full?'var(--ink-faint)':'var(--action-text)'}`,'aria-hidden':'true',html:ic('plus',IC.md)}));
     groups.forEach(([label,ids])=>{const f=ids.filter(x=>!D.includes(x));if(f.length)box.append(SectionLabel(label),el('div',{class:'list'},f.map(pickRow)));});}
   return inst;
 }
@@ -203,13 +204,13 @@ function viewInsights(root){
   insightsExtras(page);
   const byArea={},byDow=[0,0,0,0,0,0,0];let dk=k(addD(today(),-55));while(dk<=tk){const d=dayItems(dk);[...d.timed,...d.anytime].forEach(e=>{if(e.done){byArea[e.area||'No area']=(byArea[e.area||'No area']||0)+1;byDow[fromK(dk).getDay()]++;}});dk=addK(dk,1);}
   const areas=Object.entries(byArea).sort((a,b)=>b[1]-a[1]),amax=areas[0]?areas[0][1]:1;
-  if(areas.length)page.append(el('div',{class:'bars'},SectionLabel('Finished by life area'),areas.map(([a,n])=>el('div',{class:'bar-row'},el('span',{class:'clip'},a),Progress(n/amax,{size:'lg'}),el('span',{class:'small muted tnum'},String(n))))));
+  if(areas.length)page.append(el('div',{class:'bars rvbars'},SectionLabel('Finished by life area'),areas.map(([a,n])=>el('div',{class:'bar-row'},el('span',{class:'clip'},a),Progress(n/amax,{size:'lg'}),el('span',{class:'small muted tnum'},String(n))))));
   {const t0=today(),dn=t0.getDate(),a1=k(new Date(t0.getFullYear(),t0.getMonth(),1)),b1=tk,lm=new Date(t0.getFullYear(),t0.getMonth()-1,1),a0=k(lm),b0=k(new Date(lm.getFullYear(),lm.getMonth(),Math.min(dn,new Date(lm.getFullYear(),lm.getMonth()+1,0).getDate())));
     const count=(a,b)=>{const m={};for(let d=a;d<=b;d=addK(d,1)){const di=dayItems(d);[...di.timed,...di.anytime].forEach(e=>{if(e.done&&e.area)m[e.area]=(m[e.area]||0)+1;});}get.all('entry').forEach(x=>{if(x.f&&x.f.t==='cfg')return;const d=x.f&&x.f.date||k(new Date(x.createdAt||0));if(d>=a&&d<=b&&x.hub)m[x.hub]=(m[x.hub]||0)+1;});return m;};
     const now=count(a1,b1),then=count(a0,b0),rowsA=(get.settings().areas||AREAS).filter(a=>now[a]||then[a]).map(a=>[a,now[a]||0,then[a]||0]).sort((x,y)=>(y[1]-y[2])-(x[1]-x[2]));
     if(rowsA.length)page.append(Card({title:`Life areas · ${MONL[t0.getMonth()]} vs. ${MONL[lm.getMonth()]}`,as:'div'},Caption(`Things done and logged in the first ${dn} day${dn>1?'s':''} of each month.`,{as:'p',style:'margin:var(--nudge) 0 var(--s2)'}),el('div',{class:'list',style:'box-shadow:none;border:0'},rowsA.map(([a,n,p])=>{const d=n-p,dir=d>0?'up':d<0?'down':'flat';return Row({style:'width:100%;text-align:left;padding-inline:0',onclick:()=>App.go('area',{name:a})},el('span',{class:'grow'},el('span',{class:'tt'},a),el('small',{},`${n} this month · ${p} last month`)),el('span',{class:'atr '+dir},dir==='up'?`▲ ${d}`:dir==='down'?`▼ ${-d}`:'Same'));}))));}
   const hs=get.all('habit').filter(h=>!h.paused).map(h=>[h,habitRate(h)]).filter(x=>x[1]!=null).sort((a,b)=>b[1]-a[1]);
-  if(hs.length)page.append(el('div',{class:'bars'},SectionLabel('Habits kept · last 30 days'),hs.map(([h,r])=>el('button',{class:'bar-row',style:'width:100%;text-align:left',onclick:()=>App.go('habit',{id:h.id})},el('span',{class:'clip'},h.title),Progress(r,{size:'lg'}),el('span',{class:'small muted tnum'},`${Math.round(r*100)}%`)))));
+  if(hs.length)page.append(el('div',{class:'bars rvbars'},SectionLabel('Habits kept · last 30 days'),hs.map(([h,r])=>el('button',{class:'bar-row',style:'width:100%;text-align:left',onclick:()=>App.go('habit',{id:h.id})},el('span',{class:'clip'},h.title),Progress(r,{size:'lg'}),el('span',{class:'small muted tnum'},`${Math.round(r*100)}%`)))));
   const cl=carried();if(cl.length){const oldest=cl.reduce((m,t)=>t.date<m.date?t:m,cl[0]);page.append(Card({title:'Still open from past days',as:'div'},el('h2',{},`${cl.length} task${cl.length>1?'s':''}`),el('p',{class:'sub'},`The oldest, “${oldest.title}”, has waited since ${shortDay(oldest.date)}.`),el('div',{class:'btnrow'},Button('Sort them in a review',{variant:'secondary',onclick:()=>{App.state.rv=null;App.go('review');}}))));}
   const bd=byDow.indexOf(Math.max(...byDow));if(byDow[bd])page.append(Card({title:'Your strongest day',as:'div'},el('h2',{},DOW[bd]),el('p',{class:'sub'},`${byDow[bd]} things finished on ${DOW[bd]}s in the last 8 weeks.`)));
   root.append(page);

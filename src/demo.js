@@ -52,7 +52,13 @@ const DEMO_BANK={
   volunteer:['Food bank shift','Habitat build'],giving:['Red Cross','Local food bank'],faith:['Sunday service','Evening prayer']
 };
 /* hand-written fields where random ones would read as nonsense (matched to DEMO_BANK by position) */
+const DEMO_AREANOTE={Career:'Focus this quarter: ship the Q1 release, then talk about the next role.',Home:'Kitchen first, then the basement.',Health:'Sleep before seven, run three times a week.',Finances:'Emergency fund before anything else.',Relationships:'One real conversation a week with someone I miss.',Recreation:'More afternoons outside while it’s warm.',Learning:'Finish one book before starting the next.',Pets:'Longer walks on weekends.',Community:'Keep it simple.'};
+/* which area each demo task belongs to */
+const DEMO_TAREA=[[/staff meeting|AP|Workday|1:1|resume|expense|grant|board|costing|release/i,'Career'],[/bank|credit card|bill|budget|tax|HSA|Amazon/i,'Finances'],[/grocery|laundry|clean|trash|vacuum|sheets|door|closet|car |registration|inspection|fridge|recycl/i,'Home'],[/haircut|contact lenses|dentist|gym|doctor|run|shoes/i,'Health'],[/Grandma|Mom|date night|thank-you|Priya|Sam/i,'Relationships'],[/photos|ceramics|sourdough|guitar/i,'Recreation'],[/read|course|SQL|book/i,'Learning']];
+const demoAreaOf=(nm,fb)=>{const h=DEMO_TAREA.find(([re])=>re.test(nm));return h?h[1]:fb;};
 const DEMO_F={
+  outings:[{where:'Outdoors'},{where:'Indoors'},{where:'Outdoors'},{where:'Outdoors'}],
+  people:[{circle:'Friends'},{circle:'Work'},{circle:'Family'},{circle:'Family'},{circle:'Work'},{circle:'Friends'},{circle:'Family'}],
   compass:[{note:'Say the hard thing kindly.'},{note:'Sleep and movement before extra work.'},{note:'Dinner together, phones away.'},{note:'Do the job well even when no one checks.'},{note:'Learn one new thing a week.'}],
   sleep:[{bed:'23:10',wake:'06:45',rested:'OK',what:''},{bed:'00:30',wake:'08:30',rested:'Rested',what:''},{bed:'01:15',wake:'06:40',rested:'Tired',what:''}],
   records:[{status:'Vaccine',val:'Walgreens'},{status:'Lab result',val:'All in range'},{status:'Doctor',val:'Dr. Lee · new glasses'},{status:'Vaccine',val:'Good until 2034'}],
@@ -96,7 +102,7 @@ function loadDemo(quiet){
   const NR={type:'never',end:null},AR=AREAS;
   /* every area on, every module on */
   const allAreas=[...new Set([...AREAS,...OPT_AREAS])];const shown={};allAreas.forEach(a=>shown[a]=toolsOf(a).filter(x=>x.optIn).map(x=>x.id));
-  setSettings({areas:allAreas.slice().sort((a,b)=>a.localeCompare(b)),hubHidden:{},hubShown:shown,introDone:true,foundationOff:true,demoSnap:snap,demoVer:8});
+  setSettings({areas:allAreas.slice().sort((a,b)=>a.localeCompare(b)),hubHidden:{},hubShown:shown,introDone:true,foundationOff:true,demoSnap:snap,demoVer:9});
   if(!Array.isArray(s0.jobs)||!s0.jobs.length)setSettings({jobs:[{id:'work',name:'Roswell Park',flex:false,cycle:'week',shifts:[{id:'s1',days:[0,1,2,3],start:8*60+30,end:17*60},{id:'s2',days:[4],start:8*60+30,end:13*60}]}]});
   /* projects first, so tasks can belong to them */
   const projs=[['Kitchen refresh','Home',['Measure the cabinets','Pick a paint color','Order hardware','Paint weekend']],['Q1 Workday release','Career',['Write test scripts','UAT with grant managers','Sign-off from Finance','Go-live checklist','Train AP team']],['Japan trip','Travel',['Book flights','Book Kyoto ryokan','Get JR pass','Pocket wifi']],['Move to the new office','Career',[]],['Garage cleanout (paused)','Home',['Sort donations','Sell the old bike']]];
@@ -111,12 +117,12 @@ function loadDemo(quiet){
   T('Renew car registration',{date:addK(t,-3),area:'Home',priority:'high'});T('Send thank-you note to Priya',{date:addK(t,-1),area:'Relationships'});T('Return Amazon cables',{date:addK(t,-6),area:'Finances'});
   const TASKS=['Grocery run','Prep slides for staff meeting','Call the bank','Schedule haircut','Review AP aging report','Pay credit card','Plan date night','Update resume bullets','Clean out email','Order contact lenses','Workday config review','1:1 prep','Laundry','Text Grandma Rose','Reconcile grant budget','Approve expense reports','Vacuum','Meal prep','Book vet appointment','Return library books','Renew gym membership','Write weekly update','Call Mom','Pick up prescription','Draft board memo','Clean the fridge','Update budget sheet','Fix bike tire','Send invoice'];
   const usedT=new Set(get.all('task').filter(x=>x.demo).map(x=>x.title));const freshT=()=>{const left=TASKS.filter(x=>!usedT.has(x));if(!left.length)return null;const x=pick(left);usedT.add(x);return x;};
-  for(let i=1;i<=30;i++){const n=1+Math.floor(r()*2);for(let j=0;j<n;j++){const nm=freshT();if(nm)T(nm,{date:addK(t,i),area:pick(AR),time:r()<.3?(8+Math.floor(r()*10))*60:null,priority:r()<.15?'high':'normal',steps:r()<.15?[{id:uid('s'),t:'First step',d:false},{id:uid('s'),t:'Second step',d:false}]:[]});}}
+  for(let i=1;i<=30;i++){const n=1+Math.floor(r()*2);for(let j=0;j<n;j++){const nm=freshT();if(nm)T(nm,{date:addK(t,i),area:demoAreaOf(nm,pick(AR)),time:r()<.3?(8+Math.floor(r()*10))*60:null,priority:r()<.15?'high':'normal',steps:r()<.15?[{id:uid('s'),t:'First step',d:false},{id:uid('s'),t:'Second step',d:false}]:[]});}}
   T('Gym',{date:addK(t,-14),time:6*60+30,area:'Health',repeat:{type:'custom',unit:'week',n:1,days:[0,2,4],end:null}});
   T('Take out trash',{date:addK(t,-20),area:'Home',repeat:{type:'custom',unit:'week',n:1,days:[1],end:null}});
   T('Pay rent',{date:addK(t,-40),area:'Finances',repeat:{type:'custom',unit:'month',n:1,end:null},priority:'high'});
-  ['Learn to make sourdough','Clean out the closet','Look into a ceramics class','Back up phone photos','Donate old clothes','Fix the squeaky door'].forEach((x,i)=>T(x,{area:pick(AR),deadline:i<2?addK(t,4+i*3):null}));
-  for(let d=1;d<=60;d++){const k=addK(t,-d),n=2+Math.floor(r()*4);for(let j=0;j<n;j++){const nm=pick(TASKS);let dn=r()<.95;if(!dn){if(usedT.has(nm))dn=true;else usedT.add(nm);}T(nm,{date:k,area:pick(AR),doneDates:dn?done(k):{}});}}
+  ['Learn to make sourdough','Clean out the closet','Look into a ceramics class','Back up phone photos','Donate old clothes','Fix the squeaky door'].forEach((x,i)=>T(x,{area:demoAreaOf(x,pick(AR)),deadline:i<2?addK(t,4+i*3):null}));
+  for(let d=1;d<=60;d++){const k=addK(t,-d),n=2+Math.floor(r()*4);for(let j=0;j<n;j++){const nm=pick(TASKS);let dn=r()<.95;if(!dn){if(usedT.has(nm))dn=true;else usedT.add(nm);}T(nm,{date:k,area:demoAreaOf(nm,pick(AR)),doneDates:dn?done(k):{}});}}
   P[1].steps.length&&[0,1,2].forEach(i=>T(['Fix costing allocation rule','Test spend authorization BP','Write release notes'][i],{date:addK(t,i+2),area:'Career',part:P[1].id,doneDates:i===0?done(addK(t,-1)):{}}));
   /* priorities: 3 today (one done), 2 tomorrow */
   const s1=get.settings();const tops=Object.assign({},s1.top3||{});tops[t]=[{id:today[0].id},{id:today[1].id},{id:today[2].id}];tops[addK(t,1)]=[{id:today[3].id},{id:today[5].id}];
@@ -145,7 +151,7 @@ function loadDemo(quiet){
   /* goals */
   const G=(title,area,dl,steps)=>mk('goal',{title,notes:'',area,deadline:dl,color:pick(['blue','sage','plum']),status:'active',steps:steps.map((x,i)=>({id:uid('s'),t:x,d:i<Math.ceil(steps.length/2)}))});
   G('Run a half marathon','Health',addK(t,150),['Pick a plan','Run 10K','Run 15K','Sign up','Race day']);G('Save $10,000 emergency fund','Finances',addK(t,300),['Open HYSA','Auto-transfer $400','Hit $5K','Hit $10K']);
-  G('Land a Senior Manager role','Career',addK(t,200),['Update LinkedIn','Resume refresh','10 coffee chats','Apply to 5 roles']);G('Read 24 books this year','Learning',addK(t,45),['Q1: 6','Q2: 12','Q3: 18','Q4: 24']);G('Pay off the car loan','Finances',addK(t,400),['Extra $200 a month','Refinance quote','Final payment']);G('Visit Japan','Travel',addK(t,120),['Passport renewed','Flights','Ryokan','Itinerary']);G('Get my CPA-level Excel skills','Career',null,[]);
+  G('Land a Senior Manager role','Career',addK(t,200),['Update LinkedIn','Resume refresh','10 coffee chats','Apply to 5 roles']);G('Read 24 books this year','Learning',addK(t,45),['6 books by March','12 books by June','18 books by September','All 24 books']);G('Pay off the car loan','Finances',addK(t,400),['Extra $200 a month','Refinance quote','Final payment']);G('Visit Japan','Travel',addK(t,120),['Passport renewed','Flights','Ryokan','Itinerary']);G('Get my CPA-level Excel skills','Career',null,[]);
   /* routines */
   const R=(title,steps,o={})=>{const x=mk('routine',Object.assign({title,notes:'',steps:steps.map(([s,m])=>({id:uid('s'),t:s,min:m,habit:null})),days:[],setTime:null,startDate:addK(t,-30),reminder:null,area:'Personal growth',color:'sage',runs:{}},o));for(let d=1;d<=30;d++)if(r()<.5)x.runs[addK(t,-d)]=true;put(x,{silent:true});};
   R('Morning routine',[['Make bed',2],['Stretch',10],['Coffee + journal',15],['Review Today',5]],{setTime:6*60+15});R('Sunday reset',[['Laundry',30],['Plan the week',20],['Meal prep',60],['Tidy up',20]],{area:'Home'});R('Evening wind-down',[['Dishes',10],['Read',20],['Lights out',1]],{setTime:22*60});R('Shutdown routine',[['Inbox to zero',10],['Plan tomorrow',5],['Close laptop',1]],{area:'Career'});
@@ -165,10 +171,10 @@ function loadDemo(quiet){
    {hub:'Personal growth',tool:'lessons',f:{lesson:'The obstacle is the way.',kind:'Quote',from:'Marcus Aurelius',area:'Unsorted',date:addK(t,-20)}},
    {hub:'Learning',tool:'paths',f:{what:'Systems thinking',why:'Better process design at work',note:'Book: Thinking in Systems\nVideo: Donella Meadows lecture\nPractice: map the AP intake loop',cur:1}}].forEach(o=>{mk('entry',o);n++;});
   /* area notes */
-  allAreas.forEach(a=>{if(!get.id('area-'+a))put(Object.assign({id:'area-'+a,kind:'areanote',text:pick(['','Focus this quarter: consistency over intensity.','Keep it simple.'])},ex),{silent:true});});
+  allAreas.forEach(a=>{if(!get.id('area-'+a))put(Object.assign({id:'area-'+a,kind:'areanote',text:(DEMO_AREANOTE[a]||'')},ex),{silent:true});});
   /* wider spread (v246): next quarter and next year, older history, finished and paused goals and projects, period focuses */
   {const FAR=['Dentist six-month checkup','Renew passport','File quarterly estimated taxes','Plan spring garden','Book summer vacation','Annual performance review prep','Car inspection','Replace running shoes','Mid-year budget check','Clean out garage','Schedule HVAC service','Renew CRA credential','Plan Mom’s 70th','Review 401(k) allocation','Spring closet swap'];
-   for(let i=35;i<=180;i+=3+Math.floor(r()*4))T(pick(FAR),{date:addK(t,i),area:pick(AR),priority:r()<.2?'high':'normal',time:r()<.2?(9+Math.floor(r()*8))*60:null});
+   for(let i=35;i<=180;i+=3+Math.floor(r()*4)){const nm=pick(FAR);T(nm,{date:addK(t,i),area:demoAreaOf(nm,pick(AR)),priority:r()<.2?'high':'normal',time:r()<.2?(9+Math.floor(r()*8))*60:null});}
    T('Renew driver’s license',{date:addK(t,400),area:'Home'});T('Workday Pro recertification',{date:addK(t,365),area:'Career',priority:'high'});T('Plan 2028 goals',{date:addK(t,410),area:'Personal growth'});
    for(let d=61;d<=180;d+=2+Math.floor(r()*3))T(pick(TASKS),{date:addK(t,-d),area:pick(AR),doneDates:done(addK(t,-d))});
    T('Old task that slipped through',{date:addK(t,-21),area:pick(AR)});T('Deadline next week, no date yet',{area:'Career',deadline:addK(t,8),priority:'high'});
@@ -194,4 +200,4 @@ function clearDemo(){const s=get.settings(),snap=s.demoSnap;
     App.refresh();toast('Demo cleared');}});}
 
 /* refresh an already-loaded demo with the current generator, keeping the original settings snapshot */
-function demoRefresh(){const s=get.settings(),keep=s.demoSnap;if(!keep)return;[...recs.values()].filter(r=>r.demo).forEach(r=>remove(r.id,{silent:true,hard:true}));setSettings({demoSnap:null});loadDemo(true);setSettings({demoSnap:keep,demoVer:8});}
+function demoRefresh(){const s=get.settings(),keep=s.demoSnap;if(!keep)return;[...recs.values()].filter(r=>r.demo).forEach(r=>remove(r.id,{silent:true,hard:true}));setSettings({demoSnap:null});loadDemo(true);setSettings({demoSnap:keep,demoVer:9});}

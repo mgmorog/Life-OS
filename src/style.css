@@ -2537,7 +2537,7 @@ html.c-fade .todo.won .t3in .tick-host.done{opacity:1}
 .ftmrow .grow small{font-size:var(--fs-small);color:var(--text-muted)}
 .ftmrow .chev{color:var(--ink-3);display:grid}
 .tick-hit.aiopen{display:grid;place-items:center;position:relative}
-.tick-hit.aiopen::before{content:"";position:absolute;width:var(--size-28);height:var(--size-28);border-radius:var(--r-full);background:var(--line-2)}
+
 .tick-hit.aiopen svg{position:relative}
 .aichev{display:grid;color:var(--ink-3);flex:none;align-self:center;margin-left:var(--s1)}
 .revc{min-height:200px}
@@ -3656,8 +3656,10 @@ html.c-fade :is(.tick-host,.hrow,.blk,.dayline).done:not(.nodim *){opacity:var(-
 .li>.itile:first-child{width:var(--row-lead);min-width:var(--row-lead);margin-left:calc(var(--s1) * -1)}
 
 /* ───── Reach: everything you can tap is at least 44px, without changing how it looks ───── */
-.chip,.chip.line,.fchip,.hdchip{height:calc(var(--chip-h) + var(--s2));margin-block:calc(var(--s1) * -1);border:var(--s1) solid transparent;background-clip:padding-box}
-.btn.sm{height:calc(var(--btn-h-sm) + var(--s2));margin-block:calc(var(--s1) * -1);border:var(--s1) solid transparent;background-clip:padding-box}
+.chip,.chip.line,.fchip,.hdchip,.btn.sm{position:relative;border:0}
+:is(.chip,.fchip,.hdchip,.btn.sm)::before{content:"";position:absolute;left:0;right:0;top:50%;height:var(--ctl);transform:translateY(-50%)}
+.chip,.chip.line,.fchip,.hdchip{height:var(--chip-h)}
+.btn.sm{height:var(--btn-h-sm)}
 :is(.pring,.oqplus,.date,.tbtn,.m-head,.hplan,.tripname,.hafold,.plab){position:relative}
 :is(.pring,.oqplus,.date,.tbtn,.m-head,.hplan,.tripname,.hafold,.plab)::after{content:"";position:absolute;inset:calc((var(--ctl) - 100%) / -2) 0;min-height:var(--ctl);top:50%;transform:translateY(-50%);left:0;right:0}
 .pring::after,.oqplus::after{left:calc(var(--s1) * -1);right:calc(var(--s1) * -1);border-radius:var(--r-full)}
@@ -3665,3 +3667,61 @@ html.c-fade :is(.tick-host,.hrow,.blk,.dayline).done:not(.nodim *){opacity:var(-
 :is(.bl,.secl,.slabel,.sh2,.pinh,.lblrow) :is(.linkbtn,.btn.link){justify-content:flex-end}
 button.grow{align-self:stretch;min-height:var(--ctl)}
 .setsearch input{align-self:stretch}
+/* ───── Review round (v263) ───── */
+/* Quick capture: hidden parts stay hidden; soft chips; hint tight under the field */
+.sheet .photos[hidden],.sheet .field[hidden]{display:none}
+.capxb{background:var(--chip-bg);box-shadow:none;color:var(--text);height:var(--chip-h);border-radius:var(--r-full)}
+.capturn .chip{height:var(--chip-h);background:var(--chip-bg);box-shadow:none}
+.capex{margin:calc(var(--s2) * -1) var(--s4) 0}
+.segfield .seg{margin-top:var(--s2)}
+.moneyin{display:flex;align-items:baseline;gap:var(--s1);margin-top:var(--s2)}.moneyin .cur{color:var(--text-muted)}.moneyin input{margin-top:0!important}
+/* Tasks: one divider per row, starting at the title; ticks never clipped */
+.list .trow{border-bottom:0;width:100%}
+.li+.li::before,.swr+.swr::before{z-index:calc(var(--z-raised) + 2)}
+.swr{margin-left:calc(var(--s3) * -1);padding-left:var(--s3)}
+.swr>.li{margin-left:calc(var(--s3) * -1);padding-left:calc(var(--s3) + var(--pad))}
+/* one divider system for lists: each row draws the line above itself, on top, starting at the title */
+.list>*{position:relative}
+.list>*+*::before,.list>.li+.li::before,.list>.swr+.swr::before{content:"";position:absolute;top:0;right:0;left:var(--pad);border-top:var(--hairline) solid var(--divider);z-index:calc(var(--z-raised) + 3);pointer-events:none}
+.list>*+*:has(:is(.itile,.tick-hit,.dlic,.stai,.tick):first-child, .trow>.tick-hit:first-child, .swr .tick-hit)::before{left:calc(var(--pad) + var(--row-lead) + var(--row-gap))}
+.list .swr+.swr::before,.list .li .li::before{display:none}
+.list>*>.swr+.swr::before{display:none}
+.modtile .mtx{font-style:normal;font-size:var(--fs-row);font-weight:var(--fw-medium);color:var(--text);line-height:var(--lh-ui);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-top:var(--s1)}
+/* Studio: "Spread" sits at the end of its row */
+.li.strow.sthab{flex-wrap:nowrap;padding-right:var(--pad)}
+.sthab .strow-h{flex:1 1 auto}
+.sthab .linkbtn{margin:0;flex:none;padding:0 var(--s4);min-height:var(--btn-h-sm);border-radius:var(--r-full);background:var(--btn-tonal-bg);color:var(--btn-tonal-fg)}
+/* sheets rise in one movement: the keyboard lift eases with the slide instead of jumping after it */
+.sheet{transition:transform var(--dur-base) var(--ease),bottom var(--dur-base) var(--ease),max-height var(--dur-base) var(--ease)}
+/* Today: when every habit is done */
+.fhabs.alldone{display:flex;flex-wrap:wrap;gap:var(--s2);margin-top:var(--s3)}
+.hdmini{width:var(--size-28);height:var(--size-28);border-radius:var(--r-full);background:var(--sage-200);color:var(--accent-deep);display:grid;place-items:center}
+.habnote{margin-left:auto;margin-right:var(--s3)}
+.hdchip.next{max-width:min(62%,240px)}
+.hdchip.next .clip{white-space:nowrap}
+/* Today: a finished priority matches every other finished item */
+.pring.pr-done{border-color:var(--done)}
+.pring.pr-done .pfill{background:var(--done)}
+.pslot:has(.pl-done){min-height:0}
+.plab.pl-done{font-size:inherit;color:var(--text);opacity:var(--done-opacity);text-decoration:line-through;text-decoration-thickness:1.5px;text-decoration-color:color-mix(in srgb,currentColor 55%,transparent)}
+.pslot:has(.pl-done)>:first-child{transform:none}
+/* Date picker: same light chips as everywhere; the chosen month soft green */
+.dp-chip,.dp-q{background:var(--chip-bg);height:var(--chip-h);font-weight:var(--fw-medium)}
+.dp-chip.on,.dp-q.on{background:var(--selected);color:var(--accent-deep)}
+/* Settings search: the clear button only when there's text (and never the system one) */
+.sfclear[hidden]{display:none!important}
+input[type=search]::-webkit-search-cancel-button{-webkit-appearance:none;display:none}
+.li.pinfull{opacity:var(--o-muted)}
+/* pull to refresh: "Up to date" sits below the header row, not on the back link */
+#ptr .p-done{top:calc(var(--ctl) + var(--s3));box-shadow:var(--menu-shadow)}
+.praddt{display:flex;align-items:center;gap:var(--s3);width:100%;color:var(--action-text);font-weight:var(--fw-medium)}
+/* Routines: step numbers in a light ring, like priorities */
+.rtnum{background:none;box-shadow:inset 0 0 0 var(--ring) var(--prio-ring);color:var(--prio-fg)}
+/* Reviews: names sit on their own line above each bar, never cut off */
+.rvbars .bar-row{grid-template-columns:minmax(0,1fr) auto;row-gap:var(--s1)}
+.rvbars .bar-row>:first-child{grid-column:1/-1;white-space:normal;overflow:visible;text-overflow:clip}
+/* "Also …" names read as links */
+.modquiet .mqb{color:var(--action-text)}
+.dfact .dbadge.late,.dfact .dbadge.warn,.li .dbadge.late,.li .dbadge.warn{color:var(--text-muted)}
+/* habits list: finished habits are struck through like tasks */
+.ohab2.done .oh1>b,.hrow.done .tt,.fhab.done .fhabt small{text-decoration:line-through;text-decoration-thickness:1.5px;text-decoration-color:color-mix(in srgb,currentColor 55%,transparent)}

@@ -85,7 +85,7 @@ function capDupe(t){const n=(t||'').trim().toLowerCase();if(n.length<3)return nu
   const tk=get.all('task').find(x=>isOpenTask(x)&&(x.title||'').trim().toLowerCase()===n);if(tk)return{label:`Already planned: ${tk.title}${tk.date?` · ${relDay(tk.date)}`:''}`,open:()=>taskSheet(tk)};
   for(const l of get.all('list')){const it=(l.items||[]).find(i=>!i.d&&(i.t||'').trim().toLowerCase()===n);if(it)return{label:`Already on ${l.title}`,open:()=>App.go('list',{id:l.id})};}
   const idea=get.all('idea').find(x=>(x.title||'').trim().toLowerCase()===n);if(idea)return{label:'Already in your Inbox',open:()=>captureSheet(idea)};return null;}
-const CAP_EX=['Try “Milk to groceries”','Try “Call Sam Fri 3pm #work”','Try “Gym 6–7pm”','Try “Pay rent every month on the 1st”','Try “Remind me to email Pat tomorrow”','Try “Run 3 times a week”','Try “Book flights by Dec 1 !”'];
+const CAP_EX=['Try “Milk to groceries”','Try “Call Sam Fri 3pm #work”','Try “Gym 6–7pm”','Try “Pay rent every month on the 1st”','Try “Remind me to email Pat tomorrow”','Try “Run 3 times a week”','Try “Book flights by Dec 1”'];
 /* A best guess at what an idea is. Returns null when there's no good reason to guess. */
 const eventStart=t=>/\bdinner|drinks\b/i.test(t)?19*60:/\b(lunch|brunch)\b/i.test(t)?12*60:null;
 function suggestKind(title,notes,base,keep=[]){

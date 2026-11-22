@@ -3814,6 +3814,3 @@ input[type=search]::-webkit-search-cancel-button{-webkit-appearance:none;display
 /* v274 · planned sessions are softly shaded on the Plan a session calendar; the one you're moving gets a ring */
 .cal .cg button.mark:not(.on){background:var(--sage-200);color:var(--accent-deep);font-weight:var(--fw-medium)}
 .cal .cg button.ringd{box-shadow:inset 0 0 0 var(--ring-strong) var(--action)}
-/* v274 · planned sessions are softly shaded on the Plan a session calendar; the one you're moving gets a ring */
-.cal .cg button.mark:not(.on){background:var(--sage-200);color:var(--accent-deep);font-weight:var(--fw-medium)}
-.cal .cg button.ringd{box-shadow:inset 0 0 0 var(--ring-strong) var(--action)}

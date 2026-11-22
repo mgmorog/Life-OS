@@ -355,14 +355,20 @@ function zoomGrid(r0){if(!r0||!motionOK())return;const g=$('#month-grid');if(!g)
   g.animate([{transformOrigin:'0 0',transform:`translate(${r0.left-r1.left}px,${r0.top-r1.top}px) scale(${r0.width/r1.width},${r0.height/r1.height})`},{transformOrigin:'0 0',transform:'none'}],{duration:MOT.slow,easing:SOFT});
   const b=$('#cal-body');b&&[...b.children].filter(n=>!n.contains(g)).forEach((n,i)=>n.animate([{opacity:0},{opacity:1}],{duration:MOT.base,delay:160+i*40,fill:'backwards'}));}
 /* Tidy up: drag the idea right to keep it for later, left to let it go; it tilts and flies off, the next one rises */
-function deckSwipe(card,{right,left}){
-  let x0=null,y0=0,dx=0,lock=null;const tagR=el('span',{class:'dtag r'},'LATER'),tagL=el('span',{class:'dtag l'},'DELETE');card.append(tagR,tagL);card.style.touchAction='pan-y';
+function deckSwipe(card,{right,left,up:upFn}){
+  /* v282 · right = task, left = delete, up = keep for later */
+  let x0=null,y0=0,dx=0,dy=0,lock=null;const tagR=el('span',{class:'dtag r'},upFn?'TASK':'LATER'),tagL=el('span',{class:'dtag l'},'DELETE'),tagU=upFn?el('span',{class:'dtag u'},'LATER'):null;card.append(tagR,tagL);if(tagU)card.append(tagU);card.style.touchAction=upFn?'none':'pan-y';
   if(motionOK())card.animate([{transform:'translateY(12px) scale(.96)',opacity:.6},{transform:'none',opacity:1}],{duration:MOT.slow,easing:SOFT});
-  card.addEventListener('pointerdown',e=>{if(e.target.closest('a,button,.photo'))return;x0=e.clientX;y0=e.clientY;dx=0;lock=null;});
-  card.addEventListener('pointermove',e=>{if(x0==null)return;const a=e.clientX-x0,b=e.clientY-y0;if(!lock){if(Math.abs(a)>8&&Math.abs(a)>Math.abs(b)){lock='x';card.setPointerCapture(e.pointerId);}else if(Math.abs(b)>8)lock='y';}if(lock!=='x')return;dx=a;card.style.transition='none';card.style.transform=`translateX(${dx}px) rotate(${dx/18}deg)`;tagR.style.opacity=Math.max(0,dx/90);tagL.style.opacity=Math.max(0,-dx/90);});
-  const up=()=>{if(x0==null)return;x0=null;if(lock!=='x')return;
+  card.addEventListener('pointerdown',e=>{if(e.target.closest('a,button,.photo'))return;x0=e.clientX;y0=e.clientY;dx=0;dy=0;lock=null;});
+  card.addEventListener('pointermove',e=>{if(x0==null)return;const a=e.clientX-x0,b=e.clientY-y0;if(!lock){if(Math.abs(a)>8&&Math.abs(a)>Math.abs(b)){lock='x';card.setPointerCapture(e.pointerId);}else if(Math.abs(b)>8){lock=upFn&&b<0?'u':'y';if(lock==='u')card.setPointerCapture(e.pointerId);}}
+    if(lock==='x'){dx=a;card.style.transition='none';card.style.transform=`translateX(${dx}px) rotate(${dx/18}deg)`;tagR.style.opacity=Math.max(0,dx/90);tagL.style.opacity=Math.max(0,-dx/90);}
+    else if(lock==='u'){dy=Math.min(0,b);card.style.transition='none';card.style.transform=`translateY(${dy}px)`;tagU.style.opacity=Math.max(0,-dy/90);}});
+  const reset=()=>{card.style.transition='transform var(--dur-slow) '+SOFT;card.style.transform='';tagR.style.opacity=0;tagL.style.opacity=0;if(tagU)tagU.style.opacity=0;};
+  const up=()=>{if(x0==null)return;x0=null;
+    if(lock==='u'){if(dy<-90){card.style.transition='transform var(--dur-base) var(--exit),opacity var(--dur-base)';card.style.transform=`translateY(${-innerHeight/2}px)`;card.style.opacity='0';setTimeout(upFn,260);}else reset();return;}
+    if(lock!=='x')return;
     if(Math.abs(dx)>90){const dir=dx>0?1:-1;card.style.transition='transform var(--dur-base) var(--exit),opacity var(--dur-base)';card.style.transform=`translateX(${dir*innerWidth}px) rotate(${dir*20}deg)`;card.style.opacity='0';setTimeout(()=>dir>0?right():left(),260);}
-    else{card.style.transition='transform var(--dur-slow) '+SOFT;card.style.transform='';tagR.style.opacity=0;tagL.style.opacity=0;}};
+    else reset();};
   card.addEventListener('pointerup',up);card.addEventListener('pointercancel',up);return card;
 }
 

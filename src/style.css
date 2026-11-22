@@ -3891,3 +3891,30 @@ input[type=search]::-webkit-search-cancel-button{-webkit-appearance:none;display
 .capret{margin:0;padding:0 var(--s1);font-size:var(--fs-small);color:var(--ink-3)}
 .iblist>.swr+.swr::before{display:block}
 .ibstale .ibsb .btn{min-height:var(--size-36)}
+/* v282 · Inbox round two */
+.ocapi{flex:1;min-width:0;min-height:var(--ctl);border:0;background:none;font:inherit;font-size:var(--fs-input);color:var(--text);outline:none}
+.ocapi::placeholder{color:var(--text-muted)}
+.ocap:focus-within{border-color:var(--action)}
+.ibstart{display:flex;gap:var(--s2);overflow-x:auto;scrollbar-width:none;margin-top:calc(var(--s1) * -1)}
+.ibstart::-webkit-scrollbar{display:none}
+.ibstart .chip{flex:none}
+.ibsort{flex:none;display:inline-flex;align-items:center;gap:var(--s1);height:var(--size-28,28px);padding:0 var(--s3);font-size:var(--fs-small)}
+.ibfilters{display:flex;gap:var(--s2);overflow-x:auto;scrollbar-width:none;margin-inline:calc(var(--pad) * -1);padding-inline:var(--pad)}
+.ibfilters::-webkit-scrollbar{display:none}
+.ibfilters .chip{flex:none}
+.ibstale.soft{background:var(--surface-raised);box-shadow:var(--e-raised)}
+.ibrow .iblink{position:relative;width:var(--size-36);height:var(--size-36)}
+.ibrow .photo.thumb{position:relative}
+.ibnew{position:absolute;top:-1px;right:-1px;width:10px;height:10px;border-radius:var(--r-full);background:var(--action);box-shadow:0 0 0 2px var(--surface-raised)}
+.ibold{color:var(--amber-text,#A8622A)}
+.ibrow.pinned{box-shadow:inset 3px 0 0 var(--action)}
+.ibgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--s2)}
+.ibph{position:relative;aspect-ratio:1;border-radius:var(--r-row);background-size:cover;background-position:center;background-color:var(--line-2)}
+.ibph b{position:absolute;right:6px;bottom:6px;min-width:22px;height:22px;padding:0 6px;border-radius:var(--r-full);background:rgb(0 0 0 / .45);color:#fff;font-size:var(--fs-micro);display:grid;place-items:center}
+.pins .ptile .ic{position:relative}
+.pinbadge{position:absolute;top:-2px;right:-4px;min-width:20px;height:20px;padding:0 5px;border-radius:var(--r-full);background:var(--action);color:var(--on-accent);font-size:var(--fs-micro);font-weight:var(--fw-strong);display:grid;place-items:center;box-shadow:0 0 0 2px var(--bg)}
+.dtag.u{left:50%;top:auto;bottom:14px;transform:translateX(-50%);color:var(--ink-2);border-color:var(--ink-3);opacity:0}
+/* larger text: the suggested-home chip moves under the title */
+html:is(.t-large,.t-larger) .ibrow{flex-wrap:wrap}
+html:is(.t-large,.t-larger) .ibrow .ibmain{flex-basis:100%}
+html:is(.t-large,.t-larger) .ibrow .ibhome{margin-left:calc(var(--size-36) + var(--s3));max-width:none}

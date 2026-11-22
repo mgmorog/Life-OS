@@ -173,10 +173,10 @@ function toolTile(name,t){const l=entries(name,t.id),d=t.tile?t.tile(l,name):{v:
 function viewArea(root,name){
   if(!name){viewAreas(root);return;}
   markGs('area');
-  if(name==='Health'){viewHealth(root);return;}
-  if(name==='Travel'){viewTravel(root);return;}
-  if(DASH_SPECS[name]){viewDash(root,name);return;}
-  viewDashPlain(root,name);
+  if(name==='Health')viewHealth(root);else if(name==='Travel')viewTravel(root);else if(DASH_SPECS[name])viewDash(root,name);else viewDashPlain(root,name);
+  /* v282 · Inbox ideas given this life area wait at the bottom of its page */
+  const ideas=get.all('idea').filter(i=>i.area===name&&!(i.snooze&&i.snooze>todayK())),pg=root.querySelector('.page');
+  if(ideas.length&&pg)pg.append(SectionLabel(`Ideas · ${ideas.length}`),el('div',{class:'list'},ideas.map(i=>Row({onclick:()=>captureSheet(i)},el('span',{class:'grow'},el('b',{style:'font-weight:500'},typeof ideaTitle==='function'?ideaTitle(i):i.title),el('small',{},`In Inbox · ${shortAgo(i.createdAt)}`)),RowEnd('chevron')))));
 }
 /* one form builder shared by every hub record */
 const optsOf=f=>typeof f.opts==='function'?f.opts():f.opts;
@@ -222,7 +222,7 @@ function entrySheet(hub,t,rec,{seed=null,after=null,type=null,preset=null}={}){
   if(!isEdit&&ty)D.t=ty;
   if(!isEdit&&preset)Object.assign(D,preset);
   const titleF=fields[0].type==='select'?fields[1]:fields[0];
-  if(seed){const raw=seed.title&&seed.title!=='Unnamed Idea'?seed.title:'',w=parseWhen(raw,new Date());D[titleF.id]=w.title||raw;const nf=fields.find(f=>['note','val','why','result'].includes(f.id)&&f.id!==titleF.id);if(nf&&seed.notes)D[nf.id]=seed.notes;const df=fields.find(f=>f.type==='date'&&f.id!=='last');if(df&&(w.date||w.deadline))D[df.id]=w.date||w.deadline;if((seed.photos||[]).length)D.photos=seed.photos;}
+  if(seed){const raw=seed.title&&seed.title!=='Unnamed Idea'?seed.title:'',w=parseWhen(raw,new Date());D[titleF.id]=w.title||raw;const nf=fields.find(f=>['note','val','why','result'].includes(f.id)&&f.id!==titleF.id);if(nf&&seed.notes)D[nf.id]=seed.notes;const df=fields.find(f=>f.type==='date'&&f.id!=='last');if(df&&(w.date||w.deadline))D[df.id]=w.date||w.deadline;if((seed.photos||[]).length)D.photos=seed.photos;if(seed.f)Object.assign(D,seed.f);}
   const can=()=>titleF.type==='number'?true:!!String(D[titleF.id]??'').trim();
   const hasPhotos=def.photos||(t.photos&&def===t)||(D.photos||[]).length;
   formSheet({title:isEdit?`Edit ${word}`:`New ${word}`,addLabel:isEdit?'Save':'Add',D,word,isEdit,canAdd:can,commit:()=>{let r;if(isEdit){rec.f=D;r=rec;put(rec);toast('Saved');}else{r=create('entry',{hub,tool:t.id,f:D});toast('Added',null,'Undo',{open:dest('tool',{hub,tool:t.id})});after&&after();}if(t.after)t.after(r);},build:(body,update,i)=>{body.classList.add('esheet');

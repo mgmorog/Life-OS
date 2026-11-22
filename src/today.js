@@ -134,6 +134,7 @@ function viewToday(root){
     const g=get.all('goal').find(x=>goalCheckDue(x)&&App.state.goalLater!==x.id+todayK());if(g)aRow(`Check in on ${g.title}`,'How is this going?',()=>{const inst=openSheet({title:'Goal check-in',left:{label:'Close'},build:b=>{const c=goalCheckCard();if(c){c.style.boxShadow='none';c.style.padding='0';b.append(c);b.addEventListener('click',e=>{if(e.target.closest('.chip'))setTimeout(()=>inst.close(),150);});}}});});
     const cf=cfg('Health','checkin').f;if(cf.rem&&!checkOn(dk)&&nowMin()>=(tMin(cf.at||'21:00')??1260))aRow('Daily check-in','Energy, water and sleep',()=>App.go('tool',{hub:'Health',tool:'checkin'}));
     waitOpen().filter(w=>w.follow&&w.follow<=dk).slice(0,3).forEach(w=>aRow(`Follow up${w.who?` with ${w.who}`:''}`,w.title,()=>waitSheet(w)));
+    {const ideas=get.all('idea').filter(i=>!(i.snooze&&i.snooze>todayK()));if(s.inboxNudge!==false&&ideas.length>=5)aRow(`${ideas.length} ideas in Inbox`,'Tidy up in a couple of minutes',()=>tidySheet(ideas.sort((a,b)=>a.createdAt-b.createdAt)));}
     get.all('list').filter(l=>l.pinned&&(l.items||[]).some(i=>!i.d)).slice(0,2).forEach(l=>{const o2=l.items.filter(i=>!i.d);aRow(l.title,`${o2.length} left · ${o2.slice(0,3).map(i=>i.t).join(', ')}${o2.length>3?'…':''}`,()=>App.go('list',{id:l.id}));});}
   {const tc=tripTodayCard(dk);if(tc)page.append(tc);}
   {const pc=pinsCard(dk);if(pc)page.append(pc);}

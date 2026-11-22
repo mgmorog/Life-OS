@@ -107,7 +107,7 @@ Components use the **Roles**; palettes in Settings change the accent colours und
 | `--tint-3` | `var(--sage-200)` | `#CFE1D7` |
 | `--action` | `var(--accent)` | `#466B5A` |
 | `--action-text` | `var(--accent-text)` | `#3E6252` |
-| `--done` | `var(--accent)` | `#466B5A` |
+| `--done` | `var(--sage-500)` | `#6F9483` |
 | `--selected` | `var(--accent-soft)` | `#E2EBE6` |
 | `--focus` | `var(--accent)` | `#466B5A` |
 | `--now` | `var(--red)` | `#A24E36` |
@@ -153,6 +153,40 @@ Components use the **Roles**; palettes in Settings change the accent colours und
 | `--row-h` | `var(--row)` | `52px` |
 | `--tick-ring` | `#D7DAD3` |  |
 | `--track-bg` | `var(--line-2)` | `#EFF0EA` |
+| `--card-pad` | `var(--pad)` | `16px` |
+| `--card-title-fs` | `var(--fs-row)` | `15px` |
+| `--card-title-fw` | `var(--fw-medium)` | `500` |
+| `--card-title-fg` | `var(--text)` | `#1E2622` |
+| `--btn-h` | `var(--ctl)` | `44px` |
+| `--btn-h-sm` | `36px` |  |
+| `--btn-h-lg` | `52px` |  |
+| `--link` | `var(--action-text)` | `#3E6252` |
+| `--link-quiet` | `var(--text-muted)` | `#5B6560` |
+| `--fab-size` | `52px` |  |
+| `--fab-shadow` | `0 4px 14px color-mix(in srgb,var(--accent) 28%,transparent)` | `0 4px 14px color-mix(in srgb,#466B5A 28%,transparent)` |
+| `--chip-h` | `36px` |  |
+| `--seg-track` | `var(--chip-bg)` | `#EFF0EA` |
+| `--seg-fg` | `var(--text-muted)` | `#5B6560` |
+| `--seg-on-fg` | `var(--text)` | `#1E2622` |
+| `--prio-ring` | `var(--sage-300)` | `#B3CEC0` |
+| `--prio-fg` | `var(--accent-text)` | `#3E6252` |
+| `--field-h` | `48px` |  |
+| `--field-bg` | `var(--surface-raised)` | `#FFFFFF` |
+| `--field-radius` | `var(--r-row)` | `14px` |
+| `--field-edge` | `var(--card-edge)` | `#E9EAE4` |
+| `--placeholder` | `var(--ink-faint)` | `#A8AEA9` |
+| `--tab-on-bg` | `var(--selected)` | `#E2EBE6` |
+| `--back-fg` | `var(--text-muted)` | `#5B6560` |
+| `--bar-bg` | `color-mix(in srgb,var(--surface) 82%,transparent)` | `color-mix(in srgb,#F4F4EF 82%,transparent)` |
+| `--bar-edge` | `var(--card-edge)` | `#E9EAE4` |
+| `--toast-bg` | `var(--surface-raised)` | `#FFFFFF` |
+| `--toast-fg` | `var(--text)` | `#1E2622` |
+| `--toast-action` | `var(--action-text)` | `#3E6252` |
+| `--menu-shadow` | `0 0 0 1px var(--card-edge),var(--shadow-2)` | `0 0 0 1px #E9EAE4,0 10px 30px rgba(20,30,25,.08)` |
+| `--row-lead` | `24px` |  |
+| `--row-gap` | `var(--s3)` | `12px` |
+| `--divider` | `var(--line-2)` | `#EFF0EA` |
+| `--done-opacity` | `var(--o-muted)` | `.6` |
 
 ## Type: nine sizes, three weights
 
@@ -276,8 +310,3 @@ Components use the **Roles**; palettes in Settings change the accent colours und
 | `--dur-fast` | `.18s` |  |
 | `--dur-base` | `.3s` |  |
 | `--dur-slow` | `.5s` |  |
-
-## Breakpoints (media queries cannot read tokens; the code uses BP in core.js): compact 380 · tablet 700 · desktop 900 · wide 1100
-
-| Token | Value | Resolves to |
-| --- | --- | --- |

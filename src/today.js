@@ -72,7 +72,7 @@ function habitPlanSheet(h){
         mv?null:Chip('Remove',{onclick:()=>{const x=h.sessions[d];delete h.sessions[d];put(h);draw();App.refresh();toast('Session removed',()=>{h.sessions[d]=x;put(h);draw();App.refresh();});}}));})));
       b.append(SectionLabel(moving?`Move ${relDay(moving)} to`:up.length?'Add another':'Pick a day'),Card({as:'div'},c.calendar(null,d=>{if(!d)return;if(d<tk){toast('That day has passed');return;}
         if(moving){if(d!==moving){const x=h.sessions[moving];delete h.sessions[moving];h.sessions[d]=x||{time:null};put(h);toast(`Moved to ${relDay(d)}`);}moving=null;draw();App.refresh();return;}
-        planHabitDay(h,d);draw();},{minK:tk})));};
+        planHabitDay(h,d);draw();},{minK:tk,marks:new Set(up),ring:moving})));};
     draw();}});
 }
 function moveSheet(e,dk){

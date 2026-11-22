@@ -15,12 +15,12 @@ function formCtx(rerender){
   ctx.panel=(id,cls,...kids)=>{if(ctx.open!==id)return null;const fresh=ctx._shown!==id;ctx._shown=id;return el('div',{class:'panel '+cls+(fresh?'':' still')},kids);};
   ctx.sw=(on,label,fn)=>swMake(on,label,v=>fn(v));
   ctx.stepper=(v,min,max,fn,o={})=>Stepper(v,{min,max,onChange:fn,...o});
-  ctx.calendar=(val,fn,{noDate=false,minK=null,range=null}={})=>{
+  ctx.calendar=(val,fn,{noDate=false,minK=null,range=null,marks=null,ring=null}={})=>{
     const base=val?fromK(val):today();let vy=base.getFullYear(),vm=base.getMonth();const wrap=el('div',{class:'cal',onclick:e=>e.stopPropagation()});
     const draw=()=>{wrap.innerHTML='';const first=new Date(vy,vm,1),ws=get.settings().weekStart??1,lead=(first.getDay()-ws+7)%7,start=addD(first,-lead),tk=todayK();
       const labels=[];for(let i=0;i<7;i++)labels.push(DOW[(ws+i)%7][0]);
       const g=el('div',{class:'cg'},labels.map(l=>el('span',{},l)));
-      for(let i=0;i<42;i++){const d=addD(start,i),dk=k(d);if(i>=35&&d.getMonth()!==vm)break;g.append(el('button',{class:(d.getMonth()!==vm?'out ':'')+(dk===tk?'td ':'')+(dk===val?'on ':'')+(range&&dk>=range[0]&&dk<=range[1]?'inrange':''),disabled:!!(minK&&dk<minK),'aria-label':shortDay(dk),onclick:e=>{e.stopPropagation();fn(dk);}},String(d.getDate())));}
+      for(let i=0;i<42;i++){const d=addD(start,i),dk=k(d);if(i>=35&&d.getMonth()!==vm)break;g.append(el('button',{class:(d.getMonth()!==vm?'out ':'')+(dk===tk?'td ':'')+(dk===val?'on ':'')+(range&&dk>=range[0]&&dk<=range[1]?'inrange ':'')+(marks&&marks.has(dk)?'mark ':'')+(ring===dk?'ringd':''),'aria-pressed':marks?String(marks.has(dk)):null,disabled:!!(minK&&dk<minK),'aria-label':shortDay(dk),onclick:e=>{e.stopPropagation();fn(dk);}},String(d.getDate())));}
       wrap.append(el('div',{class:'ch'},el('button',{'aria-label':'Previous month',html:ic('chevl',IC.md),onclick:e=>{e.stopPropagation();vm--;if(vm<0){vm=11;vy--;}draw();}}),el('span',{},`${MONL[vm]} ${vy}`),el('button',{'aria-label':'Next month',html:ic('chevr',IC.md),onclick:e=>{e.stopPropagation();vm++;if(vm>11){vm=0;vy++;}draw();}})),g,
         noDate?Button('No date',{variant:'link',style:'margin-top:var(--s2)',onclick:e=>{e.stopPropagation();fn(null);}}):null);};
     draw();return wrap;

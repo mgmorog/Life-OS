@@ -4086,3 +4086,13 @@ textarea.big.gstep{font-size:var(--fs-row);font-family:inherit}
 .ibmv{height:var(--size-28,28px)}
 .ibmore{height:var(--size-28,28px);position:relative}
 .ibmore::before{content:"";position:absolute;left:0;right:0;top:50%;height:var(--ctl);transform:translateY(-50%)}
+/* v289 · quick-day sheet; compact move button */
+.daychips{display:grid;grid-template-columns:1fr 1fr;gap:var(--s2)}
+.dchip{display:grid;gap:2px;justify-items:start;padding:var(--s3) var(--s4);min-height:var(--size-56);border-radius:var(--r-card,16px);background:var(--surface-raised);box-shadow:inset 0 0 0 var(--hairline) var(--border);text-align:left}
+.dchip b{font-weight:var(--fw-medium);font-size:var(--fs-row)}
+.dchip small{color:var(--text-muted);font-size:var(--fs-small)}
+.dpick{display:flex;gap:var(--s2);align-items:center}
+.dpick .gdate{flex:1}
+.ibmv .ibarrow{width:36px;padding:0;justify-content:center}
+.ibmore{width:32px}
+.mtchip.on{background:var(--selected);color:var(--action-text);box-shadow:inset 0 0 0 1.5px var(--action-text)}

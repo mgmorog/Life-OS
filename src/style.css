@@ -3757,3 +3757,17 @@ input[type=search]::-webkit-search-cancel-button{-webkit-appearance:none;display
 .pdp-c.cur{box-shadow:inset 0 0 0 var(--ring) var(--sage-300)}
 .pdp-c.sel{background:var(--accent);color:var(--on-accent);box-shadow:none}
 .pdp-c.sel small{color:var(--on-dark-muted)}
+/* period picker: same inner padding as the rest of the card, centred numbers, calmer cells */
+.pdp>div:nth-child(2){padding:0 var(--s4)}
+.pdp .dp-top{padding-bottom:0}
+.pdp-dow{margin:var(--s2) 0 var(--s1)}
+.pdp-dow span,.pdp-d{display:flex;justify-content:center;align-items:center;text-align:center}
+.pdp-week{min-height:var(--size-40)}
+.pdp-weeks{gap:2px}
+.pdp-grid{gap:var(--s2);margin-top:var(--s3)}
+.pdp-grid.m .pdp-c{min-height:var(--size-40);border-radius:var(--r-full);font-weight:var(--fw-regular)}
+.pdp-grid.q .pdp-c{min-height:var(--size-56);border-radius:var(--r-row)}
+.pdp-c{background:var(--chip-bg)}
+.pdp-c.cur:not(.sel){background:var(--selected);color:var(--accent-deep);box-shadow:none}
+.pdp-week.cur:not(.sel){background:var(--selected)}
+.pdp .dp-quick>*{flex:1;justify-content:center}

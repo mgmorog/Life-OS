@@ -85,7 +85,7 @@ const PWA={
         const markF=()=>setSettings({icsAdded:true,foundation:{...(get.settings().foundation||{}),calendar:true}});
         const added=s.icsAdded===true||(s.icsAdded==null&&!!s.icsToken);/* links made before v66 were already subscribed */
         if(!added)g.append(Row({as:'a',href:url,style:'color:var(--action-text);font-weight:500;text-decoration:none',onclick:()=>setTimeout(markF,400)},'Subscribe in Calendar'));
-        else g.append(Row({as:'div',style:''},el('span',{class:'tick on',html:ic('check',14,3)}),el('span',{class:'grow'},el('b',{style:'font-weight:500'},'Added to Apple Calendar'),el('small',{},'Shows as “Life OS” in the Calendar app'))));
+        else g.append(Row({as:'div',style:''},el('span',{class:'tick on',html:ic('check',IC.xs)}),el('span',{class:'grow'},el('b',{style:'font-weight:500'},'Added to Apple Calendar'),el('small',{},'Shows as “Life OS” in the Calendar app'))));
         g.append(setRow('Calendar link',null,null,e=>Menu([
           {label:'Copy the link',icon:'copy',onclick:async()=>{try{await navigator.clipboard.writeText(url.replace('webcal://','https://'));toast('Link copied');}catch(e){toast(url);}setSettings({foundation:{...(get.settings().foundation||{}),calendar:true}});}},
           added?{label:'Add it again',icon:'cal',onclick:()=>askConfirm({title:'Add Life OS again?',body:'If Life OS is already in your Calendar app, this makes a second copy. You can delete extras in Calendar › Calendars › ⓘ › Delete Calendar.',yes:'Add again',no:'Cancel',danger:false,onYes:()=>{location.href=url;}})}:null,
@@ -107,7 +107,7 @@ function pullRefresh(){
   const C=2*Math.PI*10;
   let y0=0,x0=0,d=0,on=false,busy=false,dead=false,box=null,raf=0;
   const view=()=>$('#view');
-  const node=()=>box||(box=document.body.appendChild(el('div',{id:'ptr','aria-hidden':'true',html:`<div class="p-ring"><svg viewBox="0 0 28 28" width="28" height="28" fill="none"><circle cx="14" cy="14" r="10" stroke="var(--accent-soft)" stroke-width="3"/><circle class="p-arc" cx="14" cy="14" r="10" stroke="var(--h3)" stroke-width="3" stroke-linecap="round" stroke-dasharray="${C.toFixed(1)}" stroke-dashoffset="${C.toFixed(1)}"/></svg></div><div class="p-done"><span class="p-ck">${ic('check',13,3.2)}</span>Up to date</div>`})));
+  const node=()=>box||(box=document.body.appendChild(el('div',{id:'ptr','aria-hidden':'true',html:`<div class="p-ring"><svg viewBox="0 0 28 28" width="28" height="28" fill="none"><circle cx="14" cy="14" r="10" stroke="var(--accent-soft)" stroke-width="3"/><circle class="p-arc" cx="14" cy="14" r="10" stroke="var(--h3)" stroke-width="3" stroke-linecap="round" stroke-dasharray="${C.toFixed(1)}" stroke-dashoffset="${C.toFixed(1)}"/></svg></div><div class="p-done"><span class="p-ck">${ic('check',IC.xs)}</span>Up to date</div>`})));
   const place=(y,ease)=>{const v=view(),b=node(),r=b.firstChild;
     if(v){v.classList.toggle('ptr-ease',!!ease);v.classList.add('ptr-move');v.style.transform=y>0?`translate3d(0,${y}px,0)`:'';}
     b.classList.toggle('p-ease',!!ease);r.style.transform=`translateY(${Math.round(y/2-14)}px)`;};

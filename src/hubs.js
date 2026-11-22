@@ -32,19 +32,19 @@ const lnk=(label,fn,icon)=>Button(label,{variant:'link',size:'sm',icon,onclick:f
 const bigN=(v,rest)=>Stat({value:v,label:rest||null,size:'lg'});
 /* "all is well" labels say nothing; only a status that needs attention gets a pill */
 const pill=(t,c='')=>!t||/^(On track|On pace|Up to date|All good)$/.test(t)?null:Chip(t,{variant:'status',as:'span',cls:'hpill '+(c||'neu')});
-const AMBER='#D9A441',RUST='#C76A2E';
+const AMBER='var(--mood-4)',RUST='var(--red)';
 const meter=(f,{c,mark,tall}={})=>Progress(f,{tone:c||null,mark,size:tall?'lg':'md'});
 const paceC=f=>f>=1?RUST:f>=.75?AMBER:null;
 const tk=(on,fn,label)=>el('span',{class:'tick-hit'},tickBtn(on,fn,label));
 const rowX=({l,t,s,sc,r,on,strike,big,hold})=>{const n=Row({as:'div',style:''},l||null,el(on?'button':'div',{class:'grow',style:'text-align:left',onclick:on||null},el('b',{style:`font-weight:${big?600:500}${strike?';color:var(--ink-3);text-decoration:line-through':''}`},t),s?el('small',{class:sc||null},s):null),r||null);return hold?withPress(n,hold):n;};
 const rows=(list,fn)=>el('div',{class:'list'},list.map(fn));
 const chipsH=(items,val,on)=>FilterRow(items,val,on,{cls:'hscroll'});
-const btnP=(label,fn,extra={})=>{const{icon,...x}=extra;return Button(icon?[el('span',{style:'display:grid',html:ic(icon,16,2.2)}),label]:label,{variant:'primary',onclick:fn,...x});};
+const btnP=(label,fn,extra={})=>{const{icon,...x}=extra;return Button(icon?[el('span',{style:'display:grid',html:ic(icon,IC.sm)}),label]:label,{variant:'primary',onclick:fn,...x});};
 const btnL=(label,fn,extra={})=>Button(label,{variant:'secondary',onclick:fn,...extra});
 const btns=(...b)=>el('div',{class:'btnrow2'},b);
 const dtile=(dk,c='')=>DateBadge(dk,{tone:c==='warn'||c==='due'?'warn':null});const dtile0=(dk,c='')=>{const d=fromK(dk),n=daysBetween(todayK(),dk);return el('span',{class:'hdtile '+c},el('i',{},(n>=0&&n<=6?DOW[d.getDay()].slice(0,3):MON[d.getMonth()]).toUpperCase()),el('b',{},String(d.getDate())));};
 const wkDays=dk=>{const a=weekRange(dk)[0];return Array.from({length:7},(_,i)=>addK(a,i));};
-const PAL=['#F1D9C6','#DCE6F0','#E7E0F0','#E1EDE4','#F3E6CF','#DDE7EC','#EFDCE2'];
+const PAL=['var(--red-soft)','var(--blue-soft)','var(--violet-soft)','var(--sage-100)','var(--amber-soft)','var(--a-travel-soft)','var(--a-relationships-soft)'];
 const avatar=(name,sz=36)=>{const s=String(name||'?'),h=[...s].reduce((n,c)=>n+c.charCodeAt(0),0);return el('span',{class:'avi',style:`width:${sz}px;height:${sz}px;background:${PAL[h%PAL.length]}`,'aria-hidden':'true'},s[0].toUpperCase());};
 const fmtH=m=>{m=Math.round(m||0);return m<60?`${m}m`:`${Math.floor(m/60)}h ${pad2(m%60)}m`;};
 const mD=d=>{const x=fromK(d);return `${mdS(x)}`;};
@@ -56,7 +56,7 @@ const stepper=(val,lo,hi,step,on,fmt=v=>v)=>Stepper(val,{min:lo,max:hi,step,form
 /* a module's line under its title earns its place only with a real figure: taglines and bare counts of what's listed below are left out */
 const toolSub=s=>typeof s!=='string'?s:(!/\d/.test(s)||/^\d+ [A-Za-z]+(?: [A-Za-z]+)?\.?$/.test(s.trim()))?null:s;
 const toolHead=(page,hub,t,{sub,actions}={})=>page.append(pageHead(t.name,toolSub(sub)||null,{back:hub,to:'area',icon:t.icon,actions:actions||plusB(t.word,()=>entrySheet(hub,t))}));
-const plusB=(word,fn)=>IconButton(`New ${word}`,{cls:'green',html:ic('plus',22,2),onclick:fn});
+const plusB=(word,fn)=>IconButton(`New ${word}`,{cls:'green',html:ic('plus',IC.lg),onclick:fn});
 const moreB=(label,fn)=>IconButton(label,{cls:'green',html:sv('<circle cx="5" cy="12" r="1.8" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.8" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.8" fill="currentColor" stroke="none"/>',22),onclick:fn});
 const seedHub=name=>{App.state.params=Object.assign(App.state.params||{},{name});};
 const sVal=(key,def)=>{const S=App.state;return S['t_'+key]===undefined?def:S['t_'+key];};
@@ -151,12 +151,12 @@ const HUBS={
 const toolOf=(hub,id)=>toolsOf(hub).find(t=>t.id===id);
 function viewAreas(root){
   const page=el('div',{class:'page'}),areas=get.settings().areas||AREAS;
-  page.append(pageHead('Life areas',null,{icon:'heart',actions:IconButton('Manage life areas',{cls:'green',html:ic('gear',22),onclick:()=>App.go('setpage',{id:'areas'})})}));
+  page.append(pageHead('Life areas',null,{icon:'heart',actions:IconButton('Manage life areas',{cls:'green',html:ic('gear',IC.lg),onclick:()=>App.go('setpage',{id:'areas'})})}));
   const S=App.state,used=a=>{const c=areaRecords(a);return c.tasks.length+c.habits.length+c.goals.length+c.projects.length+c.resources.length>0||get.all('entry').some(x=>x.hub===a&&!isCfg(x))||toolsOf(a).some(t=>!t.hide&&toolOn(a,t.id));};
   const quiet=areas.filter(a=>!used(a)),shown=S.areasAll?areas:areas.filter(used);const nexts=areaNexts();
-  page.append(el('div',{class:'list'},shown.map(a=>{const c=areaRecords(a),n=c.tasks.length+c.habits.length+c.goals.length+c.projects.length+get.all('entry').filter(x=>x.hub===a&&!isCfg(x)).length;const nx=nexts[a];return Row({style:'',onclick:()=>App.go('area',{name:a})},IconTile(null,{html:ic(areaIcon(a),20,1.7)}),el('span',{class:'grow'},el('b',{style:'font-size:var(--fs-headline)'},a),nx?el('small',{},nx):null),RowEnd('chevron'));})));
-  if(quiet.length)page.append(Button([S.areasAll?'Hide areas you haven’t started':`${quiet.length} more area${quiet.length===1?'':'s'} you haven’t started`,el('span',{style:'display:grid;'+(S.areasAll?'transform:rotate(-90deg)':'transform:rotate(90deg)'),html:ic('chevr',14,2.2)})],{variant:'link',style:'margin:2px var(--s1) 0',onclick:()=>{S.areasAll=!S.areasAll;App.refresh();}}));
-  {const loose=get.all('resource').filter(r=>!r.area&&!r.archived);if(loose.length)page.append(lblRow('Resources without an area'),Caption('Give each one a life area and it moves there.',{as:'p',style:'margin:-2px var(--s1) var(--s2)'}),el('div',{class:'list'},loose.map(r=>resRow(r))));}
+  page.append(el('div',{class:'list'},shown.map(a=>{const c=areaRecords(a),n=c.tasks.length+c.habits.length+c.goals.length+c.projects.length+get.all('entry').filter(x=>x.hub===a&&!isCfg(x)).length;const nx=nexts[a];return Row({style:'',onclick:()=>App.go('area',{name:a})},IconTile(null,{html:ic(areaIcon(a),IC.md)}),el('span',{class:'grow'},el('b',{style:'font-size:var(--fs-headline)'},a),nx?el('small',{},nx):null),RowEnd('chevron'));})));
+  if(quiet.length)page.append(Button([S.areasAll?'Hide areas you haven’t started':`${quiet.length} more area${quiet.length===1?'':'s'} you haven’t started`,el('span',{style:'display:grid;'+(S.areasAll?'transform:rotate(-90deg)':'transform:rotate(90deg)'),html:ic('chevr',IC.xs)})],{variant:'link',style:'margin:var(--nudge) var(--s1) 0',onclick:()=>{S.areasAll=!S.areasAll;App.refresh();}}));
+  {const loose=get.all('resource').filter(r=>!r.area&&!r.archived);if(loose.length)page.append(lblRow('Resources without an area'),Caption('Give each one a life area and it moves there.',{as:'p',style:'margin:calc(var(--nudge) * -1) var(--s1) var(--s2)'}),el('div',{class:'list'},loose.map(r=>resRow(r))));}
   root.append(page);
 }
 /* the next thing coming up in each life area over the next two weeks, and how many land this week */
@@ -165,10 +165,10 @@ function areaNexts(){const tk=todayK(),we=k(addD(weekStartOf(today()),6)),first=
   const out={};Object.keys(first).forEach(a=>{const f=first[a];out[a]=`${f.t} ${f.d===tk?(f.tm!=null?'at '+fmtT(f.tm):'today'):relDay(f.d).replace(/^Tomorrow$/,'tomorrow')}${(n[a]||0)>1?` · ${n[a]} this week`:''}`;});return out;}
 function areaRecords(a){return{tasks:get.all('task').filter(r=>r.area===a&&isOpenTask(r)),habits:get.all('habit').filter(r=>r.area===a),goals:get.all('goal').filter(r=>r.area===a),projects:get.all('project').filter(r=>r.area===a),resources:get.all('resource').filter(r=>r.area===a)};}
 function hubHidden(name){const s=get.settings(),off=(s.hubHidden||{})[name]||[],on=(s.hubShown||{})[name]||[];return[...off,...toolsOf(name).filter(t=>t.optIn&&!on.includes(t.id)).map(t=>t.id)];}
-function editToolsSheet(name,hub){const inst=openSheet({title:'Modules',left:{label:'Done'},build:b=>{const draw=()=>{b.innerHTML='';b.append(Caption('Turn off a module you don’t use. Nothing in it is deleted.',{as:'p'}),el('div',{class:'list'},toolsOf(name).filter(t=>!t.hide).map(t=>{const on=toolOn(name,t.id);return Switch({on,label:t.name,weight:400,lead:el('span',{style:'display:grid;color:var(--action-text)',html:ic(t.icon,20)}),onChange:v=>{setToolOn(name,t.id,v);draw();}});})),Button('Build your own module',{variant:'secondary',full:true,style:'margin-top:var(--s3)',onclick:()=>{inst.close();App.state.params={name};modSheet(null);}}),Button('All modules',{variant:'link',size:'sm',style:'margin-top:var(--s1)',onclick:()=>{inst.close();App.go('modules');}}));};draw();}});}
+function editToolsSheet(name,hub){const inst=openSheet({title:'Modules',left:{label:'Done'},build:b=>{const draw=()=>{b.innerHTML='';b.append(Caption('Turn off a module you don’t use. Nothing in it is deleted.',{as:'p'}),el('div',{class:'list'},toolsOf(name).filter(t=>!t.hide).map(t=>{const on=toolOn(name,t.id);return Switch({on,label:t.name,weight:400,lead:el('span',{style:'display:grid;color:var(--action-text)',html:ic(t.icon,IC.md)}),onChange:v=>{setToolOn(name,t.id,v);draw();}});})),Button('Build your own module',{variant:'secondary',full:true,style:'margin-top:var(--s3)',onclick:()=>{inst.close();App.state.params={name};modSheet(null);}}),Button('All modules',{variant:'link',size:'sm',style:'margin-top:var(--s1)',onclick:()=>{inst.close();App.go('modules');}}));};draw();}});}
 function toolTile(name,t){const l=entries(name,t.id),d=t.tile?t.tile(l,name):{v:String(l.length),sub:l.length?t.sum(l):'Nothing yet'};
   return el('button',{class:'tc'+(d.off?' off':''),'aria-label':`${t.name}${d.sub?', '+d.sub:''}`,onclick:()=>App.go('tool',{hub:name,tool:t.id})},
-    el('span',{class:'tt2'},IconTile(null,{html:ic(t.icon||'grid',19)}),d.tag?pill(d.tag,d.tagc||''):null),
+    el('span',{class:'tt2'},IconTile(null,{html:ic(t.icon||'grid',IC.md)}),d.tag?pill(d.tag,d.tagc||''):null),
     el('span',{class:'tb'},d.v!=null?el('span',{class:'tv serif'},String(d.v),d.small?el('small',{},' '+d.small):null):null,el('span',{class:'tn'},t.name),d.sub?el('span',{class:'ts clip'},d.sub):null,d.viz?el('span',{class:'vz'},d.viz):null));}
 function viewArea(root,name){
   if(!name){viewAreas(root);return;}
@@ -243,7 +243,7 @@ function dedupeSub(page){const h=page.querySelector('header'),sub=h&&h.querySele
    empty sections become a single add row, one-time hints go, and a label with nothing under it goes too */
 function quietTool(page){
   page.querySelectorAll('.empty').forEach(e=>{const b=e.querySelector('button'),t=(e.querySelector('b')||{}).textContent||'';
-    const n=b?el('button',{class:'qempty',onclick:()=>b.click()},el('span',{class:'pplus',html:ic('plus',14,2.4)}),b.textContent.replace(/^\+\s*/,'').trim()):el('p',{class:'qempty muted'},t);e.replaceWith(n);});
+    const n=b?el('button',{class:'qempty',onclick:()=>b.click()},el('span',{class:'pplus',html:ic('plus',IC.xs)}),b.textContent.replace(/^\+\s*/,'').trim()):el('p',{class:'qempty muted'},t);e.replaceWith(n);});
   [...page.children].forEach(x=>{if(x.matches('p.small.muted,p.muted,div.small.muted')&&!/\d/.test(x.textContent)&&!x.querySelector('button,a,input'))x.remove();});
   [...page.children].forEach(x=>{if(x.matches('.sh2')&&x.nextElementSibling&&x.nextElementSibling.querySelector(':scope>.qempty,:scope.qempty')){const a=x.querySelector(':scope>button,:scope>.linkbtn');if(a&&x.children.length>1)a.remove();}});
   [...page.children].forEach(x=>{if(!x.matches('.sh2,.lbl,.sect'))return;const nx=x.nextElementSibling;if(!nx||nx.matches('.sh2,.lbl,.sect'))x.remove();});

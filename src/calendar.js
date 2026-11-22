@@ -20,16 +20,16 @@ function viewCalendar(root){
   const title=mode==='quarter'?`Q${q+1}`:mode==='month'?MONL[a.getMonth()]:rangeD;
   const miniTitle=mode==='quarter'?`Q${q+1} ${y}`:mode==='month'?`${MONL[a.getMonth()]} ${y}`:`${rangeD}, ${wE.getFullYear()}`;
   const f=get.settings().filters||{},filtered=(f.areas&&f.areas.length)||Object.values(f.types||{}).some(v=>v===false);
-  const arrows=()=>el('div',{class:'arrows'},IconButton(`Previous ${mode}`,{cls:'green',html:ic('chevl',20,2),onclick:()=>calStep(-1)}),IconButton(`Next ${mode}`,{cls:'green',html:ic('chevr',20,2),onclick:()=>calStep(1)}),IconButton('Filters',{cls:'green',html:ic('filter',20,2)+(filtered?'<span class="dot"></span>':''),onclick:e=>filterSheet({anchor:e.currentTarget.getBoundingClientRect()})}),moreB('Calendar options',e=>{const r=e.currentTarget.getBoundingClientRect(),ws=weekStartOf(fromK(C.sel||C.anchor||todayK()));openMenu(r.right,r.bottom+4,[mode==='week'?{label:C.timeline?'Show as a list':'Show as a timeline',icon:C.timeline?'list':'time',onclick:()=>{C.timeline=!C.timeline;try{localStorage.setItem('lifeos-cal-tl',C.timeline?'1':'');}catch(e){}calCommit();}}:null,{label:'Print this week',icon:'share',onclick:()=>printWeek(k(ws))}]);}));
+  const arrows=()=>el('div',{class:'arrows'},IconButton(`Previous ${mode}`,{cls:'green',html:ic('chevl',IC.md),onclick:()=>calStep(-1)}),IconButton(`Next ${mode}`,{cls:'green',html:ic('chevr',IC.md),onclick:()=>calStep(1)}),IconButton('Filters',{cls:'green',html:ic('filter',IC.md)+(filtered?'<span class="dot"></span>':''),onclick:e=>filterSheet({anchor:e.currentTarget.getBoundingClientRect()})}),moreB('Calendar options',e=>{const r=e.currentTarget.getBoundingClientRect(),ws=weekStartOf(fromK(C.sel||C.anchor||todayK()));openMenu(r.right,r.bottom+4,[mode==='week'?{label:C.timeline?'Show as a list':'Show as a timeline',icon:C.timeline?'list':'time',onclick:()=>{C.timeline=!C.timeline;try{localStorage.setItem('lifeos-cal-tl',C.timeline?'1':'');}catch(e){}calCommit();}}:null,{label:'Print this week',icon:'share',onclick:()=>printWeek(k(ws))}]);}));
   const ORDERM=['quarter','month','week'];const modeSeg=()=>seg([['quarter','Quarter'],['month','Month'],['week','Week']],mode,v=>{const[s,e]=calRange(C);if(C.sel&&C.sel>=s&&C.sel<=e)C.anchor=C.sel;const dir=ORDERM.indexOf(v)>ORDERM.indexOf(C.mode)?1:-1;C.mode=v;C.weekOpen=null;try{localStorage.setItem('lifeos-cal-mode',v);}catch(e){}glideSwap(()=>calCommit(),[['#cal-body','x'],['#cal-h .tbtn span','y'],['#cal-h .cal-eyebrow','y']],dir);});
   const pill=()=>!current?Chip('Today',{variant:'status',cls:'pill-today',onclick:calNow}):null;
   const page=el('div',{class:'page'});
   page.append(el('header',{class:'phead cal-h',id:'cal-h'},
-    el('div',{class:'cal-title'},el('button',{class:'tbtn'+(mode==='week'?' mid':''),'aria-label':`Choose ${mode}`,onclick:e=>pickPeriod(e.currentTarget.getBoundingClientRect()),html:`<span>${esc(title)}</span>`+ic('chevd',18,2)}),arrows()),
+    el('div',{class:'cal-title'},el('button',{class:'tbtn'+(mode==='week'?' mid':''),'aria-label':`Choose ${mode}`,onclick:e=>pickPeriod(e.currentTarget.getBoundingClientRect()),html:`<span>${esc(title)}</span>`+ic('chevd',IC.md)}),arrows()),
     eyebrow||!current?el('div',{class:'cal-eyebrow hq'},eyebrow?el('span',{class:'hquiet'},eyebrow):el('span'),pill()):null,
-    el('div',{style:'margin-top:6px'},modeSeg())));
+    el('div',{style:'margin-top:var(--s2)'},modeSeg())));
   const compact=el('div',{class:'cal-compact',id:'cal-compact'},el('div',{class:'cc-in'},
-    el('div',{class:'cal-title',style:'min-height:44px'},el('button',{class:'tbtn cc-title','aria-label':`Choose ${mode}`,onclick:e=>pickPeriod(e.currentTarget.getBoundingClientRect()),html:`<span>${esc(miniTitle)}</span>`+ic('chevd',16,2)}),el('span',{style:'display:flex;align-items:center;gap:2px'},pill(),arrows())),
+    el('div',{class:'cal-title',style:'min-height:var(--size-44)'},el('button',{class:'tbtn cc-title','aria-label':`Choose ${mode}`,onclick:e=>pickPeriod(e.currentTarget.getBoundingClientRect()),html:`<span>${esc(miniTitle)}</span>`+ic('chevd',IC.sm)}),el('span',{style:'display:flex;align-items:center;gap:var(--nudge)'},pill(),arrows())),
     modeSeg(),mode==='month'?el('div',{class:'wd-row'},wdLabels().map(l=>el('span',{},l))):null));
   const body=el('div',{class:'page '+(C.anim||''),id:'cal-body'});C.anim=null;
   const fk=mode==='quarter'?`q-${y}-${q}`:mode==='month'?`m-${monthKey(a)}`:`w-${weekKey(a)}`;
@@ -48,7 +48,7 @@ function focusRec(fk){return get.id('focus-'+fk);}
 /* Bars count goal steps finished in this period, out of those finished here plus those still open */
 function focusChip(fk,label,mode,range){
   const f=focusRec(fk),areas=f?f.areas||[]:[];
-  if(!areas.length)return el('button',{class:'focus-link',onclick:()=>focusSheet(fk,label)},el('span',{style:'display:grid',html:ic('plus',14,2.4)}),`Set a ${(n=>n==='Week'?'week':n)(label.replace(/ focus$/i,''))} focus`);
+  if(!areas.length)return el('button',{class:'focus-link',onclick:()=>focusSheet(fk,label)},el('span',{style:'display:grid',html:ic('plus',IC.xs)}),`Set a ${(n=>n==='Week'?'week':n)(label.replace(/ focus$/i,''))} focus`);
   const steps=allSteps(),inRange=s=>{if(!s.doneAt)return false;const d=k(new Date(s.doneAt));return d>=range[0]&&d<=range[1];};
   return el('div',{class:'bars'},
     el('div',{style:'display:flex;justify-content:space-between;align-items:center'},el('span',{class:'fl seclbl'},label),Button('Edit',{variant:'link',size:'sm',onclick:()=>focusSheet(fk,label)})),
@@ -89,26 +89,26 @@ function heatKey(){return el('div',{class:'heat-key','aria-label':'Heat map key'
 function quarterBody(body,y,months,C){
   const tk=todayK(),curW=weekKey(today()),inQ=months.includes(today().getMonth())&&y===today().getFullYear();
   const earlier=new Set();months.forEach(m=>weeksOf(y,m).forEach(w=>{if(k(w[0])<curW)earlier.add(k(w[0]));}));
-  if(inQ&&earlier.size)body.append(Button([C.showEarlier?'Hide earlier weeks':`Show ${earlier.size} earlier week${earlier.size>1?'s':''}`,el('span',{html:ic(C.showEarlier?'chevu':'chevd',16,2.2),style:'display:grid'})],{variant:'link',onclick:()=>{C.showEarlier=!C.showEarlier;App.refresh();}}));
+  if(inQ&&earlier.size)body.append(Button([C.showEarlier?'Hide earlier weeks':`Show ${earlier.size} earlier week${earlier.size>1?'s':''}`,el('span',{html:ic(C.showEarlier?'chevu':'chevd',IC.sm),style:'display:grid'})],{variant:'link',onclick:()=>{C.showEarlier=!C.showEarlier;App.refresh();}}));
   let firstShown=true;
   months.forEach(m=>{
     let weeks=weeksOf(y,m);
     if(inQ&&!C.showEarlier)weeks=weeks.filter(w=>k(w[0])>=curW);
     if(!weeks.length)return;
-    const sec=el('section',{},el('button',{class:'m-head',onclick:()=>{const gr=sec.querySelector('.qgrid'),r0=gr&&gr.getBoundingClientRect();C.mode='month';C.anchor=k(new Date(y,m,1));const t=today();C.sel=(t.getFullYear()===y&&t.getMonth()===m)?tk:k(new Date(y,m,1));calCommit();zoomGrid(r0);}},MONL[m],el('span',{class:'m-go',html:ic('chevr',14,2.4)})));
+    const sec=el('section',{},el('button',{class:'m-head',onclick:()=>{const gr=sec.querySelector('.qgrid'),r0=gr&&gr.getBoundingClientRect();C.mode='month';C.anchor=k(new Date(y,m,1));const t=today();C.sel=(t.getFullYear()===y&&t.getMonth()===m)?tk:k(new Date(y,m,1));calCommit();zoomGrid(r0);}},MONL[m],el('span',{class:'m-go',html:ic('chevr',IC.xs)})));
     sec.append(el('div',{class:'wd-row',style:'margin:0 0 var(--s2)'},wdLabels().map(l=>el('span',{},l))));firstShown=false;
-    const grid=el('div',{class:'qgrid',style:'display:grid;gap:6px'});
+    const grid=el('div',{class:'qgrid',style:'display:grid;gap:var(--s2)'});
     weeks.forEach(w=>{const row=el('div',{class:'heat-row'+(k(w[0])===curW?' curwk':'')});w.forEach(d=>row.append(heatCell(d,{month:m,tk,C,showSel:false,onTap:()=>{C.mode='week';C.anchor=k(d);C.sel=k(d);C.weekOpen=k(d);calCommit();}})));grid.append(row);{const tl=tripBand(row,w);if(tl)grid.append(tl);}});
     sec.append(grid);body.append(sec);
   });
 }
 function monthBody(body,a,C){
-  const tk=todayK(),y=a.getFullYear(),m=a.getMonth(),grid=el('div',{id:'month-grid',style:'display:grid;gap:6px'});
+  const tk=todayK(),y=a.getFullYear(),m=a.getMonth(),grid=el('div',{id:'month-grid',style:'display:grid;gap:var(--s2)'});
   const selK=C.sel&&monthKey(fromK(C.sel))===monthKey(a)?C.sel:null;weeksOf(y,m).forEach(w=>{const row=el('div',{class:'heat-row'});w.forEach(d=>row.append(heatCell(d,{month:m,tk,C,bars:true,onTap:(dk,out)=>{if(out){C.anim=dk>C.anchor?'slide-l':'slide-r';C.anchor=dk;}else if(C.sel&&dk!==C.sel)panelOut(dk>C.sel?1:-1);C.sel=dk;App.refresh();}})));grid.append(row);{const tl=tripBand(row,w);if(tl)grid.append(tl);}});
-  body.append(el('div',{class:'wd-row',style:'margin:0 0 -6px'},wdLabels().map(l=>el('span',{},l))),grid,dayPanel(C.sel&&monthKey(fromK(C.sel))===monthKey(a)?C.sel:k(new Date(y,m,1))));
+  body.append(el('div',{class:'wd-row',style:'margin:0 0 calc(var(--s2) * -1)'},wdLabels().map(l=>el('span',{},l))),grid,dayPanel(C.sel&&monthKey(fromK(C.sel))===monthKey(a)?C.sel:k(new Date(y,m,1))));
 }
 function dayLine(e,dk){
-  const row=el('div',{class:'dayline tick-host'+(e.done?' done':'')},e.kind==='gcal'?null:el('span',{class:'tick-hit'},tickBtn(e.done,on=>{row.classList.toggle('done',on);toggleItem(e,dk);setTimeout(()=>App.refresh(),820);})),el('span',{class:'tm'},e.time!=null?fmtT(e.time):'Anytime'),el('button',{class:'grow clip',style:'text-align:left;min-height:44px',onclick:()=>openItem(e,dk)},el('span',{class:'tt'},e.title),+(e.rec&&e.rec.travel)&&e.kind==='block'&&e.time!=null?el('small',{class:'trleave'},`Leave by ${fmtT(e.time-e.rec.travel)}`):null),e.kind==='block'&&e.rec&&e.rec.place?placeLink(e.rec.place):null);
+  const row=el('div',{class:'dayline tick-host'+(e.done?' done':'')},e.kind==='gcal'?null:el('span',{class:'tick-hit'},tickBtn(e.done,on=>{row.classList.toggle('done',on);toggleItem(e,dk);setTimeout(()=>App.refresh(),820);})),el('span',{class:'tm'},e.time!=null?fmtT(e.time):'Anytime'),el('button',{class:'grow clip',style:'text-align:left;min-height:var(--size-44)',onclick:()=>openItem(e,dk)},el('span',{class:'tt'},e.title),+(e.rec&&e.rec.travel)&&e.kind==='block'&&e.time!=null?el('small',{class:'trleave'},`Leave by ${fmtT(e.time-e.rec.travel)}`):null),e.kind==='block'&&e.rec&&e.rec.place?placeLink(e.rec.place):null);
   calGestures(row,e,dk);
   /* v228 · the same swipe language as Today: right = done, left = open */
   if(e.kind==='gcal'||e.done)return row;
@@ -124,7 +124,7 @@ function weekBody(body,start,C){
   if(daily.length){const nm=daily.map(id=>get.id(id)).filter(Boolean).map(r=>r.title);if(nm.length)list.append(el('p',{class:'wkdaily'},el('b',{},'Every day'),` ${andList(nm)}`));}
   for(let i=0;i<7;i++){const d=addD(start,i),dk=k(d),{allDay,timed,anytime}=dayItems(dk,{filters:true}),L=dayLoad(dk),items=[...timed,...anytime],past=dk<tk,empty=!items.length&&!allDay.length,open=C.weekOpen===dk;
     const toggle=()=>{C.weekOpen=open?null:dk;C.sel=dk;App.refresh();};
-    const main=el('div',{class:'wkitems'}),trW=tripOn(dk);if(trW)main.append(el('button',{class:'dwk',onclick:ev=>{ev.stopPropagation();tripGo(trW);}},el('span',{style:'display:grid',html:ic('plane',13,2.2)}),`${trW.f.what} · Day ${daysBetween(trW.f.date,dk)+1} of ${tripDays(trW)}`));
+    const main=el('div',{class:'wkitems'}),trW=tripOn(dk);if(trW)main.append(el('button',{class:'dwk',onclick:ev=>{ev.stopPropagation();tripGo(trW);}},el('span',{style:'display:grid',html:ic('plane',IC.xs)}),`${trW.f.what} · Day ${daysBetween(trW.f.date,dk)+1} of ${tripDays(trW)}`));
     if(open){
       {const adS=allDay.filter(e=>!(e.rec&&e.rec.tripId));if(adS.length)main.append(allDayChips(adS,dk));}
       items.forEach(e=>main.append(dayLine(e,dk)));
@@ -157,7 +157,7 @@ function dayPanel(dk){
   const adS=allDay.filter(e=>!(e.rec&&e.rec.tripId));if(adS.length)c.append(el('div',{class:'dpad'},adS.map(e=>e.title).join(' · ')));
   if(ev.length){const lst=el('div',{style:'margin-top:var(--s2)'});ev.forEach(e=>lst.append(dayLine(e,dk)));c.append(lst);}
   if(todo.length)c.append(el('button',{class:'dptodo',onclick:goT},nOpen?`${dCount(nOpen,'to-do')} ›`:`All ${todo.length} to-dos done ›`));
-  if(!ev.length&&!todo.length&&!adS.length)c.append(Caption(emptyDayHead(dk),{as:'p',style:'margin:6px 0 0'}));
+  if(!ev.length&&!todo.length&&!adS.length)c.append(Caption(emptyDayHead(dk),{as:'p',style:'margin:var(--s2) 0 0'}));
   const ch=addChips(dk);ch.style.marginTop='12px';c.append(ch);
   return c;
 }
@@ -168,7 +168,7 @@ function pickPeriod(anchor){
     const pick=d=>{C.anchor=k(d);if(C.mode==='month')C.sel=isCurrentFor('month',d)?todayK():k(d);if(C.mode==='week'){C.sel=k(d);C.weekOpen=null;}inst.close();calCommit();};
     const draw=()=>{box.innerHTML='';
       if(C.mode==='week'){const c=formCtx(()=>{});box.append(Card({as:'div'},c.calendar(C.anchor,dk=>{if(dk)pick(fromK(dk));},{range:calRange(C)})));return;}
-      box.append(el('div',{style:'display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;font-weight:500'},IconButton('Previous year',{cls:'green',html:ic('chevl',20,2),onclick:()=>{vy--;draw();}}),String(vy),IconButton('Next year',{cls:'green',html:ic('chevr',20,2),onclick:()=>{vy++;draw();}})));
+      box.append(el('div',{style:'display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--s3);font-weight:500'},IconButton('Previous year',{cls:'green',html:ic('chevl',IC.md),onclick:()=>{vy--;draw();}}),String(vy),IconButton('Next year',{cls:'green',html:ic('chevr',IC.md),onclick:()=>{vy++;draw();}})));
       if(C.mode==='month')box.append(el('div',{class:'pick-grid'},MONL.map((n,i)=>el('button',{class:(vy===a.getFullYear()&&i===a.getMonth()?'on ':'')+(vy===t.getFullYear()&&i===t.getMonth()?'cur':''),onclick:()=>pick(new Date(vy,i,1))},n.slice(0,3)))));
       else box.append(el('div',{class:'pick-grid',style:'grid-template-columns:repeat(2,minmax(0,1fr))'},[0,1,2,3].map(i=>el('button',{class:(vy===a.getFullYear()&&i===quarterOf(a)?'on ':'')+(vy===t.getFullYear()&&i===quarterOf(t)?'cur':''),style:'height:68px',onclick:()=>pick(new Date(vy,i*3,1))},`Q${i+1}`,el('small',{},`${MON[i*3]} – ${MON[i*3+2]}`)))));};
     draw();body.append(box,Button('Jump to today',{variant:'quiet',full:true,onclick:()=>{inst.close();calNow();}}));}});
@@ -198,7 +198,7 @@ function filterSheet(opts={}){
         const st=weekStartOf(today());
         const prev=el('div',{class:'heat-row','aria-label':'Preview of this week'},Array.from({length:7},(_,i)=>{const d=addD(st,i),dk=k(d),it=dayItems(dk),v=cap.mode==='hours'?it.timed.reduce((n,e)=>n+(e.dur||30),0)/60:it.timed.length+it.anytime.length,wk=[0,6].includes(d.getDay())&&cap.lightWeekends?.5:1,l=levelOf(v,full*wk);return el('span',{class:'heat '+(l?'l'+l:''),'data-preview':l},el('span',{class:'hn'},String(d.getDate())));}));
         wrap.append(Caption('How much makes a day look full on the heat map. Nothing changes until you tap Done.',{as:'p'}),g,SectionLabel('This week'),prev,
-          el('div',{class:'heat-key',style:'justify-content:flex-start;gap:6px 10px'},capLabels(full,unit).map(([v,t])=>el('span',{style:'display:inline-flex;gap:6px;align-items:center'},el('i',{style:`background:var(${v})`}),t))));
+          el('div',{class:'heat-key',style:'justify-content:flex-start;gap:var(--s2) var(--s3)'},capLabels(full,unit).map(([v,t])=>el('span',{style:'display:inline-flex;gap:var(--s2);align-items:center'},el('i',{style:`background:var(${v})`}),t))));
         box.append(wrap);
       }
       inst.place&&inst.place();};
@@ -227,9 +227,9 @@ function TimeGrid(body,start,C){const tk=todayK(),wide=innerWidth>=BP.tablet,day
   const show=wide?days:days.slice(C.tlOff,C.tlOff+3),its=show.map(dk=>{const x=dayItems(dk,{filters:true});return{dk,all:x.allDay||[],timed:(x.timed||[]).filter(e=>e.time!=null&&!e.cont)};});
   let h0=7,h1=21;its.forEach(o=>o.timed.forEach(e=>{h0=Math.min(h0,Math.floor((e.time-(+(e.rec&&e.rec.travel)||0))/60));h1=Math.max(h1,Math.ceil((e.time+(e.dur||30))/60));}));h0=Math.max(0,h0);h1=Math.min(24,h1);
   const cols=`44px repeat(${show.length},minmax(0,1fr))`,hours=[];for(let h=h0;h<=h1;h++)hours.push(h);
-  const head=el('div',{class:'tlhead',style:`grid-template-columns:${cols}`},wide?el('span'):el('span',{class:'tlnav'},IconButton('Earlier days',{size:'sm',html:ic('chevl',16,2.2),disabled:C.tlOff<=0,onclick:()=>{C.tlOff=Math.max(0,C.tlOff-3);App.refresh();}})),
+  const head=el('div',{class:'tlhead',style:`grid-template-columns:${cols}`},wide?el('span'):el('span',{class:'tlnav'},IconButton('Earlier days',{size:'sm',html:ic('chevl',IC.sm),disabled:C.tlOff<=0,onclick:()=>{C.tlOff=Math.max(0,C.tlOff-3);App.refresh();}})),
     ...show.map((dk,i)=>{const d=fromK(dk);return el('button',{class:'tlday'+(dk===tk?' today':'')+(dk===C.sel?' sel':''),onclick:()=>{App.state.sel=dk;App.state._fresh=true;App.go('today');},'aria-label':`Open ${shortDay(dk)} in Today`},el('i',{},DOW[d.getDay()].slice(0,3)),el('b',{},String(d.getDate())));}));
-  if(!wide&&C.tlOff<4)head.append(el('span',{class:'tlnavr'},IconButton('Later days',{size:'sm',html:ic('chevr',16,2.2),onclick:()=>{C.tlOff=Math.min(4,C.tlOff+3);App.refresh();}})));
+  if(!wide&&C.tlOff<4)head.append(el('span',{class:'tlnavr'},IconButton('Later days',{size:'sm',html:ic('chevr',IC.sm),onclick:()=>{C.tlOff=Math.min(4,C.tlOff+3);App.refresh();}})));
   const allRow=its.some(o=>o.all.length)?el('div',{class:'tlall',style:`grid-template-columns:${cols}`},el('span',{class:'tlhl'},'All day'),...its.map(o=>el('div',{},o.all.slice(0,3).map(e=>el('button',{class:'tlad',style:`--c:${e.color||'var(--action)'}`,onclick:()=>openItem(e,o.dk)},e.title))))):null;
   const grid=el('div',{class:'tlgrid',style:`grid-template-columns:${cols};height:${(h1-h0)*HH}px`});
   grid.append(el('div',{class:'tlhours'},hours.slice(0,-1).map(h=>el('span',{style:`top:${(h-h0)*HH}px`},get.settings().clock===24?`${pad2(h)}:00`:`${h%12||12} ${h<12?'AM':'PM'}`))));

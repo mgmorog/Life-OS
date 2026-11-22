@@ -22,7 +22,7 @@ Components use the **Roles**; palettes in Settings change the accent colours und
 | `--white` | `#FFFFFF` |  |
 | `--ink` | `#1E2622` |  |
 | `--ink-2` | `#5B6560` |  |
-| `--ink-3` | `#747C77` |  |
+| `--ink-3` | `#69716C` |  |
 | `--ink-faint` | `#A8AEA9` |  |
 | `--line-2` | `#EFF0EA` |  |
 | `--line` | `#E5E7E1` |  |
@@ -68,7 +68,7 @@ Components use the **Roles**; palettes in Settings change the accent colours und
 | `--n5` | `#D9D6CD` |  |
 | `--n6` | `#CFCBC1` |  |
 | `--on-dark` | `#FFFFFF` |  |
-| `--on-dark-muted` | `rgba(255,255,255,.8)` |  |
+| `--on-dark-muted` | `rgba(255,255,255,.85)` |  |
 | `--on-dark-line` | `rgba(255,255,255,.18)` |  |
 | `--on-accent` | `#FFFFFF` |  |
 | `--won-sub` | `#F4D5C9` |  |
@@ -84,7 +84,7 @@ Components use the **Roles**; palettes in Settings change the accent colours und
 | `--surface-raised` | `var(--card)` | `#FFFFFF` |
 | `--text` | `var(--ink)` | `#1E2622` |
 | `--text-muted` | `var(--ink-2)` | `#5B6560` |
-| `--text-faint` | `var(--ink-3)` | `#747C77` |
+| `--text-faint` | `var(--ink-3)` | `#69716C` |
 | `--ink-soft` | `var(--ink-2)` | `#5B6560` |
 | `--border` | `var(--line)` | `#E5E7E1` |
 | `--line-3` | `var(--line-strong)` | `#C9CDC7` |
@@ -146,7 +146,7 @@ Components use the **Roles**; palettes in Settings change the accent colours und
 | `--chip-on-fg` | `var(--accent-deep)` | `#2F4A3D` |
 | `--circle-bg` | `var(--selected)` | `#E2EBE6` |
 | `--circle-fg` | `var(--accent-deep)` | `#2F4A3D` |
-| `--circle` | `48px` |  |
+| `--circle` | `var(--size-48)` | `48px` |
 | `--card-bg` | `var(--surface-raised)` | `#FFFFFF` |
 | `--card-edge` | `#E9EAE4` |  |
 | `--card-radius` | `var(--r-card)` | `20px` |
@@ -158,19 +158,19 @@ Components use the **Roles**; palettes in Settings change the accent colours und
 | `--card-title-fw` | `var(--fw-medium)` | `500` |
 | `--card-title-fg` | `var(--text)` | `#1E2622` |
 | `--btn-h` | `var(--ctl)` | `44px` |
-| `--btn-h-sm` | `36px` |  |
-| `--btn-h-lg` | `52px` |  |
+| `--btn-h-sm` | `var(--size-36)` | `36px` |
+| `--btn-h-lg` | `var(--size-52)` | `52px` |
 | `--link` | `var(--action-text)` | `#3E6252` |
 | `--link-quiet` | `var(--text-muted)` | `#5B6560` |
-| `--fab-size` | `52px` |  |
-| `--fab-shadow` | `0 4px 14px color-mix(in srgb,var(--accent) 28%,transparent)` | `0 4px 14px color-mix(in srgb,#466B5A 28%,transparent)` |
-| `--chip-h` | `36px` |  |
+| `--fab-size` | `var(--size-52)` | `52px` |
+| `--fab-shadow` | `0 4px 14px var(--focus-ring)` | `0 4px 14px color-mix(in srgb,#466B5A 20%,transparent)` |
+| `--chip-h` | `var(--size-36)` | `36px` |
 | `--seg-track` | `var(--chip-bg)` | `#EFF0EA` |
 | `--seg-fg` | `var(--text-muted)` | `#5B6560` |
 | `--seg-on-fg` | `var(--text)` | `#1E2622` |
 | `--prio-ring` | `var(--sage-300)` | `#B3CEC0` |
 | `--prio-fg` | `var(--accent-text)` | `#3E6252` |
-| `--field-h` | `48px` |  |
+| `--field-h` | `var(--size-48)` | `48px` |
 | `--field-bg` | `var(--surface-raised)` | `#FFFFFF` |
 | `--field-radius` | `var(--r-row)` | `14px` |
 | `--field-edge` | `var(--card-edge)` | `#E9EAE4` |
@@ -182,7 +182,7 @@ Components use the **Roles**; palettes in Settings change the accent colours und
 | `--toast-bg` | `var(--surface-raised)` | `#FFFFFF` |
 | `--toast-fg` | `var(--text)` | `#1E2622` |
 | `--toast-action` | `var(--action-text)` | `#3E6252` |
-| `--menu-shadow` | `0 0 0 1px var(--card-edge),var(--shadow-2)` | `0 0 0 1px #E9EAE4,0 10px 30px rgba(20,30,25,.08)` |
+| `--menu-shadow` | `0 0 0 1px var(--card-edge),var(--shadow-2)` | `0 0 0 1px #E9EAE4,0 10px 30px rgb(20 30 25 / .08)` |
 | `--row-lead` | `24px` |  |
 | `--row-gap` | `var(--s3)` | `12px` |
 | `--divider` | `var(--line-2)` | `#EFF0EA` |
@@ -258,13 +258,12 @@ Components use the **Roles**; palettes in Settings change the accent colours und
 | `--ic-row` | `var(--icon-lg)` | `24px` |
 | `--ic-tile` | `var(--icon-xl)` | `28px` |
 | `--ic-pin` | `var(--icon-xl)` | `28px` |
-| `--ctl-sm` | `40px` |  |
-| `--ctl` | `44px` |  |
-| `--ctl-lg` | `56px` |  |
+| `--ctl-sm` | `var(--size-40)` | `40px` |
+| `--ctl` | `var(--size-44)` | `44px` |
+| `--ctl-lg` | `var(--size-56)` | `56px` |
 | `--row` | `calc(52px * var(--density))` | `52px` |
 | `--row-2` | `calc(64px * var(--density))` | `64px` |
 | `--icon-col` | `40px` |  |
-| `--bar` | `68px` |  |
 | `--track` | `4px` |  |
 | `--hour` | `56px` |  |
 
@@ -273,12 +272,12 @@ Components use the **Roles**; palettes in Settings change the accent colours und
 | Token | Value | Resolves to |
 | --- | --- | --- |
 | `--shadow-1` | `0 0 0 1px var(--card-edge)` | `0 0 0 1px #E9EAE4` |
-| `--shadow-2` | `0 10px 30px rgba(20,30,25,.08)` |  |
-| `--shadow-3` | `0 18px 44px rgba(20,30,25,.16)` |  |
+| `--shadow-2` | `0 10px 30px rgb(var(--shadow-ink) / .08)` | `0 10px 30px rgb(20 30 25 / .08)` |
+| `--shadow-3` | `0 18px 44px rgb(var(--shadow-ink) / .16)` | `0 18px 44px rgb(20 30 25 / .16)` |
 | `--e-flat` | `none` |  |
 | `--e-raised` | `var(--shadow-1)` | `0 0 0 1px #E9EAE4` |
-| `--e-floating` | `var(--shadow-2)` | `0 10px 30px rgba(20,30,25,.08)` |
-| `--e-overlay` | `var(--shadow-3)` | `0 18px 44px rgba(20,30,25,.16)` |
+| `--e-floating` | `var(--shadow-2)` | `0 10px 30px rgb(20 30 25 / .08)` |
+| `--e-overlay` | `var(--shadow-3)` | `0 18px 44px rgb(20 30 25 / .16)` |
 | `--e-focus` | `0 0 0 4px color-mix(in srgb,var(--accent) 22%,transparent)` | `0 0 0 4px color-mix(in srgb,#466B5A 22%,transparent)` |
 | `--z-base` | `0` |  |
 | `--z-raised` | `2` |  |
@@ -310,3 +309,70 @@ Components use the **Roles**; palettes in Settings change the accent colours und
 | `--dur-fast` | `.18s` |  |
 | `--dur-base` | `.3s` |  |
 | `--dur-slow` | `.5s` |  |
+
+## Extended scales: palettes, sizes, dots, strokes, lines, big type, motion, breakpoints and layout
+
+| Token | Value | Resolves to |
+| --- | --- | --- |
+| `--palette-sage` | `#466B5A` |  |
+| `--palette-ocean` | `#3F6A8F` |  |
+| `--palette-plum` | `#6B5591` |  |
+| `--palette-clay` | `#9A5B3E` |  |
+| `--palette-slate` | `#545F70` |  |
+| `--palette-custom` | `#B07A3A` |  |
+| `--mood-4` | `#D9A441` |  |
+| `--on-dark-faint` | `rgba(255,255,255,.35)` |  |
+| `--ring-on-dark` | `0 0 0 1.5px rgba(255,255,255,.9)` |  |
+| `--shadow-ink` | `20 30 25` |  |
+| `--red-tint` | `color-mix(in srgb,var(--red) 10%,transparent)` | `color-mix(in srgb,#A24E36 10%,transparent)` |
+| `--focus-ring` | `color-mix(in srgb,var(--accent) 20%,transparent)` | `color-mix(in srgb,#466B5A 20%,transparent)` |
+| `--e-glow` | `0 10px 26px rgb(var(--shadow-ink) / .08)` | `0 10px 26px rgb(20 30 25 / .08)` |
+| `--blur-bar` | `blur(18px) saturate(1.6)` |  |
+| `--blur-soft` | `blur(8px)` |  |
+| `--size-24` | `24px` |  |
+| `--size-28` | `28px` |  |
+| `--size-32` | `32px` |  |
+| `--size-36` | `36px` |  |
+| `--size-40` | `40px` |  |
+| `--size-44` | `44px` |  |
+| `--size-48` | `48px` |  |
+| `--size-52` | `52px` |  |
+| `--size-56` | `56px` |  |
+| `--icon-hero` | `40px` |  |
+| `--dot-sm` | `6px` |  |
+| `--dot` | `8px` |  |
+| `--dot-lg` | `10px` |  |
+| `--thumb` | `84px` |  |
+| `--stroke` | `1.8` |  |
+| `--stroke-sm` | `2.2` |  |
+| `--stroke-check` | `2.8` |  |
+| `--hairline` | `1px` |  |
+| `--ring` | `1.5px` |  |
+| `--ring-strong` | `2px` |  |
+| `--mark` | `3px` |  |
+| `--nudge` | `2px` |  |
+| `--fs-hero` | `56px` |  |
+| `--fs-jumbo` | `88px` |  |
+| `--dur-celebrate` | `1.1s` |  |
+| `--dur-celebrate-long` | `3.5s` |  |
+| `--dur-linger` | `2s` |  |
+| `--dur-toast` | `var(--dur-linger)` | `2s` |
+| `--dur-toast-undo` | `4.5s` |  |
+| `--dur-pulse` | `1.2s` |  |
+| `--dur-shimmer` | `1.6s` |  |
+| `--dur-breathe` | `4s` |  |
+| `--press-fab` | `.92` |  |
+| `--pop` | `1.08` |  |
+| `--bp-compact` | `380px` |  |
+| `--bp-narrow` | `420px` |  |
+| `--bp-tablet` | `700px` |  |
+| `--bp-desktop` | `900px` |  |
+| `--bp-wide` | `1100px` |  |
+| `--bar-h` | `68px` |  |
+| `--bar` | `var(--bar-h)` | `68px` |
+| `--bar-clear` | `calc(var(--bar-h) + 26px)` | `calc(68px + 26px)` |
+| `--page-pad` | `16px` |  |
+| `--col-w` | `480px` |  |
+| `--rail-w` | `232px` |  |
+| `--sheet-max` | `560px` |  |
+| `--sheet-gap` | `44px` |  |

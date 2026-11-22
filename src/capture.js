@@ -151,14 +151,14 @@ function captureSheet(rec,{from=null,photo=false,listen=false}={}){
     markTurn(g.kind);done();App.refresh();toast(msg,()=>{remove(made.id,{hard:true});App.refresh();},'Undo',{edit,force:true});};
   const multiMake=asTasks=>{const ls=lines();const made=ls.map(x=>asTasks?newTask(x.slice(0,120),{date:todayK(),color:defCol()}):create('idea',{title:x.slice(0,120),notes:'',photos:[],source:from||null}));done();App.refresh();toast(asTasks?`${made.length} tasks added for today`:`${made.length} ideas saved`,()=>{made.forEach(r=>remove(r.id,{hard:true}));App.refresh();},'Undo',{force:true});};
   const drawChips=()=>{if(!chips)return;chips.innerHTML='';const r=D.title.trim()?rd():null;const hs=r?r.hits:[];chips.hidden=!hs.length;
-    hs.forEach(h=>chips.append(el('span',{class:'capchip'},h.label,el('button',{'aria-label':`Keep “${h.s}” as words`,html:ic('x',12,2.4),onclick:()=>{if(h.guess)D.noArea=true;else D.keep.push(h.s);touched();T.input.focus({preventScroll:true});}}))));};
+    hs.forEach(h=>chips.append(el('span',{class:'capchip'},h.label,el('button',{'aria-label':`Keep “${h.s}” as words`,html:ic('x',IC.xs),onclick:()=>{if(h.guess)D.noArea=true;else D.keep.push(h.s);touched();T.input.focus({preventScroll:true});}}))));};
   const refreshHint=()=>{drawChips();hint.innerHTML='';if(ex)ex.hidden=!!(D.title.trim()||D.notes.trim());
     if(dupe){const dd=D.title.trim()&&!multi?capDupe(rd().title||D.title):null;dupe.innerHTML='';dupe.hidden=!dd||(isEdit&&dd.label==='Already in your Inbox');if(dd)dupe.append(el('span',{class:'grow'},dd.label),Button('Open',{variant:'link',size:'sm',onclick:dd.open}));}
-    if(!isEdit&&multi&&lines().length>=2){const n=lines().length;hint.hidden=false;hint.append(el('div',{class:'caphint2'},el('button',{class:'caphint-b',onclick:()=>multiMake(false)},el('span',{class:'k',html:ic('inbox',16,2)}),el('span',{class:'grow'},`Save as ${n} ideas`)),Button(`Add ${n} tasks for today`,{variant:'link',size:'sm',onclick:()=>multiMake(true)})));return;}
-    const q=!isEdit&&!D.notes.trim()&&!(D.photos||[]).length?quickLog(D.title):null;if(q){hint.hidden=false;hint.append(el('button',{class:'caphint-b ql',onclick:()=>{q.run();done();}},el('span',{class:'k',html:ic('check',16,2.2)}),el('span',{class:'grow'},q.label),el('span',{class:'qlgo'},'Log it')));return;}
+    if(!isEdit&&multi&&lines().length>=2){const n=lines().length;hint.hidden=false;hint.append(el('div',{class:'caphint2'},el('button',{class:'caphint-b',onclick:()=>multiMake(false)},el('span',{class:'k',html:ic('inbox',IC.sm)}),el('span',{class:'grow'},`Save as ${n} ideas`)),Button(`Add ${n} tasks for today`,{variant:'link',size:'sm',onclick:()=>multiMake(true)})));return;}
+    const q=!isEdit&&!D.notes.trim()&&!(D.photos||[]).length?quickLog(D.title):null;if(q){hint.hidden=false;hint.append(el('button',{class:'caphint-b ql',onclick:()=>{q.run();done();}},el('span',{class:'k',html:ic('check',IC.sm)}),el('span',{class:'grow'},q.label),el('span',{class:'qlgo'},'Log it')));return;}
     const g=suggestKind(D.title,D.notes,base,D.keep);hint.hidden=!g;if(!g)return;
     const one=['task','block','allday','list'].includes(g.kind)||(g.kind==='habit'&&!!g.rp);const why=g.kind==='list'?g.item:g.kind==='habit'||g.rep?g.why:(g.why||'').replace(/^.*?(\d+ times a week|Every .*|Weekdays|Weekends|Once a week)$/,'$1');
-    hint.append(el('button',{class:'caphint-b',onclick:()=>one?quick(g):go(g.kind)},el('span',{class:'k',html:ic((TURN.find(x=>x[0]===g.kind)||[])[1],16,2)}),el('span',{class:'grow'},one?addIt(g):makeIt(g.kind),why&&!(one&&!['list','habit'].includes(g.kind)&&!g.rep)?el('span',{class:'cwhy'},` · ${why}`):null),el('span',{class:'chev',html:ic(one?'check':'chevr',14,2.4)})));};
+    hint.append(el('button',{class:'caphint-b',onclick:()=>one?quick(g):go(g.kind)},el('span',{class:'k',html:ic((TURN.find(x=>x[0]===g.kind)||[])[1],IC.sm)}),el('span',{class:'grow'},one?addIt(g):makeIt(g.kind),why&&!(one&&!['list','habit'].includes(g.kind)&&!g.rep)?el('span',{class:'cwhy'},` · ${why}`):null),el('span',{class:'chev',html:ic(one?'check':'chevr',IC.xs)})));};
   const go=kind=>{if(busy()){toast('Your photo is still uploading.');return;}markTurn(kind);const r=capRead(D.title,D.keep,base);const payload={title:D.title.trim(),notes:D.notes,photos:D.photos,createdAt:isEdit?rec.createdAt:Date.now(),keep:D.keep};routeInto(kind,payload,()=>{if(isEdit)remove(rec.id);else writeDraft(null);inst.close();});};
   const drawSess=()=>{if(!sess)return;sess.innerHTML='';sess.hidden=!saved.length;if(saved.length)sess.append(el('span',{},'Saved: '),...saved.slice().reverse().slice(0,6).flatMap((r,i)=>[i?', ':'',el('button',{class:'capsessb',onclick:()=>{const x=get.id(r.id);if(!x){toast('Already sorted');return;}x.kind==='task'?taskSheet(x):captureSheet(x);}},r.title)]));};
   const touched=()=>{writeDraft(isEdit?null:D);inst&&inst.rightBtn&&update_();if(notesBox)notesBox.hidden=!(showNotes||D.notes.trim());if(ph)ph.hidden=!(showPh||D.photos.length);refreshHint();};
@@ -172,21 +172,21 @@ function captureSheet(rec,{from=null,photo=false,listen=false}={}){
       T=fieldTitle('f-cap-title','',"What's on your mind?",D.title,v=>{D.title=v;D.keep=D.keep.filter(w=>v.includes(w));if(!v.trim())multi=false;touched();},()=>{if(isEdit){if(can()){commit();inst.close();}return;}saveNext();});
       T.wrap.classList.add('capone');
       /* v235 · talk to capture: a mic beside the field (where the device supports speech), and holding + opens this sheet already listening */
-      if(voiceOK()||recOK()){const mic=el('button',{class:'capmic',type:'button','aria-label':voiceOK()?'Talk, or hold to record a voice note':'Hold to record a voice note','aria-pressed':'false',html:ic('mic',20,1.8),onclick:e=>{e.preventDefault();if(mic._held){mic._held=false;return;}if(voiceOK())voiceToggle(T.input,mic);else toast('Hold the mic to record a voice note');}});micHold(mic,T.wrap,()=>inst);T.wrap.append(mic);T.wrap.classList.add('hasmic');if(listen&&voiceOK())setTimeout(()=>voiceStart(T.input,mic),120);}
+      if(voiceOK()||recOK()){const mic=el('button',{class:'capmic',type:'button','aria-label':voiceOK()?'Talk, or hold to record a voice note':'Hold to record a voice note','aria-pressed':'false',html:ic('mic',IC.md),onclick:e=>{e.preventDefault();if(mic._held){mic._held=false;return;}if(voiceOK())voiceToggle(T.input,mic);else toast('Hold the mic to record a voice note');}});micHold(mic,T.wrap,()=>inst);T.wrap.append(mic);T.wrap.classList.add('hasmic');if(listen&&voiceOK())setTimeout(()=>voiceStart(T.input,mic),120);}
       notesBox=fieldNotes('f-cap-notes','Notes','Details or a link',D.notes,v=>{D.notes=v;touched();},{rows:1,min:26});
       ph=photosEditor(D,{compact:true,onChange:touched});hint=el('div',{class:'caphint',hidden:true});chips=el('div',{class:'capchips',hidden:true});
       dupe=el('div',{class:'capdupe',hidden:true});sess=el('div',{class:'capsess',hidden:true});ex=isEdit?null:el('p',{class:'capex'},CAP_EX[Math.floor(Math.random()*CAP_EX.length)]);
       const extras=el('div',{class:'capx'},
-        el('button',{class:'capxb',onclick:()=>{showNotes=true;touched();const n=$('#f-cap-notes');if(n)n.focus();}},el('span',{style:'display:grid',html:ic('edit',15,2)}),'Note'),
-        el('button',{class:'capxb',onclick:()=>{showPh=true;touched();const pi=ph.querySelector('input[type=file]');if(pi)pi.click();}},el('span',{style:'display:grid',html:ic('image',15,2)}),'Photo'),
-        isEdit?null:el('button',{class:'capxb',onclick:()=>importInvite(()=>inst&&inst.close())},el('span',{style:'display:grid',html:ic('cal',15,2)}),'Invite file'));
-      const top=topTurns(),row=el('div',{class:'capturn'},top.map(id=>{const t=TURN.find(x=>x[0]===id);return Chip([el('span',{style:'display:grid',html:ic(t[1],15,2)}),t[2]],{'data-k':id,onclick:()=>go(id)});}),
+        el('button',{class:'capxb',onclick:()=>{showNotes=true;touched();const n=$('#f-cap-notes');if(n)n.focus();}},el('span',{style:'display:grid',html:ic('edit',IC.sm)}),'Note'),
+        el('button',{class:'capxb',onclick:()=>{showPh=true;touched();const pi=ph.querySelector('input[type=file]');if(pi)pi.click();}},el('span',{style:'display:grid',html:ic('image',IC.sm)}),'Photo'),
+        isEdit?null:el('button',{class:'capxb',onclick:()=>importInvite(()=>inst&&inst.close())},el('span',{style:'display:grid',html:ic('cal',IC.sm)}),'Invite file'));
+      const top=topTurns(),row=el('div',{class:'capturn'},top.map(id=>{const t=TURN.find(x=>x[0]===id);return Chip([el('span',{style:'display:grid',html:ic(t[1],IC.sm)}),t[2]],{'data-k':id,onclick:()=>go(id)});}),
         moreTurn(go,()=>({title:D.title.trim(),notes:D.notes,photos:D.photos}),()=>{if(isEdit)remove(rec.id);else writeDraft(null);inst.close();},top));
       const smart=smartButton(D,()=>ph&&ph._files?ph._files():[],made=>{if(isEdit)remove(rec.id,{silent:true});else writeDraft(null);inst.close();App.refresh();toast(`${made.length} added`,()=>{made.forEach(r=>remove(r.id,{silent:true,hard:true}));if(isEdit)put(rec);App.refresh();});});
       body.append(T.wrap,ex,chips,dupe,hint,sess,extras,notesBox,ph,smart,SectionLabel(isEdit?'Or turn into':'Or save as'),row);
       if(!isEdit)body.closest('.sheet').classList.add('pinned');
       kbTurnRow(body.closest('.sheet'),go,top,()=>{const m=body.querySelector('.capmore');if(m)m.click();});
-      if(draft&&(draft.title||draft.notes))body.prepend(el('div',{class:'note good',role:'status',html:ic('undo',16,2)+'<span>Picked up where you left off.</span>'}));
+      if(draft&&(draft.title||draft.notes))body.prepend(el('div',{class:'note good',role:'status',html:ic('undo',IC.sm)+'<span>Picked up where you left off.</span>'}));
       if(isEdit){const u=(`${D.title} ${D.notes}`.match(URL_RE)||[])[0];if(u)body.insertBefore(el('a',{class:'btn line block',href:/^www\./i.test(u)?'https://'+u:u,target:'_blank',rel:'noopener'},'Open link'),row.previousSibling);
         body.append(el('button',{class:'delete',onclick:()=>{const c=clone(rec);remove(rec.id);inst.close();toast('Idea deleted',()=>put(c));}},'Delete idea'));}
       else focusTitle(T.input);
@@ -203,7 +203,7 @@ const TURN=[['task','task','Task','One action to finish'],['block','hour','Time 
    part of the screen (visualViewport), because on iPhone the keyboard's height can't be read reliably from the page. */
 function kbTurnRow(sheet,go,top=null,more=null){
   const ts=top?top.map(id=>TURN.find(x=>x[0]===id)).filter(Boolean):TURN;
-  const row=el('div',{class:'kbturn',role:'group','aria-label':'Save as'},ts.map(([id,icon,n])=>el('button',{onpointerdown:e=>e.preventDefault(),onclick:()=>go(id)},el('span',{html:ic(icon,16,2)}),n)),more?el('button',{onpointerdown:e=>e.preventDefault(),onclick:more},el('span',{html:ic('plus',16,2)}),'More'):null);
+  const row=el('div',{class:'kbturn',role:'group','aria-label':'Save as'},ts.map(([id,icon,n])=>el('button',{onpointerdown:e=>e.preventDefault(),onclick:()=>go(id)},el('span',{html:ic(icon,IC.sm)}),n)),more?el('button',{onpointerdown:e=>e.preventDefault(),onclick:more},el('span',{html:ic('plus',IC.sm)}),'More'):null);
   const v=window.visualViewport;if(!v||!isTouch())return;let maxH=Math.max(innerHeight,v.height),lastSig='',movedAt=0;
   row.style.zIndex=String((parseInt(sheet.style.zIndex)||41)+1);$('#layers').append(row);
   const place=()=>{if(!sheet.isConnected||!sheet.classList.contains('on')&&sheet._wasOn){stop();return;}if(sheet.classList.contains('on'))sheet._wasOn=true;
@@ -221,8 +221,8 @@ function moreTurn(on,getP,done,top=null){return el('button',{class:top?'chip cap
   const cap=w=>w[0].toUpperCase()+w.slice(1),secs=[];
   const pickTool=(hub,t)=>{markTurn(`${hub}|${t.id}`);inst.close();entrySheet(hub,t,null,{seed:getP(),after:done});};
   const pickBasic=id=>{inst.close();on(id);};
-  const chip=(label,icon,fn,words)=>{const c=el('button',{class:'mtchip',onclick:fn},el('span',{style:'display:grid',html:ic(icon||'list',15,1.9)}),label);c._w=(label+' '+(words||'')).toLowerCase();return c;};
-  const section=(title,icon,chs)=>{if(!chs.length)return null;const n=Card({cls:'mtcard'},el('div',{class:'mthead'},icon?el('span',{class:'mtic',html:ic(icon,17,1.9)}):null,el('b',{},title)),el('div',{class:'mtchips'},chs));n._chips=chs;secs.push(n);return n;};
+  const chip=(label,icon,fn,words)=>{const c=el('button',{class:'mtchip',onclick:fn},el('span',{style:'display:grid',html:ic(icon||'list',IC.sm)}),label);c._w=(label+' '+(words||'')).toLowerCase();return c;};
+  const section=(title,icon,chs)=>{if(!chs.length)return null;const n=Card({cls:'mtcard'},el('div',{class:'mthead'},icon?el('span',{class:'mtic',html:ic(icon,IC.md)}):null,el('b',{},title)),el('div',{class:'mtchips'},chs));n._chips=chs;secs.push(n);return n;};
   const tools={};(get.settings().areas||AREAS).forEach(hub=>{toolsOf(hub).filter(t=>!t.wheel&&t.id!=='checkin'&&toolOn(hub,t.id)).forEach(t=>{tools[`${hub}|${t.id}`]={hub,t};});});
   const label=(hub,t)=>{const all=toolsOf(hub).filter(x=>x.word===t.word).length;return /^(entry|item|note|record|log)$/i.test(t.word)||all>1?t.name:cap(t.word);};
   /* search, then what you used last, then the basic types, then every life area */
@@ -282,9 +282,9 @@ async function saveVoiceNote(blob,dur){let audio=null;
   const r=create('idea',{title:`Voice note · ${fmtT(at.getHours()*60+at.getMinutes())}`,notes:'',photos:[],audio,source:'voice'});
   toast('Voice note saved to Inbox',()=>remove(r.id,{hard:true}),'Undo',{open:()=>App.go('inbox')});return true;}
 /* a small player for a voice note */
-function voicePlayer(a){const au=el('audio',{src:a.url,preload:'none'}),b=el('button',{type:'button',class:'vplay','aria-label':'Play voice note',html:ic('play',14,2.4)}),bar=el('i'),len=el('b',{class:'tnum'},`${Math.floor((a.dur||0)/60)}:${String((a.dur||0)%60).padStart(2,'0')}`);
+function voicePlayer(a){const au=el('audio',{src:a.url,preload:'none'}),b=el('button',{type:'button',class:'vplay','aria-label':'Play voice note',html:ic('play',IC.xs)}),bar=el('i'),len=el('b',{class:'tnum'},`${Math.floor((a.dur||0)/60)}:${String((a.dur||0)%60).padStart(2,'0')}`);
   b.addEventListener('click',e=>{e.stopPropagation();if(au.paused){$$('audio').forEach(x=>{if(x!==au)x.pause();});au.play().catch(()=>toast('Couldn’t play this note'));}else au.pause();});
-  au.addEventListener('play',()=>{b.innerHTML=ic('pause',14,2.4);b.setAttribute('aria-label','Pause voice note');});au.addEventListener('pause',()=>{b.innerHTML=ic('play',14,2.4);b.setAttribute('aria-label','Play voice note');});
+  au.addEventListener('play',()=>{b.innerHTML=ic('pause',IC.xs);b.setAttribute('aria-label','Pause voice note');});au.addEventListener('pause',()=>{b.innerHTML=ic('play',IC.xs);b.setAttribute('aria-label','Play voice note');});
   au.addEventListener('timeupdate',()=>{const d=au.duration&&isFinite(au.duration)?au.duration:(a.dur||1);bar.style.width=`${Math.min(100,au.currentTime/d*100)}%`;});au.addEventListener('ended',()=>{bar.style.width='0%';});
   return el('span',{class:'vplayer',onclick:e=>e.stopPropagation()},b,el('span',{class:'vtrack'},bar),len,au);}
 

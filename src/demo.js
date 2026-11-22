@@ -102,7 +102,7 @@ function loadDemo(quiet){
   const NR={type:'never',end:null},AR=AREAS;
   /* every area on, every module on */
   const allAreas=[...new Set([...AREAS,...OPT_AREAS])];const shown={};allAreas.forEach(a=>shown[a]=toolsOf(a).filter(x=>x.optIn).map(x=>x.id));
-  setSettings({areas:allAreas.slice().sort((a,b)=>a.localeCompare(b)),hubHidden:{},hubShown:shown,introDone:true,foundationOff:true,demoSnap:snap,demoVer:9});
+  setSettings({areas:allAreas.slice().sort((a,b)=>a.localeCompare(b)),hubHidden:{},hubShown:shown,introDone:true,foundationOff:true,demoSnap:snap,demoVer:10});
   if(!Array.isArray(s0.jobs)||!s0.jobs.length)setSettings({jobs:[{id:'work',name:'Roswell Park',flex:false,cycle:'week',shifts:[{id:'s1',days:[0,1,2,3],start:8*60+30,end:17*60},{id:'s2',days:[4],start:8*60+30,end:13*60}]}]});
   /* projects first, so tasks can belong to them */
   const projs=[['Kitchen refresh','Home',['Measure the cabinets','Pick a paint color','Order hardware','Paint weekend']],['Q1 Workday release','Career',['Write test scripts','UAT with grant managers','Sign-off from Finance','Go-live checklist','Train AP team']],['Japan trip','Travel',['Book flights','Book Kyoto ryokan','Get JR pass','Pocket wifi']],['Move to the new office','Career',[]],['Garage cleanout (paused)','Home',['Sort donations','Sell the old bike']]];
@@ -146,8 +146,8 @@ function loadDemo(quiet){
   A('Japan · spring trip',addK(t,120),addK(t,133),{area:'Travel',color:'clay',icon:'plane'});A('Conference (last week)',addK(t,-9),addK(t,-7),{area:'Career'});
   /* habits: check, count, time; good and bad streaks */
   const H=(title,o)=>{const h=mk('habit',Object.assign({title,notes:'',target:3,dur:30,days:[],area:'Health',color:'blue',icon:'habit',logs:{},sessions:{},startDate:addK(t,-60)},o));const rate=o.rate||.6;for(let d=1;d<=60;d++)if(r()<rate)h.logs[addK(t,-d)]=o.track==='count'?o.goalN+Math.floor(r()*3)-1:true;put(h,{silent:true});return h;};
-  if(!get.all('habit').some(x=>/workout/i.test(x.title)))H('Workout',{target:4,icon:'dumbbell',color:'blue',rate:.55});H('Read 20 pages',{target:5,area:'Learning',color:'plum',icon:'book',rate:.7});H('Meditate',{target:7,area:'Personal growth',color:'sage',icon:'leaf',rate:.4,dur:10});
-  H('Drink 8 glasses of water',{icon:'drop',color:'blue',target:7,track:'count',goalN:8,rate:.8});H('No phone after 10pm',{icon:'moon',color:'slate',target:5,area:'Personal growth',rate:.3});H('Spanish practice',{icon:'cap',color:'olive',target:5,area:'Learning',rate:.85,dur:15});H('Call a friend',{target:1,area:'Relationships',color:'rose',icon:'phone',rate:.15});H('Stretch',{icon:'heart',color:'rose',target:7,rate:.65,dur:10});H('Journal',{target:5,area:'Personal growth',color:'plum',icon:'pencil',rate:.5,dur:15});H('Practice guitar',{target:3,area:'Recreation',color:'clay',icon:'music',rate:.35});H('Walk the dog',{target:7,area:'Pets',color:'olive',icon:'leaf',rate:.9});
+  if(!get.all('habit').some(x=>/workout/i.test(x.title)))H('Workout',{target:4,icon:'dumbbell',color:'blue',rate:.55});H('Read 20 pages',{target:5,area:'Learning',color:'plum',icon:'book',rate:.7});H('Meditate',{target:7,area:'Personal growth',color:'sage',icon:'lotus',rate:.4,dur:10});
+  H('Drink 8 glasses of water',{icon:'glass',color:'blue',target:7,track:'count',goalN:8,rate:.8});H('No phone after 10pm',{icon:'phoneoff',color:'slate',target:5,area:'Personal growth',rate:.3});H('Spanish practice',{icon:'chat',color:'olive',target:5,area:'Learning',rate:.85,dur:15});H('Call a friend',{target:1,area:'Relationships',color:'rose',icon:'phone',rate:.15});H('Stretch',{icon:'stretch',color:'rose',target:7,rate:.65,dur:10});H('Journal',{target:5,area:'Personal growth',color:'plum',icon:'notebook',rate:.5,dur:15});H('Practice guitar',{target:3,area:'Recreation',color:'clay',icon:'music',rate:.35});H('Walk the dog',{target:7,area:'Pets',color:'olive',icon:'paw',rate:.9});
   /* goals */
   const G=(title,area,dl,steps)=>mk('goal',{title,notes:'',area,deadline:dl,color:pick(['blue','sage','plum']),status:'active',steps:steps.map((x,i)=>({id:uid('s'),t:x,d:i<Math.ceil(steps.length/2)}))});
   G('Run a half marathon','Health',addK(t,150),['Pick a plan','Run 10K','Run 15K','Sign up','Race day']);G('Save $10,000 emergency fund','Finances',addK(t,300),['Open HYSA','Auto-transfer $400','Hit $5K','Hit $10K']);
@@ -200,4 +200,4 @@ function clearDemo(){const s=get.settings(),snap=s.demoSnap;
     App.refresh();toast('Demo cleared');}});}
 
 /* refresh an already-loaded demo with the current generator, keeping the original settings snapshot */
-function demoRefresh(){const s=get.settings(),keep=s.demoSnap;if(!keep)return;[...recs.values()].filter(r=>r.demo).forEach(r=>remove(r.id,{silent:true,hard:true}));setSettings({demoSnap:null});loadDemo(true);setSettings({demoSnap:keep,demoVer:9});}
+function demoRefresh(){const s=get.settings(),keep=s.demoSnap;if(!keep)return;[...recs.values()].filter(r=>r.demo).forEach(r=>remove(r.id,{silent:true,hard:true}));setSettings({demoSnap:null});loadDemo(true);setSettings({demoSnap:keep,demoVer:10});}

@@ -47,6 +47,7 @@
   --fab-size:var(--size-52); --fab-shadow:0 4px 14px var(--focus-ring);
   --chip-h:var(--size-36); --seg-track:var(--chip-bg); --seg-fg:var(--text-muted); --seg-on-fg:var(--text);
   --prio-ring:var(--sage-300); --prio-fg:var(--accent-text);
+  --hab-ring-w:2.5px; --hab-track:var(--line-2); --hab-ring-scale:.9; /* v271 trial: bigger, lighter habit rings · to revert: 3.5px, var(--line), .7 */
   --prio-set-ring:var(--sage-400); --prio-set-w:var(--ring); /* v270 trial: lighter, thinner set rings · to revert: var(--action) and var(--ring-strong) */
   --field-h:var(--size-48); --field-bg:var(--surface-raised); --field-radius:var(--r-row); --field-edge:var(--card-edge); --placeholder:var(--ink-faint);
   --tab-on-bg:var(--selected); --back-fg:var(--text-muted);
@@ -2509,7 +2510,7 @@ html.c-fade .todo.won .t3in .tick-host.done{opacity:1}
 .tick-hit.impt .tick:not(.on)::before{content:"!";position:absolute;inset:0;display:grid;place-items:center;color:var(--amber);font-weight:var(--fw-strong);font-size:var(--fs-label);line-height:var(--lh-solid)}
 .fhabs::-webkit-scrollbar{display:none}
 .fhab{flex:none;display:flex;width:auto;flex-direction:row;align-items:center;gap:var(--s3);text-align:left}
-.fhab .hring{transition:transform var(--dur-base) var(--spring);margin:calc(var(--s2) * -1);flex:none}
+.fhab .hring{transition:transform var(--dur-base) var(--spring);margin:calc(var(--s1) * -1);flex:none}
 .fhab small{overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;line-height:var(--lh-ui);-webkit-line-clamp:2;max-width:none}
 .fhab small em{color:var(--ink-3);display:inline;margin-left:var(--s1)}
 .fsched{background:none;padding:0;margin:0;box-shadow:var(--e-flat);border:0}
@@ -2879,7 +2880,7 @@ input[type=color]{width:var(--size-40);height:var(--size-40);border:0;border-rad
 /* habits: a two-column grid of check rows */
 .fhabs{scrollbar-width:none;overflow-x:auto;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s1) var(--s3);overflow:visible;margin:var(--s2) 0 0;padding:0;-webkit-mask-image:none;mask-image:none}
 .fhab{padding:var(--s2) 0;min-height:var(--ctl)}
-.fhab .hring{transform:scale(.7)}
+.fhab .hring{transform:scale(var(--hab-ring-scale))}
 .fhab:active .hring{transform:scale(.62)}
 .fhab small{font-size:var(--fs-label);color:var(--text);text-align:left}
 .fhab small em{font-style:normal}

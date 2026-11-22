@@ -3868,3 +3868,8 @@ input[type=search]::-webkit-search-cancel-button{-webkit-appearance:none;display
 .mcl.ev{border-left:2px solid var(--c,var(--action));border-radius:0;padding-left:3px}
 .mcl.td{color:var(--text-muted)}
 .mcm{font-size:10.5px;line-height:15px;padding:0 3px;color:var(--ink-3)}
+/* v280 · More: life areas start in the same column as pinned (the rail no longer snaps past its padding), and the two rows sit closer */
+.arail{scroll-padding-inline:var(--s4)}
+.page>.pinh.areah{margin-top:0}
+.pins{margin-bottom:0;margin-top:calc(var(--s1) * -1)}
+.areah+.arail{margin-top:calc(var(--s1) * -1)}

@@ -46,7 +46,7 @@ function viewMore(root){
   const absent=['today','studio','calendar'].filter(x=>!(S.nav||[]).includes(x));
   if(absent.length)page.append(SectionLabel('Main views'),el('div',{class:'list'},absent.map(x=>Row({style:'',onclick:()=>App.go(x)},IconTile(null,{html:ic(PLACES[x].i,IC.md)}),el('span',{class:'grow'},el('b',{},PLACES[x].n)),RowEnd('chevron')))));
   /* your life areas, one tap away */
-  {const areas=(S.areas||AREAS);page.append(el('div',{class:'sh2'},el('span',{class:'lbl'},'Life areas'),lnk('All',()=>App.go('areas'))),
+  {const areas=(S.areas||AREAS);page.append(el('div',{class:'sh2 pinh areah'},el('span',{class:'lbl'},'Life areas'),lnk('All',()=>App.go('areas'))),
     (rail=>{/* coming back to More, the rail starts at the beginning again */try{let was=true;new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting&&!was)rail.scrollLeft=0;was=e.isIntersecting;})).observe(rail);}catch(e){}return rail;})(el('div',{class:'arail'},areas.map(a=>el('button',{class:'acirc',onclick:()=>App.go('area',{name:a})},el('span',{class:'ic',html:ic(areaIcon(a),IC.xl)}),el('span',{class:'an'},a))))));}
   const row=(i,n,sub,on,subCls)=>Row({style:'',onclick:on},IconTile(null,{html:ic(i,IC.md)}),el('span',{class:'grow'},el('b',{style:'font-size:var(--fs-headline)'},n),sub?el('small',{class:subCls||null},sub):null),RowEnd('chevron'));
   const place=id=>id==='reviews'?(()=>{const nr=nextReviewLine();return row(PLACES[id].i,PLACES[id].n,nr&&nr[0],()=>App.go(id),nr&&nr[1]?'duenow':null);})():row(PLACES[id].i,PLACES[id].n,null,()=>App.go(id));

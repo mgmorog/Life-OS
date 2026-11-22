@@ -4072,3 +4072,17 @@ textarea.big.gstep{font-size:var(--fs-row);font-family:inherit}
 .hwdots i.fut{background:var(--line-2);box-shadow:none;opacity:.55}
 .list>.trow-wrap{border-bottom:0}
 .tstick{top:calc(env(safe-area-inset-top,0px) + var(--ctl-lg))}
+/* v288 · Move with a more button; file sheet you can change */
+.ibmv{display:inline-flex;align-items:center;flex:none;background:var(--selected);border-radius:var(--r-full)}
+.ibmv .ibhome.ico{background:none;padding-inline:var(--s3) var(--s1)}
+.ibmore{display:grid;place-items:center;width:34px;height:var(--size-44);color:var(--action-text);border-left:var(--hairline) solid color-mix(in srgb,var(--action-text) 20%,transparent);margin-left:2px}
+.filelist .li{display:flex;align-items:center;gap:var(--s2);padding-right:var(--s3)}
+.filelist .fltog{display:flex;align-items:center;gap:var(--s3);min-height:var(--size-48);text-align:left;min-width:0}
+.filelist .li.on,.filelist .li.off{background:none}
+.filelist .li.off .tt{color:var(--text-muted)}
+.flto{display:inline-flex;align-items:center;gap:2px;flex:none}
+.flto.none{background:none;box-shadow:inset 0 0 0 1px var(--border);color:var(--text-muted)}
+.ibmv .ibhome{max-width:none;overflow:visible}
+.ibmv{height:var(--size-28,28px)}
+.ibmore{height:var(--size-28,28px);position:relative}
+.ibmore::before{content:"";position:absolute;left:0;right:0;top:50%;height:var(--ctl);transform:translateY(-50%)}

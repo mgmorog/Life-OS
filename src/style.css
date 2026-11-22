@@ -3796,3 +3796,6 @@ input[type=search]::-webkit-search-cancel-button{-webkit-appearance:none;display
 /* v270 · a set priority wears a lighter, thinner ring; done keeps its filled circle */
 .pring.pr-set{border-width:var(--prio-set-w);border-color:var(--prio-set-ring);color:var(--prio-fg)}
 @media(prefers-contrast:more){:root{--prio-set-ring:var(--action);--prio-set-w:var(--ring-strong)}}
+/* v272 · the chip row under the week strip scrolls sideways only, at one fixed height */
+.hdchips{height:var(--ctl);align-items:center;overflow-x:auto;overflow-y:hidden;touch-action:pan-x;overscroll-behavior:contain}
+.hdchips>*{max-height:var(--chip-h)}

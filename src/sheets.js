@@ -241,7 +241,12 @@ function taskSheet(rec,seed={}){
       const T=fieldTitle('f-task-title','Title','What needs doing?',D.title,v=>{D.title=v;update();},()=>{if(isTouch()){T.input.blur();return;}if(D.title.trim()&&commit()!==false)inst.close();});
       stepsEd=stepsEditor(D,{tick:isEdit});let wasRep=D.repeat&&D.repeat.type!=='never';
       when=el('div',{class:'group'});details=el('div',{class:'group'});
-      body.append(T.wrap,fieldNotes('f-task-notes','Notes','Details or a link',D.notes,v=>D.notes=v,{rows:1,min:26}),photosEditor(D,{compact:true}),stepsEd,SectionLabel('When'),when,SectionLabel('Details'),details);
+      /* v283 · area, project and priority as chips under the title; When comes next, then steps, then notes */
+      const tchips=el('div',{class:'tschips'}),drawChips=()=>{tchips.replaceChildren();const pr=D.part&&get.id(D.part);
+        tchips.append(el('button',{class:'chip'+(D.area?' on':''),onclick:()=>pickOne('Life area',[['','None'],...(get.settings().areas||AREAS).map(a=>[a,a])],D.area||'',v=>{D.area=v||null;drawChips();ctxRender();})},D.area?el('span',{style:'display:grid',html:ic(areaIcon(D.area),IC.xs)}):null,D.area||'+ Life area'),
+          el('button',{class:'chip'+(pr?' on':''),onclick:()=>{const ps=[...get.all('project').filter(p=>!p.finished),...get.all('goal').filter(g=>!g.finished)];Picker({title:'Project or goal',recentKey:'project',items:[{value:'',label:'None'},...ps.map(p=>({value:p.id,label:p.title,sub:p.area||null}))],onPick:id=>{D.part=id||null;const pp=id&&get.id(id);if(pp&&!D.area&&pp.area)D.area=pp.area;drawChips();ctxRender();}});}},pr?pr.title:'+ Project'),
+          el('button',{class:'chip'+(D.priority==='high'?' on':''),onclick:()=>pickOne('Priority',[['low','Low'],['normal','Normal'],['high','High']],D.priority||'normal',v=>{D.priority=v;drawChips();ctxRender();})},D.priority==='high'?'High priority':D.priority==='low'?'Low priority':'+ Priority'));};drawChips();
+      body.append(T.wrap,tchips,SectionLabel('When'),when,stepsEd,fieldNotes('f-task-notes','Notes','Details or a link',D.notes,v=>D.notes=v,{rows:1,min:26}),photosEditor(D,{compact:true}),SectionLabel('Details'),details);
       ctxRender=()=>{
         const nowRep=D.repeat&&D.repeat.type!=='never';if(nowRep!==wasRep){wasRep=nowRep;stepsEd._redraw();}
         when.innerHTML='';details.innerHTML='';
@@ -252,6 +257,7 @@ function taskSheet(rec,seed={}){
         if(hasTime&&ctx.open==='time')when.append(ctx.panel('time','wide',ctx.wheel(()=>D.time,v=>{D.time=v;const t=$('#task-time-val');if(t)t.textContent=fmtT(v);})));
         ctx.repeatRows(when,D,()=>D.date||App.state.sel);
         ctx.reminderRow(when,D,{noTime:D.time==null,word:'the task time',onNeedTime:()=>{if(!D.date)D.date=App.state.sel;D.time=nextHour();D.reminder=0;D.remUnit='minute';ctx.open='time';ctxRender();toast('Time turned on');}});
+        when.append(ctx.row('dur','hour','How long',null,{expand:false,trailing:seg([[0,'—'],[15,'15m'],[30,'30m'],[60,'1h'],[120,'2h']],[0,15,30,60,120].includes(+D.dur||0)?(+D.dur||0):30,v=>{D.dur=+v||null;ctxRender();})}));
         const hasDead=!!D.deadline;
         when.append(ctx.row('dead','target','Deadline',null,{expand:false,tap:hasDead?()=>{ctx.open=ctx.open==='dead'?null:'dead';ctxRender();}:null,trailing:[hasDead?el('span',{class:'on'},relDay(D.deadline)):null,ctx.sw(hasDead,'Set a deadline',on=>{if(on){D.deadline=k(addD(D.date?fromK(D.date):today(),7));ctx.open='dead';}else{D.deadline=null;if(ctx.open==='dead')ctx.open=null;}ctxRender();})]}));
         if(hasDead&&ctx.open==='dead')when.append(ctx.panel('dead','wide',ctx.calendar(D.deadline,dk=>{if(dk){D.deadline=dk;ctx.open=null;ctxRender();}})));

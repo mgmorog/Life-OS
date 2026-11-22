@@ -25,6 +25,8 @@ function itemMenu(e,dk,x,y){
     {label:'Move to another day',icon:'cal',onclick:()=>moveSheet(e,occDay)},
     e.time!=null&&e.kind!=='block'?{label:'Remove the time',icon:'x',onclick:()=>{const u=snapItem(e);setItemTime(e,dk,null);App.refresh();toast('Time removed',u);}}:null,
     (e.kind==='task'||e.kind==='entry')&&!e.done&&!t3Get(dk).some(q=>q.id===r.id)?{label:'Make it a priority',icon:'target',onclick:()=>{const l=t3Get(dk);if(l.length>=T3_MAX){toast('Three priorities is the limit. Remove one first.');return;}t3Set(dk,[...l,{id:r.id}]);buzz(12);toast('Added to priorities',()=>t3Set(dk,t3Get(dk).filter(q=>q.id!==r.id)));}}:null,
+    e.kind==='task'?{label:r.part&&get.id(r.part)?`Project: ${get.id(r.part).title}`:'Move to a project…',icon:'project',onclick:()=>{const ps=[...get.all('project').filter(p=>!p.finished),...get.all('goal').filter(g=>!g.finished)];if(!ps.length){toast('No open projects or goals yet');return;}Picker({title:'Move to',recentKey:'project',items:[{value:'',label:'None'},...ps.map(p=>({value:p.id,label:p.title,sub:p.area||null}))],onPick:id=>{const was=r.part;r.part=id||null;const pp=id&&get.id(id);if(pp&&!r.area&&pp.area)r.area=pp.area;put(r);toast(pp?`Moved to ${pp.title}`:'Removed from project',()=>{r.part=was;put(r);});}});}}:null,
+    e.kind==='task'?{label:r.area?`Life area: ${r.area}`:'Set a life area…',icon:'leaf',onclick:()=>pickOne('Life area',[['','None'],...(get.settings().areas||AREAS).map(a=>[a,a])],r.area||'',v=>{r.area=v||null;put(r);})}:null,
     e.kind==='task'?{label:r.priority==='high'?'Remove high priority':'Mark high priority',icon:'flag',onclick:()=>{const was=r.priority;r.priority=was==='high'?'normal':'high';put(r);toast(r.priority==='high'?'Marked high priority':'Priority cleared',()=>{r.priority=was;put(r);});}}:null,
     (e.kind==='task'||e.kind==='block')&&!e.done?{label:frNow()&&frNow().id===r.id?'Back to the timer':'Start focus',icon:'play',onclick:()=>frNow()&&frNow().id===r.id?App.go('timer'):focusLenSheet(r)}:null,
     e.kind==='task'&&r.part&&(get.id(r.part)||{}).kind==='project'?{label:'Waits for…',icon:'layers',onclick:()=>depSheet(r)}:null,
@@ -611,7 +613,10 @@ function areaItems(dk){if(get.settings().areaDue===false)return[];let rows=[];tr
     const area=p?p[1]:(r.hub||mod);
     return Object.assign({},r,{area,kind:p?p[2]:(r.hub&&mod&&mod!==r.hub?mod:null),rid:p&&!['dprep','drev'].includes(p[0])?String(r.id).slice(p[0].length):null,late:late&&!r.done});});}
 function areaTag(a){return el('span',{class:'atag'},el('span',{style:'display:grid',html:ic(areaIcon(a),IC.xs)}),a);}
-function areaRow(r,slim){const sub=String(r.sub||'').replace(new RegExp('^'+(r.kind||'').replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\s*·\\s*','i'),'');const subT=(sub===r.kind?'':sub).replace(/(\d+ days?) overdue/i,'$1 late');
+/* v283 · one way to say late: days for two weeks, then weeks */
+function lateWord(n){return n<=1?'1 day late':n<14?`${n} days late`:`${Math.round(n/7)} weeks late`;}
+const lateWords=t=>String(t).replace(/(\d+) days? (late|ago)/i,(m,n)=>lateWord(+n));
+function areaRow(r,slim){const sub=String(r.sub||'').replace(new RegExp('^'+(r.kind||'').replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\s*·\\s*','i'),'');const subT=lateWords((sub===r.kind?'':sub).replace(/(\d+ days?) overdue/i,'$1 late'));
   const meta=subT?el('span',{class:'meta'},subT):null;
   const row=el('div',{class:'trow tick-host'+(r.done?' done':''),'data-id':r.rid||''},
     r.tick?el('span',{class:'tick-hit'},r.tick):el('span',{class:'tick-hit aiopen','aria-hidden':'true',html:ic(areaIcon(r.area||''),IC.sm)}),
@@ -645,12 +650,12 @@ function replanSheet(tasks,dk,ex){ex=ex||{};const tk=todayK(),sat=(()=>{const d=
   const markDone=()=>{const l=chosen(),snap=l.filter(x=>x.rec).map(x=>[x.rec,JSON.stringify(x.rec.doneDates||{})]);
     l.forEach(x=>{if(x.area){const b=x.area.tick&&(x.area.tick.matches('button')?x.area.tick:x.area.tick.querySelector('button'));if(b)b.click();return;}const r=x.rec;r.doneDates=Object.assign({},r.doneDates||{});r.doneDates[x.doneK]=Date.now();put(r,{silent:true});});
     finish(l.length>1?`${l.length} completed`:`${l[0].title} completed`,snap.length?()=>{snap.forEach(([r,dd])=>{r.doneDates=JSON.parse(dd);put(r,{silent:true});});App.refresh();}:null);};
-  const moveTo=v=>{const mv=chosen(),before=mv.map(x=>[x.rec,x.rec.date]);
+  const moveTo=v=>{if(v==='drop'){const mv=chosen(),cs=mv.map(x=>clone(x.rec));mv.forEach(x=>{x.rec.archived=true;x.rec.archivedAt=Date.now();put(x.rec,{silent:true});});finish(mv.length===1?`${mv[0].title} dropped`:`${mv.length} dropped`,()=>{cs.forEach(c=>put(c,{silent:true}));App.refresh();});return;}const mv=chosen(),before=mv.map(x=>[x.rec,x.rec.date]);
     mv.forEach((x,i)=>{const t=x.rec;t.date=v==='spread'?addK(tk,1+Math.floor(i/2)):v;t.moves=(t.moves||0)+1;put(t,{silent:true});});
     finish(mv.length===1?`${mv[0].title} replanned`:`${mv.length} replanned`,()=>{before.forEach(([t,d])=>{t.date=d;put(t,{silent:true});});App.refresh();});};
   const draw=b=>{b.replaceChildren();const l=chosen(),n=l.length;
     if(mode==='move'){
-      const opts=[[tk,'Today','Back on today’s list'],[addK(tk,1),'Tomorrow',relDay(addK(tk,1))],[sat,'This weekend',relDay(sat)],[mon,'Next week',relDay(mon)],...(n>1?[['spread','Spread out','2 a day from tomorrow']]:[]),[null,'Someday','No date, in Anytime']];
+      const opts=[[tk,'Today','Back on today’s list'],[addK(tk,1),'Tomorrow',relDay(addK(tk,1))],[sat,'This weekend',relDay(sat)],[mon,'Next week',relDay(mon)],...(n>1?[['spread','Spread out','2 a day from tomorrow']]:[]),[null,'Someday','No date, in Anytime'],['drop','Drop','Archive, out of the way']];
       b.append(el('button',{class:'rpback',onclick:()=>{mode='pick';draw(b);}},el('span',{style:'display:grid',html:ic('chevl',IC.sm)}),`Replan ${n} ${n===1?'to-do':'to-dos'}`),
         el('div',{class:'rpgrid'},opts.map(([v,t1,t2])=>el('button',{class:'rpopt'+(v===null?' quiet':''),onclick:()=>moveTo(v)},el('b',{},t1),el('span',{},t2))),
           el('button',{class:'rpopt wide',onclick:()=>{const ctx=formCtx(()=>{});const ps=openSheet({title:'Move to',left:{label:'Cancel'},build:bd=>bd.append(ctx.calendar(null,dk=>{ps.close();moveTo(dk);},{minK:tk}))});}},el('b',{},'Pick a date'),el('span',{},'Opens the calendar'))));
@@ -658,7 +663,8 @@ function replanSheet(tasks,dk,ex){ex=ex||{};const tk=todayK(),sat=(()=>{const d=
     const pickable=items.filter(x=>canAct(x,act)),all=pickable.length&&pickable.every(x=>sel().has(x.key));
     const seg=el('div',{class:'rpseg',role:'tablist'},[['replan','Replan'],['done','Mark complete']].map(([k,t])=>el('button',{class:act===k?'on':'',role:'tab','aria-selected':String(act===k),disabled:k==='replan'&&!items.some(x=>x.move)?'':null,onclick:()=>{if(act===k)return;act=k;draw(b);}},t)));
     const hint=act==='replan'&&items.some(x=>!x.move)?el('p',{class:'rpnote2'},'Grayed items follow their own schedule, so they can’t be replanned. Switch to Mark complete to finish them.'):null;
-    b.append(...[seg,el('div',{class:'rpbar'},Caption(sel().size&&n?`${n} selected`:act==='replan'?'Pick to-dos to replan':'Pick what you finished',{as:'span'}),pickable.length?Button(all?'Clear':'Select all',{variant:'link',size:'sm',onclick:()=>{if(all)sel().clear();else pickable.forEach(x=>sel().add(x.key));draw(b);}}):null),
+    const allToday=act==='replan'&&items.filter(x=>x.move).length>1?Button(`Move all ${items.filter(x=>x.move).length} to today`,{variant:'secondary',full:true,onclick:()=>{items.filter(x=>x.move).forEach(x=>S2.replan.add(x.key));act='replan';moveTo(tk);}}):null;
+    b.append(...[seg,allToday,el('div',{class:'rpbar'},Caption(sel().size&&n?`${n} selected`:act==='replan'?'Pick to-dos to replan':'Pick what you finished',{as:'span'}),pickable.length?Button(all?'Clear':'Select all',{variant:'link',size:'sm',onclick:()=>{if(all)sel().clear();else pickable.forEach(x=>sel().add(x.key));draw(b);}}):null),
       el('div',{class:'list rplist'},items.map(x=>{const ok=canAct(x,act),on=ok&&sel().has(x.key);
         if(x.open)return el('button',{class:'rprow nomove op',onclick:()=>{inst.close();setTimeout(()=>x.area.go&&x.area.go(),260);}},el('span',{class:'rpck op',html:ic('chevr',IC.xs)}),el('span',{class:'grow'},el('span',{class:'tt'},x.title),el('small',{},x.sub)));
         return el('button',{class:'rprow'+(on?' on':'')+(ok?'':' nomove'),disabled:ok?null:'','aria-pressed':ok?String(on):null,onclick:()=>{if(!ok)return;sel().has(x.key)?sel().delete(x.key):sel().add(x.key);draw(b);}},

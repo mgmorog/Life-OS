@@ -3918,3 +3918,30 @@ input[type=search]::-webkit-search-cancel-button{-webkit-appearance:none;display
 html:is(.t-large,.t-larger) .ibrow{flex-wrap:wrap}
 html:is(.t-large,.t-larger) .ibrow .ibmain{flex-basis:100%}
 html:is(.t-large,.t-larger) .ibrow .ibhome{margin-left:calc(var(--size-36) + var(--s3));max-width:none}
+/* v283 · Tasks */
+.tfold{display:inline-flex;align-items:center;gap:var(--s1);min-height:var(--ctl-sm);background:none;border:0;padding:0;font:inherit;color:inherit;text-align:left}
+.tfold .tfc{display:grid;color:var(--ink-3)}
+.tweek .tday{display:flex;align-items:baseline;justify-content:space-between;padding:var(--s3) var(--pad) var(--s1);font-size:var(--fs-small);color:var(--text-muted);background:var(--surface-raised)}
+.tweek .tday b{font-weight:var(--fw-medium);color:var(--text)}
+.tweek .tday::before{display:none!important}
+.taddday,.tdoneln{display:flex;align-items:center;gap:var(--s3);width:100%;min-height:var(--ctl);padding:0 var(--pad);text-align:left;font-size:var(--fs-row);color:var(--action-text);font-weight:var(--fw-medium)}
+.tadd-i{display:grid;place-items:center;width:var(--row-lead);flex:none}
+.tdoneln{color:var(--text-muted);font-weight:var(--fw-regular);font-size:var(--fs-label)}
+.orep{display:inline-flex;align-items:center;gap:3px}
+.tsearch{margin-top:var(--s2)}
+.tschips{display:flex;flex-wrap:wrap;gap:var(--s2);margin-top:calc(var(--s1) * -1)}
+.tschips .chip{display:inline-flex;align-items:center;gap:var(--s1)}
+/* filter sheet chips match the rest of the app: soft fill, solid when on */
+.sheet .chips .chip:not(.on):not([aria-pressed=true]){background:var(--chip);box-shadow:none;border:0;color:var(--text)}
+/* life-area rows: the chevron sits in one column at the right edge */
+.list .trow{position:relative}
+.list .trow .aichev{margin-left:auto;flex:none}
+.list .trow>.t{flex:1;min-width:0}
+/* steps: the delete ✕ shows only on the step you're editing */
+.steps .step .x{visibility:hidden}
+.steps .step:focus-within .x{visibility:visible}
+@media(hover:hover){.steps .step:hover .x{visibility:visible}}
+/* one divider between every row, swipeable rows included */
+.list>.swr+.swr::before,.list>.swr+.li::before,.list>.li+.swr::before{display:block}
+.trow-wrap>.swr{flex:1;min-width:0}
+.trow-wrap>.swr>.trow{width:100%}

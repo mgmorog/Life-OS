@@ -13,6 +13,7 @@ One codebase, two places it runs:
 ## Shipping a change
 1. Edit `src/` (bump `APP_VER` and `WHATS_NEW` in `src/prefs.js` for anything visible).
 2. `npm run test:pwa` (home-screen build against a local Supabase stand-in) and the Playwright scripts in `test/` for the app itself (`bash mk.sh` builds `test/page.html` first).
-3. Commit and push to `main`. Vercel deploys; open apps reload on next open via `version.json`.
+3. Changed tokens? Run `npm run tokens`, then update the Life OS design system artifact (`daf29a28-6ee1-4dc0-94cd-1213160634bd`) with `design-system/tokens.json` and `design-system/README.md` as `project/tokens.json` and `project/README.md`, and its index last.
+4. Commit and push to `main`. Vercel deploys; open apps reload on next open via `version.json`.
 
 Secrets live only in Vercel environment variables. Never commit keys or put the service_role key in code.

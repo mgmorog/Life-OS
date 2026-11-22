@@ -116,7 +116,7 @@ function dayLine(e,dk){
   return swipeAct(row,{right:['task','step','habit'].includes(e.kind)?{label:'Done',color:'var(--accent)',run:()=>{row.classList.add('done');toggleItem(e,dk);setTimeout(()=>App.refresh(),420);}}:null,
     left:{label:'Open',color:'var(--ink-2)',run:()=>{openItem(e,dk);setTimeout(()=>{row.style.transition='transform var(--dur-base) var(--ease)';row.style.transform='';},250);}}});
 }
-function allDayChips(allDay,dk){return el('div',{class:'allday-row',style:'margin-top:0'},allDay.map(e=>{const b=el('button',{class:'adchip',style:`--c:${e.color}`,html:(e.icon?glyph(e.icon,16,2):'')+`<span>${esc(e.title)}</span>`,onclick:()=>openItem(e,dk)});calGestures(b,e,dk);return b;}));}
+function allDayChips(allDay,dk){return el('div',{class:'allday-row',style:'margin-top:0'},allDay.map(e=>{const b=el('button',{class:'adchip',style:`--c:${e.color}`,html:(e.hicon?ic(e.hicon,IC.sm):e.icon?glyph(e.icon,16,2):'')+`<span>${esc(e.title)}</span>`,onclick:()=>openItem(e,dk)});calGestures(b,e,dk);return b;}));}
 const addChips=(dk,inline)=>el('div',{class:'chips'},Chip('+ Add',{onclick:e=>{const b=e.currentTarget,r=b.getBoundingClientRect();openMenu(r.left,r.bottom+4,[{label:'Task',icon:'task',onclick:()=>inline?wkAdd(b,dk):taskSheet(null,{date:dk})},{label:'Time block',icon:'time',onclick:()=>blockSheet(null,{date:dk,start:nextFreeSlot(dk)})},{label:'All-day',icon:'cal',onclick:()=>alldaySheet(null,{start:dk})}]);}}));
 function weekBody(body,start,C){
   const tk=todayK(),list=el('div',{}),adS0=a=>a.filter(e=>!(e.rec&&e.rec.tripId)).length;

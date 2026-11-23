@@ -4184,3 +4184,18 @@ textarea.big.gstep{font-size:var(--fs-row);font-family:inherit}
 /* v299 · final polish */
 .ibrow .ibold{flex:none;align-self:center;color:var(--ink-3);font-size:var(--fs-small);padding-inline:var(--s1)}
 .hmline{text-align:center;margin:0}
+/* v300 · Career */
+.anotetop{display:block;width:100%;text-align:left;font-style:italic;color:var(--text-muted);font-size:var(--fs-body);line-height:1.45;padding:0 var(--s1);margin:calc(var(--s2) * -1) 0 var(--s2)}
+.dtline{display:flex;align-items:center;justify-content:space-between;width:100%;min-height:var(--size-44);padding:0 var(--s1);color:var(--action-text);font-size:var(--fs-label);font-weight:var(--fw-medium)}
+.dtline .chev{display:grid}
+.modlist .modrow{display:flex;align-items:center;gap:var(--s3)}
+.modlist .mri{flex:none;display:grid;color:var(--action-text)}
+.modlist .modrow .dfv{color:var(--text-muted);font-size:var(--fs-small);text-align:right}
+.winq .winqt{display:block;font-weight:var(--fw-medium);font-size:var(--fs-label);margin:2px 0}
+.winq p{margin:0}
+.oneadd{display:flex;align-items:center;gap:var(--s1);flex-wrap:wrap;padding:0 var(--s1)}
+.lvdots{display:flex;flex:none}
+.lvdots button{width:26px;height:var(--size-44);display:grid;place-items:center}
+.lvdots button::before{content:"";width:12px;height:12px;border-radius:var(--r-full);background:var(--line-2)}
+.lvdots button.on::before{background:var(--accent)}
+.lvdots button.tgt::before{background:transparent;box-shadow:inset 0 0 0 1.5px var(--accent)}

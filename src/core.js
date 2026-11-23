@@ -271,7 +271,7 @@ const COLORS=[['sage','Sage','--accent'],['blue','Blue','--a-career'],['plum','P
 let COLOR_HEX=null;const colorHexOf=v=>COLOR_HEX&&COLOR_HEX[v]||(COLOR_HEX=Object.fromEntries(COLORS.map(x=>[x[2],tok(x[2])])))[v];
 const colorHex=c=>!c?colorHexOf(COLORS[0][2]):c[0]==='#'?c:colorHexOf((COLORS.find(x=>x[0]===c)||COLORS[0])[2]);
 const AREA_ICON={Health:'a_health',Home:'a_home',Finances:'a_money',Relationships:'a_people',Career:'a_career',Learning:'a_learn',Recreation:'a_rec',Travel:'a_travel','Personal growth':'a_growth','Life admin':'a_admin',Family:'a_family',Pets:'a_pets',Community:'a_comm'};
-const noLeadDate=s=>s==null?s:String(s).replace(/^(?:(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun)[a-z]*,? )?(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]* \d{1,2}(?:, \d{4})?(?: · |$)/,'');
+const noLeadDate=s=>s==null?s:Array.isArray(s)?(typeof s[0]==='string'&&!noLeadDate(s[0])?s.slice(2):s):String(s).replace(/^(?:(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun)[a-z]*,? )?(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]* \d{1,2}(?:, \d{4})?(?: · |$)/,'');
 const weekOf=(n,t)=>n>=t&&t>0?`Goal met · ${n} this week`:`${n} of ${t} this week`;
 const areaIcon=a=>AREA_ICON[a]||((get.settings().areaIcons||{})[a])||'leaf';
 const AREAS=['Health','Home','Finances','Relationships','Career','Learning','Recreation','Travel','Personal growth'];

@@ -55,7 +55,11 @@ const everyWord=n=>({1:'Daily',7:'Weekly',14:'Every 2 weeks',30:'Monthly',60:'Ev
 const stepper=(val,lo,hi,step,on,fmt=v=>v)=>Stepper(val,{min:lo,max:hi,step,format:fmt,onChange:on});
 /* a module's line under its title earns its place only with a real figure: taglines and bare counts of what's listed below are left out */
 const toolSub=s=>typeof s!=='string'?s:(!/\d/.test(s)||/^\d+ [A-Za-z]+(?: [A-Za-z]+)?\.?$/.test(s.trim()))?null:s;
-const toolHead=(page,hub,t,{sub,actions}={})=>page.append(pageHead(t.name,toolSub(sub)||null,{back:hub,to:'area',icon:t.icon,actions:actions||plusB(t.word,()=>entrySheet(hub,t))}));
+/* v300 · module pages open with the same white add field as Organize; Enter opens the form with what you typed (Wins saves straight away) */
+const toolAddOK=t=>{if(t.wheel||!t.fields||!t.fields.length)return false;const f0=t.fields[0].type==='select'?t.fields[1]:t.fields[0];return !!f0&&(f0.type==='text'||f0.type==='area');};
+const toolHead=(page,hub,t,{sub,actions,add,ph}={})=>{page.append(pageHead(t.name,toolSub(sub)||null,{back:hub,to:'area',icon:t.icon,actions:actions||plusB(t.word,()=>entrySheet(hub,t))}));
+  if(add===false||(add==null&&actions!=null)||!toolAddOK(t))return;const f0=t.fields[0].type==='select'?t.fields[1]:t.fields[0],w=t.word||'entry';
+  page.append(addField(ph||`Add ${/^[aeiou]/i.test(w)?'an':'a'} ${w}`,'tool-new-'+t.id,v=>{if(v&&hub==='Career'&&t.id==='wins'){create('entry',{hub,tool:'wins',f:{what:v,kind:WIN_KINDS[0],impact:'',date:todayK()}});toast('Win saved');return;}entrySheet(hub,t,null,v?{preset:{[f0.id]:v}}:{});}));};
 const plusB=(word,fn)=>IconButton(`New ${word}`,{cls:'green',html:ic('plus',IC.lg),onclick:fn});
 const moreB=(label,fn)=>IconButton(label,{cls:'green',html:sv('<circle cx="5" cy="12" r="1.8" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.8" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.8" fill="currentColor" stroke="none"/>',22),onclick:fn});
 const seedHub=name=>{App.state.params=Object.assign(App.state.params||{},{name});};

@@ -805,4 +805,4 @@ const tok=(n,fb='')=>{try{return getComputedStyle(document.documentElement).getP
 /* v290 · life-area choices carry their icons */
 function areaOpts(){return [{value:'',label:'None',icon:'leaf'},...(get.settings().areas||AREAS).map(a=>({value:a,label:a,icon:areaIcon(a)}))];}
 /* v291 · a sticky bar only draws its line once it is actually stuck */
-(()=>{let raf=0;const chk=()=>{raf=0;document.querySelectorAll('.tstick.ibcapw').forEach(n=>{const t=parseFloat(getComputedStyle(n).top)||0;n.classList.toggle('stuck',scrollY>4&&n.getBoundingClientRect().top<=t+1);});};try{addEventListener('scroll',()=>{if(!raf)raf=requestAnimationFrame(chk);},{passive:true});}catch(e){}})();
+(()=>{let raf=0;const chk=()=>{raf=0;document.querySelectorAll('.tstick').forEach(n=>{const t=parseFloat(getComputedStyle(n).top)||0;n.classList.toggle('stuck',scrollY>4&&n.getBoundingClientRect().top<=t+1);});};try{addEventListener('scroll',()=>{if(!raf)raf=requestAnimationFrame(chk);},{passive:true});}catch(e){}})();

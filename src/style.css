@@ -4199,3 +4199,8 @@ textarea.big.gstep{font-size:var(--fs-row);font-family:inherit}
 .lvdots button::before{content:"";width:12px;height:12px;border-radius:var(--r-full);background:var(--line-2)}
 .lvdots button.on::before{background:var(--accent)}
 .lvdots button.tgt::before{background:transparent;box-shadow:inset 0 0 0 1.5px var(--accent)}
+/* v301 · Community */
+.ycard{display:flex;flex-direction:column;gap:2px}
+.ycard .ycn{font-family:var(--font-serif,Georgia,serif);font-weight:400;font-size:var(--fs-title);line-height:1.2}
+.ycard small{color:var(--text-muted);font-size:var(--fs-small)}
+.ycard .ycl{align-self:flex-start;padding-inline:0;margin-top:var(--s1)}

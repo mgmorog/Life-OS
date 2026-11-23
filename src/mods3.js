@@ -63,7 +63,8 @@ HUBS.Relationships.tools.push(
 /* ---------- Community ---------- */
 HUBS.Community.tools.push(tplTool({id:'faith',name:'Faith practice',icon:'leaf',word:'practice',tpl:'log',optIn:true,whatLabel:'What you did',num:'Minutes',unit:'min',extra:[F('kind','Kind','select',{opts:['Reading','Service','Prayer','Meditation','Fasting','Study group','Other']}),F('passage','Passage or plan')],addLabel:'Log a practice',
   say:'Reading plans, services and the practices you keep, with a streak.',subX:(x,d)=>[x.f.kind,x.f.passage,d(x)].filter(Boolean).join(' · '),
-  head:(hub,t,l)=>{const st=streakOf(l.map(x=>x.f.date)),w=l.filter(thisWeek);return headCard(kv('Streak',`${st} day${st===1?'':'s'}`),kv('This week',`${w.length} time${w.length===1?'':'s'}`),kv('Services this year',String(l.filter(x=>x.f.kind==='Service'&&inYear(x.f.date,yr())).length)));}}));
+  yearLine:l=>{const n=l.filter(x=>inYear(x.f.date,yr())&&x.f.date<=todayK()).length;return n?`${n} practice${n>1?'s':''} kept`:'';},
+  head:(hub,t,l)=>{const st=streakOf(l.map(x=>x.f.date)),ym=todayK().slice(0,7),mo=l.filter(x=>(x.f.date||'').slice(0,7)===ym&&x.f.date<=todayK()),mins=mo.reduce((n,x)=>n+(+x.f.n||0),0);if(!l.length)return null;return yearCard(String(mo.length),['this month',mins?`${mins} min`:null,st>1?`${st}-day streak`:null].filter(Boolean).join(' · '));}}));
 
 /* ---------- Career ---------- */
 const mileRate=()=>+get.settings().mileRate||0.7;

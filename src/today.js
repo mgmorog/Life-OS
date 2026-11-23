@@ -15,6 +15,7 @@ function itemMenu(e,dk,x,y){
   if(e.kind==='routine'){openMenu(x,y,[{label:'Open routine',icon:'routine',onclick:()=>App.go('routine',{id:r.id})},{label:e.done?'Mark not done':'Mark done',icon:'task',onclick:()=>{toggleItem(e,dk);App.refresh();}}]);return;}
   const canDup=['task','block','allday'].includes(e.kind),movable=e.kind!=='allday';const occDay=e.kind==='allday'?allDayOccStart(r,dk):dk;
   openMenu(x,y,[
+    (e.title||'').length>48?{header:e.title}:null,
     {label:'Edit',icon:'edit',onclick:()=>openItem(e,dk)},
     e.kind==='task'&&App.state.view==='tasks'?{label:'Select',icon:'check',onclick:()=>{App.state.taskSel=new Set([r.id]);App.refresh();}}:null,
     e.kind!=='allday'?{label:e.done?'Mark not done':'Mark done',icon:'task',onclick:()=>{toggleItem(e,dk);App.refresh();}}:null,
@@ -670,7 +671,7 @@ function replanSheet(tasks,dk,ex){ex=ex||{};const tk=todayK(),sat=(()=>{const d=
         return el('button',{class:'rprow'+(on?' on':'')+(ok?'':' nomove'),disabled:ok?null:'','aria-pressed':ok?String(on):null,onclick:()=>{if(!ok)return;sel().has(x.key)?sel().delete(x.key):sel().add(x.key);draw(b);}},
           el('span',{class:'rpck',html:on?ic('check',IC.xs):''}),el('span',{class:'grow'},el('span',{class:'tt'},x.title),el('small',{},x.sub)));})),
       el('div',{class:'rpacts'},hint,act==='replan'
-        ?el('button',{class:'rpmove',disabled:n?null:'',onclick:()=>{mode='move';draw(b);}},n?`Replan ${n}…`:'Replan…')
+        ?el('button',{class:'rpmove',disabled:n?null:'',onclick:()=>{mode='move';draw(b);}},n?`Replan ${n} ${n===1?'task':'tasks'}`:'Replan')
         :el('button',{class:'rpmove',disabled:n?null:'',onclick:markDone},el('span',{style:'display:grid',html:ic('check',IC.sm)}),n?`Mark ${n} complete`:'Mark complete'))].filter(Boolean));};
   inst=openSheet({title:items.length>1?`${items.length} overdue`:items[0].title,left:{label:'Cancel'},right:{label:'See all',onclick:()=>{inst.close();const S=App.state;S.taskF=new Set(['overdue']);S.taskTab='all';setTimeout(()=>App.go('tasks'),200);}},build:b=>draw(b)});}
 /* Focus: a sheet that slides up with the next priority, an editable timer (25 min), switch, pause, done */

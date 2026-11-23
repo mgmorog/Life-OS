@@ -4162,3 +4162,13 @@ textarea.big.gstep{font-size:var(--fs-row);font-family:inherit}
 .list>.showmore::before{display:none!important}
 .list>.showmore{border-top:var(--hairline) solid var(--line-2)!important;box-shadow:none!important}
 .list>*+.swr::before{border-top-color:var(--divider)}
+/* v297 · Goals round 2 */
+.tstick .chip.filter:not(.on){background:var(--chip,var(--line-2));border-color:var(--border)}
+.gring{--hab-ring-w:2px;--hab-track:var(--line-2)}
+.gnx{display:inline-flex;align-items:center;gap:6px;min-width:0}
+.gnxt{width:16px;height:16px;flex:none;border-radius:var(--r-full);box-shadow:inset 0 0 0 1.5px var(--ink-3);position:relative}
+.gnxt::before{content:"";position:absolute;inset:-14px}
+.gnxl{color:var(--text);font-size:inherit;text-align:left;padding:0;min-width:0}
+.pchead .gpadd{flex:none;display:grid;place-items:center;width:var(--size-44);height:var(--size-44);border-radius:var(--r-full);color:var(--action-text);background:var(--selected)}
+.gcil{display:flex;justify-content:center;align-items:center;gap:var(--s1);margin:calc(var(--s1) * -1) 0 0;color:var(--text-muted);font-size:var(--fs-small)}
+.glinkl{display:flex;align-items:center;gap:var(--s2);min-height:var(--size-44);padding:0 var(--s1);color:var(--action-text);font-size:var(--fs-label);font-weight:var(--fw-medium)}

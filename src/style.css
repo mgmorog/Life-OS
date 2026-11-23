@@ -4204,3 +4204,7 @@ textarea.big.gstep{font-size:var(--fs-row);font-family:inherit}
 .ycard .ycn{font-family:var(--font-serif,Georgia,serif);font-weight:400;font-size:var(--fs-title);line-height:1.2}
 .ycard small{color:var(--text-muted);font-size:var(--fs-small)}
 .ycard .ycl{align-self:flex-start;padding-inline:0;margin-top:var(--s1)}
+/* v302 · Family */
+.cdempty{margin:0;padding:0 var(--s1)}
+.pastfold{width:100%}
+.ycard .ycl2{align-self:flex-start;margin-top:var(--s2)}

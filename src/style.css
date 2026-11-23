@@ -4181,3 +4181,6 @@ textarea.big.gstep{font-size:var(--fs-row);font-family:inherit}
 .rtruns{display:flex;align-items:center;justify-content:center;gap:var(--s1);width:100%;min-height:var(--size-44);color:var(--text-muted);font-size:var(--fs-small)}
 .rtruns .chev{display:grid;color:var(--ink-3)}
 .lsic{flex:none;display:grid;place-items:center;width:var(--size-32);height:var(--size-32);border-radius:var(--r-full);background:var(--selected);color:var(--action-text)}
+/* v299 · final polish */
+.ibrow .ibold{flex:none;align-self:center;color:var(--ink-3);font-size:var(--fs-small);padding-inline:var(--s1)}
+.hmline{text-align:center;margin:0}

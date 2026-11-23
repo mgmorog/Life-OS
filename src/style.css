@@ -4158,3 +4158,7 @@ textarea.big.gstep{font-size:var(--fs-row);font-family:inherit}
 .tstick.stuck{box-shadow:0 1px 0 var(--border)}
 /* one add box look on every page */
 .oquick{border-radius:var(--card-radius);border-color:var(--edge);min-height:var(--size-56);justify-content:center;padding-left:var(--s3)}
+/* v296 · tidy-ups after review */
+.list>.showmore::before{display:none!important}
+.list>.showmore{border-top:var(--hairline) solid var(--line-2)!important;box-shadow:none!important}
+.list>*+.swr::before{border-top-color:var(--divider)}

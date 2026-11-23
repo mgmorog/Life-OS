@@ -397,7 +397,8 @@ function viewHabits(root){
   /* filters work like Tasks: All is the default; tap Today or Paused to add it, tap again to take it off */
   const tdN=active.filter(h=>counts(h,tk)&&!habitDone(h,tk)).length;
   const vchip=(k,l,n)=>el('button',{class:'fchip'+(S.habF.has(k)?' on':''),'aria-pressed':String(S.habF.has(k)),onclick:()=>{S.habF.has(k)?S.habF.delete(k):S.habF.add(k);App.refresh();}},l,n!=null?el('span',{class:'n'},String(n)):null);
-  page.append(el('div',{class:'tstick'},el('div',{class:'fchips'},el('button',{class:'fchip'+(!S.habF.size?' on':''),onclick:()=>{S.habF.clear();App.refresh();}},'All',el('span',{class:'n'},String(active.length))),tdN&&tdN<active.length?vchip('today','Today',tdN):null,paused.length||S.habF.has('paused')?vchip('paused','Paused',paused.length):null)));
+  /* v296 · no chip row when All would be the only chip */
+  if((tdN&&tdN<active.length)||paused.length||S.habF.size)page.append(el('div',{class:'tstick'},el('div',{class:'fchips'},el('button',{class:'fchip'+(!S.habF.size?' on':''),onclick:()=>{S.habF.clear();App.refresh();}},'All',el('span',{class:'n'},String(active.length))),tdN&&tdN<active.length?vchip('today','Today',tdN):null,paused.length||S.habF.has('paused')?vchip('paused','Paused',paused.length):null)));
   const note=areaNote('hab');if(note)page.append(note);
   const views=S.habF.size?['today','paused'].filter(v=>S.habF.has(v)):['all'];
   for(const T of views){if(views.length>1)page.append(el('div',{class:'sh2',style:'margin-top:var(--s4)'},el('span',{class:'lbl',style:'font-size:var(--fs-small)'},T==='today'?'Today':'Paused')));

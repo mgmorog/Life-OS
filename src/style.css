@@ -4111,3 +4111,6 @@ textarea.big.gstep{font-size:var(--fs-row);font-family:inherit}
 .list>.swr+.swr::before{left:calc(var(--pad) + 24px + var(--s3))}
 .ibcapw{box-shadow:none}
 .ibcapw.stuck{box-shadow:0 1px 0 var(--border)}
+.list>*+.swr::before{z-index:3;pointer-events:none}
+.list>.swr+.li::before,.list>.li+.swr::before{border-top-color:var(--divider);left:calc(var(--pad) + 24px + var(--s3));z-index:3}
+.list>.li+.swr::before{left:calc(var(--pad) + 24px + var(--s3) + 12px)!important}

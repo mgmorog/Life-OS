@@ -4172,3 +4172,12 @@ textarea.big.gstep{font-size:var(--fs-row);font-family:inherit}
 .pchead .gpadd{flex:none;display:grid;place-items:center;width:var(--size-44);height:var(--size-44);border-radius:var(--r-full);color:var(--action-text);background:var(--selected)}
 .gcil{display:flex;justify-content:center;align-items:center;gap:var(--s1);margin:calc(var(--s1) * -1) 0 0;color:var(--text-muted);font-size:var(--fs-small)}
 .glinkl{display:flex;align-items:center;gap:var(--s2);min-height:var(--size-44);padding:0 var(--s1);color:var(--action-text);font-size:var(--fs-label);font-weight:var(--fw-medium)}
+/* v298 · Routines, Projects & Lists */
+.oplay.rtdone{background:var(--accent);color:#fff}
+.rtrun{display:flex;align-items:center;gap:var(--s2)}
+.rtrun>button:first-child{width:auto;min-width:0}
+.rtmark{flex:none;display:grid;place-items:center;width:var(--size-44);height:var(--size-44);border-radius:var(--r-full);background:var(--surface,#fff);color:var(--action-text);box-shadow:inset 0 0 0 1.5px var(--border)}
+.rtmark.on{background:var(--accent);color:#fff;box-shadow:none}
+.rtruns{display:flex;align-items:center;justify-content:center;gap:var(--s1);width:100%;min-height:var(--size-44);color:var(--text-muted);font-size:var(--fs-small)}
+.rtruns .chev{display:grid;color:var(--ink-3)}
+.lsic{flex:none;display:grid;place-items:center;width:var(--size-32);height:var(--size-32);border-radius:var(--r-full);background:var(--selected);color:var(--action-text)}

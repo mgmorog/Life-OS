@@ -183,7 +183,11 @@ function captureSheet(rec,{from=null,photo=false,listen=false}={}){
       const top=topTurns(),row=el('div',{class:'capturn'},top.map(id=>{const t=TURN.find(x=>x[0]===id);return Chip([el('span',{style:'display:grid',html:ic(t[1],IC.sm)}),t[2]],{'data-k':id,onclick:()=>go(id)});}),
         moreTurn(go,()=>({title:D.title.trim(),notes:D.notes,photos:D.photos}),()=>{if(isEdit)remove(rec.id);else writeDraft(null);inst.close();},top));
       const smart=smartButton(D,()=>ph&&ph._files?ph._files():[],made=>{if(isEdit)remove(rec.id,{silent:true});else writeDraft(null);inst.close();App.refresh();toast(`${made.length} added`,()=>{made.forEach(r=>remove(r.id,{silent:true,hard:true}));if(isEdit)put(rec);App.refresh();});});
-      body.append(T.wrap,ex,chips,dupe,hint,sess,extras,notesBox,ph,smart,SectionLabel(isEdit?'Or turn into':'Or save as'),row);
+      /* v291 · editing an idea: where should it go, using the same places as everywhere else */
+      let row2=row;if(isEdit&&typeof ideaHome==='function'){const h0=ideaHome(rec),keep=()=>{rec.title=D.title.trim()||rec.title;rec.notes=D.notes;if(D.photos)rec.photos=D.photos;put(rec,{silent:true});},moveTo=h=>{keep();inst.close();if(h.tool)sendHome(rec,h);else go(h.kind);};
+        const basics=['task','goal','habit'].filter(id=>!(h0&&!h0.tool&&h0.kind===id));
+        row2=el('div',{class:'capturn'},h0?Chip([el('span',{style:'display:grid',html:ic(h0.tool?(h0.icon||'grid'):(TURN.find(x=>x[0]===h0.kind)||[])[1]||'task',IC.sm)}),`${h0.label} · suggested`],{selected:true,onclick:()=>h0.tool?moveTo(h0):go(h0.kind)}):null,...basics.map(id=>{const t=TURN.find(x=>x[0]===id);return Chip([el('span',{style:'display:grid',html:ic(t[1],IC.sm)}),t[2]],{'data-k':id,onclick:()=>go(id)});}),Chip(['All places',el('span',{style:'display:grid',html:ic('chevr',IC.xs)})],{onclick:()=>pickHome(rec,h0,h=>moveTo(h))}));}
+      body.append(T.wrap,ex,chips,dupe,hint,sess,extras,notesBox,ph,smart,SectionLabel(isEdit?'Where should it go?':'Or save as'),row2);
       if(!isEdit)body.closest('.sheet').classList.add('pinned');
       kbTurnRow(body.closest('.sheet'),go,top,()=>{const m=body.querySelector('.capmore');if(m)m.click();});
       if(draft&&(draft.title||draft.notes))body.prepend(el('div',{class:'note good',role:'status',html:ic('undo',IC.sm)+'<span>Picked up where you left off.</span>'}));

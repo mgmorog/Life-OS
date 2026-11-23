@@ -131,7 +131,7 @@ const viewOrganize=root=>subList('Organize',['inbox','tasks','habits','routines'
 const viewReflect=root=>subList('Reflect',['reviews','insights'],root,'clip');
 
 /* Inbox: oldest first, every entry is an idea */
-function tidySheet(list){
+function tidySheet(list){list=list.map((x,n)=>[x,n]).sort((a,b)=>((ideaHome(b[0])?1:0)-(ideaHome(a[0])?1:0))||a[1]-b[1]).map(x=>x[0]);
   let i=0,inst;const ids=list.map(x=>x.id),tally={task:0,filed:0,deleted:0,kept:0};
   inst=openSheet({title:'Tidy up',build:body=>{
     body.style.minHeight='min(600px,72dvh)';

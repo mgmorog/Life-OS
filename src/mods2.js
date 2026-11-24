@@ -19,7 +19,8 @@ const mBar=(p,late)=>el('div',{class:'mbar'+(late?' late':'')},el('i',{style:`wi
 HUBS.Health.tools.push(
  tplTool({id:'sleep',name:'Sleep',icon:'moon',word:'night',tpl:'log',optIn:true,whatLabel:'Note (optional)',extra:[F('bed','Bedtime','time'),F('wake','Woke up','time'),F('rested','How rested','select',{opts:['Rested','OK','Tired']})],addLabel:'Log a night',
    say:'Bedtime, wake time and how rested you feel, with a consistency score.',shows:[['R','Your sleep this week'],['F','Average sleep in your scorecard']],
-   subX:x=>[relDay(x.f.date),x.f.bed&&x.f.wake?`${fmtHM(minsOfTime(x.f.bed))} → ${fmtHM(minsOfTime(x.f.wake))}`:null,sleepHrs(x)!=null?`${sleepHrs(x)} h`:null,x.f.rested].filter(Boolean).join(' · '),
+   titleX:x=>x.f.date?mD(x.f.date):(x.f.what||'Night'),
+   subX:x=>[x.f.bed&&x.f.wake?`${fmtHM(minsOfTime(x.f.bed))} → ${fmtHM(minsOfTime(x.f.wake))}`:null,x.f.rested,x.f.what||null].filter(Boolean).join(' · '),rowR:x=>sleepHrs(x)!=null?el('span',{class:'tside tnum'},`${sleepHrs(x)} h`):null,
    head:(hub,t,l)=>{const s=sleepStats(l);if(!s)return null;return Card({as:'div',cls:'mhead'},kv('Usual bedtime',s.bed),kv('Usual wake time',s.wake),s.hrs?kv('Average',`${s.hrs.toFixed(1)} h`):null,Caption(s.score>=80?'Steady. Your bed and wake times rarely move.':s.score>=60?`Your times move about ${s.spread} minutes night to night.`:`Your times swing about ${s.spread} minutes. A steady wake time helps most.`,{as:'p',style:'flex-basis:100%;margin:0'}));},
    sumX:l=>{const s=sleepStats(l);return s&&s.hrs?`${s.hrs.toFixed(1)} h average`:`${l.length} nights`;},tileX:l=>{const s=sleepStats(l);return s?{v:String(s.score),sub:'consistency'}:{v:String(l.length),sub:'nights'};},
    afterX:x=>{if(!x.f.what)x.f.what=x.f.rested||'Night';}}),

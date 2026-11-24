@@ -3,6 +3,8 @@
    (long titles, overdue and repeating items, overlapping blocks, multi-day all-days, big money, empty notes).
    Everything it makes is marked example:true and demo:true, and the settings it touches are saved in
    settings.demoSnap, so "Clear demo data" puts the app back exactly as it was. */
+/* inbox ideas the demo adds; also used to find things made from them (v316) */
+const DEMO_IDEAS=['Look into a ceramics class','Podcast: Hidden Brain episode on habits','Idea: automate the AP intake form with a Workday web service','Gift for Sam — that vinyl he mentioned','Try the new ramen place on Elmwood','Ask Jordan about the 2027 budget timeline','Read: “Four Thousand Weeks” notes','Fix bathroom fan','https://www.workday.com/en-us/products/grants.html','Birthday dinner idea for Mom: Rue Franklin','Look up 529 plans','Try a standing desk at work','Podcast: Acquired on Costco','Recipe: miso salmon','Ask HR about tuition reimbursement','Learn Power BI?','Sign up for the Turkey Trot','Buy snow tires before Dec','Old photo scan project','Write a thank-you to the team'];
 function demoRand(seed){let x=seed||7;return()=>{x=(x*16807)%2147483647;return(x-1)/2147483646;};}
 const DEMO_BANK={
   workouts:['Upper body + core','5K easy run','Leg day','Spin class','Long run · 8 mi','Yoga flow','Hill repeats','Swim · 1,500 m'],
@@ -97,7 +99,7 @@ function demoFill(t,i,r,t0){const f={};const fs=Array.isArray(t.fields)?t.fields
   return f;}
 function loadDemo(quiet){
   const s0=get.settings();if(s0.demoSnap){toast('The demo is already loaded');return;}
-  const snap={};['areas','hubHidden','hubShown','top3','todayPins','areaExtra','areaIcons','introDone','onboardedAt','gsOff','foundationOff','jobs'].forEach(k=>snap[k]=s0[k]===undefined?null:JSON.parse(JSON.stringify(s0[k])));
+  const snap={demoAt:Date.now()};['areas','hubHidden','hubShown','top3','todayPins','areaExtra','areaIcons','introDone','onboardedAt','gsOff','foundationOff','jobs'].forEach(k=>snap[k]=s0[k]===undefined?null:JSON.parse(JSON.stringify(s0[k])));
   const r=demoRand(42),t=todayK(),ex={example:true,demo:true},mk=(kind,f)=>create(kind,Object.assign({},ex,f)),pick=a=>a[Math.floor(r()*a.length)];
   const NR={type:'never',end:null},AR=AREAS;
   /* every area on, every module on */
@@ -160,7 +162,7 @@ function loadDemo(quiet){
   Lst('Groceries',['Oat milk','Lemons','Coffee beans','Spinach','Chicken thighs','Rice','Greek yogurt','Bananas','Olive oil','Parmesan','Eggs','Sourdough']);Lst('Books to read',['Project Hail Mary','Tomorrow, and Tomorrow, and Tomorrow','Thinking, Fast and Slow']);
   Lst('Gift ideas',['Candle set','Cookbook','Concert tickets','Plant']);Lst('Packing · Chicago',['Chargers','Running shoes','Jacket','Passport? (no)','Toiletries']);Lst('Empty list',[]);Lst('Movies to watch',['Dune: Part Two','Past Lives','Oppenheimer','The Holdovers']);Lst('Restaurants to try',['Toutant','Las Puertas','Oliver’s','Casa Azul','Ballyhoo']);Lst('Home projects',['Paint bedroom','Fix squeaky door','Hang shelves','Caulk the tub','Replace door handles','New blinds','Patch drywall','Organize garage','Clean dryer vent','Install smart thermostat','Re-seal deck','Wash windows']);
   /* inbox ideas */
-  ['Look into a ceramics class','Podcast: Hidden Brain episode on habits','Idea: automate the AP intake form with a Workday web service','Gift for Sam — that vinyl he mentioned','Try the new ramen place on Elmwood','Ask Jordan about the 2027 budget timeline','Read: “Four Thousand Weeks” notes','Fix bathroom fan','https://www.workday.com/en-us/products/grants.html','Birthday dinner idea for Mom: Rue Franklin','Look up 529 plans','Try a standing desk at work','Podcast: Acquired on Costco','Recipe: miso salmon','Ask HR about tuition reimbursement','Learn Power BI?','Sign up for the Turkey Trot','Buy snow tires before Dec','Old photo scan project','Write a thank-you to the team'].forEach((x,i)=>mk('idea',{title:x,notes:'',photos:[],source:null,createdAt:Date.now()-i*3*864e5-(i>6?40*864e5:0)}));
+  DEMO_IDEAS.forEach((x,i)=>mk('idea',{title:x,notes:'',photos:[],source:null,createdAt:Date.now()-i*3*864e5-(i>6?40*864e5:0)}));
   /* every module in every area */
   let n=0;allAreas.forEach(a=>toolsOf(a).forEach(tool=>{if(tool.hide||!Array.isArray(tool.fields))return;
     if(tool.id==='wheel'){for(let i=0;i<4;i++){const sc={};AREAS.forEach(x=>sc[x]=3+Math.floor(r()*8));mk('entry',{hub:a,tool:'wheel',f:{date:addK(t,-i*30),scores:sc}});n++;}return;}
@@ -193,11 +195,38 @@ function loadDemo(quiet){
    const nowD=fromK(t);FC('w-'+wk(t),['Health','Career']);FC('w-'+wk(addK(t,7)),['Home']);FC('m-'+monthKey(nowD),['Finances','Health','Career']);FC('q-'+nowD.getFullYear()+'-'+quarterOf(nowD),['Career','Health']);}
   App.refresh();toast(`Demo loaded: ${n} module entries plus tasks, habits, goals and more`);
 }
-function clearDemo(){const s=get.settings(),snap=s.demoSnap;
-  askConfirm({title:'Clear the demo?',body:'Removes everything the demo added and puts your settings back. Your own data stays.',yes:'Clear demo',no:'Keep it',onYes:()=>{
-    [...recs.values()].filter(r=>r.demo||(r.example&&snap)).forEach(r=>remove(r.id,{silent:true,hard:true}));
-    if(snap){const back={demoSnap:null};Object.keys(snap).forEach(k=>back[k]=snap[k]===null?undefined:snap[k]);const top=Object.assign({},get.settings().top3||{});Object.keys(top).forEach(d=>{top[d]=(top[d]||[]).filter(x=>get.id(x.id));});if(snap.top3==null)back.top3=top;setSettings(back);}
-    App.refresh();toast('Demo cleared');}});}
+/* v316 · Clear the demo, all of it. Besides records marked demo/example this also removes what was made FROM demo data:
+   project steps the step-to-task move turned into tasks, ideas turned into tasks or module entries, anything linked to a removed
+   record, trashed copies, the auto net-worth snapshot, and rewards (badges, bests, levels) earned on demo history, which are rebuilt
+   from what's left. It also catches leftovers from earlier clears that missed these. */
+const demoNorm=x=>String(x||'').toLowerCase().replace(/^(idea|podcast|read|recipe|look up|buy|try)\s*:?\s*/,'').replace(/[“”"'’]/g,'').replace(/\s+/g,' ').trim();
+function demoTitleHit(t){const n=demoNorm(t);if(n.length<8)return false;return DEMO_IDEAS.some(x=>{const d=demoNorm(x);return d===n||(n.length>=12&&(d.includes(n)||n.includes(d)));});}
+function demoSweep(){const s=get.settings(),snap=s.demoSnap,since=snap&&snap.demoAt||0,all=[...recs.values()],out=new Set();
+  const titleOf=r=>r.title||(r.f&&(r.f.what||r.f.lesson||r.f.title))||'';
+  const KINDS=new Set(['task','habit','goal','project','block','allday','list','routine','idea','entry']);
+  all.forEach(r=>{if(r.kind==='settings'||r.kind==='rewards')return;
+    if(r.demo||r.example)out.add(r.id);
+    else if(r.kind==='trashed'&&r.rec&&(r.rec.demo||r.rec.example||(String(r.rec.id||'').startsWith('pt-')&&!recs.has(r.rec.part))||demoTitleHit(r.rec.title)))out.add(r.id);
+    else if(KINDS.has(r.kind)&&demoTitleHit(titleOf(r))&&(!since||(r.createdAt||0)>=since))out.add(r.id);});
+  /* anything hanging off a removed (or already missing) demo record: project and goal tasks, step-to-task copies */
+  let grew=true;while(grew){grew=false;all.forEach(r=>{if(out.has(r.id)||r.kind==='settings')return;const p=r.part||r.goal||r.proj||(r.f&&r.f.proj);
+    if(p&&(out.has(p)||(String(r.id).startsWith('pt-')&&!recs.has(p)))){out.add(r.id);grew=true;}});}
+  /* net-worth snapshots the app took on its own from demo accounts */
+  const realAccts=all.some(r=>r.kind==='entry'&&r.hub==='Finances'&&r.tool==='networth'&&r.f&&r.f.t==='acct'&&!out.has(r.id));
+  all.forEach(r=>{if(r.kind==='entry'&&r.tool==='networth'&&r.f&&r.f.t==='snap'&&r.f.auto&&(!realAccts||since&&(r.createdAt||0)>=since))out.add(r.id);});
+  return [...out];}
+function demoLeftovers(){try{return demoSweep().length;}catch(e){return 0;}}
+function clearDemo(){const s=get.settings(),snap=s.demoSnap,n=demoSweep().length;
+  askConfirm({title:'Clear the demo?',body:`Removes everything the demo added, plus anything made from it${n?` (${n} item${n===1?'':'s'})`:''}, and puts your settings back. Your own data stays.`,yes:'Clear demo',no:'Keep it',onYes:()=>{
+    const ids=demoSweep();ids.forEach(id=>remove(id,{silent:true,hard:true}));
+    const back={demoSnap:null};if(snap)Object.keys(snap).forEach(k=>{if(k!=='demoAt')back[k]=snap[k]===null?undefined:snap[k];});
+    /* priorities: drop picks that point at removed items, and empty days */
+    const top=Object.assign({},(snap&&snap.top3)||get.settings().top3||{});Object.keys(top).forEach(d=>{const l=(top[d]||[]).filter(x=>x&&get.id(x.id));if(l.length)top[d]=l;else delete top[d];});back.top3=top;
+    setSettings(back);
+    /* rewards earned on demo history: start fresh and rebuild quietly from your own data */
+    if(recs.has('rewards'))remove('rewards',{silent:true,hard:true});try{rwCheck({quiet:true});}catch(e){console.warn(e);}
+    try{nwAutoSnap();}catch(e){}
+    App.refresh();toast(`Demo cleared · ${ids.length} item${ids.length===1?'':'s'} removed`);}});}
 
 /* refresh an already-loaded demo with the current generator, keeping the original settings snapshot */
 function demoRefresh(){const s=get.settings(),keep=s.demoSnap;if(!keep)return;[...recs.values()].filter(r=>r.demo).forEach(r=>remove(r.id,{silent:true,hard:true}));setSettings({demoSnap:null});loadDemo(true);setSettings({demoSnap:keep,demoVer:10});}

@@ -4,7 +4,7 @@ function nextOcc(t){if(!t.date)return todayK();if(!t.repeat||t.repeat.type==='ne
 function migrate(){
   let n=0;recs.forEach(p=>{if(p.kind!=='project'||!(p.steps||[]).length)return;
     p.steps.forEach((s,i)=>{const id='pt-'+s.id;if(recs.has(id)||!s.t)return;const done=s.d?(s.doneAt||Date.now()):null,date=s.date||(done?k(new Date(done)):null);
-      put({id,kind:'task',title:s.t,notes:'',steps:[],date,time:s.time??null,repeat:{type:'never',end:null},reminder:null,deadline:null,priority:'normal',part:p.id,area:p.area||null,order:i,planWeek:s.planWeek||null,planMonth:s.planMonth||null,doneDates:done?{[date]:done}:{}},{silent:true});n++;});
+      put({id,kind:'task',...(p.demo?{demo:true}:{}),...(p.example?{example:true}:{}),title:s.t,notes:'',steps:[],date,time:s.time??null,repeat:{type:'never',end:null},reminder:null,deadline:null,priority:'normal',part:p.id,area:p.area||null,order:i,planWeek:s.planWeek||null,planMonth:s.planMonth||null,doneDates:done?{[date]:done}:{}},{silent:true});n++;});
     p.steps=[];put(p,{silent:true});});
   return n;
 }

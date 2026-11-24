@@ -4213,3 +4213,5 @@ textarea.big.gstep{font-size:var(--fs-row);font-family:inherit}
 /* v304 · Health */
 .emp.emp2{border:0;background:none;color:var(--ink-3);font-weight:var(--fw-regular,400);padding-left:0}
 .chips.qlwrap{flex-wrap:wrap}
+/* v306 · Learning */
+.cover.cvmini{width:32px;height:44px;min-width:32px;font-size:7px;padding:3px;border-radius:6px;line-height:1.1;overflow:hidden}

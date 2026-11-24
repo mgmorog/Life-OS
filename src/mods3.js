@@ -116,7 +116,7 @@ HUBS.Finances.tools.push(
 HUBS.Learning.tools.push(tplTool({id:'school',name:'School planner',icon:'books',word:'item',tpl:'collection',optIn:true,whatLabel:'Assignment, exam or class',statusLabel:'Kind',statuses:['Assignment','Exam','Class','Term'],extra:[F('cls','Class'),F('due','Due or date','date',{blank:true}),F('done','Done','select',{opts:['No','Yes']}),F('grade','Grade')],groupKey:'cls',addLabel:'Add an item',
   dueKey:'due',dueWin:7,closed:x=>x.f.done==='Yes'||x.f.status==='Class'||x.f.status==='Term',calTitle:x=>`${x.f.status==='Exam'?'Exam: ':''}${x.f.what}`,
   say:'Terms, classes, assignments and exam dates, with a heads-up before each one is due.',
-  subX:x=>[x.f.status,x.f.done==='Yes'?(x.f.grade?`Done · ${x.f.grade}`:'Done'):x.f.due?`due ${mD(x.f.due)} · ${dUntil(x.f.due).toLowerCase()}`:null].filter(Boolean).join(' · '),
+  subX:x=>[x.f.status,x.f.done==='Yes'?(x.f.grade?`Done · ${x.f.grade}`:'Done'):x.f.due?(daysBetween(todayK(),x.f.due)<=7&&daysBetween(todayK(),x.f.due)>=0?`Due ${mD(x.f.due)} · ${dUntil(x.f.due).toLowerCase()}`:`Due ${mD(x.f.due)}`):null].filter(Boolean).join(' · '),
   rowR:x=>(x.f.status==='Assignment'||x.f.status==='Exam')&&x.f.done!=='Yes'?smallBtn('Done',()=>{x.f.done='Yes';put(x);App.refresh();},`${x.f.what} done`):null}));
 
 /* ---------- Health ---------- */

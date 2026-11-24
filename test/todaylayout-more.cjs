@@ -60,3 +60,36 @@ global.__todayMore.push(async({ev,ok,today,W,p})=>{
     await p.keyboard.press('Escape');await W(300);}
   else ok('v310 capture sheet opens',false,'no capture field');
 });
+
+// v311 · Today by time of day
+global.__todayMore.push(async({ev,ok,ids,setL,set,today,onPage,base,W})=>{
+  await set({todayLayout:null,todayPins:[],work:{start:540,end:1020}});
+  const w=await ev(()=>{const f=window.__lifeos.t.tdWindow;return[f(480),f(700),f(1019),f(1020),f(1300)];});
+  ok('v311 windows: morning, day, evening',JSON.stringify(w)===JSON.stringify(['morning','day','day','evening','evening']),w);
+  const plain=await ev(()=>Array.isArray(window.__lifeos.get.settings().todayLayout)||window.__lifeos.get.settings().todayLayout==null);
+  await setL(base);
+  ok('v311 off by default, stored as a plain list',plain&&await ev(()=>Array.isArray(window.__lifeos.get.settings().todayLayout)));
+  await ev(()=>{const T=window.__lifeos.t;T.setTdByTime(true);T.setTodayLayout([{id:'habits'},{id:'tasks'},{id:'sched'},{id:'also'}],'morning');T.setTodayLayout([{id:'sched'},{id:'tasks'},{id:'habits'},{id:'also'}],'evening');});
+  const orderAt=async win=>{await ev(w=>{const A=window.__lifeos.App;A.go('today');A.state._tdWin=w;A.refresh();},win);await W(400);const pg=await onPage();return pg.filter(x=>['tasks','habits','sched'].includes(x))[0];};
+  const m=await orderAt('morning'),d=await orderAt('day'),e=await orderAt('evening');
+  ok('v311 each time of day has its own order',m==='habits'&&d==='tasks'&&e==='sched',{m,d,e});
+  // frozen while on screen: refresh keeps the window it drew
+  await ev(()=>{const A=window.__lifeos.App;A.go('today');A.state._tdWin='morning';A.refresh();});await W(300);
+  await ev(()=>{window.__lifeos.App.refresh();});await W(300);
+  ok('v311 the order never changes while Today is on screen',(await onPage()).filter(x=>['tasks','habits','sched'].includes(x))[0]==='habits');
+  // adding a card from a module page lands in every window
+  await ev(()=>{const L=window.__lifeos;L.t.togglePin('Learning',L.toolOf('Learning','reading'));});
+  const every=await ev(()=>['fixed','morning','day','evening'].map(w=>window.__lifeos.t.todayLayout(w).some(x=>x.id==='m:Learning|reading')));
+  ok('v311 a card added from a module goes into every window',every.every(Boolean),every);
+  // restore keeps a v2 layout
+  const snap=await ev(()=>JSON.stringify({app:'life-os',version:2,records:[window.__lifeos.get.settings()]}));
+  await set({todayLayout:null,todayPins:[]});
+  await ev(async s=>{await window.__lifeos.t.importData({text:async()=>s});},snap);await W(300);
+  const r=await ev(()=>{const t=window.__lifeos.t;return{by:window.__lifeos.get.settings().todayLayout.mode,ev:t.todayLayout('evening')[0].id};});
+  ok('v311 restore keeps the time-of-day layout',r.by==='byTime'&&r.ev==='sched',r);
+  // turning it off goes back to one order, which old versions can read
+  await ev(()=>window.__lifeos.t.setTdByTime(false));
+  const off=await ev(()=>({mode:window.__lifeos.get.settings().todayLayout.mode,pins:window.__lifeos.get.settings().todayPins}));
+  ok('v311 turning it off returns to one order; pins kept for older versions',off.mode==='fixed'&&off.pins.includes('Learning|reading'),off);
+  await set({todayLayout:null,todayPins:[]});
+});

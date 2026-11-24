@@ -4257,3 +4257,6 @@ textarea.big.gstep{font-size:var(--fs-row);font-family:inherit}
 .tmcrow .tmcp{height:var(--size-36);padding:0 var(--s3)}
 .tmcdays.d0 b{font-size:11px}
 .tmc .tmcl:last-child,.tmc .tmcrow:last-child{margin-bottom:calc(-1 * var(--s2))}
+
+/* v311 · time of day in Settings › Today */
+.tswin{margin:var(--s2) 0 0}

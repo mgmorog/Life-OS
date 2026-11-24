@@ -2,7 +2,7 @@
 const TOPS=['today','studio','calendar','more'];
 const App={
   state:{view:'today',sel:todayK(),params:{},loading:true,_fresh:true},
-  go(view,params={}){const S=this.state;if(view!==S.view){S.trashSel=null;S.pdrop=null;}try{const tt=$('#toast');if(tt&&tt.classList.contains('on')&&Date.now()-toastAt>1200)tt.classList.remove('on');}catch(e){}if(S.view==='today'){const g=$('#grid');if(g)S._gridTop=g.scrollTop;}
+  go(view,params={}){const S=this.state;if(view==='today'||view!==S.view)S._tdWin=null;if(view!=='setpage')S._tdEdit=null;if(view!==S.view){S.trashSel=null;S.pdrop=null;}try{const tt=$('#toast');if(tt&&tt.classList.contains('on')&&Date.now()-toastAt>1200)tt.classList.remove('on');}catch(e){}if(S.view==='today'){const g=$('#grid');if(g)S._gridTop=g.scrollTop;}
     const y=scrollY;S.scrolls=S.scrolls||{};S.scrolls[S.view]=y;
     if(view==='today')S._fresh=S._fresh||S.view!=='today';
     /* v232 · remember the row this page grows out of */
@@ -93,7 +93,7 @@ const App={
 let lastDay=todayK();
 function clockTick(){tickNow();const tk=todayK();if(tk!==lastDay){if(App.state.sel===lastDay)App.state.sel=tk;lastDay=tk;try{tripReturn();}catch(e){}App.state._fresh=true;App.refresh();}else if(App.state.view==='today'&&!sheetStack.length&&!$('.menu')&&!App.dragging&&!(document.activeElement&&document.activeElement.matches&&document.activeElement.matches('input,textarea'))){App.refresh();}checkReminders();}
 (function clock(){setTimeout(()=>{clockTick();clock();},60000-Date.now()%60000+50);})();
-document.addEventListener('visibilitychange',()=>{if(!document.hidden){clockTick();Gcal.refreshIfStale();try{Ical.sync();}catch(e){}}});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden){App.state._tdWin=null;clockTick();Gcal.refreshIfStale();try{Ical.sync();}catch(e){}}});
 /* keyboard on Today: arrows change day, T goes to today, N adds a task */
 document.addEventListener('keydown',e=>{if((e.key==='c'||e.key==='C')&&!sheetStack.length&&!$('.menu')&&!e.metaKey&&!e.ctrlKey&&!e.altKey&&!(e.target.matches&&e.target.matches('input,textarea,select'))){e.preventDefault();captureSheet(null);}});
 document.addEventListener('keydown',e=>{if(App.state.view!=='calendar'||sheetStack.length||$('.menu')||e.metaKey||e.ctrlKey||e.altKey)return;if(e.target.matches&&e.target.matches('input,textarea,select'))return;

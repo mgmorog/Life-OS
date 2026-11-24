@@ -4215,3 +4215,28 @@ textarea.big.gstep{font-size:var(--fs-row);font-family:inherit}
 .chips.qlwrap{flex-wrap:wrap}
 /* v306 · Learning */
 .cover.cvmini{width:32px;height:44px;min-width:32px;font-size:7px;padding:3px;border-radius:6px;line-height:1.1;overflow:hidden}
+/* v308 · Today cards */
+.tmc{display:flex;flex-direction:column;gap:var(--s3)}
+.tmch{display:flex;align-items:center;gap:var(--s3)}
+.tmci{flex:none;display:grid;color:var(--text-muted)}
+.tmct{flex:1;min-width:0;text-align:left;display:flex;flex-direction:column;gap:2px;min-height:var(--size-44);justify-content:center}
+.tmct b{font-weight:var(--fw-medium);font-size:var(--fs-row)}
+.tmct small{color:var(--text-muted);font-size:var(--fs-small);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tmc3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--s2)}
+.tmc.line .tmc3{display:flex;gap:var(--s1)}
+.tmc.line .tmc3 .tmcp{height:var(--size-36);padding:0 var(--s3)}
+.tmcp{height:var(--size-44);border-radius:var(--r-full);background:var(--chip,var(--line-2));font-size:var(--fs-label);font-weight:var(--fw-medium);color:var(--text);padding:0 var(--s4);flex:none}
+.tmcp.on{background:var(--accent);color:#fff}
+.tmcchips{display:flex;flex-wrap:wrap;gap:var(--s2)}
+.tmcrow{display:flex;align-items:center;gap:var(--s3)}
+.tmcplus{flex:none;width:var(--size-44);height:var(--size-44);border-radius:var(--r-full);background:var(--selected);color:var(--action-text);display:grid;place-items:center}
+.tsrow.off b{color:var(--text-muted)}
+.tsgrip{flex:none;display:grid;color:var(--ink-faint,#A8AEA9)}
+.tseye{flex:none;width:var(--size-44);height:var(--size-44);display:grid;place-items:center;color:var(--text-muted)}
+.tsaddrow{display:flex;align-items:center;justify-content:center;gap:var(--s2);min-height:var(--size-48);border-radius:var(--r-card);border:1.5px dashed var(--line-strong,#C9CDC7);color:var(--action-text);font-size:var(--fs-label);font-weight:var(--fw-medium);margin-top:var(--s3);width:100%}
+.tsaddrow[disabled]{color:var(--text-muted)}
+.tsadd{flex:none;width:var(--size-44);height:var(--size-44);border-radius:var(--r-full);background:var(--selected);color:var(--action-text);display:grid;place-items:center}
+.tsadd.on{background:var(--accent);color:#fff}
+.tsradio{flex:none;width:22px;height:22px;border-radius:var(--r-full);box-shadow:inset 0 0 0 1.5px var(--line-strong,#C9CDC7)}
+.tsradio.on{box-shadow:inset 0 0 0 7px var(--accent)}
+.tsdanger{color:var(--overdue)!important;margin-top:var(--s3);align-self:center}

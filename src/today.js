@@ -116,8 +116,9 @@ function viewToday(root){
       el('button',{class:'date'+(S.dateDrop?' open':''),'aria-label':'Pick a date','aria-expanded':String(!!S.dateDrop),onclick:()=>dateDrop(),html:`<span>${isToday?DOW[sel.getDay()]:DOW[sel.getDay()].slice(0,3)}, ${mdS(sel)}${sel.getFullYear()!==today().getFullYear()?`, ${sel.getFullYear()}`:''}</span>`+ic('chevd',IC.md)}),
       el('div',{class:'icons'},
         !isToday?Button('Today',{variant:'link',cls:'hdtoday',onclick:()=>goDay(tk)}):null,
+        isToday&&!(S.loading&&!recs.size)?rwRing(dk):null,
         IconButton(inboxNew()?'Inbox, something new':'Inbox',{html:ic('inbox',IC.lg)+(inboxNew()||newVerN()?'<span class="badge dot"></span>':''),onclick:()=>App.go('inbox')}),
-        moreB('Today options',e=>Menu([{label:'Share this day',icon:'share',onclick:()=>shareDaySheet(dk)},{label:'Plan tomorrow',icon:'cal',onclick:()=>planTomorrowSheet(todayK())},{label:'Edit Today',icon:'layers',onclick:()=>App.go('setpage',{id:'today'})}],{at:e})))),
+        moreB('Today options',e=>Menu([{label:'Share this day',icon:'share',onclick:()=>shareDaySheet(dk)},{label:'Plan tomorrow',icon:'cal',onclick:()=>planTomorrowSheet(todayK())},{label:'See what you’ve done',icon:'check',onclick:()=>App.go('done')},{label:'Edit Today',icon:'layers',onclick:()=>App.go('setpage',{id:'today'})}],{at:e})))),
     S.dateDrop?dateDropEl(dk):null,S.dateDrop?null:weekStrip(dk),
     hdChips(dk,isToday)));
   if(S.loading&&!recs.size){page.append(...todaySkeleton());root.append(page);return;}
@@ -129,7 +130,7 @@ function viewToday(root){
 
   /* v308 · Today is laid out from Settings › Today: built-in sections and module cards, in your order */
   const dc=dayCard(dk),secs={},rest=[],extras=[];dc.forEach(n=>{if(n&&n.dataset&&n.dataset.tk)secs[n.dataset.tk]=n;else if(n)rest.push(n);});
-  if(isToday){const pe=planEveCard(dk);if(pe)extras.push(pe);}
+  if(isToday){try{const fz=rwFreezeCard();if(fz)extras.push(fz);}catch(e){console.warn(e);}const pe=planEveCard(dk);if(pe)extras.push(pe);}
   const rem=reminderCard();if(rem)extras.push(rem);
   const look=[];
   const also=[];const aRow=(t,sub,fn)=>also.push(Row({onclick:fn},el('span',{class:'grow'},el('b',{},t),sub?el('small',{},sub):null),RowEnd('chevron')));
@@ -192,7 +193,10 @@ function dueExtras(dk,shown){
 /* Today, Stack layout: To-do, Habits and Coming up cards (the day's time grid opens inline in Coming up) */
 function habRing(p,inner,c){const r=17,C=2*Math.PI*r,d=Math.max(0,Math.min(1,p))*C;return el('span',{class:'hring','aria-hidden':'true',style:c?`--c:${c}`:null,html:`<svg viewBox="0 0 40 40" width="40" height="40"><circle cx="20" cy="20" r="${r}" fill="none" stroke="var(--line)" stroke-width="3.5" style="stroke:var(--hab-track);stroke-width:var(--hab-ring-w)"/><circle cx="20" cy="20" r="${r}" fill="none" stroke="var(--c,var(--accent))" stroke-width="3.5" stroke-linecap="round" style="stroke-width:var(--hab-ring-w)" stroke-dasharray="${C.toFixed(2)}" stroke-dashoffset="${(C-d).toFixed(2)}" transform="rotate(-90 20 20)" class="hr-fill"/></svg><span class="hring-in">${inner||''}</span>`});}
 function habProg(h,dk){const v=(h.logs||{})[dk];if(h.track==='count'||h.track==='time'){const n=typeof v==='number'?v:v?h.goalN:0;return n/Math.max(h.goalN||1,1);}if(h.days&&h.days.length)return habitWeek(h,dk)/h.days.length;if(h.target)return habitWeek(h,dk)/h.target;return habitDone(h,dk)?1:0;}
-function habSub(h,dk){if(h.track==='count'||h.track==='time')return habitMeta(h,dk);const on=habitDone(h,dk),lt=(h.logT||{})[dk];if(on&&lt!=null)return `Done at ${fmtT(lt)}`;if(h.days&&h.days.length)return `${habitWeek(h,dk)} of ${h.days.length} this week`;if(h.target)return `${weekOf(habitWeek(h,dk),h.target||1)}`;return on?'Done today':'Today';}
+function habSub(h,dk){const b=habSub0(h,dk),t=rwStreakTag(h,dk);return t?`${b} · ${t}`:b;}
+/* v315 · the streak under a habit, when there is one worth showing */
+function rwStreakTag(h,dk){if(dk!==todayK()||!rwOn('rwStreaks')||h.everyN)return '';const s=habitStreak(h);return s.n>=2?`${s.n} ${s.unit==='week'?'wks':'days'}`:'';}
+function habSub0(h,dk){if(h.track==='count'||h.track==='time')return habitMeta(h,dk);const on=habitDone(h,dk),lt=(h.logT||{})[dk];if(on&&lt!=null)return `Done at ${fmtT(lt)}`;if(h.days&&h.days.length)return `${habitWeek(h,dk)} of ${h.days.length} this week`;if(h.target)return `${weekOf(habitWeek(h,dk),h.target||1)}`;return on?'Done today':'Today';}
 function habRow(e,dk,loose){
   const h=e.rec,on=habitDone(h,dk);
   const act=!on&&h.link&&h.link.log&&typeof wkRoutines==='function'&&wkRoutines(h).length?Chip([el('span',{style:'display:grid',html:ic('play',IC.xs)}),'Start'],{cls:'startchip','aria-label':`Start ${(wkFor(h,dk)||{f:{}}).f.what||'a workout'}`,onclick:ev=>{ev.stopPropagation();wkStart(h,dk);}})
@@ -395,7 +399,7 @@ function habDot(e,dk){const h=e.rec,on=habitDone(h,dk),cnt=h.track==='count',c=h
   const v=cnt?(typeof (h.logs||{})[dk]==='number'?h.logs[dk]:h.logs&&h.logs[dk]?h.goalN:0):0;
   const b=el('button',{class:'fhab'+(on?' done':''),style:c?`--c:${c}`:null,'aria-pressed':String(on),'aria-label':on?`Undo ${h.title}`:cnt?`Add one to ${h.title}, ${v} of ${h.goalN}`:`Log ${h.title}`,
     onclick:()=>{if(cnt&&!on){buzz(6);logHabit(h,dk,1);return;}if(h.track==='time'&&!on){logTimeSheet(h,dk);return;}const now=toggleItem({kind:'habit',rec:h},dk);buzz(now?12:6);habDotSet(b,h,dk,now);if(now){const n=habitStreak(h);toast(n.n>1?`${h.title} · ${streakText(n)} in a row`:`${h.title} done`,()=>{toggleItem({kind:'habit',rec:h},dk);App.refresh();});}}},
-    habRing(on?1:habProg(h,dk),on?ic('check',IC.md):habGlyph(h),c),el('span',{class:'fhabt'},el('small',{},h.title),cnt?el('span',{class:'hcnt tnum'},`${on?h.goalN:v} of ${h.goalN}`):null));
+    habRing(on?1:habProg(h,dk),on?ic('check',IC.md):habGlyph(h),c),el('span',{class:'fhabt'},el('small',{},h.title),cnt?el('span',{class:'hcnt tnum'},`${on?h.goalN:v} of ${h.goalN}`):(()=>{const t=rwStreakTag(h,dk);return t?el('span',{class:'hstk tnum'},t):null;})()));
   onPress(b,(x,y)=>itemMenu(e,dk,x,y));return b;}
 /* drop a row on a priority ring (long-press drag) */
 function ringAt(x,y){let best=null,bd=1e9;document.querySelectorAll('.todo .pring').forEach(n=>{const r=n.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2,d=Math.hypot(cx-x,cy-y);if(d<r.width/2+40&&d<bd){bd=d;best=n;}});return best;}
@@ -720,7 +724,7 @@ function habGlyph(h){const g=x=>glyph(x,24,1.9);if(h.icon&&h.icon!=='habit'&&GL[
 function foldAway(w,on){if(!w||!motionOK())return;setTimeout(()=>{if(!w.isConnected)return;const h=w.offsetHeight;w.style.height=h+'px';w.style.overflow='hidden';w.getBoundingClientRect();w.style.transition='height var(--dur-base) var(--ease),opacity var(--dur-fast) ease';w.style.height='0px';w.style.opacity='0';},170);}
 
 /* habit ring updates in place: the ring fills and the icon swaps to a check, with no re-render */
-function habDotSet(b,h,dk,on){b.classList.toggle('done',on);b.setAttribute('aria-pressed',String(on));const old=b.querySelector('.hring');if(!old)return;const c=h.color?colorHex(h.color):null;const nr=habRing(on?1:habProg(h,dk),on?ic('check',IC.md):habGlyph(h),c);old.replaceWith(nr);if(motionOK())nr.animate([{transform:'scale(1.1)'},{transform:'scale(1.25)'}],{duration:MOT.base,easing:MOT.spring});}
+function habDotSet(b,h,dk,on){b.classList.toggle('done',on);{const t=rwStreakTag(h,dk),s0=b.querySelector('.hstk');if(s0&&t)s0.textContent=t;else if(s0)s0.remove();else if(t){const ft=b.querySelector('.fhabt');if(ft&&!ft.querySelector('.hcnt'))ft.append(el('span',{class:'hstk tnum'},t));}}b.setAttribute('aria-pressed',String(on));const old=b.querySelector('.hring');if(!old)return;const c=h.color?colorHex(h.color):null;const nr=habRing(on?1:habProg(h,dk),on?ic('check',IC.md):habGlyph(h),c);old.replaceWith(nr);if(motionOK())nr.animate([{transform:'scale(1.1)'},{transform:'scale(1.25)'}],{duration:MOT.base,easing:MOT.spring});}
 
 /* v228 · loading Today paints the Stack's own card outlines (Top 3, To-do, Habits, Coming up), so nothing jumps when data lands */
 function todaySkeleton(){const bar=(w,h=12)=>el('div',{class:'skel',style:`height:${h}px;width:${w}`}),

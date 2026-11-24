@@ -348,10 +348,10 @@ async function flush(id,attempt=0){
 function flushAll(){[...dirty,...deleted].forEach(id=>flush(id));}
 addEventListener('online',flushAll);
 document.addEventListener('visibilitychange',()=>{if(document.hidden){cacheNow();flushAll();}else{App.refresh();}});
-function put(r,{silent=false}={}){r.updatedAt=Date.now();if(!r.createdAt)r.createdAt=r.updatedAt;recs.set(r.id,r);deleted.delete(r.id);queueWrite(r.id);const tr='del-'+r.id;if(recs.has(tr)){recs.delete(tr);deleted.add(tr);queueWrite(tr);}if(typeof wkHook==='function')wkHook(r);if(!silent)App.refresh();return r;}
+function put(r,{silent=false}={}){r.updatedAt=Date.now();if(!r.createdAt)r.createdAt=r.updatedAt;recs.set(r.id,r);deleted.delete(r.id);queueWrite(r.id);const tr='del-'+r.id;if(recs.has(tr)){recs.delete(tr);deleted.add(tr);queueWrite(tr);}if(typeof wkHook==='function')wkHook(r);if(typeof rwHook==='function')rwHook(r);if(!silent)App.refresh();return r;}
 function create(kind,fields){return put(Object.assign({id:uid(kind[0]),kind},fields));}
-const NO_TRASH=new Set(['settings','remstate','focus','plan','trashed','areanote','discover']);
-function remove(id,{silent=false,hard=false}={}){const was=recs.get(id);if(was&&!hard&&!NO_TRASH.has(was.kind)&&!(was.f&&was.f.t==='cfg')&&!was.example){const tr={id:'del-'+id,kind:'trashed',rec:JSON.parse(JSON.stringify(was)),deletedAt:Date.now(),createdAt:Date.now(),updatedAt:Date.now()};recs.set(tr.id,tr);deleted.delete(tr.id);queueWrite(tr.id);}recs.delete(id);deleted.add(id);queueWrite(id);if(was&&typeof wkHook==='function')wkHook(was);if(!silent)App.refresh();}
+const NO_TRASH=new Set(['settings','remstate','focus','plan','trashed','areanote','discover','rewards']);
+function remove(id,{silent=false,hard=false}={}){const was=recs.get(id);if(was&&!hard&&!NO_TRASH.has(was.kind)&&!(was.f&&was.f.t==='cfg')&&!was.example){const tr={id:'del-'+id,kind:'trashed',rec:JSON.parse(JSON.stringify(was)),deletedAt:Date.now(),createdAt:Date.now(),updatedAt:Date.now()};recs.set(tr.id,tr);deleted.delete(tr.id);queueWrite(tr.id);}recs.delete(id);deleted.add(id);queueWrite(id);if(was&&typeof wkHook==='function')wkHook(was);if(was&&typeof rwHook==='function')rwHook(was,true);if(!silent)App.refresh();}
 function setSettings(patch){const s=Object.assign({},DEFAULT_SETTINGS,get.settings(),patch);put(s);}
 async function connect(){
   const claude=window.claude;
@@ -745,8 +745,8 @@ const contrast=(a,b)=>{const x=lum(a),y=lum(b);return(Math.max(x,y)+.05)/(Math.m
 const mixC=(a,b,t)=>a.map((v,i)=>v+(b[i]-v)*t);
 /* the accent is darkened until white text on it, and it as text on white, both read clearly */
 function safeAccent(h){let c=hx2rgb(h)||hx2rgb(palHex('sage'));for(let i=0;i<30&&contrast(c,[255,255,255])<4.6;i++)c=mixC(c,[0,0,0],.06);return c;}
-const themeOf=s=>{const p=PALETTES.find(x=>x[0]===(s.palette||'sage'));return p?palHex(p[0]):(s.palette==='custom'&&s.customAccent)||palHex('sage');};
-const defCol=()=>{const s=get.settings(),p=PALETTES.find(x=>x[0]===(s.palette||'sage'));return p?p[3]:'sage';};
+const themeOf=s=>{const p=PALETTES.find(x=>x[0]===(s.palette||'sage'));if(p)return palHex(p[0]);const e=typeof RW_PALS!=='undefined'&&RW_PALS.find(x=>x[0]===s.palette);if(e)return e[2];return (s.palette==='custom'&&s.customAccent)||palHex('sage');};
+const defCol=()=>{const s=get.settings(),p=PALETTES.find(x=>x[0]===(s.palette||'sage'))||(typeof RW_PALS!=='undefined'&&RW_PALS.find(x=>x[0]===s.palette));return p?p[3]:'sage';};
 function applyTheme(){const s=get.settings(),R=document.documentElement,dark=s.mode==='dark'||(s.mode==='auto'&&matchMedia('(prefers-color-scheme: dark)').matches);
   R.dataset.mode=dark?'dark':'light';R.dataset.font=s.titleFont||'serif';R.dataset.bg=s.bgTone||'warm';R.dataset.density=s.density||'comfortable';R.dataset.labels=s.tabLabels===false?'off':'on';
   const a=safeAccent(themeOf(s)),W=[255,255,255],K=[0,0,0],st=R.style,set=(k,c)=>st.setProperty(k,typeof c==='string'?c:rgb2hx(c));

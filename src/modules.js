@@ -12,7 +12,8 @@ const CELEB=[7,30,100,365];
 function habitStreak(h){
   if(h.everyN){const ds=Object.keys(h.logs||{}).filter(d=>habitDone(h,d)&&d<=todayK()).sort().reverse();if(!ds.length||daysBetween(ds[0],todayK())>h.everyN)return{n:0,unit:'time'};let n=1;for(let i=1;i<ds.length;i++){if(daysBetween(ds[i],ds[i-1])<=h.everyN)n++;else break;}return{n,unit:'time'};}
   if(h.days&&h.days.length){let n=0,d=today();for(let i=0;i<800;i++){const dk=k(d);if(h.startDate&&dk<h.startDate)break;if(h.days.includes(monIdx(d))){if(habitDone(h,dk))n++;else if(!(h.skips&&h.skips[dk])&&dk!==todayK())break;}d=addD(d,-1);}return{n,unit:'day'};}
-  let n=habitWeek(h,todayK())>=(h.target||1)?1:0,d=addD(weekStartOf(today()),-7);for(let i=0;i<104;i++){if(habitWeek(h,k(d))>=(h.target||1))n++;else break;d=addD(d,-7);}return{n,unit:'week'};
+  /* v315 · a week covered by a freeze keeps the run going without adding to it */
+  let n=habitWeek(h,todayK())>=(h.target||1)?1:0,d=addD(weekStartOf(today()),-7);for(let i=0;i<104;i++){if(habitWeek(h,k(d))>=(h.target||1))n++;else if(!(h.wkFrz||{})[k(d)])break;d=addD(d,-7);}return{n,unit:'week'};
 }
 function celebrateStreak(h,dk){if(!habitDone(h,dk)||get.settings().celebrate==='off')return;const s=habitStreak(h);if(!CELEB.includes(s.n)||(h.celebrated||{})[s.n])return;h.celebrated=Object.assign({},h.celebrated,{[s.n]:todayK()});put(h,{silent:true});setTimeout(()=>{const inst=openSheet({title:'',build:b=>b.append(el('div',{class:'celebrate'},el('div',{class:'num'},String(s.n)),el('h2',{class:'serif',style:'font-size:var(--fs-xl)'},`${s.n} ${s.unit}s of ${h.title}`),el('p',{class:'muted'},'That rhythm is yours now.'),Button('Keep going',{variant:'primary',onclick:()=>inst.close()})))});},640);}
 function habitMeta(h,dk){const v=h.logs&&h.logs[dk];if(h.track==='count')return `${typeof v==='number'?v:v?h.goalN:0} of ${h.goalN} ${h.unit||''}`.trim();if(h.track==='time')return `${typeof v==='number'?v:v?h.goalN:0} of ${h.goalN} min`;return (h.days&&h.days.length)?'Habit':`Habit · ${habitWeek(h,dk)} of ${h.target} this week`;}
@@ -143,9 +144,12 @@ function viewPlan(root,id){
   }else{
     /* one card: progress, open tasks, add a task as the last row, done tasks folded; details below as rows */
     const ts=projectTasks(r),open=ts.filter(t=>!taskDone(t)),d=ts.length-open.length,pcP=ts.length?d/ts.length:0,S2=App.state;
-    const card=Card({cls:'pcard'});
+    const card=Card({cls:'pcard'+(rwOn()?' rwfill':'')});
+    /* v315 · the card fills from the bottom as tasks get done */
+    let rwW=null;if(rwOn()&&ts.length){const hgt=f=>`calc(${f.toFixed(3)} * (100% + var(--s4)))`;rwW=el('span',{class:'rwwash','aria-hidden':'true',style:`height:${hgt(pcP)}`});const pf=S2._pf=S2._pf||{},was=pf[r.id];pf[r.id]=pcP;if(was!=null&&was!==pcP&&motionOK())requestAnimationFrame(()=>rwW.animate([{height:hgt(was)},{height:hgt(pcP)}],{duration:900,easing:'cubic-bezier(.3,1.2,.5,1)'}));}
     const nx=open.length?nextProjectTask(r):null;
-    card.append(el('div',{class:'pchead'},Progress(pcP,{kind:'ring',label:`${Math.round(pcP*100)}%`}),el('span',{class:'grow'},el('b',{},ts.length?`${d} of ${ts.length} done`:'No tasks yet'),el('small',{},r.finished?'Finished':r.deadline?weeksLeft(r):ts.length&&!open.length?'Every task is done':''))));
+    card.append(el('div',{class:'pchead'+(rwW?' rwph':'')},rwW,Progress(pcP,{kind:'ring',label:`${Math.round(pcP*100)}%`}),el('span',{class:'grow'},el('b',{},ts.length?`${d} of ${ts.length} done`:'No tasks yet'),el('small',{},r.finished?'Finished':r.deadline?weeksLeft(r):ts.length&&!open.length?'Every task is done':''))));
+    if(rwOn()&&ts.length&&!open.length&&!r.finished)card.append(el('div',{class:'rwpdone'},el('span',{class:'grow'},el('b',{},`${r.title} is complete`),el('small',{},(()=>{const w=Math.max(1,Math.round((Date.now()-(r.createdAt||Date.now()))/6048e5));return `${ts.length} task${ts.length===1?'':'s'} over ${w} week${w===1?'':'s'}`;})())),Button('Mark it done',{variant:'primary',size:'sm',onclick:()=>{finishProject(r);buzz(14);}})));
     const row=t=>{const dn=taskDone(t);const x=el('div',{class:'prow2 tick-host'+(dn?' done':'')},el('span',{class:'tick-hit'},tickBtn(dn,on=>{x.classList.toggle('done',on);setTaskDone(t,t.date||todayK(),on);if(on&&typeof foldAway==='function')foldAway(x,true);setTimeout(()=>App.refresh(),on?430:200);})),el('button',{class:'grow t',onclick:()=>taskSheet(t)},el('span',{class:'tt'},t.title)),!dn&&(t.date||t.deadline)?sideDay(t.date||t.deadline):null);
       onPress(x,(px,py)=>openMenu(px,py,[!dn?{label:'Start focus',icon:'play',onclick:()=>focusLenSheet(t)}:null,{label:'Waits for…',icon:'layers',onclick:()=>depSheet(t)},{label:'Set a section',icon:'list',onclick:()=>sectionSheet(t)},{label:'Remove from project',icon:'x',danger:true,onclick:()=>{t.part=null;put(t);}}]));return x;};
     /* v299 · up to 5 done tasks stay in the list, greyed; more than that fold away */

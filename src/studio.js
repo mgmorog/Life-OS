@@ -128,7 +128,7 @@ function viewStudio(root){
   const MODEN={w:'week',m:'month',q:'quarter'},pdOn=App.state.pdrop==='studio';
   page.append(PageHeader({title:el('button',{class:'tbtn ptitle'+(pdOn?' open':''),'aria-label':`Choose ${MODEN[st.mode]}`,'aria-expanded':pdOn?'true':'false',onclick:()=>periodDrop('studio'),html:`<span>${esc(P.head)}</span>`+ic('chevd',IC.md)}),titleClass:'serif',titleStyle:'font-size:34px;line-height:1.05;letter-spacing:-.01em;margin:0',rowClass:'cal-title',
     controls:el('div',{class:'arrows'},IconButton('Previous',{cls:'green',html:ic('chevl',IC.md),onclick:()=>go(-1)}),IconButton('Next',{cls:'green',html:ic('chevr',IC.md),onclick:()=>go(1)}),moreB('Studio options',menu)),
-    after:[el('span',{class:'hquiet'},P.eyebrow),
+    after:[el('span',{class:'hquiet'},P.eyebrow,committed?el('span',{class:'rwlockp',html:ic('lock',IC.xs)+'<span>Locked in</span>'}):null),
     pdOn?periodDropEl(MODEN[st.mode],/* the period on screen, which can differ from today (Studio opens on next week late on Sundays) */(()=>{const [m,rest]=[P.key[0],P.key.slice(2)];if(m==='w')return rest;if(m==='m')return rest+'-01';const [y,q]=rest.split('-Q');return k(new Date(+y,(+q-1)*3,1));})(),key=>{periodDrop('studio',false);setTimeout(()=>{st.anchor=key;st.selCard=null;st.ghosts=[];st.open=null;App.refresh();},MOT.base);}):null,
     el('div',{style:'margin-top:var(--s3)'},seg([['w','Week'],['m','Month'],['q','Quarter']],st.mode,v=>{st.mode=v;st.anchor=null;st.selCard=null;st.ghosts=[];st.open=null;App.refresh();}))]}));
   const fk=st.mode==='q'?P.key.replace(/^q-(\d+)-Q(\d)/,(m,y,q)=>`q-${y}-${q-1}`):P.key;
@@ -288,7 +288,7 @@ function reviewSheet(P,st,cards){
     if(busy)body.append(el('p',{class:'small',style:'color:var(--overdue)'},`${busy} ${P.unit}${busy>1?'s are':' is'} over your capacity.`));
     if(late)body.append(el('p',{class:'small',style:'color:var(--overdue)'},`${late} card${late>1?'s land':' lands'} after the due date.`));
     if(unplaced.length){body.append(SectionLabel(`Not placed · ${unplaced.length}`));body.append(el('div',{class:'list'},unplaced.map(c=>Row({as:'div',style:''},el('span',{class:'grow'},el('b',{style:'font-weight:500'},c.t),el('small',{},c.type==='habit'?'Sessions left this week':'Stays in To plan'))))));}
-    body.append(Button(P.commit,{variant:'primary',full:true,onclick:()=>{const r=get.id('plan-'+P.key)||{id:'plan-'+P.key,kind:'plan',key:P.key};r.committed=true;r.committedAt=Date.now();App.state._commitSweep=true;put(r);if(st.mode==='w')setSettings({checkinDone:todayK()});inst.close();buzz(12);toast(P.doneL);}}),Button('Keep planning',{variant:'quiet',full:true,onclick:()=>inst.close()}));
+    body.append(Button(P.commit,{variant:'primary',full:true,onclick:()=>{const r=get.id('plan-'+P.key)||{id:'plan-'+P.key,kind:'plan',key:P.key};r.committed=true;r.committedAt=Date.now();App.state._commitSweep=true;put(r);if(st.mode==='w')setSettings({checkinDone:todayK()});inst.close();buzz(12);if(navigator.vibrate)setTimeout(()=>buzz(18),420);toast(st.mode==='w'?`Week locked in · ${placedN} planned`:P.doneL,null,'Undo',{force:true});}}),Button('Keep planning',{variant:'quiet',full:true,onclick:()=>inst.close()}));
   }});
 }
 function checkinSheet(P,st,cards){

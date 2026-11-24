@@ -130,3 +130,16 @@ global.__todayMore.push(async({ev,ok,W,p})=>{
     if(!o||(o.gi>=0&&o.mi>=0&&o.gi>o.mi))bad.push([n,o]);}
   ok('v314 every area page: linked items, then modules',!bad.length,bad);
 });
+
+// v315 · the day ring: beside the date when something's due, gone when nothing is or it's turned off
+global.__todayMore.push(async({p,ev,ok,set,today,W})=>{
+  await set({rwOn:true,rwRing:true});await today();
+  const st=await ev(()=>window.__lifeos.t.rw.day(window.__lifeos.todayK()));
+  const has=await ev(()=>!!document.querySelector('.hd .icons .dring'));
+  ok('v315 ring shows when something is due today',st.total>0?has:!has,{st,has});
+  if(has){await p.click('.hd .icons .dring');await W(500);const sh=await ev(()=>[...document.querySelectorAll('.sheet,[role=dialog]')].some(n=>/Today so far/.test(n.textContent)));ok('v315 tapping the ring opens Today so far',sh);await p.keyboard.press('Escape');await W(400);
+    await ev(()=>{document.querySelectorAll('.sheet .sheet-left,.sheet button').forEach(b=>{if(/^Close$/.test(b.textContent.trim()))b.click();});});await W(400);}
+  await set({rwRing:false});await today();ok('v315 ring hides when turned off',!(await ev(()=>!!document.querySelector('.dring'))));
+  await set({rwRing:true});await today();
+  ok('v315 the ring never shows on another day',await ev(async()=>{const L=window.__lifeos;L.App.state.sel=L.todayK().slice(0,8)+'01'===L.todayK()?'2020-01-02':L.todayK().slice(0,8)+'01';L.App.go('today');await new Promise(r=>setTimeout(r,400));const none=!document.querySelector('.dring');L.App.state.sel=L.todayK();L.App.go('today');return none;}));
+});

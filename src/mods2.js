@@ -144,6 +144,8 @@ function vYir(page,hub,t){const S=App.state,y=S.yirYear||today().getFullYear(),s
   page.append(pageHead(`${y} in review`,y===today().getFullYear()?'So far this year':null,{back:hub,to:'area',actions:el('div',{style:'display:flex;gap:var(--s1)'},IconButton('Previous year',{html:ic('chevl',IC.md),onclick:()=>{S.yirYear=y-1;App.refresh();}}),y<today().getFullYear()?IconButton('Next year',{html:ic('chevr',IC.md),onclick:()=>{S.yirYear=y+1;App.refresh();}}):null)}));
   if(!st.length){page.append(el('div',{class:'list'},emptyState('Nothing logged in '+y,'As you finish tasks, log workouts and read books, your year fills in here.')));return;}
   page.append(StatRow(st.map(([l2,v])=>[Number(v).toLocaleString(),l2]),{cls:'yirgrid',size:'lg'}));
+  page.append(Button([el('span',{style:'display:grid',html:ic('play',IC.sm)}),`Play your ${y}`],{variant:'link',style:'justify-self:start',onclick:()=>rwYearStory(y)}));
+  if(S._yirPlay){S._yirPlay=false;setTimeout(()=>rwYearStory(y),450);}
   {const hc=yirHighlightsCard(y);if(hc)page.append(hc);}
   {const ns=get.all('habit',{archived:true}).flatMap(h=>Object.entries(h.logNotes||{}).filter(([d,v])=>v&&inYear(d,y)).map(([d,v])=>[d,v,h.title])).sort((a,b)=>a[0]<b[0]?1:-1);if(ns.length)page.append(Card({title:'From your check-ins'},el('div',{class:'list',style:'box-shadow:none;border:0'},ns.slice(0,6).map(([d,v,t])=>Row({as:'div'},DateBadge(d,{tone:'plain'}),el('span',{class:'grow'},el('b',{style:'font-weight:500'},v),el('small',{},t)))))));}
   const wins=entries('Career','wins').filter(x=>inYear(x.f.date,y)).slice(0,5),goals=get.all('goal',{archived:true}).filter(g=>g.finished&&inYear(k(new Date(g.finishedAt||0)),y)),books=entries('Learning','reading').filter(x=>x.f.status==='Finished'&&inYear(x.f.finOn||k(new Date(x.updatedAt||0)),y)),trips=entries('Travel','trips').filter(x=>inYear(x.f.date,y));
@@ -202,6 +204,6 @@ async function yirImage(y){const H=yirHighlights(y),W=1080,Hh=1350,c=document.cr
 /* from mid-December into the first week of January, Today offers the review once */
 function yirNudge(dk){if(dk!==todayK())return null;const d=today(),m=d.getMonth(),day=d.getDate(),y=m===0?d.getFullYear()-1:d.getFullYear();
   if(!((m===11&&day>=15)||(m===0&&day<=7)))return null;const s=get.settings();if((s.yirSeen||0)>=y)return null;
-  const go=()=>{setSettings({yirSeen:y});if(!toolOn('Personal growth','yir'))setToolOn('Personal growth','yir',true);App.state.yirYear=y;App.go('tool',{hub:'Personal growth',tool:'yir'});};
+  const go=()=>{setSettings({yirSeen:y});if(!toolOn('Personal growth','yir'))setToolOn('Personal growth','yir',true);App.state.yirYear=y;App.state._yirPlay=true;App.go('tool',{hub:'Personal growth',tool:'yir'});};
   return Card({tone:'tinted',cls:'yirnudge'},el('div',{class:'bl'},el('span',{class:'lbl',style:'color:var(--action-text)'},`Your ${y}`),IconButton('Not now',{size:'sm',html:ic('x',IC.xs),onclick:()=>{setSettings({yirSeen:y});App.refresh();}})),
     el('p',{style:'margin:var(--s1) 0 var(--s3)'},'Your year in review is ready: what you finished, your best streak and where the time went.'),Button('See your year',{variant:'primary',full:true,onclick:go}));}

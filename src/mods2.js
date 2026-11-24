@@ -81,7 +81,7 @@ const pantryHas=txt=>{const l=String(txt).toLowerCase();return pantryLive().find
 HUBS.Home.tools.push(tplTool({id:'pantry',name:'Pantry and freezer',icon:'archive',word:'item',tpl:'collection',optIn:true,whatLabel:'Item',statusLabel:'Where',statuses:['Pantry','Fridge','Freezer','Used up'],extra:[F('qty','How much'),F('use','Use by','date',{blank:true})],groupKey:'status',
   dueKey:'use',dueWord:'Use by',dueWin:3,cal:false,closed:x=>x.f.status==='Used up',feedTitle:x=>`Use the ${x.f.what} soon`,addLabel:'Add an item',
   say:'What’s on hand. Meal prep skips it when it builds your grocery list and suggests recipes that use it.',shows:[['T','When something should be used']],
-  subX:x=>[x.f.qty,x.f.use?`use by ${mD(x.f.use)}`:null].filter(Boolean).join(' · ')||x.f.status,
+  subX:x=>[x.f.qty,x.f.use?`Use by ${mD(x.f.use)}`:null].filter(Boolean).join(' · ')||x.f.status,
   rowR:x=>x.f.status!=='Used up'?smallBtn('Used up',()=>{const c=clone(x.f);x.f.status='Used up';put(x);App.refresh();toast(`${x.f.what} used up`,()=>{x.f=c;put(x);App.refresh();});},`${x.f.what} used up`):null,
   head:(hub,t,l)=>{const live=l.filter(x=>x.f.status!=='Used up'),rec=pantryRecipes(live);return rec.length?Card({title:'You could make',as:'div'},el('div',{class:'chips',style:'margin-top:var(--s2);flex-wrap:wrap'},rec.slice(0,6).map(([r,n])=>Chip(`${r.f.what} · ${n} on hand`,{onclick:()=>App.go('tool',{hub:'Health',tool:'meals'})})))):null;},
   sumX:l=>{const live=l.filter(x=>x.f.status!=='Used up'),soon=live.filter(x=>x.f.use&&daysBetween(todayK(),x.f.use)<=3).length;return soon?`${soon} to use soon`:`${live.length} on hand`;}}));

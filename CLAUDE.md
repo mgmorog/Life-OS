@@ -12,7 +12,7 @@ One codebase, two places it runs:
 
 ## Shipping a change
 1. Edit `src/` (bump `APP_VER` and `WHATS_NEW` in `src/prefs.js` for anything visible).
-2. `npm run test:pwa` (home-screen build against a local Supabase stand-in) and the Playwright scripts in `test/` for the app itself (`bash mk.sh` builds `test/page.html` first).
+2. `npm run test:pwa` (home-screen build against a local Supabase stand-in) and the Playwright scripts in `test/` for the app itself (`bash mk.sh` builds `test/page.html` first). Always run `npm run test:today` (Today layout: defaults, old pins, hide/show, reorder, until-done, one-line, six-card cap, module off, restore); add a case there for anything that changes Today.
 3. Changed tokens? Run `npm run tokens`, then update the Life OS design system artifact (`daf29a28-6ee1-4dc0-94cd-1213160634bd`) with `design-system/tokens.json` and `design-system/README.md` as `project/tokens.json` and `project/README.md`, and its index last.
 4. Commit and push to `main`. Vercel deploys; open apps reload on next open via `version.json`.
 

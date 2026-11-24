@@ -8,7 +8,8 @@
     "build": "node build.mjs --target pwa",
     "build:artifact": "node build.mjs --target artifact",
     "test:pwa": "node test-pwa/run.mjs",
-    "tokens": "node tools/tokens.mjs"
+    "tokens": "node tools/tokens.mjs",
+    "test:today": "bash mk.sh && node test/todaylayout.cjs"
   },
   "engines": {
     "node": ">=20"

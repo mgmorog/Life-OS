@@ -121,3 +121,12 @@ global.__todayMore.push(async({ev,ok,W})=>{
   ok('v313 worth noticing when a change is big enough',/Worth noticing · Workouts went up/.test(r.txt),r.txt);
   ok('v313 a week with nothing logged shows no section',!r.empty);
 });
+
+// v314 · one area page for every area
+global.__todayMore.push(async({ev,ok,W,p})=>{
+  const names=await ev(()=>[...new Set([...(window.__lifeos.get.settings().areas||[]),'Health','Travel','Pets'])]);const bad=[];
+  for(const n of names){await ev(n=>window.__lifeos.App.go('area',{name:n}),n);await W(250);
+    const o=await ev(()=>{const pg=document.querySelector('.page');if(!pg)return null;const labs=[...pg.querySelectorAll('.lbl,.lblrow,.sh2')].map(x=>x.textContent.trim());const mi=labs.findIndex(t=>/^Modules/.test(t)),gi=labs.findIndex(t=>/^(Goals|Projects|Habits|Tasks)\b/.test(t));return{head:!!pg.querySelector('h1,.ph-title,.pagehead'),mi,gi};});
+    if(!o||(o.gi>=0&&o.mi>=0&&o.gi>o.mi))bad.push([n,o]);}
+  ok('v314 every area page: linked items, then modules',!bad.length,bad);
+});

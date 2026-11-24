@@ -93,3 +93,19 @@ global.__todayMore.push(async({ev,ok,ids,setL,set,today,onPage,base,W})=>{
   ok('v311 turning it off returns to one order; pins kept for older versions',off.mode==='fixed'&&off.pins.includes('Learning|reading'),off);
   await set({todayLayout:null,todayPins:[]});
 });
+
+// v313 · starter set
+global.__todayMore.push(async({ev,ok,set,setL,base,W,p})=>{
+  await set({todayLayout:null,todayPins:[]});await setL(base);
+  await ev(()=>window.__lifeos.t.setToolOn('Health','sleep',false));
+  const r1=await ev(()=>window.__lifeos.t.applyStarters(['sleep','reading','bills']));
+  const st=await ev(()=>{const t=window.__lifeos.t,L=t.todayLayout().map(x=>x.id);return{sleep:t.toolOn('Health','sleep'),bills:t.toolOn('Finances','bills'),L};});
+  ok('v313 picks turn on modules and add daily cards only',st.sleep&&st.bills&&st.L.includes('m:Health|sleep')&&st.L.includes('m:Learning|reading')&&!st.L.includes('m:Finances|bills'),{r1,st});
+  ok('v313 cards go before Also, built-ins keep their order',JSON.stringify(st.L)===JSON.stringify(['tasks','habits','sched','m:Health|sleep','m:Learning|reading','also']),st.L);
+  const r2=await ev(()=>window.__lifeos.t.applyStarters(['sleep','reading','bills']));const L2=await ev(()=>window.__lifeos.t.todayLayout().map(x=>x.id));
+  ok('v313 running it again adds nothing twice',JSON.stringify(L2)===JSON.stringify(st.L)&&r2.mods===0,{r2,L2});
+  await setL([{id:'sched'},{id:'tasks'},{id:'m:Health|workouts'},{id:'habits'},{id:'also'}]);
+  await ev(()=>window.__lifeos.t.applyStarters(['energy','workouts','sleep','reading','journal','walks']));const L3=await ev(()=>window.__lifeos.t.todayLayout().map(x=>x.id));
+  ok('v313 from Settings it only adds: your order stays, at most four new cards',L3.slice(0,4).join()==='sched,tasks,m:Health|workouts,habits'&&L3.filter(x=>x.startsWith('m:')).length<=5,L3);
+  await set({todayLayout:null,todayPins:[]});
+});

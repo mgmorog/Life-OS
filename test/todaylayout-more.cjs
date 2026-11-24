@@ -109,3 +109,15 @@ global.__todayMore.push(async({ev,ok,set,setL,base,W,p})=>{
   ok('v313 from Settings it only adds: your order stays, at most four new cards',L3.slice(0,4).join()==='sched,tasks,m:Health|workouts,habits'&&L3.filter(x=>x.startsWith('m:')).length<=5,L3);
   await set({todayLayout:null,todayPins:[]});
 });
+
+// v313 · week in numbers (weekly review)
+global.__todayMore.push(async({ev,ok,W})=>{
+  const r=await ev(()=>{const L=window.__lifeos,t=L.t,d=L.todayK();const add=(n,dd)=>{const x=new Date(d+'T12:00');x.setDate(x.getDate()+n);return x.toISOString().slice(0,10);};
+    const a='2031-03-03',b='2031-03-09';const mk=[];['2031-03-04','2031-03-05','2031-03-06'].forEach(dd=>mk.push(L.create('entry',{hub:'Health',tool:'workouts',f:{what:'Run',min:30,feel:'Steady',date:dd}})));
+    mk.push(L.create('entry',{hub:'Health',tool:'workouts',f:{what:'Run',min:20,feel:'Steady',date:'2031-02-25'}}));
+    const fr=t.weekNumbers(a,b,'week'),div=document.createElement('div');if(fr)div.append(fr);const txt=div.textContent;mk.forEach(x=>L.remove(x.id,{hard:true,silent:true}));
+    const empty=t.weekNumbers('2040-01-01','2040-01-07','week');return{txt,empty:!!empty};});
+  ok('v313 a line per module you used, against last week',/Workouts/.test(r.txt)&&/3 workouts/.test(r.txt)&&/2 workouts more than last week/.test(r.txt),r.txt);
+  ok('v313 worth noticing when a change is big enough',/Worth noticing · Workouts went up/.test(r.txt),r.txt);
+  ok('v313 a week with nothing logged shows no section',!r.empty);
+});

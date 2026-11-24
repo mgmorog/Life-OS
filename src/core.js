@@ -118,7 +118,7 @@ function Stepper(value,{min=0,max=999,step=1,format=v=>v,onChange=null,label='Va
 function DateBadge(dk,{tone=null,cls='',...rest}={}){
   const d=fromK(dk),n=daysBetween(todayK(),dk),top=n===0?'Today':n===1?'Tmrw':MON[d.getMonth()].slice(0,3);
   const t=n<0?'late':(tone||(n===0?'today':''));
-  return el('span',{...rest,class:['dbadge',t,cls].filter(Boolean).join(' '),'aria-label':shortDay(dk)},el('i',{},top),el('b',{class:'tnum'},String(d.getDate())));
+  return el('span',{...rest,class:['dbadge',t,cls].filter(Boolean).join(' '),'aria-label':shortDay(dk)},el('i',{},top),n===0?null:el('b',{class:'tnum'},String(d.getDate())));
 }
 /* v236 · Card, Field, Switch, Segmented, Progress and Picker: the rest of the shared pieces */
 function Card({title=null,action=null,onAction=null,tone='plain',flush=false,as='section',cls='',...rest}={},...kids){

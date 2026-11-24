@@ -95,18 +95,20 @@ HUBS.Career.tools.push(
 
 /* ---------- Finances ---------- */
 HUBS.Finances.tools.push(
- tplTool({id:'taxes',name:'Taxes',icon:'clip',word:'item',tpl:'collection',optIn:true,whatLabel:'Item',statusLabel:'Kind',statuses:['Document','Deductible','Estimated payment'],extra:[F('amt','Amount','number',{blank:true}),F('due','Due','date',{blank:true}),F('got','Done or in hand','select',{opts:['No','Yes']})],groupKey:'status',photos:true,addLabel:'Add an item',
+ tplTool({id:'taxes',name:'Taxes',icon:'clip',word:'item',tpl:'collection',optIn:true,whatLabel:'Item',statusLabel:'Kind',statuses:['Document','Deductible','Estimated payment'],extra:[F('amt','Amount','number',{blank:true}),F('due','Due','date',{blank:true}),F('got','Done or in hand','select',{opts:['No','Yes']})],groupKey:'status',photos:true,addLabel:'Add an item',closedLabel:'Done',
    dueKey:'due',dueWin:14,closed:x=>x.f.got==='Yes',calTitle:x=>x.f.what,
    say:'Deductible receipts, estimated-payment dates and a tax-season checklist of documents.',
-   subX:x=>[x.f.got==='Yes'?'Done':x.f.due?`due ${mD(x.f.due)}`:'Still need it',+x.f.amt?money0(+x.f.amt):null].filter(Boolean).join(' · '),
-   rowR:x=>x.f.got!=='Yes'?smallBtn(x.f.status==='Document'?'Got it':'Done',()=>{x.f.got='Yes';put(x);App.refresh();},`${x.f.what} done`):null,
+   subX:x=>[x.f.got==='Yes'?'Done':x.f.due?`Due ${mD(x.f.due)}`:'Still need it',+x.f.amt?money0(+x.f.amt):null].filter(Boolean).join(' · '),
+   rowR:x=>x.f.got!=='Yes'?smallBtn('Done',()=>{x.f.got='Yes';put(x);App.refresh();},`${x.f.what} done`):null,
    head:(hub,t,l)=>{const y=yr(),ded=sumN(l.filter(x=>x.f.status==='Deductible'),'amt'),gv=entries('Community','giving').filter(x=>inYear(x.f.date,y)&&x.f.receipt==='Yes'),gvT=sumN(gv),sb=entries('Career','sidebiz').filter(x=>inYear(x.f.date,y)&&x.f.kind==='Expense'),docs=l.filter(x=>x.f.status==='Document');
      return headCard(kv('Deductions logged',money0(ded)),gv.length?kv('Gifts with receipts',money0(gvT)):null,sb.length?kv('Business expenses',money0(sumN(sb))):null,docs.length?kv('Documents',`${docs.filter(x=>x.f.got==='Yes').length} of ${docs.length}`):null);},
    starter:{q:'What do you need for tax season?',opts:[['W-2',{status:'Document'}],['1099-INT or 1099-DIV',{status:'Document'}],['1098 mortgage interest',{status:'Document'}],['HSA forms',{status:'Document'}],['Charity receipts',{status:'Document'}],['Q1 estimated payment',{status:'Estimated payment',due:`${today().getFullYear()+1}-04-15`}],['Q2 estimated payment',{status:'Estimated payment',due:`${today().getFullYear()+1}-06-15`}],['Q3 estimated payment',{status:'Estimated payment',due:`${today().getFullYear()+1}-09-15`}],['Q4 estimated payment',{status:'Estimated payment',due:`${today().getFullYear()+2}-01-15`}]],note:'Estimated-payment dates are the usual federal ones. Check the IRS calendar for your year.'}}),
  tplTool({id:'invest',name:'Investments and retirement',icon:'target',word:'account',tpl:'collection',optIn:true,whatLabel:'Account',statusLabel:'Type',statuses:['401(k)','IRA','Roth IRA','HSA','Brokerage','Other'],extra:[F('bal','Balance','number',{blank:true}),F('contrib','Contributed this year','number',{blank:true}),F('limit','Yearly limit','number',{blank:true}),F('mix','Target mix (e.g. 80/20 stocks/bonds)')],addLabel:'Add an account',
    say:'Contributions toward each yearly limit, your accounts and your target mix. Look up the current limits; they change each year.',
-   subX:x=>{const L=+x.f.limit,c=+x.f.contrib||0,mo=12-today().getMonth();return[x.f.status,+x.f.bal?money0(+x.f.bal):null,L?(c>=L?'Limit reached':`${money0((L-c)/mo)}/mo to max out`):null].filter(Boolean).join(' · ');},
-   rowR:x=>smallBtn('+ Add',()=>askFields({title:`Contribution to ${x.f.what}`,req:false,fields:[F('n','Amount','number')],save:v=>{x.f.contrib=(+x.f.contrib||0)+(+v.n||0);x.f.bal=(+x.f.bal||0)+(+v.n||0);put(x);App.refresh();toast(`${money0(+v.n||0)} added`);}}),`Add a contribution to ${x.f.what}`),
+   subX:x=>{const L=+x.f.limit,c=+x.f.contrib||0,mo=12-today().getMonth();return[x.f.status,L?(c>=L?'Limit reached':`${money0((L-c)/mo)}/mo to max out`):null].filter(Boolean).join(' · ');},
+   /* v303 · balance on the right; tapping a row adds a contribution (Edit details inside) */
+   rowR:x=>+x.f.bal?el('span',{class:'tside tnum'},money0(+x.f.bal)):null,
+   onOpen:(x,hub,t)=>addMoneySheet(`Contribution to ${x.f.what}`,+x.f.limit?`${money0(+x.f.contrib||0)} of ${money0(+x.f.limit)} contributed this year.`:null,n=>{x.f.contrib=(+x.f.contrib||0)+n;x.f.bal=(+x.f.bal||0)+n;put(x);App.refresh();toast(`${money0(n)} added to ${x.f.what}`);},()=>entrySheet(hub,t,x)),
    head:(hub,t,l)=>{if(!l.length)return null;const lim=l.filter(x=>+x.f.limit);return el('div',{style:'display:flex;flex-direction:column;gap:var(--s3)'},headCard(kv('Total balance',money0(sumN(l,'bal'))),kv(`Contributed ${yr()}`,money0(sumN(l,'contrib')))),null);}}));
 
 /* ---------- Learning: school planner ---------- */

@@ -4208,3 +4208,5 @@ textarea.big.gstep{font-size:var(--fs-row);font-family:inherit}
 .cdempty{margin:0;padding:0 var(--s1)}
 .pastfold{width:100%}
 .ycard .ycl2{align-self:flex-start;margin-top:var(--s2)}
+/* v303 · Finances */
+.oready{color:var(--action-text);font-weight:var(--fw-medium)}

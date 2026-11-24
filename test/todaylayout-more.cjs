@@ -30,3 +30,33 @@ global.__todayMore.push(async({ev,ok,setL,today,base,W})=>{
     ok('v309 and Undo takes it back',undone===r.n0,undone);
     await ev(([h,id])=>{window.__lifeos.t.entries(h,id).filter(x=>x.f.what==='Test log').forEach(x=>window.__lifeos.remove(x.id,{hard:true,silent:true}));},[lh,lid]);}
 });
+
+// v310 · log in plain words (capture)
+global.__todayMore.push(async({ev,ok,today,W,p})=>{
+  const table=[
+    ['spent 42 at Wegmans','Finances|spending'],['paid 18 for lunch','Finances|spending'],['slept 7 hours','Health|checkin'],['ran 3 miles','Health|workouts'],
+    ['did yoga','Health|workouts'],['read 20 pages','Learning|reading'],['weighed 172 lb','Health|measure'],['walked Biscuit 20 min','Pets|walks'],
+    ['volunteered 3 hours at food bank','Community|volunteer'],['donated 50 to Red Cross','Community|giving'],['meditated 20 min','Health|mindful'],['20 minutes meditation','Health|mindful'],
+    ['meditated','Health|mindful'],['journal: long day','Personal growth|journal'],['journaled','Personal growth|journal'],['prayed 15','Community|faith'],
+    ['practiced 30 min spanish','Learning|lang'],['allowance 10 Maya','Family|allowance'],['side business 120 logo job','Career|sidebiz'],['symptom: headache','Health|symptoms'],
+    ['pay 42 rent',null],['buy milk',null],['call mom tomorrow',null],['dinner with Sam friday',null],['journal entry tomorrow',null],
+    ['meeting at 3',null],['gym 3 times a week',null],['read Dune',null],['taxes due April 15',null],['spent',null]];
+  const got=await ev(tb=>tb.map(([x])=>{const q=window.__lifeos.t.quickLog(x);if(!q)return null;if(q.hub)return`${q.hub}|${q.tool}`;
+    const L=q.label;return /^Log \$|on /.test(L)&&/^Log \$/.test(L)?'Finances|spending':/sleep/.test(L)?'Health|checkin':/workout/.test(L)?'Health|workouts':/pages/.test(L)?'Learning|reading':/weight/.test(L)?'Health|measure':/walk with/.test(L)?'Pets|walks':/volunteer/.test(L)?'Community|volunteer':/gift/.test(L)?'Community|giving':L;}),table);
+  const bad=table.map(([x,want],i)=>[x,want,got[i]]).filter(([,w,g])=>(w||null)!==(g||null));
+  ok(`v310 ${table.length} phrases go where expected`,!bad.length,bad);
+  const cat=await ev(()=>{const L=window.__lifeos,r=L.create('entry',{hub:'Finances',tool:'spending',f:{what:'Corner Shop',amount:9,cat:'Household',date:L.todayK()}});const c=L.t.learnCat('corner shop');L.remove(r.id,{hard:true,silent:true});return c;});
+  ok('v310 category learned from your history',cat==='Household',cat);
+  const off=await ev(()=>{const T=window.__lifeos.t;T.setToolOn('Health','mindful',false);const q=T.quickLog('meditated 20 min');T.setToolOn('Health','mindful',true);return q;});
+  ok('v310 turned-off modules are never matched',!off,off);
+  // Return logs a sure phrase instead of saving to Inbox
+  const before=await ev(()=>({n:window.__lifeos.t.entries('Pets','walks').length,i:window.__lifeos.get.all('idea').length}));
+  await ev(()=>window.__lifeos.App.go('today'));await W(300);
+  await p.click('.fab, button[aria-label="Quick capture"], button[aria-label="Capture"]').catch(()=>{});await W(500);
+  const has=await p.locator('#f-cap-title').count();
+  if(has){await p.fill('#f-cap-title','walked Biscuit 20 min');await W(200);await p.press('#f-cap-title','Enter');await W(400);
+    const after=await ev(()=>({n:window.__lifeos.t.entries('Pets','walks').length,i:window.__lifeos.get.all('idea').length}));
+    ok('v310 Return logs a sure phrase, not to Inbox',after.n===before.n+1&&after.i===before.i,{before,after});
+    await p.keyboard.press('Escape');await W(300);}
+  else ok('v310 capture sheet opens',false,'no capture field');
+});

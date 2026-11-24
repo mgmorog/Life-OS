@@ -220,6 +220,33 @@ const setTodayLayout=L=>setSettings({todayLayout:L,todayPins:L.filter(x=>x.id.st
 const tcParts=x=>{const[hub,id]=x.id.slice(2).split('|');return[hub,id,toolOf(hub,id)];};
 function todayCardLogged(hub,t){const dk=todayK();try{if(hub==='Health'&&t.id==='checkin'){const c=checkOn(dk);return !!(c&&c.f.eAt);}if(hub==='Learning'&&t.id==='review')return !!((cfg('Learning','review').f.days||{})[dk]);if(hub==='Learning'&&t.id==='reading')return ofType('Learning','reading','').some(x=>(x.f.log||{})[dk]);return entries(hub,t.id).some(e=>e.f&&e.f.date===dk&&e.createdAt&&k(new Date(e.createdAt))===dk);}catch(e){return false;}}
 function todayCardDue(x,hub,t){const w=x.when||'always',m=nowMin();if(w==='morning')return m<720;if(w==='evening')return m>=1080;if(w==='until')return !todayCardLogged(hub,t);return true;}
+/* v309 · a real card for every module, by template: log again, tick what's due, the next date, what needs you */
+function tplCard(hub,t,line,pill){const id=t.id,l=entries(hub,id),dk=todayK(),out={sub:'',act:null,body:null};let s0='';try{s0=String(t.sum(l)||'');}catch(e){}
+  const addB=()=>Button('Add',{variant:'secondary',size:'sm',onclick:()=>entrySheet(hub,t)}),open=x=>()=>t.onOpen?t.onOpen(x,hub,t):entrySheet(hub,t,x);
+  const mini=(xs,draw)=>el('div',{class:'tmcl'},xs.map(draw));
+  if(t.tpl==='log'){const past=l.filter(x=>!(x.f.date>dk)).sort((a,b)=>(b.f.date||'')<(a.f.date||'')?-1:(b.f.date||'')>(a.f.date||'')?1:(b.createdAt||0)-(a.createdAt||0)),last=past[0];
+    const again=()=>{const r=create('entry',{hub,tool:id,f:Object.assign(clone(last.f),{date:dk})});toast(`${t.title(last)} logged for today`,()=>remove(r.id,{hard:true}),'Undo',{force:true});};
+    out.sub=s0||'Nothing this week';const canAgain=last&&!t.money;
+    if(line)out.act=canAgain?pill('Log again',false,again):addB();
+    else{out.act=addB();if(last)out.body=el('div',{class:'tmcrow'},el('button',{class:'grow small muted tmclast',onclick:open(last)},(()=>{const ti=String(t.title(last)||''),dd=last.f.date?relDay(last.f.date):'';return `Last · ${[ti,dd].filter((v,i,a)=>v&&a.indexOf(v)===i&&!(i===1&&ti===mD(last.f.date))).join(' · ')}`;})()),canAgain?pill('Log again',false,again):null);}
+    return out;}
+  if(t.tpl==='checklist'){const due=l.filter(x=>x.f.last!==dk&&dueState(x).over).sort((a,b)=>(dueState(a).left??0)-(dueState(b).left??0)),done=l.filter(x=>x.f.last===dk).length;
+    out.sub=due.length?`${due.length} due${done?` · ${done} done today`:''}`:done?`All caught up · ${done} done today`:'All caught up';
+    if(!line&&due.length)out.body=mini(due.slice(0,3),x=>el('div',{class:'tmcli'},tk(false,v=>{if(!v)return;x.f.prev=x.f.last||null;x.f.last=dk;x.f.logs=[...(x.f.logs||[]),dk];put(x);toast(`${x.f.what} done`,()=>{x.f.last=x.f.prev||null;x.f.logs=(x.f.logs||[]).filter(q=>q!==dk);put(x);},'Undo',{force:true});},`${x.f.what} done`),el('button',{class:'grow',onclick:open(x)},el('span',{},t.title(x)),el('small',{class:'olate'},dueState(x).txt))));
+    if(line&&due.length===1){const x=due[0];out.sub=`${t.title(x)} · ${dueState(x).txt}`;out.act=pill('Done',false,()=>{x.f.prev=x.f.last||null;x.f.last=dk;x.f.logs=[...(x.f.logs||[]),dk];put(x);toast(`${x.f.what} done`,()=>{x.f.last=x.f.prev||null;x.f.logs=(x.f.logs||[]).filter(q=>q!==dk);put(x);},'Undo',{force:true});});}
+    else if(due.length>3&&!line)out.act=Button(`All ${due.length}`,{variant:'secondary',size:'sm',onclick:()=>App.go('tool',{hub,tool:id})});
+    return out;}
+  if(t.tpl==='countdown'){const up=l.filter(x=>x.f.date&&x.f.date>=dk&&!t.closed(x)).sort((a,b)=>a.f.date<b.f.date?-1:1),nx=up[0];
+    if(!nx){out.sub=l.length?'Nothing coming up':'Nothing yet';out.act=addB();return out;}
+    const n=daysBetween(dk,nx.f.date);out.sub=`${t.title(nx)} · ${n===0?'today':n===1?'tomorrow':`in ${n} days`}`;
+    out.act=el('span',{class:'tmcdays'+(n<=(+nx.f.remind||30)?' soon':'')+(n===0?' d0':'')},n===0?el('b',{},'Today'):el('b',{class:'tnum'},String(n)),n===0?null:el('small',{},n===1?'day':'days'));
+    if(!line&&up.length>1)out.body=mini(up.slice(1,3),x=>el('button',{class:'tmcli',onclick:open(x)},el('span',{class:'grow'},t.title(x)),el('small',{class:'tnum'},mD(x.f.date))));
+    return out;}
+  /* collection: what needs you (due soon), otherwise the count */
+  const dKey=t.dueKey,need=dKey?l.filter(x=>!t.closed(x)&&x.f[dKey]&&x.f[dKey]<=addK(dk,t.dueWin!=null?Math.max(+t.dueWin,7):7)).sort((a,b)=>a.f[dKey]<b.f[dKey]?-1:1):[];
+  out.sub=need.length?`${need.length} need${need.length===1?'s':''} you · ${s0}`:(s0||'Nothing yet');out.act=addB();
+  if(!line&&need.length)out.body=mini(need.slice(0,3),x=>el('button',{class:'tmcli',onclick:open(x)},el('span',{class:'grow'},t.title(x)),el('small',{class:x.f[dKey]<dk?'olate':''},x.f[dKey]<dk?'Overdue':relDay(x.f[dKey]))));
+  return out;}
 /* each card is the one thing you do in that module most, right on Today */
 function todayModCard(x){const[hub,id,t]=tcParts(x);if(!t||!toolOn(hub,id)||!todayCardDue(x,hub,t))return null;const dk=todayK(),line=x.size==='line',go=()=>App.go('tool',{hub,tool:id});
   let sub='',act=null,body=null;const pill=(label,on,fn,cls='')=>el('button',{class:'tmcp'+(on?' on':'')+cls,'aria-pressed':String(!!on),onclick:e=>{e.stopPropagation();buzz(6);fn();}},label);
@@ -232,6 +259,7 @@ function todayModCard(x){const[hub,id,t]=tcParts(x);if(!t||!toolOn(hub,id)||!tod
     else if(hub==='Learning'&&id==='reading'){const r=ofType('Learning','reading','').find(z=>z.f.status==='Reading');if(r){const pg=+r.f.page||0,pp=+r.f.pages||0,bump=()=>{r.f.page=pp?Math.min(pp,pg+10):pg+10;r.f.log=Object.assign({},r.f.log,{[dk]:((r.f.log||{})[dk]||0)+10});put(r);};sub=`${r.f.what} · p. ${pg}${pp?` of ${pp}`:''}`;act=pill('+10',false,bump);if(!line&&pp)body=meter(pg/pp);}else sub='Nothing on the go';}
     else if(hub==='Finances'&&id==='spending'){const ym=monthKey(today()),sp=sumBy(spendIn(ym),'amount'),pl=spendPlan();sub=pl?`${money0(sp)} spent · ${money0(Math.max(0,pl-sp))} left`:`${money0(sp)} this month`;act=Button('Add',{variant:'secondary',size:'sm',onclick:()=>expenseSheet(hub,t)});}
     else if(hub==='Learning'&&id==='review'){const n=revDue().length;sub=n?`${n} card${n>1?'s':''} due`:'Nothing due today';act=n?Button('Start',{variant:'secondary',size:'sm',onclick:()=>startReview()}):null;}
+    else if(t.tpl&&MOD_TPL[t.tpl]){const o=tplCard(hub,t,line,(a,b,c)=>pill(a,b,c));sub=o.sub;act=o.act;body=o.body;}
     else{const l=entries(hub,id);let tx='';try{tx=String(t.sum(l)||'');}catch(e){}if(!tx&&t.yearSum)tx=t.yearSum(l);sub=tx||'Nothing yet';const canAdd=t.fields&&t.fields.length&&!t.wheel;act=canAdd?Button('Add',{variant:'secondary',size:'sm',onclick:()=>entrySheet(hub,t)}):Button('Open',{variant:'secondary',size:'sm',onclick:go});}
   }catch(e){console.warn(e);}
   const head=el('div',{class:'tmch'},el('span',{class:'tmci',html:ic(t.icon||'grid',IC.md)}),el('button',{class:'tmct',onclick:go},el('b',{},t.name),sub?el('small',{},sub):null),act);

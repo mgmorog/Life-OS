@@ -4240,3 +4240,20 @@ textarea.big.gstep{font-size:var(--fs-row);font-family:inherit}
 .tsradio{flex:none;width:22px;height:22px;border-radius:var(--r-full);box-shadow:inset 0 0 0 1.5px var(--line-strong,#C9CDC7)}
 .tsradio.on{box-shadow:inset 0 0 0 7px var(--accent)}
 .tsdanger{color:var(--overdue)!important;margin-top:var(--s3);align-self:center}
+
+/* v309 · template cards on Today */
+.tmcl{display:flex;flex-direction:column;border-top:1px solid var(--line-2)}
+.tmcli{display:flex;align-items:center;gap:var(--s3);min-height:var(--size-44);border-bottom:1px solid var(--line-2);text-align:left;width:100%}
+.tmcli:last-child{border-bottom:0}
+.tmcli>button.grow,.tmcli .grow{flex:1;min-width:0;min-height:var(--size-44);display:flex;align-items:center;justify-content:space-between;gap:var(--s3);text-align:left}
+.tmcli span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:var(--fs-row)}
+.tmcli small{flex:none;color:var(--text-muted);font-size:var(--fs-small)}
+.tmcli small.olate{color:var(--overdue)}
+.tmclast{text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-height:var(--size-44)}
+.tmcdays{flex:none;display:grid;place-items:center;align-content:center;width:var(--size-44);height:var(--size-44);border-radius:var(--r-full);background:var(--line-2);line-height:1}
+.tmcdays b{font-size:var(--fs-row);font-weight:var(--fw-semibold,600)}
+.tmcdays small{font-size:10px;color:var(--text-muted)}
+.tmcdays.soon{background:var(--selected);color:var(--action-text)}
+.tmcrow .tmcp{height:var(--size-36);padding:0 var(--s3)}
+.tmcdays.d0 b{font-size:11px}
+.tmc .tmcl:last-child,.tmc .tmcrow:last-child{margin-bottom:calc(-1 * var(--s2))}

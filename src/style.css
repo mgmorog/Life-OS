@@ -4634,3 +4634,11 @@ body.sheet-open .fab.fabfloat,body:has(.sheet.open) .fab.fabfloat{opacity:0;poin
 .stchip{background:var(--selected);color:var(--accent-deep);border-radius:var(--r-full);padding:2px var(--s2);font-size:var(--fs-micro,11px);white-space:nowrap}
 .list>.li>.grip,.list>[data-i]>.grip{color:var(--ink-3);cursor:grab;touch-action:none;display:grid;place-items:center;margin-left:calc(var(--s1) * -1)}
 @media (prefers-reduced-motion:reduce){.swrow,.mdemo .mdtick{animation:none!important}.setflash{animation:none}}
+
+/* v360 · a smarter Life OS */
+.smbusy{display:flex;align-items:center;gap:var(--s3);padding:var(--s5) var(--s2);color:var(--ink-2)}
+.smbusy .spin{width:18px;height:18px;border-radius:50%;border:2px solid var(--selected);border-top-color:var(--accent);animation:smspin .8s linear infinite;flex:none}
+@keyframes smspin{to{transform:rotate(360deg)}}
+.smaside{margin-bottom:var(--s4)}.smaside .bl{display:flex;justify-content:space-between;align-items:baseline;gap:var(--s2)}
+.smdraft{line-height:1.4}.smgoal{margin-bottom:var(--s3)}
+@media (prefers-reduced-motion:reduce){.smbusy .spin{animation-duration:2.4s}}

@@ -660,7 +660,7 @@ function viewList(root,id){
   if(!open.length&&chk.length)page.append(el('div',{class:'ozero',style:'padding-block:var(--s4) var(--nudge)'},el('span',{class:'ozi',style:'width:64px;height:64px',html:ic('check',IC.xl)}),el('h2',{style:'font-size:var(--fs-title)'},'Everything’s checked off'),l.reusable?el('p',{},'Uncheck all to use this list again.'):null));
   if(chk.length){const openC=S.listChecked===true;page.append(el('div',{class:'osech'},el('button',{class:'ochkt','aria-expanded':String(openC),onclick:()=>{S.listChecked=!openC;if(!openC)S._reveal='lChk';App.refresh();}},el('span',{class:'lbl'},`Checked · ${chk.length}`),el('span',{style:'display:grid;color:var(--ink-3)',html:ic(openC?'chevu':'chevd',IC.sm)})),el('span',{style:'flex:1'}),openC?lnk('Uncheck all',()=>{const b=clone(l.items);l.items.forEach(i=>i.d=false);put(l);toast('Unchecked',()=>{l.items=b;put(l);});}):null,openC?lnk('Clear checked',()=>{const b=clone(l.items);l.items=l.items.filter(i=>!i.d);put(l);toast('Cleared',()=>{l.items=b;put(l);});}):null));
     if(openC)page.append(el('div',{class:'list'},revealRows(chk.map(row),'lChk')));}
-  root.append(page);if(refocus)setTimeout(()=>{const n=document.getElementById(refocus);n&&n.focus({preventScroll:true});},30);
+  {const th=smTplHint('list',l);if(th&&page.firstElementChild)page.firstElementChild.after(th);}root.append(page);if(refocus)setTimeout(()=>{const n=document.getElementById(refocus);n&&n.focus({preventScroll:true});},30);
 }
 
 /* ---------- Shared page rows ---------- */

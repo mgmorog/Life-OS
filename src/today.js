@@ -17,6 +17,7 @@ function itemMenu(e,dk,x,y){
   openMenu(x,y,[
     (e.title||'').length>48?{header:e.title}:null,
     {label:'Edit',icon:'edit',onclick:()=>openItem(e,dk)},
+    e.kind==='task'&&!e.done?{label:'Help me start',icon:'spark',onclick:()=>smHelpStart(r)}:null,
     ['task','block','allday','habit'].includes(e.kind)&&r&&r.title!=null?{label:'Rename',icon:'edit',onclick:()=>{const row=document.querySelector(`.trow[data-id="${CSS.escape(e.id)}"] .tt`)||document.querySelector(`[data-k="t:${CSS.escape(r.id)}"] .tt`);if(row){const t=[...row.childNodes].reverse().find(n=>n.nodeType===3)||row;const sp=document.createElement('span');row.replaceChildren(sp);renameInPlace(sp,r);}else askFields({title:'Rename',req:true,D:{t:r.title},fields:[F('t','Name','text')],save:v=>{const t=String(v.t||'').trim();if(t){r.title=t;put(r);App.refresh();}}});}}:null,
     e.kind==='task'&&App.state.view==='tasks'?{label:'Select',icon:'check',onclick:()=>{App.state.taskSel=new Set([r.id]);App.refresh();}}:null,
     e.kind!=='allday'?{label:e.done?'Mark not done':'Mark done',icon:'task',onclick:()=>{toggleItem(e,dk);App.refresh();}}:null,
@@ -118,7 +119,7 @@ function viewToday(root){
       el('div',{class:'icons'},
         !isToday?Button('Today',{variant:'link',cls:'hdtoday',onclick:()=>goDay(tk)}):null,
         ...hdIconsOf(get.settings()).map(id=>id==='rewards'?(isToday&&!(S.loading&&!recs.size)?rwRing(dk):null):id==='inbox'?IconButton(inboxNew()?'Inbox, something new':'Inbox',{html:ic('inbox',IC.lg)+(inboxNew()||newVerN()?'<span class="badge dot"></span>':''),onclick:()=>App.go('inbox')}):id==='search'?IconButton('Search',{html:ic('search',IC.lg),onclick:()=>App.go('search')}):id==='done'?IconButton('What you’ve done',{html:ic('check',IC.lg),onclick:()=>App.go('done')}):id==='focus'?IconButton('Focus',{html:ic('time',IC.lg),onclick:()=>App.go('tasks')}):null),
-        moreB('Today options',e=>Menu([{label:'Share this day',icon:'share',onclick:()=>shareDaySheet(dk)},{label:'Plan tomorrow',icon:'cal',onclick:()=>planTomorrowSheet(todayK())},{label:'See what you’ve done',icon:'check',onclick:()=>App.go('done')},{label:get.settings().todayNote?'Edit pinned note':'Pin a note',icon:'pin',onclick:()=>noteSheet()},{label:'Edit Today',icon:'layers',onclick:()=>App.go('setpage',{id:'today'})}],{at:e})))),
+        moreB('Today options',e=>Menu([{label:'Share this day',icon:'share',onclick:()=>shareDaySheet(dk)},{label:'Plan tomorrow',icon:'cal',onclick:()=>planTomorrowSheet(todayK())},{label:'See what you’ve done',icon:'check',onclick:()=>App.go('done')},{label:get.settings().todayNote?'Edit pinned note':'Pin a note',icon:'pin',onclick:()=>noteSheet()},...smTodayMenu(dk),{label:'Edit Today',icon:'layers',onclick:()=>App.go('setpage',{id:'today'})}],{at:e})))),
     S.dateDrop?dateDropEl(dk):null,S.dateDrop?null:weekStrip(dk),
     (()=>{let hc=hdChips(dk,isToday);const mc=modeChip(),th=dayTheme(dk),wx=isToday?wxChip():null;const extra=[mc,th?el('span',{class:'chip themechip'},th.name):null,wx].filter(Boolean);if(!extra.length)return hc;if(hc&&hc.append){hc.prepend(...extra);return hc;}return el('div',{class:'hdchips'},...extra);if(!mc)return hc;if(hc&&hc.append){hc.prepend(mc);return hc;}return el('div',{class:'hdchips'},mc);})()));
   if(S.loading&&!recs.size){page.append(...todaySkeleton());root.append(page);return;}
@@ -149,6 +150,7 @@ function viewToday(root){
     try{const sd=somedayDue();if(sd.length&&new Date().getDay()%6===0)aRow(`${sd.length} someday task${sd.length>1?'s':''} to look at`,'Keep, schedule or let go',()=>somedaySheet(sd));}catch(e){}
     try{const h=new Date().getHours();if(get.settings().shutdown!==false&&h*60+new Date().getMinutes()>=(get.settings().shutdownFrom??1020)&&!shutDown())aRow('Shut down for the day','Move what’s left, tidy the Inbox, glance at tomorrow',shutdownSheet);}catch(e){}
     {const ideas=get.all('idea').filter(i=>!(i.snooze&&i.snooze>todayK()));if(s.inboxNudge!==false&&ideas.length>=(s.inboxAt||5))aRow(`${ideas.length} ideas in Inbox`,'Tidy up in a couple of minutes',()=>tidySheet(ideas.sort((a,b)=>a.createdAt-b.createdAt)));}
+    try{smartTodayRows(dk,aRow,extras);}catch(e){console.warn(e);}
     get.all('list').filter(l=>l.pinned&&(l.items||[]).some(i=>!i.d)).slice(0,2).forEach(l=>{const o2=l.items.filter(i=>!i.d);aRow(l.title,`${o2.length} left · ${o2.slice(0,3).map(i=>i.t).join(', ')}${o2.length>3?'…':''}`,()=>App.go('list',{id:l.id}));});}
   {const tc=tripTodayCard(dk);if(tc)extras.push(tc);}
   if(isToday){try{const ly=lastYearCard(dk);if(ly)extras.push(ly);}catch(e){}}

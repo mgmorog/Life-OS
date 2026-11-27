@@ -136,6 +136,7 @@ function billHistory(x){const now=today(),start=x.createdAt?new Date(x.createdAt
 function vBills(page,hub,t){
   const dk=todayK(),b=billDays(),hand=b.filter(o=>o.x.f.pay!=='Autopay'&&!billPaid(o.x,o.d)).length,tot=b.reduce((n,o)=>n+(+o.x.f.amount||0),0),tab=sVal('billTab','up');
   toolHead(page,hub,t,{actions:plusB(tab==='up'?t.word:'subscription',()=>entrySheet(hub,t,null,tab==='up'?{}:{type:'sub'}))});
+  try{page.append(smSetAsideCard());}catch(e){console.warn(e);}
   const mk=o=>{const pos=Math.min(98,Math.max(2,daysBetween(dk,o.d)/30*100)),p=billPaid(o.x,o.d),auto=o.x.f.pay==='Autopay';return el('i',{class:'mk '+(p?'paid':auto?'auto':'man'),style:`left:${pos}%`});};
   const biggest=b.slice().sort((a,c)=>(+c.x.f.amount||0)-(+a.x.f.amount||0))[0];
   page.append(Card({title:'Next 30 days',action:hand?Caption(`${hand} to pay by hand`,{as:'span'}):null},bigN(money0(tot),`across ${b.length} bill${b.length===1?'':'s'}`)));

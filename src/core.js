@@ -353,7 +353,7 @@ function flushAll(){[...dirty,...deleted].forEach(id=>flush(id));}
 addEventListener('online',flushAll);
 document.addEventListener('visibilitychange',()=>{if(document.hidden){cacheNow();flushAll();}else{App.refresh();}});
 function put(r,{silent=false}={}){try{learnSlip(histShadow.get(r.id),r);}catch(e){}try{histNote(r);}catch(e){}r.updatedAt=Date.now();if(!r.createdAt)r.createdAt=r.updatedAt;recs.set(r.id,r);deleted.delete(r.id);queueWrite(r.id);const tr='del-'+r.id;if(recs.has(tr)){recs.delete(tr);deleted.add(tr);queueWrite(tr);}if(typeof wkHook==='function')wkHook(r);if(typeof rwHook==='function')rwHook(r);if(!silent)App.refresh();return r;}
-function create(kind,fields){try{if(kind==='task')learnCreated(fields);}catch(e){}return put(Object.assign({id:uid(kind[0]),kind},fields));}
+function create(kind,fields){try{if(kind==='task')learnCreated(fields);}catch(e){}/* v360 · fill in from a similar task, then a heads-up if the day is full */let got=null;try{if(kind==='task'&&typeof smFill==='function')got=smFill(fields);}catch(e){}const r=put(Object.assign({id:uid(kind[0]),kind},fields));try{if(kind==='task'&&typeof smCreated==='function')smCreated(r,got);}catch(e){}return r;}
 const NO_TRASH=new Set(['settings','remstate','focus','plan','trashed','areanote','discover','rewards']);
 function remove(id,{silent=false,hard=false}={}){const was=recs.get(id);try{if(was)histNote(was,true);}catch(e){}if(was&&!hard&&!NO_TRASH.has(was.kind)&&!(was.f&&was.f.t==='cfg')&&!was.example){const tr={id:'del-'+id,kind:'trashed',rec:JSON.parse(JSON.stringify(was)),deletedAt:Date.now(),createdAt:Date.now(),updatedAt:Date.now()};recs.set(tr.id,tr);deleted.delete(tr.id);queueWrite(tr.id);}recs.delete(id);deleted.add(id);queueWrite(id);if(was&&typeof wkHook==='function')wkHook(was);if(was&&typeof rwHook==='function')rwHook(was,true);if(!silent)App.refresh();}
 function setSettings(patch){const cur=get.settings();try{if(typeof layoutNote==='function')layoutNote(cur,patch);}catch(e){}const s=Object.assign({},DEFAULT_SETTINGS,cur,patch);put(s);}
@@ -425,7 +425,7 @@ function dayItems(dk,{filters=false}={}){
   if(typeof Ical!=='undefined')Ical.on(dk).forEach(e=>{if(!matchesFilter(e.time==null?'allday':'block',null,filters))return;(e.time==null?allDay:timed).push(e);});
   if(typeof Holidays!=='undefined'&&matchesFilter('allday',null,filters))allDay.push(...Holidays.on(dk));
   timed.sort((a,b)=>a.time-b.time);
-  const pr=e=>e.rec.priority==='high'?0:e.rec.priority==='low'?2:1;anytime.sort((a,b)=>(a.done-b.done)||(pr(a)-pr(b)));
+  const pr=e=>e.rec.priority==='high'?0:e.rec.priority==='low'?2:1;/* v360 · low-energy mode: quick, easy tasks first today */const lowE=dk===todayK()&&get.settings().lowE===dk,ez=e=>e.kind==='task'?(+e.rec.dur||30)+(e.rec.priority==='high'?30:0):60;anytime.sort((a,b)=>(a.done-b.done)||(lowE?ez(a)-ez(b):0)||(pr(a)-pr(b)));
   return{allDay,timed,anytime};
 }
 /* a time block running past midnight carries on at the top of the next day's grid */

@@ -8,6 +8,7 @@ const LEARNERS=[
  ['slips','Slip warning','Tasks you keep moving'],
  ['energy','Energy patterns','Your energy check-ins by time of day'],
  ['dupes','Duplicate catch','Warns when a new task matches an open one'],
+ ['inbox','Inbox filing','Suggests where ideas go, from where you filed similar ones'],
  ['next','Usual next step','What you usually add after finishing something'],
  ['routines','Routine spotting','Tasks you add by hand every week'],
  ['targets','Adaptive habit targets','Easing or stepping up a habit’s target'],
@@ -100,3 +101,12 @@ function habitPatterns(h){const days=lastN(56),done=days.filter(d=>habitDone(h,d
   return el('div',{},SectionLabel('Patterns'),el('div',{class:'list'},rows.map(([a,b])=>Row({as:'div',style:''},el('span',{class:'grow'},el('b',{style:'font-weight:500'},a)),Caption(b,{as:'span'})))));}
 /* habits on a gentle restart go back to their target after two weeks */
 function learnTidyUp(){const tk=todayK();get.all('habit').forEach(h=>{if(h.restart&&h.restart.until<=tk){if(h.restart.was)h.target=h.restart.was;delete h.restart;put(h,{silent:true});}});}
+
+/* ---------- v351 · your own words: shorthand that expands as you type it into capture ---------- */
+const shorthands=()=>get.settings().shorthand||[];
+function expandWords(t){const L=shorthands();if(!L.length||!t)return t;let out=String(t);L.forEach(({w,to})=>{if(!w||!to)return;out=out.replace(new RegExp(`(^|\\s)${w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')}(?=\\s|$|[.,!?])`,'gi'),(m,a)=>a+to);});return out;}
+function shorthandSheet(){const L=shorthands().map(x=>Object.assign({},x));let inst;const draw=b=>{b.replaceChildren(Caption('Type the short word in quick capture and it becomes the longer one.',{as:'p',style:'padding:0 var(--s1) var(--s3)'}),el('div',{class:'list'},...L.map((x,i)=>Row({as:'div',style:''},el('span',{class:'grow'},el('b',{style:'font-weight:500'},x.w),el('small',{},`→ ${x.to}`)),IconButton(`Remove ${x.w}`,{size:'sm',html:ic('x',IC.xs),onclick:()=>{L.splice(i,1);draw(b);}}))),Row({style:'color:var(--action-text);font-weight:500',onclick:()=>askFields({title:'New shorthand',req:true,D:{w:'',to:''},fields:[F('w','Short word','text',{ph:'rx'}),F('to','Becomes','text',{ph:'Medication refill'})],save:v=>{const w=String(v.w||'').trim(),to=String(v.to||'').trim();if(w&&to){L.push({w,to});draw(b);}}})},'+ Add shorthand')));};
+  inst=openSheet({title:'Your own words',left:{label:'Cancel'},right:{label:'Done',onclick:()=>{setSettings({shorthand:L});inst.close();}},build:b=>draw(b)});}
+/* ---------- v351 · Inbox learns where you file things ---------- */
+function learnHome(i,h){try{const key=homeKey(h);if(!key||!i)return;const L=learnStore();L.homes=L.homes||{};normT(i.title).split(' ').filter(w=>w.length>=4).forEach(w=>{L.homes[w]=L.homes[w]||{};L.homes[w][key]=(L.homes[w][key]||0)+1;});learnSave(L);}catch(e){}}
+function learnedHome(i){if(!learnOn('inbox'))return null;const H=learnStore().homes||{},votes={};normT(i.title).split(' ').filter(w=>w.length>=4).forEach(w=>Object.entries(H[w]||{}).forEach(([k2,n])=>{votes[k2]=(votes[k2]||0)+n;}));const top=Object.entries(votes).sort((a,b)=>b[1]-a[1])[0];if(!top||top[1]<2)return null;try{return homeFromKey(i,top[0]);}catch(e){return null;}}

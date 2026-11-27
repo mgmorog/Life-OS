@@ -44,7 +44,7 @@ function parseRepeat(text){
 }
 /* Quick capture's reading of a line: dates and times (parseWhen), a time range or length, ! for important, #area,
    and any words the person chose to keep as plain text. hits are what it picked up, for the chips. */
-function capRead(text,keep=[],base=new Date(),guess=false){let s=' '+(text||'')+' ';const hits=[];let hi=false,area=null,dur=null,range=null,remind=false;
+function capRead(text,keep=[],base=new Date(),guess=false){text=expandWords(text);let s=' '+(text||'')+' ';const hits=[];let hi=false,area=null,dur=null,range=null,remind=false;
   s=s.replace(/^\s*(remind me to|don[’']?t forget to|remember to)\s+/i,m=>{remind=true;hits.push({k:'rem',s:m.trim(),label:'Reminder'});return ' ';});
   (keep||[]).forEach((w,i)=>{if(w&&s.includes(w))s=s.replace(w,`\u0002${i}\u0003`);});
   s=s.replace(/(^|\s)!{1,3}(?=\s|$)/,m=>{hi=true;hits.push({k:'hi',s:m.trim(),label:'Important'});return ' ';});
@@ -72,7 +72,19 @@ function capArea(t){const on=new Set(get.settings().areas||AREAS);const hit=AREA
 /* chores and bills that repeat: "pay rent every month on the 1st", "water plants every Sunday" */
 const CHORE=/^(pay|water|clean|take out|put out|renew|change|replace|vacuum|mow|wash|feed|empty|refill|check|backup|back up|file|submit|send|order|charge|scrub|dust|do laundry|laundry|trash|recycling)\b/i;
 const HABITW=/\b(run|running|read|reading|meditat\w*|stretch\w*|journal\w*|walk|workout|exercise|practice|study|yoga|floss|drink|gym|lift|pray|sleep)\b/i;
+/* v351 · smarter repeat words: every 3 days, every other Tuesday, Mondays and Thursdays, quarterly */
+const NUMW={one:1,two:2,three:3,four:4,five:5,six:6,seven:7,eight:8,nine:9,ten:10,other:2};
+const wdOf=w=>{const x=String(w||'').toLowerCase().replace(/s$/,'');const i=WEEKDAY.findIndex(d=>d===x||d.slice(0,3)===x.slice(0,3)&&x.length>=3);return i<0?null:(i+6)%7;};
+function capRepeat2(s){let m;const WD='(?:mon|tue|tues|wed|thu|thur|thurs|fri|sat|sun)(?:day)?s?';
+  if((m=s.match(/\bevery\s+(\d+|two|three|four|five|six|seven|eight|nine|ten|other)\s+days?\b/))){const n=+m[1]||NUMW[m[1]];return{rp:{type:'custom',unit:'day',n,end:null},lab:n===2?'Every other day':`Every ${n} days`,strip:m[0]};}
+  if((m=s.match(/\bevery\s+(3|4|5|6|three|four|five|six)\s+weeks?\b/))){const n=+m[1]||NUMW[m[1]];return{rp:{type:'custom',unit:'week',n,end:null},lab:`Every ${n} weeks`,strip:m[0]};}
+  if((m=s.match(/\bevery\s+(\d+|two|three|four|six|other)\s+months?\b|\bquarterly\b/))){const n=m[0]==='quarterly'?3:(+m[1]||NUMW[m[1]]);return{rp:{type:'custom',unit:'month',n,end:null},lab:n===3?'Every 3 months':n===2?'Every other month':`Every ${n} months`,strip:m[0]};}
+  if((m=s.match(new RegExp(`\\bevery\\s+other\\s+(${WD})\\b`)))){const d=wdOf(m[1]);if(d!=null)return{rp:{type:'custom',unit:'week',n:2,days:[d],end:null},lab:`Every other ${DOW[(d+1)%7]}`,strip:m[0],days:[d]};}
+  if((m=s.match(new RegExp(`\\b(?:every\\s+|on\\s+)?(${WD})(?:\\s*(?:,|and|&)\\s*(${WD}))(?:\\s*(?:,|and|&)\\s*(${WD}))?\\b`)))){const ds=[m[1],m[2],m[3]].filter(Boolean).map(wdOf).filter(x=>x!=null);if(ds.length>=2){const u=[...new Set(ds)].sort();return{rp:{type:'custom',unit:'week',n:1,days:u,end:null},lab:u.map(d=>DOW[(d+1)%7].slice(0,3)).join(', '),strip:m[0],days:u};}}
+  if((m=s.match(new RegExp(`\\bon\\s+(${WD.replace('s?','s')})\\b`)))){const d=wdOf(m[1]);if(d!=null)return{rp:{type:'custom',unit:'week',n:1,days:[d],end:null},lab:`Every ${DOW[(d+1)%7]}`,strip:m[0],days:[d]};}
+  return null;}
 function capRepeat(t){const s=(t||'').toLowerCase();let rp=null,date=null,m,lab='',strip=[];
+  {const x=capRepeat2(s);if(x){rp=x.rp;lab=x.lab;strip.push(x.strip);if(x.days){const t0=today();for(let i=0;i<14;i++){const y=addD(t0,i);if(x.days.includes(monIdx(y))){date=k(y);break;}}}let title=t;strip.forEach(z=>{title=title.replace(new RegExp(z.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'i'),' ');});return{repeat:rp,date:date||todayK(),title:title.replace(/\s+/g,' ').trim(),label:lab};}}
   if((m=s.match(/\b(?:every|each)\s+month\s+on\s+the\s+(\d{1,2})(?:st|nd|rd|th)?\b|\bmonthly\s+on\s+the\s+(\d{1,2})(?:st|nd|rd|th)?\b|\b(?:every|each|on\s+the)\s+(\d{1,2})(?:st|nd|rd|th)\s*(?:of\s+(?:the|every|each)\s+month)?\b/))){const d=+(m[1]||m[2]||m[3]);if(d>=1&&d<=31){const t0=today();let x=new Date(t0.getFullYear(),t0.getMonth(),d);if(x<t0)x=new Date(t0.getFullYear(),t0.getMonth()+1,d);rp={type:'custom',unit:'month',n:1,end:null};date=k(x);lab=`Monthly on the ${d}${[,'st','nd','rd'][d%10>3||Math.floor(d%100/10)===1?0:d%10]||'th'}`;strip.push(m[0]);}}
   else if((m=s.match(/\b(?:every|each)\s+month\b|\bmonthly\b/))){rp={type:'custom',unit:'month',n:1,end:null};lab='Monthly';strip.push(m[0]);}
   else if((m=s.match(/\b(?:every|each)\s+year\b|\byearly\b|\bannually\b/))){rp={type:'custom',unit:'year',n:1,end:null};lab='Yearly';strip.push(m[0]);}
@@ -119,7 +131,7 @@ const readDraft=()=>{try{return JSON.parse(localStorage.getItem(DRAFT)||'null');
 const writeDraft=d=>{try{if(d&&(d.title.trim()||d.notes.trim()||(d.photos||[]).length))localStorage.setItem(DRAFT,JSON.stringify({title:d.title,notes:d.notes,photos:d.photos||[]}));else localStorage.removeItem(DRAFT);}catch(e){}};
 /* notes alone become a title (first line) plus notes (the rest) */
 function tidyIdea(D){const t=D.title.trim();D.title=t;if(!t&&D.notes.trim()){const ls=D.notes.trim().split('\n');D.title=ls[0].slice(0,120);D.notes=ls.slice(1).join('\n').trim();}if(!D.title&&(D.photos||[]).length)D.title='Unnamed Idea';return D;}
-function saveCapture(D,from){
+function saveCapture(D,from){try{if(D&&D.title)D.title=expandWords(D.title);}catch(e){}
   markGs('capture');
   const s=get.settings();
   if(!D.title.trim()&&!(D.photos||[]).length){const ls=D.notes.split('\n').map(x=>x.trim()).filter(Boolean),bul=ls.every(x=>/^([-•*]|\d+[.)])\s+/.test(x));if(ls.length>=2&&(bul||(ls.length>=3&&ls.every(x=>x.length<=60)))){const made=ls.map(x=>create('idea',{title:x.replace(/^([-•*]|\d+[.)])\s+/,'').slice(0,120),notes:'',photos:[],source:from||null}));toast(`${made.length} ideas saved`,()=>made.forEach(r=>remove(r.id,{silent:true})));return made[0];}}

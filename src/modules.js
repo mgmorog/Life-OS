@@ -16,7 +16,8 @@ function habitStreak(h){
   let n=habitWeek(h,todayK())>=(h.target||1)?1:0,d=addD(weekStartOf(today()),-7);for(let i=0;i<104;i++){if(habitWeek(h,k(d))>=(h.target||1))n++;else if(!(h.wkFrz||{})[k(d)])break;d=addD(d,-7);}return{n,unit:'week'};
 }
 function celebrateStreak(h,dk){if(!habitDone(h,dk)||celebOf(get.settings()).habit==='off')return;const s=habitStreak(h);if(!CELEB.includes(s.n)||(h.celebrated||{})[s.n])return;h.celebrated=Object.assign({},h.celebrated,{[s.n]:todayK()});put(h,{silent:true});setTimeout(()=>{const inst=openSheet({title:'',build:b=>b.append(el('div',{class:'celebrate'},el('div',{class:'num'},String(s.n)),el('h2',{class:'serif',style:'font-size:var(--fs-xl)'},`${s.n} ${s.unit}s of ${h.title}`),el('p',{class:'muted'},'That rhythm is yours now.'),Button('Keep going',{variant:'primary',onclick:()=>inst.close()})))});},640);}
-function habitMeta(h,dk){const v=h.logs&&h.logs[dk];if(h.track==='count')return `${typeof v==='number'?v:v?h.goalN:0} of ${h.goalN} ${h.unit||''}`.trim();if(h.track==='time')return `${typeof v==='number'?v:v?h.goalN:0} of ${h.goalN} min`;return (h.days&&h.days.length)?'Habit':`Habit · ${habitWeek(h,dk)} of ${h.target} this week`;}
+function habitMeta(h,dk){const base=habitMeta0(h,dk),af=h.after&&get.id(h.after);return af&&!af.archived?[base,`after ${af.title}`].filter(Boolean).join(' · '):base;}
+function habitMeta0(h,dk){const v=h.logs&&h.logs[dk];if(h.track==='count')return `${typeof v==='number'?v:v?h.goalN:0} of ${h.goalN} ${h.unit||''}`.trim();if(h.track==='time')return `${typeof v==='number'?v:v?h.goalN:0} of ${h.goalN} min`;return (h.days&&h.days.length)?'Habit':`Habit · ${habitWeek(h,dk)} of ${h.target} this week`;}
 const TOD=[['anytime','Anytime'],['morning','Morning'],['afternoon','Afternoon'],['evening','Evening'],['set','At a set time']];
 function habitSheet(rec,seed={}){
   const isEdit=!!rec,after=seed.after;

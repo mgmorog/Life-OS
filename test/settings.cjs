@@ -160,4 +160,9 @@ const CHROME=process.env.CHROME||'/opt/pw-browsers/chromium-1243/chrome-linux64/
    const sl=await p.evaluate(()=>{const L=window.__lifeos,tk=L.todayK();const t=L.create('task',{title:'Slippy',steps:[],notes:'',photos:[],repeat:{type:'never'},priority:'normal',date:tk});const add=n=>{const d=new Date();d.setDate(d.getDate()+n);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};for(let i=1;i<=3;i++){t.date=add(i);L.put(t);}return L.get.id(t.id).slips;});
    ok('v350 moving a task forward counts slips',sl===3,sl);
    await go('noticed');ok('v350 slipping task is noticed',/Slippy has moved 3 times/.test(await p.evaluate(()=>document.querySelector('.page').innerText)));}
+  // v351 · smarter repeat words and shorthand
+  {const r=await p.evaluate(()=>{const T=window.__lifeos.t;return['Water plants every 3 days','Team sync every other tuesday','Gym mondays and thursdays','Review budget quarterly'].map(x=>{const v=T.capRepeat(x);return v&&v.label;});});
+   ok('v351 repeat words',JSON.stringify(r)===JSON.stringify(['Every 3 days','Every other Tuesday','Mon, Thu','Every 3 months']),r);
+   await p.evaluate(()=>window.__lifeos.t.setSettings({shorthand:[{w:'rx',to:'Medication refill'}]}));ok('v351 shorthand expands',await p.evaluate(()=>window.__lifeos.t.expandWords('rx for dad'))==='Medication refill for dad');
+   await p.evaluate(()=>window.__lifeos.t.setSettings({shorthand:[]}));}
   ok('no page errors',!errs.length,errs);await b.close();process.exit(fails?1:0);})();

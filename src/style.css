@@ -4533,3 +4533,12 @@ body.sheet-open .fab.fabfloat,body:has(.sheet.open) .fab.fabfloat{opacity:0;poin
 .pgic{width:var(--size-40);height:var(--size-40);border-radius:var(--r-full);background:var(--selected);color:var(--accent-deep);display:grid;place-items:center;flex:none}
 .iconcov{margin-top:var(--s3)}
 .rip{font:inherit;font-weight:var(--fw-medium);border:0;border-bottom:2px solid var(--action);background:transparent;color:var(--text);padding:2px 0;width:100%;outline:none}
+/* v349 · modes chip, side panel on wide screens */
+.chip.modechip{font-weight:var(--fw-medium)}
+@media (min-width:1100px){
+  .a-pane .sheet:not(.picker):not(.pop):not(.cmdk){left:auto;right:0;top:0;bottom:0;margin-left:0;width:min(460px,38vw);max-height:none;height:100%;border-radius:0;transform:translate3d(24px,0,0);opacity:0;box-shadow:var(--e-overlay);border-left:var(--hairline) solid var(--line)}
+  .a-pane .sheet.on:not(.picker):not(.pop):not(.cmdk){transform:none;opacity:1}
+  .a-pane .sheet:not(.picker):not(.pop) .grab{display:none}
+  .a-pane .scrim{background:transparent}
+  .a-pane body:has(.sheet.on:not(.picker):not(.pop)) #view{padding-right:min(460px,38vw)}
+}

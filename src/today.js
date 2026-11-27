@@ -120,7 +120,7 @@ function viewToday(root){
         ...hdIconsOf(get.settings()).map(id=>id==='rewards'?(isToday&&!(S.loading&&!recs.size)?rwRing(dk):null):id==='inbox'?IconButton(inboxNew()?'Inbox, something new':'Inbox',{html:ic('inbox',IC.lg)+(inboxNew()||newVerN()?'<span class="badge dot"></span>':''),onclick:()=>App.go('inbox')}):id==='search'?IconButton('Search',{html:ic('search',IC.lg),onclick:()=>App.go('search')}):id==='done'?IconButton('What you’ve done',{html:ic('check',IC.lg),onclick:()=>App.go('done')}):id==='focus'?IconButton('Focus',{html:ic('time',IC.lg),onclick:()=>App.go('tasks')}):null),
         moreB('Today options',e=>Menu([{label:'Share this day',icon:'share',onclick:()=>shareDaySheet(dk)},{label:'Plan tomorrow',icon:'cal',onclick:()=>planTomorrowSheet(todayK())},{label:'See what you’ve done',icon:'check',onclick:()=>App.go('done')},{label:get.settings().todayNote?'Edit pinned note':'Pin a note',icon:'pin',onclick:()=>noteSheet()},{label:'Edit Today',icon:'layers',onclick:()=>App.go('setpage',{id:'today'})}],{at:e})))),
     S.dateDrop?dateDropEl(dk):null,S.dateDrop?null:weekStrip(dk),
-    hdChips(dk,isToday)));
+    (()=>{const hc=hdChips(dk,isToday),mc=modeChip();if(!mc)return hc;if(hc&&hc.append){hc.prepend(mc);return hc;}return el('div',{class:'hdchips'},mc);})()));
   if(S.loading&&!recs.size){page.append(...todaySkeleton());root.append(page);return;}
   const s=get.settings();
   {const fr=frNow(),onPrio=fr&&isToday&&t3Get(dk).some(x=>x.id===fr.id);const fc=onPrio?null:focusRunChip();if(fc)page.append(fc);}
@@ -134,7 +134,7 @@ function viewToday(root){
   if(isToday){try{const fz=rwFreezeCard();if(fz)extras.push(fz);}catch(e){console.warn(e);}const pe=planEveCard(dk);if(pe)extras.push(pe);}
   const rem=reminderCard();if(rem)extras.push(rem);
   const look=[];
-  const qw=quietWkd(dk);
+  const qw=quietWkd(dk)||modeQuiet();
   const also=[];const aRow=(t,sub,fn)=>qw?null:also.push(Row({onclick:fn},el('span',{class:'grow'},el('b',{},t),sub?el('small',{},sub):null),RowEnd('chevron')));
   if(isToday&&s.checkinCard&&reviewPeriod(dk)&&sel.getDay()===(s.reviewDay??0)&&s.checkinDone!==dk&&!(s.onboardedAt&&Date.now()-s.onboardedAt<6*864e5))aRow('Weekly review','A few minutes on the week behind and ahead',()=>App.go('review'));
   if(isToday){const gz=goalPulseCard();if(gz)extras.push(gz);
@@ -199,6 +199,7 @@ function dGrip(){return el('span',{class:'t3grip dgrip',role:'button','aria-labe
 function dayCard(dk){
   const S=App.state,tk=todayK(),isToday=dk===tk,isPast=dk<tk,first=!S._painted,fu=first?' fade-up':'';
   let{timed,anytime}=dayItems(dk);
+  /* v349 · modes */if(modeNow()&&(modeNow().areas||[]).length){const keep=e=>!(e.kind==='task'&&modeHidesArea(areaOfTask(e.rec)));timed=timed.filter(keep);anytime=anytime.filter(keep);}
   /* v339 · quiet weekends: work-area tasks wait for Monday */if(quietWkd(dk)){const W=quietAreas();if(W.length){const keep=e=>!(e.kind==='task'&&W.includes(areaOfTask(e.rec)));timed=timed.filter(keep);anytime=anytime.filter(keep);}}
   const nowM=nowMin(),late=isToday&&get.settings().carryOver?carried():[];
   const t3on=!isPast||t3Get(dk).length>0,t3ids=new Set(t3on?t3Get(dk).map(x=>x.id):[]),t3es=t3on?t3Get(dk).map(x=>t3Entry(x,dk)).filter(Boolean):[];

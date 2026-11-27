@@ -206,3 +206,10 @@ global.__todayMore.push(async({ev,ok,today,W,p})=>{
   await swipe(-140);let sel=await ev(()=>window.__lifeos.App.state.sel);ok('v348 swipe left goes to tomorrow',sel>tk,{sel,tk});
   await swipe(140);sel=await ev(()=>window.__lifeos.App.state.sel);ok('v348 swipe right comes back',sel===tk,{sel,tk});
 });
+
+// v349 · a mode keeps other areas' tasks off Today and quiets nudges
+global.__todayMore.push(async({ev,ok,today})=>{
+  await ev(()=>{const L=window.__lifeos,tk=L.todayK(),base={steps:[],notes:'',photos:[],repeat:{type:'never'},priority:'normal',date:tk};L.create('task',Object.assign({title:'Mode career task',area:'Career'},base));L.create('task',Object.assign({title:'Mode home task',area:'Home'},base));L.t.setSettings({modes:[{id:'m1',name:'Work',areas:['Career'],quiet:true}],modeId:'m1'});const S=L.App.state;S._moreOpen=Object.assign({},S._moreOpen,{[tk]:true});});
+  await today();let t=await ev(()=>document.querySelector('#view .page').innerText);ok('v349 mode filters Today',/Mode career task/.test(t)&&!/Mode home task/.test(t));
+  await ev(()=>window.__lifeos.t.setSettings({modes:[],modeId:null}));await today();t=await ev(()=>document.querySelector('#view .page').innerText);ok('v349 no mode restores Today',/Mode home task/.test(t));
+});

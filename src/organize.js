@@ -22,7 +22,7 @@ function viewsRow(items,val,on,key,pool){
   const S=App.state;if(!(S['af'+key] instanceof Set))S['af'+key]=new Set();const sel=S['af'+key],areas=areasIn(pool);
   return el('div',{class:'tstick'},FilterRow(items,val,on,{cls:'fchips',extra:areaMenuChip(sel,areas)}));
 }
-function areaOnly(list,key){const S=App.state,cur=S['af'+key];if(!(cur instanceof Set)||!cur.size)return list;return list.filter(r=>cur.has(r.area));}
+function areaOnly(list,key){const S=App.state,cur=S['af'+key];if(!(cur instanceof Set)||!cur.size){const m=modeNow();if(m&&(m.areas||[]).length&&key==='task')return list.filter(r=>!r.area||m.areas.includes(r.area));return list;}return list.filter(r=>cur.has(r.area));}
 const areaNote=()=>null;
 function byArea(list){const m=new Map();list.forEach(r=>{const a=r.area||'No area';if(!m.has(a))m.set(a,[]);m.get(a).push(r);});return[...m.entries()].sort((a,b)=>a[0]==='No area'?1:b[0]==='No area'?-1:a[0].localeCompare(b[0]));}
 const withPress=(node,fn)=>holdMenu(node,fn,{skip:'.tick-hit'});

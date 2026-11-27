@@ -148,4 +148,10 @@ const CHROME=process.env.CHROME||'/opt/pw-browsers/chromium-1243/chrome-linux64/
    await go('today');await p.evaluate(()=>{const b=document.querySelector('#nav-in .tab[data-tab="more"]');b.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true}));});await p.waitForTimeout(650);
    ok('v348 holding a tab opens shortcuts',/Settings/.test(await p.evaluate(()=>document.querySelector('.menu,.ctxmenu,[role=menu]')?.innerText||'')));
    await p.evaluate(()=>{document.querySelector('#nav-in .tab[data-tab="more"]').dispatchEvent(new PointerEvent('pointerup',{bubbles:true}));document.body.click();});await p.keyboard.press('Escape');await p.waitForTimeout(300);}
+  // v349 · modes hide other areas on Today; setup sharing rows
+  {await p.evaluate(()=>{const L=window.__lifeos,tk=L.todayK(),base={steps:[],notes:'',photos:[],repeat:{type:'never'},priority:'normal',date:tk};L.create('task',Object.assign({title:'Work thing',area:'Career'},base));L.create('task',Object.assign({title:'Home thing',area:'Home'},base));L.t.setSettings({modes:[{id:'mw',name:'Work',areas:['Career'],quiet:true}],modeId:'mw'});const S=L.App.state;S._moreOpen=Object.assign({},S._moreOpen,{[tk]:true});});
+   await go('today');let tt=await p.evaluate(()=>document.querySelector('#view .page').innerText);ok('v349 work mode shows only work tasks',/Work thing/.test(tt)&&!/Home thing/.test(tt),tt.slice(300,900));
+   ok('v349 mode chip on Today',/Work/.test(await p.evaluate(()=>document.querySelector('.modechip')?.textContent||'')));
+   await p.evaluate(()=>window.__lifeos.t.setSettings({modeId:null}));await go('today');tt=await p.evaluate(()=>document.querySelector('#view .page').innerText);ok('v349 no mode shows everything',/Home thing/.test(tt));
+   await p.evaluate(()=>window.__lifeos.t.setSettings({modes:[]}));await go('setpage',{id:'data'});ok('v349 share your setup rows',/Share your setup[\s\S]*Use a setup/.test(await p.evaluate(()=>document.querySelector('.page').innerText)));}
   ok('no page errors',!errs.length,errs);await b.close();process.exit(fails?1:0);})();

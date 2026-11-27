@@ -179,7 +179,7 @@ function Picker({title,items,search=null,multi=false,selected=[],onPick,recentKe
   inst=openSheet({title,left:{label:left},right:multi?{label:'Done',onclick:()=>{if(sel.size<min){toast(`Pick at least ${min}`);return;}inst.close();onPick([...sel]);}}:null,build:b=>{
     if(note)b.append(Caption(note,{as:'p'}));
     if(useSearch)b.append(SearchField({placeholder:'Search',label:`Search ${String(title).toLowerCase()}`,cls:'psearchf',onInput:v=>{q=v;draw();}}));
-    draw();b.append(box);if(footer)b.append(footer);}});
+    draw();b.append(box);if(footer)b.append(footer);}});try{inst.sheet.classList.add('picker');}catch(e){}
   return inst;
 }
 /* v230 · three icon weights: regular 1.8, bold 2.4 (small or active), 2.8 for the checkmark only */

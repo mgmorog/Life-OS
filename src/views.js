@@ -116,3 +116,33 @@ function viewViews(root){const page=el('div',{class:'page'});page.append(pageHea
   if(V.length)page.append(SectionLabel('Saved'),el('div',{class:'list'},V.map(v=>Row({style:'',onclick:()=>App.go('view',{id:v.id})},IconTile(null,{html:ic((VW_LAYOUTS.find(x=>x[0]===v.layout)||VW_LAYOUTS[0])[2],IC.md)}),el('span',{class:'grow'},el('b',{},v.name),el('small',{},`${(vwSources().find(x=>x[0]===v.src)||[0,'Items'])[1]} · ${(VW_LAYOUTS.find(x=>x[0]===v.layout)||VW_LAYOUTS[0])[1]}`)),RowEnd('chevron')))));
   page.append(SectionLabel('New view of'),el('div',{class:'list'},vwSources().map(([id,n])=>Row({style:'',onclick:()=>{App.state._vw=null;App.go('view',{src:id,fresh:true,back:'Views',to:'views'});}},el('span',{class:'grow'},el('b',{},n)),RowEnd('chevron')))));
   page.append(Caption('Smart lists: a saved view with filters, like “Due this week, Work, high priority”. Pin it to More or put it on Today.',{as:'p',style:'padding:var(--s3) var(--s1)'}));root.append(page);}
+
+/* ---------- v347 · custom swipe actions on task rows ---------- */
+const SWIPE_ACTS=[['auto','Page default'],['done','Done'],['edit','Open'],['tomorrow','Tomorrow'],['nextweek','Next week'],['priority','Important'],['delete','Delete'],['none','Nothing']];
+function swipeFor(t,dk,side,dflt){const s=get.settings(),pick=(side==='right'?s.swipeR:s.swipeL)||'auto';const a=pick==='auto'?dflt:pick;if(!a||a==='none'||!t)return null;const e={kind:'task',id:t.id,rec:t};
+  if(a==='done'){if(isDone(t,dk))return null;return{label:'Done',color:'var(--accent)',run:()=>{setTaskDone(t,dk,true);App.refresh();}};}
+  if(a==='edit')return{label:'Open',color:'var(--ink)',run:()=>{taskSheet(t,{occ:dk});setTimeout(()=>App.refresh(),260);}};
+  if(a==='tomorrow'||a==='nextweek'){const lab=a==='tomorrow'?'Tomorrow':'Next week';return{label:lab,color:'var(--amber)',run:()=>{const u=snapItem(e),d=a==='tomorrow'?addK(todayK(),1):k(addD(weekStartOf(today()),7));if(t.date)moveItemDay(e,dk,d);else{t.date=d;put(t);}toast(`Moved to ${lab.toLowerCase()}`,u);}};}
+  if(a==='priority')return{label:t.priority==='high'?'Not important':'Important',color:'var(--ink-2)',run:()=>{t.priority=t.priority==='high'?'normal':'high';put(t);App.refresh();}};
+  if(a==='delete')return{label:'Delete',color:'var(--overdue)',run:()=>{const copy=clone(t);remove(t.id);App.refresh();toast('Task deleted',()=>put(copy));}};
+  return null;}
+
+/* ---------- v347 · rename in place: the title becomes a text box right on the row ---------- */
+function renameInPlace(span,r,after){if(!span||!r)return;const old=r.title||'';const inp=el('input',{class:'rip',value:old,'aria-label':'Rename',enterkeyhint:'done'});let doneFlag=false;
+  const finish=save=>{if(doneFlag)return;doneFlag=true;const v=inp.value.trim();if(save&&v&&v!==old){r.title=v;put(r);toast('Renamed',()=>{r.title=old;put(r);App.refresh();});}App.refresh();after&&after();};
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();finish(true);}else if(e.key==='Escape')finish(false);});inp.addEventListener('blur',()=>finish(true));inp.addEventListener('click',e=>e.stopPropagation());inp.addEventListener('pointerdown',e=>e.stopPropagation());
+  span.replaceWith(inp);inp.focus();inp.setSelectionRange(0,inp.value.length);}
+
+/* ---------- v347 · which fields the task sheet shows ---------- */
+const SHEET_PARTS=[['notes','Notes'],['photos','Photos'],['steps','Steps'],['priority','Priority'],['part','Goal or project'],['area','Life area'],['spent','Time spent'],['fields','Status, tags and fields'],['links','Linked items']];
+const sheetHidden=()=>new Set(get.settings().sheetHide||[]);
+function sheetPartsSheet(){const H=sheetHidden();toggleOrderSheet({title:'Task sheet',items:SHEET_PARTS.map(([id,n])=>({id,hidden:H.has(id),label:n})),onDone:L=>setSettings({sheetHide:L.filter(x=>x.hidden).map(x=>x.id)})});}
+
+/* ---------- v347 · row details: what shows under task titles ---------- */
+const ROW_PARTS=[['date','Date'],['area','Life area'],['steps','Steps'],['status','Status'],['tags','Tags'],['fields','Fields marked “on rows”'],['link','Goal or project']];
+const rowShown=id=>!(get.settings().rowHide||[]).includes(id);
+
+/* ---------- v347 · icons and covers for goals, projects and lists ---------- */
+const PICK_ICONS=['target','project','star','heart','plane','car','books','coins','users','globe','leaf','spark','image','bookmark','flag','list'];
+function iconCoverBlock(D){const box=el('div',{class:'iconcov'});const draw=()=>{const P={photos:D.cover?[D.cover]:[]};box.replaceChildren(SectionLabel('Icon and cover'),el('div',{class:'cfchips'},PICK_ICONS.map(i=>el('button',{type:'button',class:'chip icchip'+(D.icon===i?' on':''),'aria-label':i,'aria-pressed':String(D.icon===i),html:ic(i,IC.sm),onclick:()=>{D.icon=D.icon===i?null:i;draw();}}))),photosEditor(P,{compact:true,onChange:()=>{D.cover=P.photos[P.photos.length-1]||null;}}));};draw();return box;}
+function coverBanner(r){return r&&r.cover&&r.cover.url?el('div',{class:'covban',style:`background-image:url("${r.cover.url}")`,role:'img','aria-label':'Cover'}):null;}

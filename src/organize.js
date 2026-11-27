@@ -188,21 +188,22 @@ function taskRow(t,dk,{late=false,date=false,doneOn=null,grouped=false}={}){
   if(t.repeat&&t.repeat.type!=='never'&&!doneOn)meta.push(el('span',{class:'omi orep',html:ic('rep',IC.xs)+esc(repeatLabel(t.repeat).replace(/^Every /,'').replace(/^day$/,'Daily').replace(/^Weekly, /,''))}));
   if(late){meta.push(el('span',{class:'olate'},lateWord(daysBetween(t.date,todayK()))));}
   if(doneOn)meta.push(`Done ${relDay(doneOn).replace(/^[A-Z](?=oday|omorrow|esterday)/,c=>c.toLowerCase())}`);
-  if(date&&!late&&!doneOn)meta.push(t.date?relDay(dk):'No date');
+  if(date&&!late&&!doneOn&&rowShown('date'))meta.push(t.date?relDay(dk):'No date');
   if(t.time!=null&&!doneOn)meta.push(el('span',{class:'otime'},fmtT(t.time)));
   if(t.dur&&!doneOn)meta.push(fmtDur(t.dur));
   if(t.deadline&&!doneOn){const dl=`Due ${relDay(t.deadline).replace(/^(Today|Tomorrow|Yesterday)$/,x=>x.toLowerCase())}`;meta.push(t.deadline<=todayK()&&!done?el('span',{class:'olate'},dl):dl);}
   if(!done&&!doneOn){const dm=depMeta(t);if(dm)meta.push(dm);}
-  if(steps.length&&!done&&!doneOn)meta.push(`${sd} of ${steps.length} steps`);
-  if(proj)meta.push(proj.title);
+  if(steps.length&&!done&&!doneOn&&rowShown('steps'))meta.push(`${sd} of ${steps.length} steps`);
+  if(proj&&rowShown('link'))meta.push(proj.title);
   if(!doneOn)tagMeta(t).forEach(x=>meta.push(x));
-  const aIco=t.area&&!grouped&&!doneOn&&meta.length?el('span',{class:'atag only',role:'img','aria-label':t.area,title:t.area,html:ic(areaIcon(t.area),IC.xs)}):null;if(t.area&&!grouped&&!doneOn&&!meta.length)meta.unshift(areaTag(t.area));
+  /* v347 · status, tags and fields */if(!doneOn)cfMeta(t).forEach(x=>meta.push(x));
+  const aIco=t.area&&rowShown('area')&&!grouped&&!doneOn&&meta.length?el('span',{class:'atag only',role:'img','aria-label':t.area,title:t.area,html:ic(areaIcon(t.area),IC.xs)}):null;if(t.area&&rowShown('area')&&!grouped&&!doneOn&&!meta.length)meta.unshift(areaTag(t.area));
   const hold=(x,y)=>itemMenu({kind:'task',id:t.id,rec:t,title:t.title,time:t.time,dur:t.dur||30,area:t.area,done},t.date&&!(t.repeat&&t.repeat.type!=='never')?t.date:dk,x,y);
   const r=el('div',{class:'li tick-host'+(done?' done':''),'data-k':'t:'+t.id+(doneOn?':d':''),style:''},
     el('span',{class:'tick-hit'},tickBtn(done,on=>{r.classList.toggle('done',on);if(!on)hideToast();setTaskDone(t,dk,on);setTimeout(()=>App.refresh(),820);}),null),
     el('button',{class:'grow',style:'text-align:left',onclick:()=>openRec(t)},el('span',{class:'tt',style:'font-weight:500'},t.priority==='high'&&!done?el('span',{class:'oflag','aria-label':'High priority',html:ic('flag',IC.xs)}):null,t.title),meta.length?el('small',{class:'ometa'},aIco,joinMeta(meta)):null),!t.date&&t.deadline&&!done&&!doneOn?el('button',{class:'oturn','aria-label':`Do ${t.title} today`,onclick:()=>{t.date=todayK();put(t);toast('Added to today',()=>{t.date=null;put(t);});}},'Today'):null);
   if(doneOn)return withPress(r,hold);
-  return swipeAct(withPress(r,hold),{right:done?null:{label:'Done',color:'var(--accent)',run:()=>{setTaskDone(t,dk,true);App.refresh();}},left:done?null:{label:'Tomorrow',color:'var(--amber)',run:()=>{/* v293 · one swipe moves it to tomorrow; hold for other days */const e={kind:'task',id:t.id,rec:t},u=snapItem(e),tk=todayK(),d=addK(tk,1);if(t.date)moveItemDay(e,dk,d);else{t.date=d;put(t);}toast('Moved to tomorrow',u);}}});
+  return swipeAct(withPress(r,hold),{right:done?null:swipeFor(t,dk,'right','done'),left:done?null:swipeFor(t,dk,'left','tomorrow')});
 }
 /* v283 · to-dos more than a month late: keep each (back to today) or drop it */
 function oldTasksSheet(list){let inst;const st=new Map(),was=new Map();inst=openSheet({title:'Still doing these?',left:{label:'Done'},build:b=>{const draw=()=>{b.innerHTML='';b.append(Caption('Keep moves it to today. Drop archives it; you can find it in Archive.',{as:'p'}),el('div',{class:'list'},list.map(t=>{const v=st.get(t.id);return Row({as:'div',cls:'oldrow'},el('span',{class:'grow'},el('b',{style:'font-weight:500'},t.title),el('small',{},v==='keep'?'Moved to today':v==='drop'?'Dropped':lateWord(daysBetween(t.date,todayK())))),v?Button('Undo',{variant:'link',size:'sm',onclick:()=>{const c=was.get(t.id);if(c){Object.assign(t,c);if(!c.archived)delete t.archived;put(t,{silent:true});}st.delete(t.id);App.refresh();draw();}}):el('span',{style:'display:flex;gap:var(--s2)'},Button('Keep',{variant:'secondary',size:'sm',onclick:()=>{was.set(t.id,{date:t.date,archived:t.archived});t.date=todayK();put(t,{silent:true});st.set(t.id,'keep');App.refresh();draw();}}),Button('Drop',{variant:'quiet',size:'sm',onclick:()=>{was.set(t.id,{date:t.date,archived:t.archived});t.archived=true;t.archivedAt=Date.now();put(t,{silent:true});st.set(t.id,'drop');App.refresh();draw();}})));})));};draw();}});}

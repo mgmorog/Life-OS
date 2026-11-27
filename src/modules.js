@@ -103,6 +103,7 @@ function goalSheet(rec,opts={}){
       if(!isEdit){const hs=get.all('habit').filter(h=>!h.part),cur=D._habit&&get.id(D._habit);if(hs.length)det.append(ctx.row('sup','habit','Supported by',null,{expand:false,tap:()=>pickOne('Supported by',[['','Nothing'],...hs.map(h=>[h.id,h.title])],D._habit||'',v=>{D._habit=v||null;render();}),trailing:el('span',{class:cur?'on':''},cur?cur.title:'A habit')}));}};
     render();
      {const cfe=cfEditor(D,'goal');if(cfe)body.append(cfe);}
+     body.append(iconCoverBlock(D));
      if(isEdit){const lb=linksBlock(rec,{onChange:()=>{inst.close();goalSheet(get.id(rec.id));}});if(lb)body.append(lb);}
     if((D.photos||[]).length)body.append(SectionLabel('Attached'),photosEditor(D));
     if(isEdit)body.append(el('button',{class:'delete',onclick:()=>archiveFlow(rec,i)},'Archive goal'));else focusIfKeyboard(T.input);}});
@@ -123,6 +124,7 @@ function projectSheet(rec,opts={}){
       ctx.areaRow(det,D);ctx.partRow(det,D,{types:['goal']});ctx.lookRows(det,D,{word:'project'});};
     render();
      {const cfe=cfEditor(D,'project');if(cfe)body.append(cfe);}
+     body.append(iconCoverBlock(D));
      if(isEdit){const lb=linksBlock(rec,{onChange:()=>{inst.close();projectSheet(get.id(rec.id));}});if(lb)body.append(lb);}
     if((D.photos||[]).length)body.append(SectionLabel('Attached'),photosEditor(D));
     if(isEdit)body.append(el('button',{class:'delete',onclick:()=>archiveFlow(rec,i)},'Archive project'));else focusIfKeyboard(T.input);}});
@@ -145,7 +147,7 @@ function viewPlan(root,id){
   const moreBtn=IconButton('Options',{cls:'green',html:sv('<circle cx="5" cy="12" r="1.8" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.8" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.8" fill="currentColor" stroke="none"/>',22),onclick:e=>statusMenu(r,e.clientX,e.clientY,isGoal)});
   const parent=r.part&&get.id(r.part);
   const sub=[r.paused?null:r.finished?(isGoal?'Achieved':'Done'):null,isGoal&&r.focus?'In focus':null].filter(Boolean).join(' · ');
-  page.append(el('header',{},el('div',{class:'pghead'},backBtn(isGoal?'Goals':'Projects',isGoal?'goals':'projects'),moreBtn),r.paused?el('div',{class:'tags',style:'margin-top:var(--s1)'},Chip('On hold',{as:'span',variant:'status',cls:'warn pill','data-hb':'1'})):null,el('h1',{class:'pgtitle',style:'margin-top:var(--s2)'},r.title),r.notes?(()=>{const w=whyLine(r.notes);if(isGoal)w.classList.add('gwhy');return w;})():null,sub?Caption(sub,{as:'div',style:'margin-top:var(--s1)'}):null));
+  page.append(el('header',{},el('div',{class:'pghead'},backBtn(isGoal?'Goals':'Projects',isGoal?'goals':'projects'),moreBtn),r.paused?el('div',{class:'tags',style:'margin-top:var(--s1)'},Chip('On hold',{as:'span',variant:'status',cls:'warn pill','data-hb':'1'})):null,coverBanner(r),el('h1',{class:'pgtitle'+(r.icon?' withic':''),style:'margin-top:var(--s2)'},r.icon?el('span',{class:'pgic',html:ic(r.icon,IC.md)}):null,r.title),r.notes?(()=>{const w=whyLine(r.notes);if(isGoal)w.classList.add('gwhy');return w;})():null,sub?Caption(sub,{as:'div',style:'margin-top:var(--s1)'}):null));
   if(isGoal){goalBody(page,r);
   }else{
     /* one card: progress, open tasks, add a task as the last row, done tasks folded; details below as rows */

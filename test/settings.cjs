@@ -128,4 +128,12 @@ const CHROME=process.env.CHROME||'/opt/pw-browsers/chromium-1243/chrome-linux64/
    ok('v346 a saved view can be a Today card',await p.evaluate(id=>!!document.querySelector(`[data-tk="v:${id}"]`)&&/View me/.test(document.querySelector(`[data-tk="v:${id}"]`).innerText),vid));
    await p.evaluate(id=>{const T=window.__lifeos.t;T.setTodayLayout(T.todayLayout().filter(x=>x.id!=='v:'+id));},vid);
    await go('more');ok('v346 More lists Views',/Views/.test(await p.evaluate(()=>document.querySelector('.page').innerText)));}
+  // v347 · row details, task sheet parts, swipe choices, rename in place
+  {await p.evaluate(()=>{const L=window.__lifeos,tk=L.todayK();L.create('task',{title:'Row test',steps:[],notes:'',photos:[],repeat:{type:'never'},priority:'normal',date:tk,area:'Home'});L.t.setSettings({rowHide:['area'],sheetHide:['notes','photos']});});
+   await go('tasks');const rt=await p.evaluate(()=>[...document.querySelectorAll('[data-k^="t:"]')].map(r=>r.innerText).join('|'));ok('v347 row details hide the area',/Row test/.test(rt)&&!/Home/.test(rt.split('|').find(x=>/Row test/.test(x))||''),rt.slice(0,200));
+   await p.evaluate(()=>[...document.querySelectorAll('[data-k^="t:"] button.grow')].find(b=>/Row test/.test(b.textContent)).click());await p.waitForTimeout(600);
+   ok('v347 task sheet hides notes and photos',await p.evaluate(()=>{const sh=[...document.querySelectorAll('.sheet')].pop();return !!sh&&/Edit task/.test(sh.innerText)&&!sh.querySelector('#f-task-notes')&&!sh.querySelector('.addphoto');}));
+   await p.evaluate(()=>document.querySelectorAll('.sheet button').forEach(b=>{if(b.textContent.trim()==='Cancel')b.click();}));await p.waitForTimeout(400);
+   await go('setpage',{id:'tasks'});const tt=await p.evaluate(()=>document.querySelector('.page').innerText);ok('v347 tasks settings: rows, sheet, swipes',/Row details/.test(tt)&&/Swipe right/.test(tt)&&/Swipe left/.test(tt),tt.slice(0,200));
+   await p.evaluate(()=>window.__lifeos.t.setSettings({rowHide:[],sheetHide:[]}));}
   ok('no page errors',!errs.length,errs);await b.close();process.exit(fails?1:0);})();

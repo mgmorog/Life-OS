@@ -59,7 +59,7 @@ function cfRow(D,f,changed){const v=D.cf[f.id],set=x=>{if(x===''||x==null||(Arra
 function applyAreaDefaults(D){const a=D.area,d=a&&(get.settings().areaDefaults||{})[a];if(!d)return D;if(d.dur&&!D.dur)D.dur=d.dur;if(d.priority&&(!D.priority||D.priority==='normal'))D.priority=d.priority;if(d.status&&!D.status)D.status=d.status;if(d.tags&&d.tags.length)D.tags=[...new Set([...(D.tags||[]),...d.tags])];return D;}
 
 /* a compact line for rows: status, tags and up to two fields marked "show on rows" */
-function cfMeta(r){const out=[];const st=stOf(r);if(st)out.push(`${st.sym?st.sym+' ':''}${st.name}`);(r.tags||[]).slice(0,3).forEach(t=>out.push(t.startsWith('@')||t.startsWith('#')?t:'#'+t));cfFor(r.kind).filter(f=>f.row).slice(0,2).forEach(f=>{const t=cfText(r,f);if(t)out.push(f.type==='rating'||f.type==='check'?`${f.name} ${t}`:t);});return out;}
+function cfMeta(r){const out=[];const rs=id=>typeof rowShown!=='function'||rowShown(id);const st=stOf(r);if(st&&rs('status'))out.push(`${st.sym?st.sym+' ':''}${st.name}`);if(rs('tags'))(r.tags||[]).slice(0,3).forEach(t=>out.push(t.startsWith('@')||t.startsWith('#')?t:'#'+t));if(rs('fields'))cfFor(r.kind).filter(f=>f.row).slice(0,2).forEach(f=>{const t=cfText(r,f);if(t)out.push(f.type==='rating'||f.type==='check'?`${f.name} ${t}`:t);});return out;}
 
 /* ---------- Settings › Fields, tags & statuses ---------- */
 function fieldsSettings(page,group,ctx){const s=get.settings();

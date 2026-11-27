@@ -4526,3 +4526,10 @@ body.sheet-open .fab.fabfloat,body:has(.sheet.open) .fab.fabfloat{opacity:0;poin
 .vwnow{position:absolute;top:0;bottom:0;width:2px;background:var(--overdue);opacity:.55}
 .danger-text{color:var(--overdue)!important}
 @media (min-width:768px){.vwcol{flex-basis:280px}}
+/* v347 · half-height pickers, covers, page icons, rename box */
+.a-half .sheet.picker{max-height:min(56vh,calc(var(--vvh,100vh) - 44px))}
+.covban{height:132px;border-radius:var(--r-card);background-size:cover;background-position:center;margin:var(--s2) 0 0}
+.pgtitle.withic{display:flex;align-items:center;gap:var(--s3)}
+.pgic{width:var(--size-40);height:var(--size-40);border-radius:var(--r-full);background:var(--selected);color:var(--accent-deep);display:grid;place-items:center;flex:none}
+.iconcov{margin-top:var(--s3)}
+.rip{font:inherit;font-weight:var(--fw-medium);border:0;border-bottom:2px solid var(--action);background:transparent;color:var(--text);padding:2px 0;width:100%;outline:none}

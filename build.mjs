@@ -8,7 +8,7 @@ import { transform, build } from 'esbuild';
 const root = new URL('.', import.meta.url).pathname;
 const target = (process.argv.find(a => a.startsWith('--target=')) || '').split('=')[1] || process.argv[process.argv.indexOf('--target') + 1] || 'artifact';
 const minify = process.env.NOMIN !== '1';
-export const ORDER = ['core', 'sheets', 'capture', 'today', 'calendar', 'studio', 'more', 'demo', 'modules', 'organize', 'assist', 'hubs', 'tools', 'tools2', 'prep', 'onboard', 'focus', 'plan', 'mods', 'mods2', 'mods3', 'fitness', 'pwa', 'dash', 'travel', 'prefs', 'fields', 'lock', 'views', 'motion', 'rewards', 'main'];
+export const ORDER = ['core', 'sheets', 'capture', 'today', 'calendar', 'studio', 'more', 'demo', 'modules', 'organize', 'assist', 'hubs', 'tools', 'tools2', 'prep', 'onboard', 'focus', 'plan', 'mods', 'mods2', 'mods3', 'fitness', 'pwa', 'dash', 'travel', 'prefs', 'fields', 'lock', 'views', 'learn', 'motion', 'rewards', 'main'];
 
 const read = p => readFileSync(root + p, 'utf8');
 // media queries can't read custom properties, so the build fills in $bp-* from the --bp-* tokens in :root

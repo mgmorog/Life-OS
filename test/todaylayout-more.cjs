@@ -213,3 +213,11 @@ global.__todayMore.push(async({ev,ok,today})=>{
   await today();let t=await ev(()=>document.querySelector('#view .page').innerText);ok('v349 mode filters Today',/Mode career task/.test(t)&&!/Mode home task/.test(t));
   await ev(()=>window.__lifeos.t.setSettings({modes:[],modeId:null}));await today();t=await ev(()=>document.querySelector('#view .page').innerText);ok('v349 no mode restores Today',/Mode home task/.test(t));
 });
+
+// v350 · the Noticed card appears on Today when a suggestion has an action, and can be turned off
+global.__todayMore.push(async({ev,ok,today})=>{
+  await ev(()=>{const L=window.__lifeos,tk=L.todayK();const t=L.create('task',{title:'Slip test card',steps:[],notes:'',photos:[],repeat:{type:'never'},priority:'normal',date:tk});t.slips=4;L.put(t);L.t.setSettings({noticedCard:true,learnAll:true});});
+  await today();ok('v350 noticed card on Today',await ev(()=>!!document.querySelector('.ncard')));
+  await ev(()=>window.__lifeos.t.setSettings({noticedCard:false}));await today();ok('v350 noticed card can be turned off',await ev(()=>!document.querySelector('.ncard')));
+  await ev(()=>window.__lifeos.t.setSettings({noticedCard:true}));
+});

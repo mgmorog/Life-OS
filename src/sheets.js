@@ -276,7 +276,7 @@ function taskSheet(rec,seed={}){
       if(isEdit)body.append(el('button',{class:'delete',onclick:()=>deleteFlow(rec,occ||null,inst)},'Delete task'));
       if(!isEdit)focusIfKeyboard(T.input);
     }});
-  function commit(){D.title=D.title.trim();D.steps=(D.steps||[]).filter(s=>s.t.trim());if(!isEdit)applyAreaDefaults(D);
+  function commit(){D.title=D.title.trim();D.steps=(D.steps||[]).filter(s=>s.t.trim());if(!isEdit){applyAreaDefaults(D);/* v350 · learned length, duplicate check */try{if(!D.dur){const ll=learnedLen(D.title);if(ll)D.dur=ll;}const dup=dupeOf(D.title,null);if(dup)setTimeout(()=>toast(`“${dup.title}” is already on your list`,()=>openRec(dup),'Open',{force:true}),600);}catch(e){}}
     /* finishing the last step in here finishes the to-do too, unless it was already all done (you reopened it on purpose) */
     if(isEdit&&!occ&&!(D.repeat&&D.repeat.type!=='never')&&D.steps.length&&D.steps.every(x=>x.d)&&!(rec.steps||[]).every(x=>x.d)){const dkx=D.date||todayK();if(!(rec.doneDates||{})[dkx]){D.doneDates=Object.assign({},rec.doneDates||D.doneDates||{},{[dkx]:Date.now()});setTimeout(()=>toast(`All steps done · ${D.title} finished`),300);}}const moved=!occ&&firstOccurrence(D,'date');if(isEdit){if(occ)return saveOcc(rec,D,occ,'date','task',()=>inst.close());saveEdit(rec,D);}else{const r=create('task',D);toast(moved?`Starts ${relDay(D.date)}`:D.date?(D.date===App.state.sel?'Task added':`Added to ${relDay(D.date)}`):'Task added',null,'Undo',{open:D.date?()=>{App.state.sel=D.date;App.state._fresh=true;App.go('today');}:dest('tasks')});seed._after&&seed._after(r);if(!seed._after&&D.date&&App.state.view==='today'&&D.date!==App.state.sel){App.state.sel=D.date;App.refresh();}}}
   return inst;

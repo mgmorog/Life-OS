@@ -351,8 +351,8 @@ async function flush(id,attempt=0){
 function flushAll(){[...dirty,...deleted].forEach(id=>flush(id));}
 addEventListener('online',flushAll);
 document.addEventListener('visibilitychange',()=>{if(document.hidden){cacheNow();flushAll();}else{App.refresh();}});
-function put(r,{silent=false}={}){try{histNote(r);}catch(e){}r.updatedAt=Date.now();if(!r.createdAt)r.createdAt=r.updatedAt;recs.set(r.id,r);deleted.delete(r.id);queueWrite(r.id);const tr='del-'+r.id;if(recs.has(tr)){recs.delete(tr);deleted.add(tr);queueWrite(tr);}if(typeof wkHook==='function')wkHook(r);if(typeof rwHook==='function')rwHook(r);if(!silent)App.refresh();return r;}
-function create(kind,fields){return put(Object.assign({id:uid(kind[0]),kind},fields));}
+function put(r,{silent=false}={}){try{learnSlip(histShadow.get(r.id),r);}catch(e){}try{histNote(r);}catch(e){}r.updatedAt=Date.now();if(!r.createdAt)r.createdAt=r.updatedAt;recs.set(r.id,r);deleted.delete(r.id);queueWrite(r.id);const tr='del-'+r.id;if(recs.has(tr)){recs.delete(tr);deleted.add(tr);queueWrite(tr);}if(typeof wkHook==='function')wkHook(r);if(typeof rwHook==='function')rwHook(r);if(!silent)App.refresh();return r;}
+function create(kind,fields){try{if(kind==='task')learnCreated(fields);}catch(e){}return put(Object.assign({id:uid(kind[0]),kind},fields));}
 const NO_TRASH=new Set(['settings','remstate','focus','plan','trashed','areanote','discover','rewards']);
 function remove(id,{silent=false,hard=false}={}){const was=recs.get(id);try{if(was)histNote(was,true);}catch(e){}if(was&&!hard&&!NO_TRASH.has(was.kind)&&!(was.f&&was.f.t==='cfg')&&!was.example){const tr={id:'del-'+id,kind:'trashed',rec:JSON.parse(JSON.stringify(was)),deletedAt:Date.now(),createdAt:Date.now(),updatedAt:Date.now()};recs.set(tr.id,tr);deleted.delete(tr.id);queueWrite(tr.id);}recs.delete(id);deleted.add(id);queueWrite(id);if(was&&typeof wkHook==='function')wkHook(was);if(was&&typeof rwHook==='function')rwHook(was,true);if(!silent)App.refresh();}
 function setSettings(patch){const cur=get.settings();try{if(typeof layoutNote==='function')layoutNote(cur,patch);}catch(e){}const s=Object.assign({},DEFAULT_SETTINGS,cur,patch);put(s);}
@@ -438,7 +438,7 @@ const habitDone=(h,dk)=>{const v=h.logs&&h.logs[dk];if(!v)return false;return h.
 function habitWeek(h,dk){const s0=habWeekStart(fromK(dk)),a=k(s0),b=k(addD(s0,6));let n=0;for(const d in(h.logs||{}))if(d>=a&&d<=b&&habitDone(h,d))n++;return n;}
 function habitPlanned(h,dk){const[a,b]=weekRange(dk);let n=0;for(const d in(h.sessions||{}))if(d>=a&&d<=b)n++;return n;}
 /* finishing a task ticks whatever steps are still open, and un-finishing puts back only those */
-function setTaskDone(r,dk,on,opts){return goalPulseAround(r,on,()=>setTaskDoneRaw(r,dk,on,opts));}
+function setTaskDone(r,dk,on,opts){if(on){try{learnDone(r);}catch(e){}}return goalPulseAround(r,on,()=>setTaskDoneRaw(r,dk,on,opts));}
 function setTaskDoneRaw(r,dk,on,{quiet=false}={}){
   if(!r.date)r.date=dk;r.doneDates=r.doneDates||{};r.autoSteps=r.autoSteps||{};const steps=r.steps||[];
   if(on){const open=steps.filter(s=>s.t&&!stepDone(r,s,dk));r.doneDates[dk]=Date.now();

@@ -4542,3 +4542,10 @@ body.sheet-open .fab.fabfloat,body:has(.sheet.open) .fab.fabfloat{opacity:0;poin
   .a-pane .scrim{background:transparent}
   .a-pane body:has(.sheet.on:not(.picker):not(.pop)) #view{padding-right:min(460px,38vw)}
 }
+/* v350 · noticed */
+.nrow{display:flex;flex-direction:column;gap:var(--s2);padding:var(--s3) var(--pad,var(--s4));border-bottom:var(--hairline) solid var(--line)}
+.nrow:last-child{border-bottom:0}
+.ntxt b{font-weight:var(--fw-medium);line-height:1.35}
+.nwhy{margin:var(--s1) 0 0}
+.nacts{display:flex;flex-wrap:wrap;gap:var(--s2) var(--s3);align-items:center}
+.ncard .nrow{padding:var(--s2) 0 0;border:0}

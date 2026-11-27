@@ -9,7 +9,7 @@ const CHROME=process.env.CHROME||'/opt/pw-browsers/chromium-1243/chrome-linux64/
   const go=async(v,o)=>{await p.evaluate(([v,o])=>window.__lifeos.App.go(v,o),[v,o]);await p.waitForTimeout(500);};
   await go('prefs');
   const hub=await p.evaluate(()=>({labels:[...document.querySelectorAll('.setbody .sectionlabel, .setbody .slabel, .setbody h2, .setbody h3')].map(n=>n.textContent.trim()),rows:[...document.querySelectorAll('.setbody .list b')].map(n=>n.textContent.trim()),icons:[...document.querySelectorAll('.setbody .list .li, .setbody .list > *')].map(r=>(r.querySelector('svg')||{}).innerHTML).filter(Boolean)}));
-  ok('hub rows',JSON.stringify(hub.rows.filter(r=>r!=='Personalized foundation'))===JSON.stringify(['Today','Tasks, habits & capture','Reviews','Planning & availability','Life areas','Fields, tags & statuses','Bottom bar','Display & motion','Rewards','Calendars','Notifications','Data & help']),hub.rows);
+  ok('hub rows',JSON.stringify(hub.rows.filter(r=>r!=='Personalized foundation'))===JSON.stringify(['Today','Tasks, habits & capture','Reviews','Planning & availability','Life areas','Fields, tags & statuses','Smart','Bottom bar','Display & motion','Rewards','Calendars','Notifications','Data & help']),hub.rows);
   ok('no two hub icons alike',new Set(hub.icons).size===hub.icons.length,hub.icons.length);
   for(const id of ['fields','today','tasks','reviews','planning','areas','display','rewards','calendar','notify','data','holidays','connect']){await go('setpage',{id});const t=await p.evaluate(()=>document.querySelector('.page h1')?.textContent||'');ok('page '+id+' renders: '+t,!!t,t);}
   await go('setpage',{id:'connect'});ok('connect → Calendars',(await p.evaluate(()=>document.querySelector('.page h1').textContent)).includes('Calendars'));
@@ -154,4 +154,10 @@ const CHROME=process.env.CHROME||'/opt/pw-browsers/chromium-1243/chrome-linux64/
    ok('v349 mode chip on Today',/Work/.test(await p.evaluate(()=>document.querySelector('.modechip')?.textContent||'')));
    await p.evaluate(()=>window.__lifeos.t.setSettings({modeId:null}));await go('today');tt=await p.evaluate(()=>document.querySelector('#view .page').innerText);ok('v349 no mode shows everything',/Home thing/.test(tt));
    await p.evaluate(()=>window.__lifeos.t.setSettings({modes:[]}));await go('setpage',{id:'data'});ok('v349 share your setup rows',/Share your setup[\s\S]*Use a setup/.test(await p.evaluate(()=>document.querySelector('.page').innerText)));}
+  // v350 · learning: Noticed page, Smart settings, slips counted, usual next step learned
+  {await go('noticed');ok('v350 Noticed page opens',/Noticed/.test(await p.evaluate(()=>document.querySelector('.page').innerText)));
+   await go('setpage',{id:'smart'});const st=await p.evaluate(()=>document.querySelector('.page').innerText);ok('v350 Smart settings list learners',/Learn from my history/.test(st)&&/Slip warning/.test(st)&&/Reset what’s been learned/.test(st),st.slice(0,200));
+   const sl=await p.evaluate(()=>{const L=window.__lifeos,tk=L.todayK();const t=L.create('task',{title:'Slippy',steps:[],notes:'',photos:[],repeat:{type:'never'},priority:'normal',date:tk});const add=n=>{const d=new Date();d.setDate(d.getDate()+n);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};for(let i=1;i<=3;i++){t.date=add(i);L.put(t);}return L.get.id(t.id).slips;});
+   ok('v350 moving a task forward counts slips',sl===3,sl);
+   await go('noticed');ok('v350 slipping task is noticed',/Slippy has moved 3 times/.test(await p.evaluate(()=>document.querySelector('.page').innerText)));}
   ok('no page errors',!errs.length,errs);await b.close();process.exit(fails?1:0);})();

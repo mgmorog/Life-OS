@@ -186,3 +186,15 @@ global.__todayMore.push(async({ev,ok,setL,today,base,W})=>{
   r=await ev(()=>({folded:document.querySelector('[data-tk=tasks]').classList.contains('folded'),note:!!document.querySelector('.notecard')}));
   ok('v339 unfold and unpin restore Today',!r.folded&&!r.note,r);
 });
+
+// v346 · a saved view as a Today card, kept by the layout cleaner and dropped when the view is deleted
+global.__todayMore.push(async({ev,ok,setL,today,base,W})=>{
+  await ev(()=>window.__lifeos.t.setSettings({views:[{id:'vt1',name:'Quick wins',src:'task',layout:'list',filter:{done:'open'},group:'none',sort:'due'}]}));
+  await setL([{id:'v:vt1'},...base]);await today();
+  let r=await ev(()=>({card:!!document.querySelector('[data-tk="v:vt1"]'),kept:window.__lifeos.t.todayLayout().some(x=>x.id==='v:vt1')}));
+  ok('v346 view card shows on Today',r.card&&r.kept,r);
+  await ev(()=>window.__lifeos.t.setSettings({views:[]}));await today();
+  r=await ev(()=>({card:!!document.querySelector('[data-tk="v:vt1"]'),kept:window.__lifeos.t.todayLayout().some(x=>x.id==='v:vt1')}));
+  ok('v346 deleting the view drops its card',!r.card&&!r.kept,r);
+  await setL(base);
+});

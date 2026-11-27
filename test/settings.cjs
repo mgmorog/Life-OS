@@ -117,4 +117,15 @@ const CHROME=process.env.CHROME||'/opt/pw-browsers/chromium-1243/chrome-linux64/
    await p.evaluate(()=>{localStorage.removeItem('lifeos-lock');window.__lifeos.t.setSettings({lockMode:'off'});});
    await go('setpage',{id:'display'});ok('v345 app lock row in Privacy',/App lock/.test(await p.evaluate(()=>document.querySelector('.page').innerText)));
    await go('setpage',{id:'data'});const dt=await p.evaluate(()=>document.querySelector('.page').innerText);ok('v345 data page has daily backups and history',/Daily backups/.test(dt)&&/Change history/.test(dt),dt.slice(0,200));}
+  // v346 · views: table, board, gallery, timeline; save, pin to Today
+  {await p.evaluate(()=>{const L=window.__lifeos,tk=L.todayK();L.t.setSettings({statuses:[{id:'s1',name:'In progress',sym:'◐'}]});const base={steps:[],notes:'',photos:[],repeat:{type:'never'},priority:'normal'};L.create('task',Object.assign({},base,{title:'View me',date:tk,deadline:tk,status:'s1',area:'Home'}));});
+   for(const lay of ['table','board','gallery','timeline']){await p.evaluate(l=>{window.__lifeos.App.state._vw=null;window.__lifeos.App.go('view',{src:'task',fresh:true,layout:l,group:l==='board'?'status':'none'});},lay);await p.waitForTimeout(400);
+     const got=await p.evaluate(l=>({t:!!document.querySelector(l==='table'?'.vwtbl':l==='board'?'.vwboard .vwcol':l==='gallery'?'.vwgal .vwcard':'.vwtl .vwbar'),txt:document.querySelector('.vwbody').innerText}),lay);ok(`v346 ${lay} view renders`,got.t&&/View me/.test(got.txt),got.txt.slice(0,120));}
+   await p.evaluate(()=>[...document.querySelectorAll('.vwfoot button')].find(b=>/Save this view/.test(b.textContent)).click());await p.waitForTimeout(400);
+   await p.fill('#f-x-n','Due soon');await p.waitForTimeout(200);await p.evaluate(()=>[...document.querySelectorAll('.sheet .sfoot-btn')].pop().click());await p.waitForTimeout(600);
+   const vid=await p.evaluate(()=>(window.__lifeos.get.id('settings').views||[]).find(v=>v.name==='Due soon')?.id);ok('v346 view saved',!!vid,vid);
+   await p.evaluate(id=>{const T=window.__lifeos.t;const L=T.todayLayout();L.splice(0,0,{id:'v:'+id});T.setTodayLayout(L);},vid);await go('today');
+   ok('v346 a saved view can be a Today card',await p.evaluate(id=>!!document.querySelector(`[data-tk="v:${id}"]`)&&/View me/.test(document.querySelector(`[data-tk="v:${id}"]`).innerText),vid));
+   await p.evaluate(id=>{const T=window.__lifeos.t;T.setTodayLayout(T.todayLayout().filter(x=>x.id!=='v:'+id));},vid);
+   await go('more');ok('v346 More lists Views',/Views/.test(await p.evaluate(()=>document.querySelector('.page').innerText)));}
   ok('no page errors',!errs.length,errs);await b.close();process.exit(fails?1:0);})();

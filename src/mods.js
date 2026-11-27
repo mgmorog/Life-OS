@@ -219,7 +219,7 @@ function tdKey(w){if(w)return w;const R=tdRaw();if(R.mode!=='byTime')return'fixe
 function tdClean(L0){const s=get.settings();let L=Array.isArray(L0)?L0.map(x=>Object.assign({},x)):null;
   if(!L){L=[{id:'tasks'},{id:'habits'},{id:'sched'}];(s.todayPins||[]).forEach(p=>L.push({id:'m:'+p,when:'always'}));L.push({id:'also'});}
   TODAY_BUILTIN.forEach(([id])=>{if(!L.some(x=>x.id===id))L.push({id});});
-  return L.filter(x=>{if(!x||!x.id)return false;if(x.id.startsWith('m:')){const[h,t]=x.id.slice(2).split('|');try{return !!toolOf(h,t);}catch(e){return false;}}return TODAY_BUILTIN.some(b=>b[0]===x.id);});}
+  return L.filter(x=>{if(!x||!x.id)return false;if(x.id.startsWith('m:')){const[h,t]=x.id.slice(2).split('|');try{return !!toolOf(h,t);}catch(e){return false;}}if(x.id.startsWith('v:'))return !!(s.views||[]).some(v=>'v:'+v.id===x.id);return TODAY_BUILTIN.some(b=>b[0]===x.id);});}
 function todayLayout(w){const R=tdRaw(),k2=tdKey(w);if(k2==='fixed'||!R.windows||!R.windows[k2])return tdClean(R.fixed);return tdClean(R.windows[k2]);}
 function tdSave(R){const all=[R.fixed,...(R.windows?TD_WINS.map(([w])=>R.windows[w]):[])].filter(Array.isArray),pins=[...new Set(all.flat().filter(x=>x&&x.id&&x.id.startsWith('m:')&&!x.hidden).map(x=>x.id.slice(2)))].slice(0,6);
   setSettings({todayLayout:R.mode==='fixed'&&!R.windows?R.fixed:{v:2,mode:R.mode,fixed:R.fixed,windows:R.windows},todayPins:pins});}

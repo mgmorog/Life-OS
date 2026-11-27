@@ -180,6 +180,7 @@ function Picker({title,items,search=null,multi=false,selected=[],onPick,recentKe
     if(note)b.append(Caption(note,{as:'p'}));
     if(useSearch)b.append(SearchField({placeholder:'Search',label:`Search ${String(title).toLowerCase()}`,cls:'psearchf',onInput:v=>{q=v;draw();}}));
     draw();b.append(box);if(footer)b.append(footer);}});try{inst.sheet.classList.add('picker');}catch(e){}
+  /* v359 · six or fewer choices open as a short sheet */try{if(its.length<=6&&!useSearch&&!multi)inst.sheet.classList.add('short');}catch(e){}
   return inst;
 }
 /* v230 · three icon weights: regular 1.8, bold 2.4 (small or active), 2.8 for the checkmark only */
@@ -769,7 +770,7 @@ const defCol=()=>{const s=get.settings(),p=PALETTES.find(x=>x[0]===(s.palette||'
 function applyTheme(){const s=get.settings(),R=document.documentElement,dark=s.mode==='dark'||(s.mode==='auto'&&matchMedia('(prefers-color-scheme: dark)').matches);
   R.dataset.mode=dark?'dark':'light';R.dataset.font=s.titleFont||'serif';R.dataset.bg=s.bgTone||'warm';R.dataset.density=s.density||'comfortable';R.dataset.labels=s.tabLabels===false?'off':'on';
   /* v337 · look: accent strength, corners, card style, body font */R.dataset.accent=s.accentStr||'standard';R.dataset.corners=s.corners||'round';R.dataset.cards=s.cardStyle||'lifted';R.dataset.body=s.bodyFont||'figtree';R.dataset.four=s.navFour?'on':'off';
-  /* v342 · Home Screen icon: iPhone reads it when you add the app */try{const li=document.querySelector('link[rel=apple-touch-icon]');if(li){const want=s.appIcon&&s.appIcon!=='sage'?`/icons/apple-touch-icon-${s.appIcon}.png`:'/icons/apple-touch-icon.png';if(li.getAttribute('href')!==want)li.setAttribute('href',want);}}catch(e){}
+  /* v342 · Home Screen icon: iPhone reads it when you add the app */try{const li=document.querySelector('link[rel=apple-touch-icon]');if(li){const ai=typeof appIconOf==='function'?appIconOf(s):(s.appIcon||'sage'),want=ai!=='sage'?`/icons/apple-touch-icon-${ai}.png`:'/icons/apple-touch-icon.png';if(li.getAttribute('href')!==want)li.setAttribute('href',want);}}catch(e){}
   const a=safeAccent(themeOf(s)),W=[255,255,255],K=[0,0,0],st=R.style,set=(k,c)=>st.setProperty(k,typeof c==='string'?c:rgb2hx(c));
   const isDefault=(s.palette||'sage')==='sage'&&!dark;
   const RAMP=[[50,W,.93],[100,W,.85],[200,W,.74],[300,W,.6],[400,W,.48],[500,W,.22],[600,null,0],[700,K,.1],[800,K,.32],[900,K,.5]];const OLD=['--accent','--accent-text','--accent-deep','--accent-soft','--accent-wash','--accent-mid','--accent-light','--accent-pale','--h0','--h1','--h2','--h3','--h4','--tint-1','--tint-3'];

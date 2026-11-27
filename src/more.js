@@ -96,7 +96,7 @@ function searchIndex(){
   get.all('resource').forEach(r=>push('Resources',r.title,r.area?`Resource · ${r.area}`:'Resource','books',()=>r.area?App.go('area',{name:r.area}):openRec(r)));
   [...userTpls(),...TEMPLATES.filter(t=>t.kind!=='upkeep')].forEach(t=>push('Templates',t.t,`${t.mine?'Your template':'Template'} · ${t.kind[0].toUpperCase()+t.kind.slice(1)}`,'books',()=>addTemplate(t)));
   Object.entries(PLACES).filter(([id])=>!['tools','discover'].includes(id)).forEach(([id,p])=>push('Pages',p.n,'Open','arrow',()=>App.go(id)));
-  SET_INDEX.forEach(([l,id])=>{const pg=SET_PAGES.find(x=>x[0]===id);push('Settings',l,`Settings › ${pg?pg[1]:id==='modules'?'Modules':id==='help'?'How Life OS works':'Settings'}`,'gear',()=>id==='help'?App.go('help'):id==='modules'?App.go('modules'):App.go('setpage',{id}),(SET_WORDS[l]||''));});
+  SET_INDEX.forEach(([l,id])=>{const pg=SET_PAGES.find(x=>x[0]===id);push('Settings',l,`Settings › ${pg?pg[1]:id==='modules'?'Modules':id==='help'?'How Life OS works':'Settings'}`,'gear',()=>id==='help'?App.go('help'):id==='modules'?App.go('modules'):(App.state.setFocus=l,App.go('setpage',{id})),(SET_WORDS[l]||''));});
   return out;
 }
 const readSearches=()=>{try{return JSON.parse(localStorage.getItem('lifeos-searches')||'[]');}catch(e){return[];}};
@@ -410,7 +410,7 @@ function importTasksSheet(){let found=null,inst;const box=el('div',{});/* v357 �
 /* v340 · More page sections: order and visibility, from Settings › Bottom bar or the foot of More */
 const MORE_SECS=[['pinned','Pinned'],['views','Main views'],['areas','Life areas'],['plan','Plan'],['saved','Saved']];
 function moreSecs(s){const L=Array.isArray(s.moreSecs)?s.moreSecs.filter(x=>MORE_SECS.some(m=>m[0]===x.id)):[];MORE_SECS.forEach(([id])=>{if(!L.some(x=>x.id===id))L.push({id,hidden:false});});return L;}
-function toggleOrderSheet({title,items,onDone}){let L=items.map(x=>Object.assign({},x)),inst;const draw=b=>{b.replaceChildren(el('div',{class:'list'},L.map((x,i)=>el('div',{class:'rorow'},Switch({on:!x.hidden,label:x.label,sub:x.hidden?'Hidden':null,onChange:v=>{x.hidden=!v;draw(b);}}),IconButton(`Move ${x.label} up`,{size:'sm',html:ic('chevu',IC.sm),disabled:i===0,onclick:()=>{[L[i-1],L[i]]=[L[i],L[i-1]];draw(b);}}),IconButton(`Move ${x.label} down`,{size:'sm',html:ic('chevd',IC.sm),disabled:i===L.length-1,onclick:()=>{[L[i+1],L[i]]=[L[i],L[i+1]];draw(b);}}),null))));};
+function toggleOrderSheet({title,items,onDone,preview=null}){let L=items.map(x=>Object.assign({},x)),inst;const draw=b=>{b.replaceChildren(...(preview?[preview(L)]:[]),el('div',{class:'list'},L.map((x,i)=>el('div',{class:'rorow'},Switch({on:!x.hidden,label:x.label,sub:x.hidden?'Hidden':null,onChange:v=>{x.hidden=!v;draw(b);}}),IconButton(`Move ${x.label} up`,{size:'sm',html:ic('chevu',IC.sm),disabled:i===0,onclick:()=>{[L[i-1],L[i]]=[L[i],L[i-1]];draw(b);}}),IconButton(`Move ${x.label} down`,{size:'sm',html:ic('chevd',IC.sm),disabled:i===L.length-1,onclick:()=>{[L[i+1],L[i]]=[L[i],L[i+1]];draw(b);}}),null))));};
   inst=openSheet({title,left:{label:'Cancel'},right:{label:'Done',onclick:()=>{inst.close();onDone(L);}},build:b=>draw(b)});}
 function moreEditSheet(){toggleOrderSheet({title:'More page',items:moreSecs(get.settings()).map(x=>({id:x.id,hidden:!!x.hidden,label:MORE_SECS.find(m=>m[0]===x.id)[1]})),onDone:L=>setSettings({moreSecs:L.map(x=>({id:x.id,hidden:!!x.hidden}))})});}
 /* v340 · the + button: what a tap does and what the hold menu lists */

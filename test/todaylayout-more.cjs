@@ -142,7 +142,8 @@ global.__todayMore.push(async({p,ev,ok,set,today,W})=>{
   await set({hdIcons:['inbox']});await today();ok('v315 ring hides when turned off',!(await ev(()=>!!document.querySelector('.dring'))));
   /* v358 · every card on Today is switched in Settings › Today, and only there */
   await ev(()=>window.__lifeos.App.go('setpage',{id:'today'}));await p.waitForTimeout(400);{const tx=await ev(()=>document.querySelector('.page').innerText);
-    ok('v358 Today settings own the Today cards',['Morning plan','Evening','Shut down from','Fill the gap','Someday check','This time last year','Review day card','Swipe between days'].every(x=>tx.includes(x)),tx.slice(0,400));}
+    ok('v359 Today settings open with a live preview and Nudges/Moments',/Preview · changes as you set things below/.test(tx)&&/Nudges/.test(tx)&&/Moments/.test(tx),tx.slice(0,300));
+    ok('v358 Today settings own the Today cards',['Morning plan','Evening','Shut down from','Fill the gap','Someday check','This time last year','Review day card','Swipe between days','Weather on Today'].every(x=>tx.includes(x)),tx.slice(0,400));}
   await ev(()=>window.__lifeos.App.go('setpage',{id:'planning'}));await p.waitForTimeout(400);{const tx=await ev(()=>document.querySelector('.page').innerText);ok('v358 Planning no longer repeats them',!/Morning plan|Evening shutdown|Fill the gap|What if/.test(tx),tx.slice(0,300));}
   await set({hdIcons:null});await today();
 

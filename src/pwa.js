@@ -78,7 +78,7 @@ const PWA={
       /* v324 · one "What to send" list, time rows like the rest of Settings */
       {const gw=group('What to send'),hn=s.habitNudge||{},dg=s.digest||{};
         if(!on)gw.append(Row({as:'div',style:'display:block;padding-block:var(--s3)'},el('small',{style:'white-space:normal'},'These need Reminders when the app is closed, above.')));
-        setToggle(ctx,gw,null,'Evening habit nudge','Habits still open that day. Nothing if they’re all done.',hn.on!==false,v=>{setSettings({habitNudge:{...hn,on:v}});App.refresh();});
+        setToggle(ctx,gw,null,'Evening habit nudge','Habits still open. Skipped if all done.',hn.on!==false,v=>{setSettings({habitNudge:{...hn,on:v}});App.refresh();});
         if(hn.on!==false){const t=hn.time!=null?hn.time:1200;gw.append(condRow(setRow('Send the nudge at',null,fmtT(t),()=>clockSheet('Evening habit nudge',t,m=>setSettings({habitNudge:{...(get.settings().habitNudge||{}),time:m}})))));}
         setToggle(ctx,gw,null,'Morning digest','Your Top 3, first commitment and habits',!!dg.on,v=>{setSettings({digest:{...dg,on:v}});App.refresh();});
         if(dg.on){const t=dg.time!=null?dg.time:450;gw.append(condRow(setRow('Send the digest at','Tomorrow: '+digestText(addK(todayK(),1)),fmtT(t),()=>clockSheet('Morning digest',t,m=>setSettings({digest:{...(get.settings().digest||{}),on:true,time:m}})))));}
@@ -90,7 +90,7 @@ const PWA={
         setToggle(ctx,g2,null,'New ideas in the Inbox','Counted until you open the Inbox',s.badgeIdeas!==false,v=>{setSettings({badgeIdeas:v});this.badge();});}
     }else if(id==='calendar'){
       const g=group('On your iPhone calendar');
-      if(!s.icsToken){g.append(setRow('Show Life OS in Apple Calendar','Your blocks, timed tasks and all-day items, updated about every hour',null,()=>{setSettings({icsToken:this.newToken(),icsAdded:false});this.afterChange();}));}
+      if(!s.icsToken){g.append(setRow('Show Life OS in Apple Calendar','Blocks, timed tasks and all-day items, hourly',null,()=>{setSettings({icsToken:this.newToken(),icsAdded:false});this.afterChange();}));}
       else{const url=this.feedUrl(s.icsToken);
         const markF=()=>setSettings({icsAdded:true,foundation:{...(get.settings().foundation||{}),calendar:true}});
         const added=s.icsAdded===true||(s.icsAdded==null&&!!s.icsToken);/* links made before v66 were already subscribed */

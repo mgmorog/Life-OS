@@ -268,12 +268,13 @@ function taskSheet(rec,seed={}){
         if(isEdit&&D.part&&(get.id(D.part)||{}).kind==='project')details.append(ctx.row('dep','layers','Waits for',blockedBy(rec).length?`${blockedBy(rec).length} task${blockedBy(rec).length>1?'s':''}`:depsOf(rec).length?'All done':'Nothing',{tap:()=>{inst.close();depSheet(rec);}}));
       };
       ctxRender();
+      /* v343 · status, tags and your fields */{const cfe=cfEditor(D,'task');if(cfe)body.append(cfe);}
       if(isEdit&&isOpenTask(rec))body.append(Button([el('span',{style:'display:grid',html:ic('play',IC.sm)}),frNow()&&frNow().id===rec.id?'Back to the timer':'Start focus'],{variant:'secondary',full:true,style:'margin-top:var(--s2)',onclick:()=>{inst.close();frNow()&&frNow().id===rec.id?App.go('timer'):focusLenSheet(rec);}}));
       if(isEdit){const dk=occ||rec.date||todayK(),dn=isDone(rec,dk);body.append(Button([el('span',{style:'display:grid',html:ic(dn?'undo':'check',IC.sm)}),dn?'Mark not done':'Mark done'],{variant:'secondary',full:true,style:'margin-top:var(--s2)',onclick:()=>{setTaskDone(rec,dk,!dn,{quiet:true});inst.close();App.refresh();toast(dn?'Marked not done':'Done',()=>{setTaskDone(rec,dk,dn,{quiet:true});App.refresh();});}}));}
       if(isEdit)body.append(el('button',{class:'delete',onclick:()=>deleteFlow(rec,occ||null,inst)},'Delete task'));
       if(!isEdit)focusIfKeyboard(T.input);
     }});
-  function commit(){D.title=D.title.trim();D.steps=(D.steps||[]).filter(s=>s.t.trim());
+  function commit(){D.title=D.title.trim();D.steps=(D.steps||[]).filter(s=>s.t.trim());if(!isEdit)applyAreaDefaults(D);
     /* finishing the last step in here finishes the to-do too, unless it was already all done (you reopened it on purpose) */
     if(isEdit&&!occ&&!(D.repeat&&D.repeat.type!=='never')&&D.steps.length&&D.steps.every(x=>x.d)&&!(rec.steps||[]).every(x=>x.d)){const dkx=D.date||todayK();if(!(rec.doneDates||{})[dkx]){D.doneDates=Object.assign({},rec.doneDates||D.doneDates||{},{[dkx]:Date.now()});setTimeout(()=>toast(`All steps done · ${D.title} finished`),300);}}const moved=!occ&&firstOccurrence(D,'date');if(isEdit){if(occ)return saveOcc(rec,D,occ,'date','task',()=>inst.close());saveEdit(rec,D);}else{const r=create('task',D);toast(moved?`Starts ${relDay(D.date)}`:D.date?(D.date===App.state.sel?'Task added':`Added to ${relDay(D.date)}`):'Task added',null,'Undo',{open:D.date?()=>{App.state.sel=D.date;App.state._fresh=true;App.go('today');}:dest('tasks')});seed._after&&seed._after(r);if(!seed._after&&D.date&&App.state.view==='today'&&D.date!==App.state.sel){App.state.sel=D.date;App.refresh();}}}
   return inst;

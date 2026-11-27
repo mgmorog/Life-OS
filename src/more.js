@@ -79,7 +79,7 @@ function editPins(){const s=get.settings();orderSheet({title:'Edit pinned',init:
 /* search */
 function searchIndex(){
   const out=[];const push=(type,t,sub,icon,go,n,m)=>out.push(Object.assign({type,t:t||'',sub,icon,go,n:n||''},m||{}));const cd=r=>r.createdAt?k(new Date(r.createdAt)):null;
-  get.all('task').forEach(r=>push('Tasks',r.title,`${r.date?relDay(r.date):'No date'}${r.area?' · '+r.area:''}`,'task',()=>openRec(r),r.notes,{a:r.area,d:r.date||cd(r)}));
+  get.all('task').forEach(r=>push('Tasks',r.title,`${r.date?relDay(r.date):'No date'}${r.area?' · '+r.area:''}`,'task',()=>openRec(r),[r.notes,(r.tags||[]).join(' '),Object.values(r.cf||{}).filter(v=>typeof v==='string'||typeof v==='number').join(' '),(stOf(r)||{}).name].filter(Boolean).join(' '),{a:r.area,d:r.date||cd(r)}));
   [...get.all('block'),...get.all('allday')].forEach(r=>push('Calendar',r.title,`${relDay(r.date||r.start)}${r.kind==='block'?' · '+fmtT(r.start):''}`,'cal',()=>openRec(r),r.notes,{a:r.area,d:r.date||r.start}));
   get.all('habit').forEach(r=>push('Habits',r.title,`${r.target} times a week`,'habit',()=>openRec(r),r.notes,{a:r.area,d:cd(r)}));
   get.all('goal').forEach(r=>push('Goals',r.title,r.area||'Goal','target',()=>openRec(r),r.notes,{a:r.area,d:cd(r)}));

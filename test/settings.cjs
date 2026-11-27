@@ -9,9 +9,9 @@ const CHROME=process.env.CHROME||'/opt/pw-browsers/chromium-1243/chrome-linux64/
   const go=async(v,o)=>{await p.evaluate(([v,o])=>window.__lifeos.App.go(v,o),[v,o]);await p.waitForTimeout(500);};
   await go('prefs');
   const hub=await p.evaluate(()=>({labels:[...document.querySelectorAll('.setbody .sectionlabel, .setbody .slabel, .setbody h2, .setbody h3')].map(n=>n.textContent.trim()),rows:[...document.querySelectorAll('.setbody .list b')].map(n=>n.textContent.trim()),icons:[...document.querySelectorAll('.setbody .list .li, .setbody .list > *')].map(r=>(r.querySelector('svg')||{}).innerHTML).filter(Boolean)}));
-  ok('hub rows',JSON.stringify(hub.rows.filter(r=>r!=='Personalized foundation'))===JSON.stringify(['Today','Tasks, habits & capture','Reviews','Planning & availability','Life areas','Bottom bar','Display & motion','Rewards','Calendars','Notifications','Data & help']),hub.rows);
+  ok('hub rows',JSON.stringify(hub.rows.filter(r=>r!=='Personalized foundation'))===JSON.stringify(['Today','Tasks, habits & capture','Reviews','Planning & availability','Life areas','Fields, tags & statuses','Bottom bar','Display & motion','Rewards','Calendars','Notifications','Data & help']),hub.rows);
   ok('no two hub icons alike',new Set(hub.icons).size===hub.icons.length,hub.icons.length);
-  for(const id of ['today','tasks','reviews','planning','areas','display','rewards','calendar','notify','data','holidays','connect']){await go('setpage',{id});const t=await p.evaluate(()=>document.querySelector('.page h1')?.textContent||'');ok('page '+id+' renders: '+t,!!t,t);}
+  for(const id of ['fields','today','tasks','reviews','planning','areas','display','rewards','calendar','notify','data','holidays','connect']){await go('setpage',{id});const t=await p.evaluate(()=>document.querySelector('.page h1')?.textContent||'');ok('page '+id+' renders: '+t,!!t,t);}
   await go('setpage',{id:'connect'});ok('connect → Calendars',(await p.evaluate(()=>document.querySelector('.page h1').textContent)).includes('Calendars'));
   await go('setpage',{id:'notify'});const nt=await p.evaluate(()=>document.querySelector('.page').innerText);ok('notify has no duplicate on-Today toggles',!/Goal check-ins\n|Inbox nudge\n/.test(nt),nt);
   await go('setpage',{id:'tasks'});const tt=await p.evaluate(()=>document.querySelector('.page').innerText);ok('tasks has focus timer + check-in notes',/Focus timer/i.test(tt)&&/Check-in notes/.test(tt)&&/Timer chime/.test(tt));
@@ -84,4 +84,14 @@ const CHROME=process.env.CHROME||'/opt/pw-browsers/chromium-1243/chrome-linux64/
    const id2=await p.evaluate(()=>{const L=window.__lifeos;return L.create('task',{title:'Water plants',date:L.todayK(),time:700,reminder:0}).id;});
    await p.evaluate(([id,tk])=>{location.hash='rem?k='+encodeURIComponent(id+'|'+tk)+'&do=done';},[id2,tk]);await p.waitForTimeout(900);
    ok('v341 the notification Done button finishes it',await p.evaluate(([id,tk])=>!!(window.__lifeos.get.id(id).doneDates||{})[tk],[id2,tk]));}
+  // v343 · fields, statuses, tags, formulas, area defaults
+  await p.evaluate(()=>window.__lifeos.t.setSettings({fields:[{id:'fc',name:'Cost',type:'money',on:['task'],row:true},{id:'fv',name:'Visits',type:'number',on:['task']},{id:'fp',name:'Per visit',type:'formula',expr:'{Cost} / {Visits}',fmt:'money',on:['task'],row:true}],statuses:[{id:'s1',name:'Waiting',sym:'⏸'}],tagGroups:[{id:'g1',name:'Context',tags:['@home','@office']}],areaDefaults:{Health:{dur:45,priority:'high',tags:['@home']}}}));
+  {const id=await p.evaluate(()=>{const L=window.__lifeos;return L.create('task',{title:'Gym membership',steps:[],notes:'',photos:[],repeat:{type:'never'},priority:'normal',date:L.todayK(),cf:{fc:45,fv:9},status:'s1',tags:['@home']}).id;});
+   await go('today');const row=await p.evaluate(()=>[...document.querySelectorAll('.trow')].map(r=>r.innerText).join(' '));ok('v343 rows show status, tags, fields and formula',/Waiting/.test(row)&&/@home/.test(row)&&/\$5\b/.test(row),row);
+   await p.evaluate(()=>[...document.querySelectorAll('.trow .t')].find(b=>/Gym/.test(b.textContent)).click());await p.waitForTimeout(700);
+   const sh=await p.evaluate(()=>document.querySelector('.sheet .cfbox')?.innerText||'');ok('v343 task sheet edits status, tags and fields',/Status/.test(sh)&&/Context/.test(sh)&&/Per visit/.test(sh),sh.slice(0,200));
+   await p.evaluate(()=>document.querySelectorAll('.sheet button').forEach(b=>{if(b.textContent.trim()==='Cancel')b.click();}));await p.waitForTimeout(400);
+   await go('setpage',{id:'fields'});const ft=await p.evaluate(()=>document.querySelector('.page').innerText);ok('v343 fields page lists fields, statuses, tags and area defaults',/Per visit/.test(ft)&&/Waiting/.test(ft)&&/Context/.test(ft)&&/45m · High · @home/.test(ft),ft.slice(0,300));
+   await go('search');await p.fill('.searchbox input, #q','@home');await p.waitForTimeout(400);ok('v343 search finds tags',/Gym membership/.test(await p.evaluate(()=>document.querySelector('.page').innerText)));
+   await p.evaluate(()=>window.__lifeos.t.setSettings({fields:[],statuses:[],tagGroups:[],areaDefaults:{}}));}
   ok('no page errors',!errs.length,errs);await b.close();process.exit(fails?1:0);})();

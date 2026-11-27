@@ -46,6 +46,7 @@ function habitSheet(rec,seed={}){
       track.append(Caption(D.track==='check'?'On Today: a circle you tick.':D.track==='count'?`On Today: 0 of ${D.goalN}${D.unit?' '+D.unit:''}, with a +1 button.`:`On Today: 0 of ${D.goalN} min, with a Log button.`,{as:'p',style:'margin:var(--s2) var(--s1) 0'}));
       ctx.partRow(det,D,{types:['goal']});ctx.areaRow(det,D);ctx.lookRows(det,D,{word:'habit'});};
     render();
+     {const cfe=cfEditor(D,'habit');if(cfe)body.append(cfe);}
     if((D.photos||[]).length)body.append(SectionLabel('Attached'),photosEditor(D));
     if(isEdit)body.append(el('button',{class:'delete',onclick:()=>archiveFlow(rec,i)},'Archive habit'));else focusIfKeyboard(T.input);
   }});
@@ -100,6 +101,7 @@ function goalSheet(rec,opts={}){
       ctx.areaRow(det,D);
       if(!isEdit){const hs=get.all('habit').filter(h=>!h.part),cur=D._habit&&get.id(D._habit);if(hs.length)det.append(ctx.row('sup','habit','Supported by',null,{expand:false,tap:()=>pickOne('Supported by',[['','Nothing'],...hs.map(h=>[h.id,h.title])],D._habit||'',v=>{D._habit=v||null;render();}),trailing:el('span',{class:cur?'on':''},cur?cur.title:'A habit')}));}};
     render();
+     {const cfe=cfEditor(D,'goal');if(cfe)body.append(cfe);}
     if((D.photos||[]).length)body.append(SectionLabel('Attached'),photosEditor(D));
     if(isEdit)body.append(el('button',{class:'delete',onclick:()=>archiveFlow(rec,i)},'Archive goal'));else focusIfKeyboard(T.input);}});
   function commit(){D.title=D.title.trim();D.steps=(D.steps||[]).filter(s=>s.t.trim());if(isEdit){Object.assign(rec,D);put(rec);toast('Saved');}else{const hb=D._habit;delete D._habit;const r=create('goal',D);if(hb){const h=get.id(hb);if(h){h.part=r.id;put(h,{silent:true});}}toast('Goal added',null,'Undo',{open:dest('plan',{id:r.id})});opts.after&&opts.after(r);}}
@@ -118,6 +120,7 @@ function projectSheet(rec,opts={}){
       if(has&&ctx.open==='dead')when.append(ctx.panel('dead','wide',ctx.calendar(D.deadline,dk=>{if(dk){D.deadline=dk;ctx.open=null;render();}})));
       ctx.areaRow(det,D);ctx.partRow(det,D,{types:['goal']});ctx.lookRows(det,D,{word:'project'});};
     render();
+     {const cfe=cfEditor(D,'project');if(cfe)body.append(cfe);}
     if((D.photos||[]).length)body.append(SectionLabel('Attached'),photosEditor(D));
     if(isEdit)body.append(el('button',{class:'delete',onclick:()=>archiveFlow(rec,i)},'Archive project'));else focusIfKeyboard(T.input);}});
   function commit(){D.title=D.title.trim();const st=(D.steps||[]).filter(s=>s.t.trim());D.steps=[];if(isEdit){Object.assign(rec,D);put(rec);toast('Saved');}else{const r=create('project',D);st.forEach((s,n)=>put({id:uid('t'),kind:'task',title:s.t,notes:'',steps:[],date:null,time:null,repeat:{type:'never',end:null},reminder:null,deadline:null,priority:'normal',part:r.id,area:r.area,order:n},{silent:true}));App.refresh();toast('Project added',null,'Undo',{open:dest('plan',{id:r.id})});opts.after&&opts.after(r);}}

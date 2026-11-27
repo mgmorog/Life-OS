@@ -335,7 +335,7 @@ function countUp(root){
   root.querySelectorAll('.dstat .val,.bign .n,.stat3 b,[data-count]').forEach((n,idx)=>{
     const tn=[...n.childNodes].find(c=>c.nodeType===3&&/\d/.test(c.nodeValue));if(!tn)return;const raw=tn.nodeValue,m=raw.match(/-?[\d,]*\.?\d+/);if(!m)return;
     const target=parseFloat(m[0].replace(/,/g,'')),dec=(m[0].split('.')[1]||'').length,comma=m[0].includes(','),pre=raw.slice(0,m.index),post=raw.slice(m.index+m[0].length);if(!isFinite(target)||target===0)return;
-    const fmt=v=>{let s=v.toFixed(dec);if(comma)s=Number(s).toLocaleString(undefined,{minimumFractionDigits:dec,maximumFractionDigits:dec});return pre+s+post;};
+    const fmt=v=>{let s=v.toFixed(dec);if(comma)s=Number(s).toLocaleString(numLoc(),{minimumFractionDigits:dec,maximumFractionDigits:dec});return pre+s+post;};
     const t0=performance.now()+idx*70,d=850;tn.nodeValue=fmt(0);
     const step=t=>{const k=Math.max(0,Math.min(1,(t-t0)/d)),e=1-Math.pow(1-k,3);tn.nodeValue=k>=1?raw:fmt(target*e);if(k<1&&tn.isConnected)requestAnimationFrame(step);};requestAnimationFrame(step);
   });

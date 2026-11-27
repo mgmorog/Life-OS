@@ -4371,3 +4371,8 @@ textarea.big.gstep{font-size:var(--fs-row);font-family:inherit}
 .nvp small{font-size:var(--fs-label,11px);color:var(--ink-3)}
 .nvp.empty i{border-radius:50%;border:1.5px dashed var(--line-strong)}
 .nvplus{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:var(--action);color:var(--on-action)}
+
+/* v331 · Reduce transparency: no frosted glass anywhere */
+.a-solid .nav,.a-solid .mini,.a-solid .commitbar{background:var(--surface)!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+.a-solid .cscrim,.a-solid .cscrim.on{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+.a-solid *{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}

@@ -143,7 +143,7 @@ function yirStats(y){const a=`${y}-01-01`,b=`${y}-12-31`,cnt=(hub,tool,f=x=>inYe
 function vYir(page,hub,t){const S=App.state,y=S.yirYear||today().getFullYear(),st=yirStats(y);
   page.append(pageHead(`${y} in review`,y===today().getFullYear()?'So far this year':null,{back:hub,to:'area',actions:el('div',{style:'display:flex;gap:var(--s1)'},IconButton('Previous year',{html:ic('chevl',IC.md),onclick:()=>{S.yirYear=y-1;App.refresh();}}),y<today().getFullYear()?IconButton('Next year',{html:ic('chevr',IC.md),onclick:()=>{S.yirYear=y+1;App.refresh();}}):null)}));
   if(!st.length){page.append(el('div',{class:'list'},emptyState('Nothing logged in '+y,'As you finish tasks, log workouts and read books, your year fills in here.')));return;}
-  page.append(StatRow(st.map(([l2,v])=>[Number(v).toLocaleString(),l2]),{cls:'yirgrid',size:'lg'}));
+  page.append(StatRow(st.map(([l2,v])=>[Number(v).toLocaleString(numLoc()),l2]),{cls:'yirgrid',size:'lg'}));
   page.append(Button([el('span',{style:'display:grid',html:ic('play',IC.sm)}),`Play your ${y}`],{variant:'link',style:'justify-self:start',onclick:()=>rwYearStory(y)}));
   if(S._yirPlay){S._yirPlay=false;setTimeout(()=>rwYearStory(y),450);}
   {const hc=yirHighlightsCard(y);if(hc)page.append(hc);}
@@ -193,7 +193,7 @@ async function yirImage(y){const H=yirHighlights(y),W=1080,Hh=1350,c=document.cr
   g.font='500 34px Inter, system-ui, sans-serif';g.fillStyle='rgba(255,255,255,.72)';g.fillText(y===today().getFullYear()?'So far this year':'The whole year',94,272);
   const cells=[[H.tasks,'tasks done'],[H.streak?H.streak.n:0,H.streak?`${H.streak.weekly?'week':'day'} best streak · ${H.streak.name}`:'day best streak'],[H.workouts,'workouts'],[H.goals,'goals reached']].filter(x=>x[0]>0).slice(0,4);
   cells.forEach(([n,l],i)=>{const x=90+(i%2)*460,yy=360+Math.floor(i/2)*300;g.fillStyle='rgba(255,255,255,.09)';const r=36;g.beginPath();g.roundRect?g.roundRect(x,yy,430,260,r):g.rect(x,yy,430,260);g.fill();
-    g.fillStyle='#fff';g.font='600 104px Inter, system-ui, sans-serif';g.fillText(Number(n).toLocaleString(),x+40,yy+140);g.fillStyle='rgba(255,255,255,.75)';g.font='500 32px Inter, system-ui, sans-serif';const lab=l.length>26?l.slice(0,25)+'…':l;g.fillText(lab,x+40,yy+200);});
+    g.fillStyle='#fff';g.font='600 104px Inter, system-ui, sans-serif';g.fillText(Number(n).toLocaleString(numLoc()),x+40,yy+140);g.fillStyle='rgba(255,255,255,.75)';g.font='500 32px Inter, system-ui, sans-serif';const lab=l.length>26?l.slice(0,25)+'…':l;g.fillText(lab,x+40,yy+200);});
   let ly=360+Math.ceil(cells.length/2)*300+60;g.font='500 38px Inter, system-ui, sans-serif';
   if(H.month){g.fillStyle='rgba(255,255,255,.7)';g.fillText('Busiest month',94,ly);g.fillStyle='#fff';g.fillText(MONL[H.month.m],420,ly);ly+=64;}
   if(H.areas){g.fillStyle='rgba(255,255,255,.7)';g.fillText('Most time',94,ly);g.fillStyle='#fff';g.fillText(H.areas.join(' and '),420,ly);ly+=64;}

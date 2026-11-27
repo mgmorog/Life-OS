@@ -116,7 +116,7 @@ function vWorkoutRun(page,hub,t,c){
 /* a logged workout: what you did, set by set */
 function wkLogView(x){const hub='Health',t=toolOf?toolOf(hub,'workouts'):null;let inst;
   inst=openSheet({title:x.f.what,left:{label:'Close'},right:{label:'Edit',onclick:()=>{inst.close();entrySheet(hub,toolOf(hub,'workouts'),x);}},build:b=>{
-    b.append(Caption([shortDay(x.f.date),x.f.min?`${x.f.min} min`:null,x.f.sets?`${x.f.sets} sets`:null,x.f.vol?`${Math.round(x.f.vol).toLocaleString()} lb lifted`:null,x.f.feel||null].filter(Boolean).join(' · '),{as:'p'}));
+    b.append(Caption([shortDay(x.f.date),x.f.min?`${x.f.min} min`:null,x.f.sets?`${x.f.sets} sets`:null,x.f.vol?`${Math.round(x.f.vol).toLocaleString(numLoc())} lb lifted`:null,x.f.feel||null].filter(Boolean).join(' · '),{as:'p'}));
     (x.f.log||[]).forEach(e=>{let n=0;b.append(SectionLabel(e.name),el('div',{class:'list'},e.p?Row({as:'div',style:''},el('small',{class:'muted'},[e.p,...(e.s||[])].join(' · '))):null,e.sets.map(s=>{if(s.t!=='w')n++;return Row({as:'div',style:''},el('span',{class:'nb sty t-'+s.t,style:'width:var(--size-32)'},s.t==='n'?String(n):SET_T[s.t][0]),el('span',{class:'grow'},`${s.w!==''&&s.w!=null&&+s.w?`${s.w} lb × `:''}${s.r||0} reps`),s.t!=='n'?el('small',{class:'muted'},SET_T[s.t][1]):null);})));});}});}
 
 /* ---------- muscles and routine balance, last 30 days ---------- */

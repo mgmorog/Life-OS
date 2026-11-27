@@ -5,7 +5,9 @@ const PLACES={
  reviews:{n:'Reviews',i:'clip',g:'reflect'},insights:{n:'Insights',i:'chart',g:'reflect'},discover:{n:'Discover',i:'compass'},tools:{n:'Tools & Resources',i:'books'},archive:{n:'Archive',i:'archive'},areas:{n:'Life Areas',i:'heart'},
  today:{n:'Today',i:'sun'},studio:{n:'Studio',i:'layers'},calendar:{n:'Calendar',i:'cal'},
 };
-const backBtn=(label='More',to='more')=>{const st=App.state.stack||[],top=st[st.length-1];if(top&&top.t&&top.view!==App.state.view)label=top.t;return el('button',{class:'back',onclick:()=>App.back(to),html:ic('chevl',IC.md)+`<span class="clip">${esc(label)}</span>`});};
+/* v325 · the page you came from, even when it's the same kind of page */
+function sameSpot(a,b){if(!a||!b||a.view!==b.view)return false;try{return JSON.stringify(a.params||{})===JSON.stringify(b.params||{});}catch(e){return true;}}
+const backBtn=(label='More',to='more')=>{const st=App.state.stack||[];let i=st.length-1;while(i>=0&&sameSpot(st[i],App.state))i--;const top=st[i];if(top&&top.t)label=top.t;return el('button',{class:'back',onclick:()=>App.back(to),html:ic('chevl',IC.md)+`<span class="clip">${esc(label)}</span>`});};
 /* module pages show their icon beside the title, the same icon used for them in lists, so the two are learned together */
 const titleIc=i=>el('span',{class:'tic','aria-hidden':'true',html:ic(i,IC.lg)});
 /* page titles stand on their own; the icon tile beside them only repeated the name */

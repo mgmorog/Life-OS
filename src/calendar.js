@@ -219,7 +219,7 @@ function filterSheet(opts={}){
         g.append(ctx.row('lw','sun','Lighter weekends',null,{expand:false,trailing:ctx.sw(cap.lightWeekends,'Lighter weekends',on=>{cap.lightWeekends=on;draw();})}));
         const st=weekStartOf(today());
         const prev=el('div',{class:'heat-row','aria-label':'Preview of this week'},Array.from({length:7},(_,i)=>{const d=addD(st,i),dk=k(d),it=dayItems(dk),v=cap.mode==='hours'?it.timed.reduce((n,e)=>n+(e.dur||30),0)/60:it.timed.length+it.anytime.length,wk=[0,6].includes(d.getDay())&&cap.lightWeekends?.5:1,l=levelOf(v,full*wk);return el('span',{class:'heat '+(l?'l'+l:''),'data-preview':l},el('span',{class:'hn'},String(d.getDate())));}));
-        wrap.append(Caption('How much makes a day look full on the heat map. Nothing changes until you tap Done.',{as:'p'}),g,SectionLabel('This week'),prev,
+        wrap.append(Caption('How much makes a day look full on the heat map. Nothing changes until you tap Save.',{as:'p'}),g,SectionLabel('This week'),prev,
           el('div',{class:'heat-key',style:'justify-content:flex-start;gap:var(--s2) var(--s3)'},capLabels(full,unit).map(([v,t])=>el('span',{style:'display:inline-flex;gap:var(--s2);align-items:center'},el('i',{style:`background:var(${v})`}),t))));
         box.append(wrap);
       }

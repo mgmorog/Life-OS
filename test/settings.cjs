@@ -27,5 +27,12 @@ const CHROME=process.env.CHROME||'/opt/pw-browsers/chromium-1243/chrome-linux64/
   await p.evaluate(()=>window.__lifeos.t.setSettings({rvHabits:false,rvNumbers:false}));await go('review');const rr=await p.evaluate(()=>document.querySelector('.page').innerText);
   ok('v322 turned-off sections leave the review',!/Habits this week/.test(rr),rr.slice(0,300));
   await p.evaluate(()=>window.__lifeos.t.setSettings({rvHabits:true,rvNumbers:true}));
+  // v325 · back returns to the page you came from, even between two setpages
+  await go('prefs');await go('setpage',{id:'planning'});await go('setpage',{id:'holidays'});
+  const lab=await p.evaluate(()=>document.querySelector('#view .back').textContent.trim());ok('v325 back label names Planning',/Planning/.test(lab),lab);
+  await p.evaluate(()=>document.querySelector('#view .back').click());await p.waitForTimeout(500);
+  let h1=await p.evaluate(()=>document.querySelector('.page h1').textContent);ok('v325 back from Holidays lands on Planning',/Planning/.test(h1),h1);
+  await p.evaluate(()=>document.querySelector('#view .back').click());await p.waitForTimeout(500);
+  h1=await p.evaluate(()=>document.querySelector('.page h1').textContent);ok('v325 then back to Settings',/Settings/.test(h1),h1);
   await p.screenshot({path:'/tmp/set-hub.png'});
   ok('no page errors',!errs.length,errs);await b.close();process.exit(fails?1:0);})();

@@ -25,6 +25,20 @@ export function parseMeta(html, base) {
   return { title: title.slice(0, 200), site: site.slice(0, 80), icon };
 }
 
+/* v356 · recipe import: reads schema.org Recipe data (JSON-LD) from a public recipe page */
+const isoMin = s => { const m = /P(?:T)?(?:(\d+)H)?(?:(\d+)M)?/i.exec(String(s || '')); return m ? (+(m[1] || 0)) * 60 + (+(m[2] || 0)) : null; };
+const txt = x => typeof x === 'string' ? decode(x.replace(/<[^>]+>/g, ' ')) : x && x.text ? decode(String(x.text).replace(/<[^>]+>/g, ' ')) : '';
+export function parseRecipe(html) {
+  const found = [];
+  for (const m of html.matchAll(/<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)) {
+    try { const j = JSON.parse(m[1].trim()); const walk = o => { if (!o) return; if (Array.isArray(o)) return o.forEach(walk); if (typeof o !== 'object') return; const t = o['@type']; if (t === 'Recipe' || (Array.isArray(t) && t.includes('Recipe'))) found.push(o); if (o['@graph']) walk(o['@graph']); }; walk(j); } catch (e) {}
+  }
+  const r = found[0]; if (!r) return null;
+  const steps = []; const addStep = s => { if (!s) return; if (Array.isArray(s)) return s.forEach(addStep); if (s['@type'] === 'HowToSection') return addStep(s.itemListElement); const t = txt(s); if (t) steps.push(t); };
+  addStep(r.recipeInstructions);
+  const y = Array.isArray(r.recipeYield) ? r.recipeYield[0] : r.recipeYield;
+  return { name: decode(r.name || '').slice(0, 160), ingredients: (r.recipeIngredient || []).map(x => decode(String(x))).filter(Boolean).slice(0, 60), steps: steps.slice(0, 40), min: isoMin(r.totalTime) || ((isoMin(r.prepTime) || 0) + (isoMin(r.cookTime) || 0)) || null, serves: parseInt(String(y || ''), 10) || null };
+}
 export default async function handler(req, res) {
   const user = await userFrom(req);
   if (!user) return res.status(401).json({ error: 'Sign in first' });
@@ -47,9 +61,11 @@ export default async function handler(req, res) {
     if (!r.ok) return res.status(502).json({ error: `The page answered ${r.status}` });
     if (!/html/i.test(r.headers.get('content-type') || '')) return res.status(200).json({ title: '', site: '', icon: null });
     const reader = r.body.getReader(), chunks = []; let n = 0;
-    for (;;) { const { done, value } = await reader.read(); if (done) break; n += value.length; chunks.push(value); if (n > MAX || /<\/head>/i.test(Buffer.from(value).toString('latin1'))) { ctl.abort(); break; } }
+    const wantRecipe = !!(req.query && req.query.recipe), cap = wantRecipe ? 1_500_000 : MAX;
+    for (;;) { const { done, value } = await reader.read(); if (done) break; n += value.length; chunks.push(value); if (n > cap || (!wantRecipe && /<\/head>/i.test(Buffer.from(value).toString('latin1')))) { ctl.abort(); break; } }
     const html = Buffer.concat(chunks.map(c => Buffer.from(c))).toString('utf8');
     res.setHeader('cache-control', 'private, max-age=86400');
+    if (wantRecipe) { const rc = parseRecipe(html); return res.status(rc ? 200 : 404).json(rc || { error: 'No recipe found on that page' }); }
     return res.status(200).json(parseMeta(html, url));
   } catch (e) {
     return res.status(504).json({ error: 'The page didn’t answer in time' });

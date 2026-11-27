@@ -194,4 +194,14 @@ const CHROME=process.env.CHROME||'/opt/pw-browsers/chromium-1243/chrome-linux64/
    await go('setpage',{id:'today'});ok('v355 weather toggle on Today settings',/Weather on Today/.test(await p.evaluate(()=>document.querySelector('.page').innerText)));
    const tk=await p.evaluate(()=>window.__lifeos.todayK());await p.evaluate(tk=>window.__lifeos.t.setSettings({shutdownAt:tk}),tk);
    ok('v355 shutdown recorded',await p.evaluate(tk=>window.__lifeos.get.id('settings').shutdownAt===tk,tk));await p.evaluate(()=>window.__lifeos.t.setSettings({shutdownAt:null}));}
+  // v356 · meeting notes to tasks, talk about next time
+  {const n=await p.evaluate(()=>{const L=window.__lifeos,tk=L.todayK();const before=L.get.all('task').length;const b=L.create('block',{title:'Team sync',date:tk,start:600,dur:60,notes:'Q2 on track\n→ Send reminder to PIs\n-> Update the FAQ',repeat:{type:'never'}});return{before,id:b.id};});
+   await p.evaluate(id=>{const L=window.__lifeos;},n.id);
+   await go('today');await p.evaluate(id=>{const r=window.__lifeos.get.id(id);window.__lifeos.App.state.sel=window.__lifeos.todayK();},n.id);
+   const made=await p.evaluate(()=>{const L=window.__lifeos;return L.get.all('task').filter(t=>/Send reminder to PIs|Update the FAQ/.test(t.title)).length;});
+   ok('v356 notes arrows are not turned into tasks until saved',made===0,made);
+   await p.evaluate(id=>window.__lifeos.sheets.block(window.__lifeos.get.id(id)),n.id);await p.waitForTimeout(600);await p.evaluate(()=>[...document.querySelectorAll('.sheet .sfoot-btn, .sheet button')].filter(b=>b.textContent.trim()==='Save').pop().click());await p.waitForTimeout(800);
+   const made2=await p.evaluate(()=>window.__lifeos.get.all('task').filter(t=>/Send reminder to PIs|Update the FAQ/.test(t.title)).length);ok('v356 saving the event turns → lines into tasks',made2===2,made2);
+   await p.evaluate(()=>{const L=window.__lifeos;L.t.setToolOn('Relationships','people',true);L.create('entry',{hub:'Relationships',tool:'people',f:{what:'Jordan Lee',topics:'Holiday plans\nThe album',every:30}});const tk=L.todayK();L.create('block',{title:'Coffee with Jordan',date:tk,start:900,dur:30,repeat:{type:'never'}});});
+   await go('today');ok('v356 talk about next time shows on Today',/Talk to Jordan about[\s\S]*Holiday plans/.test(await p.evaluate(()=>document.querySelector('#view .page').innerText)));}
   ok('no page errors',!errs.length,errs);await b.close();process.exit(fails?1:0);})();

@@ -334,7 +334,7 @@ function blockSheet(rec,seed={}){
       if(isEdit)body.append(el('button',{class:'delete',onclick:()=>deleteFlow(rec,occ||null,inst)},'Delete time block'));
       if(!isEdit)focusIfKeyboard(T.input);
     }});
-  function commit(){D.title=D.title.trim();delete D.lookTouched;const moved=!occ&&firstOccurrence(D,'date');if(isEdit){if(occ)return saveOcc(rec,D,occ,'date','time block',()=>inst.close());saveEdit(rec,D);}else{create('block',D);toast(moved?`Starts ${relDay(D.date)}`:'Time block added',null,'Undo',{open:()=>{if(D.date)App.state.sel=D.date;App.state._fresh=true;App.go('today');}});seed._after&&seed._after();if(!seed._after&&App.state.view==='today'&&D.date!==App.state.sel){App.state.sel=D.date;App.refresh();}}}
+  function commit(){D.title=D.title.trim();delete D.lookTouched;/* v356 · → lines in notes become tasks */try{const n=notesToTasks(D);if(n)setTimeout(()=>toast(`${n} task${n>1?'s':''} from the notes`),500);}catch(e){}const moved=!occ&&firstOccurrence(D,'date');if(isEdit){if(occ)return saveOcc(rec,D,occ,'date','time block',()=>inst.close());saveEdit(rec,D);}else{create('block',D);toast(moved?`Starts ${relDay(D.date)}`:'Time block added',null,'Undo',{open:()=>{if(D.date)App.state.sel=D.date;App.state._fresh=true;App.go('today');}});seed._after&&seed._after();if(!seed._after&&App.state.view==='today'&&D.date!==App.state.sel){App.state.sel=D.date;App.refresh();}}}
   return inst;
 }
 

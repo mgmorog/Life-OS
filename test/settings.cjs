@@ -60,4 +60,19 @@ const CHROME=process.env.CHROME||'/opt/pw-browsers/chromium-1243/chrome-linux64/
   const bar=await p.evaluate(()=>document.body.innerText);ok('v338 rename swaps Studio everywhere',/Planner/.test(bar)&&!/\bStudio\b/.test(bar),bar.match(/.{0,20}(Studio|Planner).{0,20}/g));
   await p.evaluate(()=>window.__lifeos.t.setSettings({names:{},motionCalm:false,cbSafe:false,hideEmpty:false,stickyHeads:false,relDates:false}));await go('today');await p.waitForTimeout(400);
   ok('v338 rename off brings names back',/Studio/.test(await p.evaluate(()=>document.body.innerText)));
+  // v340 · four tabs, + menu, More sections, fiscal year, recently viewed, calendar display
+  await p.evaluate(()=>window.__lifeos.t.setSettings({navFour:true}));await go('today');
+  let nv=await p.evaluate(()=>({inBar:!!document.querySelector('#nav-in .fab'),float:!!document.querySelector('body > .fab.fabfloat'),cols:getComputedStyle(document.querySelector('.nav .in')).gridTemplateColumns.split(' ').length}));
+  ok('v340 four tabs float the +',!nv.inBar&&nv.float&&nv.cols===4,nv);
+  await p.evaluate(()=>window.__lifeos.t.setSettings({navFour:false}));await go('today');
+  nv=await p.evaluate(()=>({inBar:!!document.querySelector('#nav-in .fab'),float:!!document.querySelector('body > .fab.fabfloat')}));ok('v340 back to five puts + in the bar',nv.inBar&&!nv.float,nv);
+  await p.evaluate(()=>window.__lifeos.t.setSettings({moreSecs:[{id:'saved',hidden:false},{id:'pinned',hidden:false},{id:'views',hidden:true},{id:'areas',hidden:true},{id:'plan',hidden:false}]}));await go('more');
+  const mt=await p.evaluate(()=>document.querySelector('.page').innerText);ok('v340 More follows your order and hides sections',mt.indexOf('Saved')>=0&&mt.indexOf('Saved')<mt.indexOf('Pinned')&&!/Life areas/.test(mt),mt.slice(0,300));
+  await p.evaluate(()=>window.__lifeos.t.setSettings({moreSecs:null}));
+  const tk=await p.evaluate(()=>{const L=window.__lifeos;const r=L.create('task',{title:'Renew passport',date:L.todayK()});return r.id;});
+  await p.evaluate(id=>{try{localStorage.setItem('lifeos-recent',JSON.stringify([id]));}catch(e){}},tk);await go('search');
+  ok('v340 search lists recently viewed',/Recently viewed[\s\S]*Renew passport/.test(await p.evaluate(()=>document.querySelector('.page').innerText)));
+  await go('setpage',{id:'calendar'});const ct=await p.evaluate(()=>document.querySelector('.page').innerText);ok('v340 calendar display group',/Calendar display/.test(ct)&&/Opens to/.test(ct),ct.slice(0,200));
+  await go('setpage',{id:'planning'});ok('v340 planning has fiscal year and Studio view',/Year starts in/.test(await p.evaluate(()=>document.querySelector('.page').innerText)));
+  await go('setpage',{id:'tasks'});ok('v340 tasks has default length and reminder',/Default length[\s\S]*Default reminder/.test(await p.evaluate(()=>document.querySelector('.page').innerText)));
   ok('no page errors',!errs.length,errs);await b.close();process.exit(fails?1:0);})();

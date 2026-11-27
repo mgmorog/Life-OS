@@ -1,5 +1,5 @@
 /* ---------- Studio: plan a week, month or quarter. Studio picks the day, Today picks the time ---------- */
-function stState(){const S=App.state;if(!S.studio)S.studio={mode:'w',anchor:null,selCard:null,ghosts:[]};if(!S.studio.ghosts)S.studio.ghosts=[];return S.studio;}
+function stState(){const S=App.state;if(!S.studio)S.studio={mode:({week:'w',month:'m',quarter:'q'})[(get.settings().defView||{}).studio]||'w',anchor:null,selCard:null,ghosts:[]};if(!S.studio.ghosts)S.studio.ghosts=[];return S.studio;}
 function stPeriod(st){
   const t=today(),a=st.anchor?fromK(st.anchor):null;
   if(st.mode==='w'){const base=a?weekStartOf(a):weekStartOf(addD(t,t.getDay()===(get.settings().reviewDay??0)?1:0));const s=base,e=addD(s,6);

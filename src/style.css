@@ -4423,3 +4423,10 @@ textarea.big.gstep{font-size:var(--fs-row);font-family:inherit}
 .notecard .bl{display:flex;align-items:center}
 .notecard .notex{margin-left:auto;width:var(--size-32);height:var(--size-32)}
 .notebody{display:block;width:100%;text-align:left;background:none;font:inherit;font-size:var(--fs-row);line-height:var(--lh-read);color:var(--text);white-space:pre-wrap;padding:var(--s1) 0 0}
+/* v340 · four-tab bar with a floating +, reorder rows */
+:root[data-four=on] .nav .in{grid-template-columns:repeat(4,1fr)}
+.fab.fabfloat{position:fixed;right:max(var(--s4),env(safe-area-inset-right,0px) + var(--s4));bottom:calc(var(--bar) + env(safe-area-inset-bottom,0px) + var(--s4));width:var(--size-56);height:var(--size-56);z-index:var(--z-bar);box-shadow:var(--e-overlay,0 8px 24px rgba(0,0,0,.18))}
+body.sheet-open .fab.fabfloat,body:has(.sheet.open) .fab.fabfloat{opacity:0;pointer-events:none}
+.rorow{display:flex;align-items:center;gap:var(--s1);padding-right:var(--s2);border-bottom:var(--hairline) solid var(--line)}
+.rorow:last-child{border-bottom:0}
+.rorow>:first-child{flex:1;min-width:0;border-bottom:0}

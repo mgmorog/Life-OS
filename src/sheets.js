@@ -230,7 +230,7 @@ const nextQuarter=()=>{const s=Math.ceil(nowMin()/15)*15;return s>=1440?1425:s;}
 /* ---------- New task ---------- */
 function taskSheet(rec,seed={}){
   const isEdit=!!rec;
-  const D=isEdit?clone(rec):Object.assign({title:'',notes:'',steps:[],date:App.state.sel,time:null,repeat:{type:'never',end:null},reminder:null,remUnit:'minute',deadline:null,priority:'normal',part:null,area:null,photos:[]},seed);
+  const D=isEdit?clone(rec):Object.assign({title:'',notes:'',steps:[],date:App.state.sel,time:null,repeat:{type:'never',end:null},/* v340 · your defaults */dur:get.settings().taskDur||undefined,reminder:get.settings().taskRem??null,remUnit:'minute',deadline:null,priority:'normal',part:null,area:null,photos:[]},seed);
   delete D._after;delete D.occ;
   const occ=isEdit&&seed.occ&&rec.repeat&&rec.repeat.type!=='never'?seed.occ:null;if(occ)D.date=occ;
   let ctxRender,stepsEd,when,details;

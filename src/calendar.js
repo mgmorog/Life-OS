@@ -1,5 +1,5 @@
 /* ---------- Calendar: Quarter, Month, Week. One header, one heat map, one filter sheet ---------- */
-function calState(){const S=App.state;if(!S.cal){let m='quarter';try{m=localStorage.getItem('lifeos-cal-mode')||'quarter';}catch(e){}if(!['quarter','month','week'].includes(m))m='quarter';let tl=false,mc=false;try{tl=!!localStorage.getItem('lifeos-cal-tl');mc=!!localStorage.getItem('lifeos-cal-mcal');}catch(e){}S.cal={mcal:mc,mode:m,anchor:todayK(),sel:todayK(),weekOpen:null,showEarlier:false,timeline:tl};}return S.cal;}
+function calState(){const S=App.state;if(!S.cal){let m='quarter';try{m=localStorage.getItem('lifeos-cal-mode')||'quarter';}catch(e){}{const dv=(get.settings().defView||{}).calendar;if(dv&&dv!=='last')m=dv;}if(!['quarter','month','week'].includes(m))m='quarter';let tl=false,mc=false;try{tl=!!localStorage.getItem('lifeos-cal-tl');mc=!!localStorage.getItem('lifeos-cal-mcal');}catch(e){}S.cal={mcal:mc,mode:m,anchor:todayK(),sel:todayK(),weekOpen:null,showEarlier:false,timeline:tl};}return S.cal;}
 function calCommit(){App.render();scrollTo(0,0);}
 const isCurrentFor=(mode,d)=>{const t=today();return mode==='quarter'?(d.getFullYear()===t.getFullYear()&&quarterOf(d)===quarterOf(t)):mode==='month'?monthKey(d)===monthKey(t):weekKey(d)===weekKey(t);};
 function calStep(dir){

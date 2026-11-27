@@ -298,6 +298,10 @@ const habWeekStart=d=>{const ws=wsAt(d);return addD(d,-((d.getDay()-ws+7)%7));};
 const weekKey=d=>k(weekStartOf(d));
 const monthKey=d=>`${d.getFullYear()}-${pad2(d.getMonth()+1)}`;
 const quarterOf=d=>Math.floor(d.getMonth()/3);
+/* v340 · fiscal year: quarters for reviews start in the month you choose (Settings › Planning) */
+const fyM=()=>+(get.settings().fyStart||0);
+const fqStart=d=>{const off=(d.getMonth()-fyM()+12)%12;return new Date(d.getFullYear(),d.getMonth()-off%3,1);};
+const fqLabel=d=>{const m=fyM(),off=(d.getMonth()-m+12)%12,q=Math.floor(off/3)+1;if(!m)return `Q${q} ${d.getFullYear()}`;const sy=d.getMonth()>=m?d.getFullYear():d.getFullYear()-1;return `Q${q} FY${String(sy+1).slice(2)}`;};
 const quarterKey=d=>`${d.getFullYear()}-Q${quarterOf(d)+1}`;
 const fmtT=m=>{m=((m%1440)+1440)%1440;const h=Math.floor(m/60),mm=m%60;if(get.settings().clock===24)return `${pad2(h)}:${pad2(mm)}`;return `${h%12||12}:${pad2(mm)} ${h<12?'AM':'PM'}`;};
 const fmtS=m=>{m=((m%1440)+1440)%1440;const h=Math.floor(m/60),mm=m%60;if(get.settings().clock===24)return `${pad2(h)}:${pad2(mm)}`;return `${h%12||12}:${pad2(mm)}`;};
@@ -746,7 +750,7 @@ const themeOf=s=>{const p=PALETTES.find(x=>x[0]===(s.palette||'sage'));if(p)retu
 const defCol=()=>{const s=get.settings(),p=PALETTES.find(x=>x[0]===(s.palette||'sage'))||(typeof RW_PALS!=='undefined'&&RW_PALS.find(x=>x[0]===s.palette));return p?p[3]:'sage';};
 function applyTheme(){const s=get.settings(),R=document.documentElement,dark=s.mode==='dark'||(s.mode==='auto'&&matchMedia('(prefers-color-scheme: dark)').matches);
   R.dataset.mode=dark?'dark':'light';R.dataset.font=s.titleFont||'serif';R.dataset.bg=s.bgTone||'warm';R.dataset.density=s.density||'comfortable';R.dataset.labels=s.tabLabels===false?'off':'on';
-  /* v337 · look: accent strength, corners, card style, body font */R.dataset.accent=s.accentStr||'standard';R.dataset.corners=s.corners||'round';R.dataset.cards=s.cardStyle||'lifted';R.dataset.body=s.bodyFont||'figtree';
+  /* v337 · look: accent strength, corners, card style, body font */R.dataset.accent=s.accentStr||'standard';R.dataset.corners=s.corners||'round';R.dataset.cards=s.cardStyle||'lifted';R.dataset.body=s.bodyFont||'figtree';R.dataset.four=s.navFour?'on':'off';
   const a=safeAccent(themeOf(s)),W=[255,255,255],K=[0,0,0],st=R.style,set=(k,c)=>st.setProperty(k,typeof c==='string'?c:rgb2hx(c));
   const isDefault=(s.palette||'sage')==='sage'&&!dark;
   const RAMP=[[50,W,.93],[100,W,.85],[200,W,.74],[300,W,.6],[400,W,.48],[500,W,.22],[600,null,0],[700,K,.1],[800,K,.32],[900,K,.5]];const OLD=['--accent','--accent-text','--accent-deep','--accent-soft','--accent-wash','--accent-mid','--accent-light','--accent-pale','--h0','--h1','--h2','--h3','--h4','--tint-1','--tint-3'];

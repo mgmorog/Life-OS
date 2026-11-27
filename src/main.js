@@ -63,7 +63,7 @@ const App={
     const anyFav=fav.some(isAct)||!!origin;
     /* The bar is built once and kept, so the sliding highlight is never torn out mid-glide.
        It is only rebuilt when the chosen favorites change. */
-    const sig=fav.join('|')+JSON.stringify(s.names||{});
+    const sig=fav.join('|')+JSON.stringify(s.names||{})+(s.navFour?'|4':'');
     if(nav._sig!==sig){
       nav.innerHTML='';nav._sig=sig;
       const tab=(id,label,icon)=>{const b=el('button',{class:'tab','data-tab':id,onclick:()=>{
@@ -81,7 +81,9 @@ const App={
       }},el('span',{class:'ic',html:icon}),el('span',{class:'tl-lbl'},label));return b;};
       const iconOf=id=>id==='more'?sv('<circle cx="5" cy="12" r="1.8" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.8" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.8" fill="currentColor" stroke="none"/>',22):ic(PLACES[id].i,IC.lg);
       const short=id=>({'tools':'Tools'})[id]||PLACES[id].n;
-      nav.append(el('span',{class:'tab-ind','aria-hidden':'true'},el('i')),el('div',{class:'rail-brand'},'Life OS'),tab(fav[0],short(fav[0]),iconOf(fav[0])),tab(fav[1],short(fav[1]),iconOf(fav[1])),(()=>{let t=0,held=false;const f=el('button',{class:'fab',id:'fab','aria-label':'Quick capture. Press and hold for more',html:sv(P.plus,24,2.2),onclick:e=>{if(held){held=false;e.preventDefault();return;}captureSheet(null);},oncontextmenu:e=>e.preventDefault(),onpointerdown:e=>{held=false;clearTimeout(t);t=setTimeout(()=>{held=true;buzz(8);if(voiceOK()&&get.settings().holdToTalk!==false){captureSheet(null,{listen:true});const up=()=>{removeEventListener('pointerup',up,true);removeEventListener('pointercancel',up,true);setTimeout(voiceStop,350);};addEventListener('pointerup',up,true);addEventListener('pointercancel',up,true);return;}const r=f.getBoundingClientRect();openMenu(r.left+r.width/2,r.top-8,[{label:'Task',icon:'task',onclick:()=>taskSheet(null,{date:todayK()})},{label:'Time block',icon:'hour',onclick:()=>blockSheet(null,{date:todayK(),start:nextFreeSlot(todayK())})},{label:'All-day item',icon:'cal',onclick:()=>alldaySheet(null,{start:App.state.view==='today'&&App.state.sel?App.state.sel:todayK()})},{label:'Habit',icon:'habit',onclick:()=>habitSheet(null)},{label:'Goal',icon:'target',onclick:()=>goalSheet(null)},{label:'Idea for the Inbox',icon:'inbox',onclick:()=>captureSheet(null)}]);},450);},onpointerup:()=>clearTimeout(t),onpointerleave:()=>clearTimeout(t),onpointercancel:()=>clearTimeout(t)});return f;})(),tab(fav[2],short(fav[2]),iconOf(fav[2])),tab('more','More',iconOf('more')));
+      {const old=document.querySelector('body > .fab.fabfloat');if(old)old.remove();}
+      const fabEl=(()=>{let t=0,held=false;const f=el('button',{class:'fab',id:'fab','aria-label':'Quick capture. Press and hold for more',html:sv(P.plus,24,2.2),onclick:e=>{if(held){held=false;e.preventDefault();return;}plusTap();},oncontextmenu:e=>e.preventDefault(),onpointerdown:e=>{held=false;clearTimeout(t);t=setTimeout(()=>{held=true;buzz(8);if(voiceOK()&&get.settings().holdToTalk!==false){captureSheet(null,{listen:true});const up=()=>{removeEventListener('pointerup',up,true);removeEventListener('pointercancel',up,true);setTimeout(voiceStop,350);};addEventListener('pointerup',up,true);addEventListener('pointercancel',up,true);return;}const r=f.getBoundingClientRect();openMenu(r.left+r.width/2,r.top-8,plusMenuItems());},450);},onpointerup:()=>clearTimeout(t),onpointerleave:()=>clearTimeout(t),onpointercancel:()=>clearTimeout(t)});return f;})();if(s.navFour){fabEl.classList.add('fabfloat');document.body.append(fabEl);}else{}
+      nav.append(el('span',{class:'tab-ind','aria-hidden':'true'},el('i')),el('div',{class:'rail-brand'},'Life OS'),tab(fav[0],short(fav[0]),iconOf(fav[0])),tab(fav[1],short(fav[1]),iconOf(fav[1])),(s.navFour?null:fabEl),tab(fav[2],short(fav[2]),iconOf(fav[2])),tab('more','More',iconOf('more')));
     }
     if(nav._pending)return;
     let actId=null;

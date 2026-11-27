@@ -187,7 +187,6 @@ const swN=s=>s>=2.7?2.8:s>=2.1?2.4:1.8;
 /* v234 · breakpoints and motion tokens for the code: the same values the stylesheet uses */
 /* breakpoints come from the --bp-* tokens in style.css (the same values the build writes into media queries) */
 const BP=(()=>{const D={compact:380,narrow:420,tablet:700,desktop:900,wide:1100};try{const cs=getComputedStyle(document.documentElement);for(const k in D){const v=parseFloat(cs.getPropertyValue('--bp-'+k));if(v)D[k]=v;}}catch(e){}return D;})();
-const isCompact=()=>innerWidth<=BP.compact,isTablet=()=>innerWidth>=BP.tablet&&innerWidth<BP.desktop,isDesktop=()=>innerWidth>=BP.desktop,isWide=()=>innerWidth>=BP.wide;
 const MOT=(()=>{const cs=()=>getComputedStyle(document.documentElement),ms=(n,fb)=>{const v=cs().getPropertyValue(n).trim();if(!v)return fb;return v.endsWith('ms')?parseFloat(v):parseFloat(v)*1000;},cv=(n,fb)=>cs().getPropertyValue(n).trim()||fb;
   return{get fast(){return ms('--dur-fast',160);},get base(){return ms('--dur-base',280);},get slow(){return ms('--dur-slow',480);},get ease(){return cv('--ease','cubic-bezier(.2,.8,.2,1)');},get spring(){return cv('--spring','cubic-bezier(.3,1.35,.5,1)');},get exit(){return cv('--exit','cubic-bezier(.4,0,1,1)');},get soft(){return cv('--soft','cubic-bezier(.3,1.1,.5,1)');},get celebrate(){return ms('--dur-celebrate',1100);},get celebrateLong(){return ms('--dur-celebrate-long',3500);},get linger(){return ms('--dur-linger',2000);},get toast(){return ms('--dur-toast',2000);},get toastUndo(){return ms('--dur-toast-undo',4500);}};})();
 /* icon sizes and line weights come from the --icon-* and --stroke* tokens (read once) */
@@ -708,10 +707,6 @@ function animateFills(root,S){
     if(FILLS_SEEN.has(key)&&target>from){n.classList.add('oglow');n.addEventListener('animationend',()=>n.classList.remove('oglow'),{once:true});}FILLS_SEEN.add(key);
   });
 }
-/* After a tick, rows glide to their new places instead of jumping */
-const flipKey=n=>{const t=n.querySelector('.tt,b');return t?t.textContent:null;};
-function flipSnapshot(root){const m=new Map();root.querySelectorAll('.tick-host').forEach(n=>{const key=flipKey(n);if(key)m.set(key,n.getBoundingClientRect().top);});return m;}
-function flipPlay(root,before){if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;root.querySelectorAll('.tick-host').forEach(n=>{const key=flipKey(n);if(!key||!n.animate)return;if(!before.has(key)){n.animate([{opacity:0},{opacity:getComputedStyle(n).opacity}],{duration:MOT.base,easing:'ease-out'});return;}const d=before.get(key)-n.getBoundingClientRect().top;if(Math.abs(d)>1)n.animate([{transform:`translateY(${d}px)`},{transform:'none'}],{duration:MOT.base,easing:MOT.ease});});}
 
 /* page titles step down in size as they get longer, and stop at three lines, so a long name never takes over the page */
 function fitTitle(h){const n=(h.textContent||'').trim().length;h.classList.remove('tm','tl','tx');if(n>60)h.classList.add('tx');else if(n>34)h.classList.add('tl');else if(n>18)h.classList.add('tm');if(n>18){h.title=h.textContent.trim();}}

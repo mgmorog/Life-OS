@@ -1,7 +1,5 @@
 /* ===== Type A planning: estimates, focus timer, waiting on, dependencies, time budgets, energy, goal cascade, scorecard ===== */
 
-/* ---------- estimates vs. actual ---------- */
-const EST_OPTS=[[0,'None'],[15,'15m'],[30,'30m'],[60,'1h'],[120,'2h']];
 let _er={at:0,v:null};
 function estStats(days=180){const cut=Date.now()-days*864e5,l=get.all('task',{archived:true,every:true}).filter(t=>t.kind==='task'&&+t.dur>0&&+t.spent>0&&!isOpenTask(t)&&(t.updatedAt||0)>cut);const est=l.reduce((n,t)=>n+(+t.dur),0),act=l.reduce((n,t)=>n+(+t.spent),0);return{n:l.length,est,act,ratio:l.length>=3&&est?act/est:null,list:l};}
 function estRatio(){if(Date.now()-_er.at<1500)return _er.v;const s=estStats();_er={at:Date.now(),v:s.ratio&&Math.abs(s.ratio-1)>=.1?Math.min(3,Math.max(.4,s.ratio)):null};return _er.v;}
@@ -9,11 +7,6 @@ const planMin=t=>{if(!t||!+t.dur)return null;return Math.max(5,Math.round(+t.dur
 const ratioWords=r=>r>=1?`about ${r.toFixed(1).replace(/\.0$/,'')}× as long as you estimate`:`about ${Math.round(r*100)}% of what you estimate`;
 const mins0=m=>m?fmtDurS(m):'0m';
 
-/* ---------- energy and place ---------- */
-const ENERGY=[['low','Low'],['med','Medium'],['high','High']];
-const TPLACE=[['home','Home'],['work','Work'],['out','Out'],['online','Online']];
-const energyName=v=>(ENERGY.find(x=>x[0]===v)||[])[1]||'';
-const placeName=v=>(TPLACE.find(x=>x[0]===v)||[])[1]||'';
 /* energy and place are no longer asked for, so they're no longer shown */
 function tagMeta(t){return [];}
 function nowPool(){const tk=todayK(),di=dayItems(tk),seen=new Set(),out=[];const add=t=>{if(!t||seen.has(t.id)||!isOpenTask(t)||onHold(t)||blockedBy(t).length)return;seen.add(t.id);out.push(t);};
@@ -92,8 +85,6 @@ function waitTab(page){const open=waitOpen(),done=get.all('wait').filter(w=>w.do
   if(!open.length)page.append(emptyOf('Nobody owes you anything','When you hand something off or ask for something, track it here with a date to follow up.'));
   else{const due=open.filter(w=>w.follow&&w.follow<=todayK()),rest=open.filter(w=>!due.includes(w));if(due.length)page.append(el('div',{class:'sh2'},el('span',{class:'lbl olate'},`Follow up · ${due.length}`)),el('div',{class:'list'},due.map(waitRow)));if(rest.length)page.append(el('div',{class:'sh2'},el('span',{class:'lbl'},due.length?`Waiting · ${rest.length}`:`${rest.length} waiting`)),el('div',{class:'list'},rest.map(waitRow)));}
   if(done.length)page.append(el('div',{class:'sh2'},el('span',{class:'lbl'},`Received · ${done.length}`)),el('div',{class:'list nodim'},done.map(waitRow)));}
-function waitCard(dk){if(dk!==todayK())return null;const due=waitOpen().filter(w=>w.follow&&w.follow<=dk);if(!due.length)return null;
-  return el('section',{class:'dduecard'},el('div',{class:'lbl dhead',style:'margin:var(--nudge) var(--s1) var(--s2)'},`Follow up · ${due.length}`),el('div',{class:'list'},due.slice(0,4).map(w=>Row({as:'div',cls:'tick-host',style:''},el('span',{class:'tick-hit'},tickBtn(false,()=>setTimeout(()=>waitDone(w,true),300),'Got it')),el('button',{class:'grow',style:'text-align:left',onclick:()=>waitSheet(w)},el('b',{style:'font-weight:500;display:block'},w.who?`${w.who}: ${w.title}`:w.title),el('small',{},w.follow<dk?`Follow-up was due ${rdl(w.follow)}`:'Follow up today')),el('button',{class:'oturn',onclick:()=>waitNudge(w)},'Nudged'))),due.length>4?el('button',{class:'dfact',style:'justify-content:center;min-height:var(--size-44);color:var(--action-text);font-weight:500',onclick:()=>{App.go('tasks',{tab:'waiting'});}},`See all ${due.length}`):null));}
 
 /* ---------- dependencies and project timeline ---------- */
 const depsOf=t=>(t.after||[]).map(id=>get.id(id)).filter(x=>x&&x.kind==='task');

@@ -89,7 +89,6 @@ function heatCell(d,{month,tk,C,onTap,bars=false,showSel=true}){
   return btn;
 }
 function weeksOf(y,m){const first=new Date(y,m,1),last=new Date(y,m+1,0),start=weekStartOf(first),out=[];let d=start;while(d<=last){out.push(Array.from({length:7},(_,i)=>addD(d,i)));d=addD(d,7);}return out;}
-function heatKey(){return el('div',{class:'heat-key','aria-label':'Heat map key'},el('span',{},'Fewer'),['--h0','--h1','--h2','--h3','--h4'].map(v=>el('i',{style:`background:var(${v})`})),el('span',{},'More'));}
 function quarterBody(body,y,months,C){
   const tk=todayK(),curW=weekKey(today()),inQ=months.includes(today().getMonth())&&y===today().getFullYear();
   const earlier=new Set();months.forEach(m=>weeksOf(y,m).forEach(w=>{if(k(w[0])<curW)earlier.add(k(w[0]));}));
@@ -182,18 +181,6 @@ function dayPanel(dk){
   if(!ev.length&&!todo.length&&!adS.length)c.append(Caption(emptyDayHead(dk),{as:'p',style:'margin:var(--s2) 0 0'}));
   const ch=addChips(dk);ch.style.marginTop='12px';c.append(ch);
   return c;
-}
-function pickPeriod(anchor){
-  const C=calState(),a=fromK(C.anchor),t=today();let inst,vy=a.getFullYear();
-  inst=openSheet({anchor,title:C.mode==='quarter'?'Choose quarter':C.mode==='month'?'Choose month':'Choose week',build:body=>{
-    const box=el('div',{});
-    const pick=d=>{C.anchor=k(d);if(C.mode==='month')C.sel=isCurrentFor('month',d)?todayK():k(d);if(C.mode==='week'){C.sel=k(d);C.weekOpen=null;}inst.close();calCommit();};
-    const draw=()=>{box.innerHTML='';
-      if(C.mode==='week'){const c=formCtx(()=>{});box.append(Card({as:'div'},c.calendar(C.anchor,dk=>{if(dk)pick(fromK(dk));},{range:calRange(C)})));return;}
-      box.append(el('div',{style:'display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--s3);font-weight:500'},IconButton('Previous year',{cls:'green',html:ic('chevl',IC.md),onclick:()=>{vy--;draw();}}),String(vy),IconButton('Next year',{cls:'green',html:ic('chevr',IC.md),onclick:()=>{vy++;draw();}})));
-      if(C.mode==='month')box.append(el('div',{class:'pick-grid'},MONL.map((n,i)=>el('button',{class:(vy===a.getFullYear()&&i===a.getMonth()?'on ':'')+(vy===t.getFullYear()&&i===t.getMonth()?'cur':''),onclick:()=>pick(new Date(vy,i,1))},n.slice(0,3)))));
-      else box.append(el('div',{class:'pick-grid',style:'grid-template-columns:repeat(2,minmax(0,1fr))'},[0,1,2,3].map(i=>el('button',{class:(vy===a.getFullYear()&&i===quarterOf(a)?'on ':'')+(vy===t.getFullYear()&&i===quarterOf(t)?'cur':''),style:'height:68px',onclick:()=>pick(new Date(vy,i*3,1))},`Q${i+1}`,el('small',{},`${MON[i*3]} – ${MON[i*3+2]}`)))));};
-    draw();body.append(box,Button('Jump to today',{variant:'quiet',full:true,onclick:()=>{inst.close();calNow();}}));}});
 }
 function capLabels(full,unit){
   const b={1:[],2:[],3:[]};for(let n=1;n<full;n++){const l=levelOf(n,full);if(b[l])b[l].push(n);}

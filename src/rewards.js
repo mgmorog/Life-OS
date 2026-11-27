@@ -143,7 +143,6 @@ function rwHabitBest(h){if(!habitWeekly(h)||h.everyN)return habitBest(h);const t
 
 /* ---------- earned palettes ---------- */
 var RW_PALS=[['moss','Moss','#55703F','olive','planner'],['harbor','Harbor','#2E6B7A','blue','nooverdue'],['dusk','Dusk','#5B4A85','plum','reviews10'],['ember','Ember','#A24E36','rose','level10']];
-const rwPalHas=id=>{const p=RW_PALS.find(x=>x[0]===id);return !!p&&!!rwRec().badges[p[4]];};
 
 /* ---------- the idea garden ---------- */
 const RW_PLANT={project:'tree',goal:'flower',habit:'grass',routine:'grass'};

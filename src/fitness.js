@@ -139,7 +139,6 @@ const wkLastDone=r=>wkLogs().filter(x=>x.f.rid===r.id||(!x.f.rid&&x.f.what===r.f
 function wkOrdered(h){return wkRoutines(h).map((r,i)=>[r,wkLastDone(r),i]).sort((a,b)=>a[1]<b[1]?-1:a[1]>b[1]?1:a[2]-b[2]).map(x=>x[0]);}
 const wkNextUp=h=>wkOrdered(h)[0]||null;/* next up = the one you've gone longest without */
 function wkFor(h,dk){const s=(h.sessions||{})[dk],p=s&&s.rid&&get.id(s.rid);return p||wkNextUp(h);}
-const shortR=r=>{const w=r.f.what.replace(/\s+day$/i,'').trim();return w.length>6?w.slice(0,5)+'.':w;};
 /* any change to a logged workout keeps the linked habit honest for that day */
 function wkHook(r){if(r&&r.kind==='entry'&&r.hub==='Health'&&r.tool==='workouts'&&r.f&&!r.f.t&&r.f.date){const d=r.f.date;queueMicrotask(()=>wkSyncDay(d));}}
 function wkSyncDay(d){const h=wkHabit();if(!h)return;const has=wkLogs().some(x=>x.f.date===d),on=habitDone(h,d);h.logs=h.logs||{};
@@ -185,13 +184,6 @@ function wkAddRoutineSheet(h){const all=ofType('Health','workouts','routine'),ha
     box.append(Caption('Pick the workouts that count for this habit. With more than one, they take turns.',{as:'p'}));
     if(all.length)box.append(el('div',{class:'list'},all.map(r=>{const on=h.link.rs.includes(r.id);return Row({style:'width:100%;text-align:left','aria-pressed':String(on),onclick:()=>{if(on)h.link.rs=h.link.rs.filter(x=>x!==r.id);else h.link.rs.push(r.id);put(h,{silent:true});draw();}},el('span',{class:'tick'+(on?' on':''),html:ic('check',IC.xs)}),el('span',{class:'grow'},el('b',{style:'font-weight:500'},r.f.what),el('small',{},(n=>`${n} exercise${n===1?'':'s'}`)(planOf(r).length))));})));
     box.append(el('button',{class:'addstep',html:ic('plus',IC.md)+'New workout routine',onclick:()=>workoutRoutineSheet(null,{after:r=>{if(!h.link.rs.includes(r.id))h.link.rs.push(r.id);put(h);draw();}})}));};draw();b.append(box);},onClose:()=>{put(h);App.refresh();}});void have;}
-/* plan sheet for a day chip: which routine that day */
-function wkPinSheet(h,d){const rs=wkRoutines(h),s=(h.sessions||{})[d];let inst;const dn=d===todayK()?'Today':DOW[fromK(d).getDay()];
-  const set=rid=>{h.sessions=h.sessions||{};h.sessions[d]=Object.assign({time:h.setTime??null},h.sessions[d],{rid});put(h);inst.close();};
-  inst=openSheet({title:`${dn}’s workout`,left:{label:'Cancel'},build:b=>{b.append(el('div',{class:'list'},
-    Row({style:'width:100%;text-align:left',onclick:()=>set(null)},el('span',{class:'grow'},'Whatever’s next up'),s&&!s.rid?el('span',{style:'display:grid;color:var(--action-text)',html:ic('check',IC.sm)}):null),
-    ...rs.map(r=>{const on=s&&s.rid===r.id,other=Object.entries(h.sessions||{}).find(([dd,x])=>dd!==d&&dd>=todayK()&&x&&x.rid===r.id);return Row({style:'width:100%;text-align:left',onclick:()=>set(r.id)},el('span',{class:'grow'},r.f.what),other?el('small',{class:'muted'},`Planned ${DOW[fromK(other[0]).getDay()].slice(0,3)}`):null,on?el('span',{style:'display:grid;color:var(--action-text)',html:ic('check',IC.sm)}):null);}),
-    s?Row({style:'width:100%;text-align:left;color:var(--danger)',onclick:()=>{delete h.sessions[d];put(h);inst.close();}},el('span',{class:'grow'},`Take ${dn==='Today'?'today':dn} off the plan`)):null));}});}
 /* new habit sheet: offer the link when the name sounds like a workout */
 function wkSuggest(box,D){if(!box)return;box.innerHTML='';if(D.track&&D.track!=='check')return;
   if(D.link){box.append(el('div',{class:'wksug on'},el('span',{style:'display:grid;color:var(--action-text)',html:LINKI}),el('span',{class:'grow small'},'Linked to your Workouts log'),Button('Undo',{variant:'link',size:'sm',onclick:()=>{D.link=null;D._noLink=true;wkSuggest(box,D);}})));return;}

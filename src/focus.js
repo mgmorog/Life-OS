@@ -19,16 +19,6 @@ function t3PickSheet(dk,slot){const cur=t3Get(dk),inst=openSheet({title:`Pick #$
   const c=t3Candidates(dk,cur.map(x=>x.id));
   b.append(el('div',{class:'ob-add',style:'margin-bottom:var(--s4)'},inp,Button(null,{variant:'primary','aria-label':'Add it',html:ic('plus',IC.md),onclick:()=>{if(inp.value.trim())choose(newTask(inp.value.trim(),{date:dk}));else inp.focus();}})));
   b.append(c.length?el('div',{class:'list'},c.map(({r,why})=>Row({style:'width:100%;text-align:left;',onclick:()=>choose(r)},el('span',{class:'grow'},el('span',{class:'tt'},r.title),el('small',{},why))))):emptySm('Nothing planned yet','Type what matters most above.'));}});}
-function top3Card(dk){const s=get.settings();if(s.top3On===false)return null;const l=t3Get(dk),start=(s.startAt||{})[dk];
-  const es=l.map(x=>t3Entry(x,dk)).filter(Boolean),n=es.filter(e=>e.done).length;
-  const slots=es.length?es.map((e,i)=>{
-    const row=el('div',{class:'t3row tick-host'+(e.done?' done':''),'data-k':'t3:'+e.id},el('span',{class:'t3n'},String(i+1)),el('span',{class:'tick-hit'},tickBtn(e.done,on=>{row.classList.toggle('done',on);toggleItem(e,dk);if(on&&t3AllDone(dk)){buzz(14);App.state._t3win=Date.now();}setTimeout(()=>App.refresh(),700);},`${e.done?'Mark not done':'Mark done'}: ${e.title}`)),el('button',{class:'grow',style:'text-align:left',onclick:()=>openItem(e,dk)},el('span',{class:'tt'},e.title)),es.length>1?t3Grip(dk,i):null);
-    return withPress(row,(x,y)=>openMenu(x,y,[i>0?{label:'Move up',icon:'arrow',onclick:()=>t3Move(dk,i,i-1)}:null,i<es.length-1?{label:'Move down',icon:'arrow',onclick:()=>t3Move(dk,i,i+1)}:null,{label:'Swap for something else',icon:'edit',onclick:()=>t3PickSheet(dk,i)},{label:'Remove from top 3',icon:'x',onclick:()=>t3Set(dk,t3Get(dk).filter(z=>z.id!==e.id))}]));
-  }):[el('button',{class:'t3slot',onclick:()=>t3PickSheet(dk,0)},el('span',{class:'t3n'},'1'),el('span',{class:'grow muted'},'Pick what matters most'),el('span',{style:'display:grid;color:var(--action-text)',html:ic('plus',IC.sm)}))];
-  const add=es.length&&es.length<3?el('button',{class:'t3add',onclick:()=>t3PickSheet(dk,es.length)},el('span',{html:ic('plus',IC.sm),style:'display:grid'}),`Add a ${es.length===1?'second':'third'}`):null;
-  const meta=es.length?(n===es.length&&es.length===3?'All done':`${n} of ${es.length}`):start!=null?`Start at ${fmtT(start)}`:null;
-  const allDone=es.length===3&&n===3,win=allDone&&Date.now()-(App.state._t3win||0)<2500;if(win)App.state._t3win=0;
-  return el('section',{class:'card t3'+(es.length?'':' t3-empty')+(win?' win':'')},win?el('span',{class:'t3sheen','aria-hidden':'true'}):null,el('div',{class:'bl'},el('span',{class:'lbl',style:'color:var(--action-text)'},'Top 3'),meta?el('span',{class:'small muted tnum','data-roll':'t3'},meta):null),es.length?Progress(n/es.length,{size:'sm',cls:'t3bar progress'}):null,...slots,add,allDone?el('p',{class:'t3done'+(win?' settle':'')},'That’s the day that mattered.'):null);}
 /* weekly review line */
 function t3WeekLine(a,b){const t3=get.settings().top3||{};let days=0,hit=0;for(let d=a;d<=b;d=addK(d,1)){if((t3[d]||[]).length){days++;if(t3AllDone(d))hit++;}}return days?`Top 3: all done on ${hit} of ${days} day${days>1?'s':''} you set them`:null;}
 /* ---------- Evening: plan tomorrow ---------- */

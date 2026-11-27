@@ -118,23 +118,6 @@ function rollCounts(root,scope){
   root.querySelectorAll('[data-roll]').forEach(n=>{const key=(n.dataset.roll==='inbox'?'':scope)+':'+n.dataset.roll,txt=n.textContent,prev=ROLLS.get(key);ROLLS.set(key,txt);rollNode(n,prev);});
 }
 
-/* The + opens a small menu: the + turns into an ×, the page dims, the options float up one by one */
-function fabMenu(){
-  const fab=$('#fab');if(!fab)return;if($('.fab-menu')){closeFabMenu();return;}
-  const dk=App.state.view==='today'&&App.state.sel?App.state.sel:todayK();
-  const go=fn=>()=>{closeFabMenu(true);setTimeout(fn,motionOK()?120:0);};
-  const items=[['Quick capture','inbox',()=>captureSheet(null)],['All-day','sun',()=>alldaySheet(null,{start:dk})],['Time block','time',()=>blockSheet(null,{date:dk,start:nextFreeSlot(dk)})],['Task','task',()=>taskSheet(null,{date:dk})]];
-  const r=fab.getBoundingClientRect();
-  const scrim=el('div',{class:'fab-scrim',onclick:()=>closeFabMenu()});
-  const menu=el('div',{class:'fab-menu',role:'menu'},items.map(([l,i,fn])=>el('button',{class:'mitem',role:'menuitem',onclick:go(fn)},el('span',{class:'d',html:ic(i,IC.sm)}),l)));
-  const wide=innerWidth>=BP.desktop;
-  Object.assign(menu.style,wide?{left:(r.right+12)+'px',top:r.top+'px'}:{left:(r.left+r.width/2)+'px',bottom:(innerHeight-r.top+14)+'px'});
-  if(wide)menu.classList.add('side');
-  document.body.append(scrim,menu);fab.classList.add('open');fab.setAttribute('aria-expanded','true');
-  requestAnimationFrame(()=>{scrim.classList.add('on');[...menu.children].reverse().forEach((b,j)=>{b.style.transitionDelay=(j*45)+'ms';});menu.classList.add('on');});
-  const esc=e=>{if(e.key==='Escape')closeFabMenu();};addEventListener('keydown',esc);menu._esc=esc;
-  setTimeout(()=>{const f=menu.querySelector('.mitem:last-child');f&&f.focus({preventScroll:true});},60);
-}
 function closeFabMenu(fast){
   const m=$('.fab-menu'),s=$('.fab-scrim'),fab=$('#fab');if(fab){fab.classList.remove('open');fab.setAttribute('aria-expanded','false');}
   if(m){removeEventListener('keydown',m._esc);[...m.children].forEach(b=>b.style.transitionDelay='0ms');m.classList.remove('on');setTimeout(()=>m.remove(),fast?120:260);}
@@ -262,16 +245,6 @@ function morphSheetIn(sheet,h0){
 }
 /* Lists that just changed under a search box: rows settle in one after another */
 function settleIn(box){if(!motionOK()||!box)return;$$('.li,.lbl',box).slice(0,12).forEach((n,i)=>n.animate([{opacity:0,transform:'translateY(8px)'},{opacity:1,transform:'none'}],{duration:MOT.base,delay:i*35,easing:EASE,fill:'backwards'}));}
-/* Tomorrow card: the day grows out of the card you tapped */
-function zoomFrom(r,update){
-  if(!motionOK()||!r){update();return;}
-  /* a card-shaped panel grows from the card to the screen, then melts away over the new day */
-  const box=el('div',{class:'zoom-box','aria-hidden':'true'});Object.assign(box.style,{left:r.left+'px',top:r.top+'px',width:r.width+'px',height:r.height+'px'});document.body.append(box);
-  const W=innerWidth,H=innerHeight;
-  box.animate([{left:r.left+'px',top:r.top+'px',width:r.width+'px',height:r.height+'px',borderRadius:'22px'},{left:'0px',top:'0px',width:W+'px',height:H+'px',borderRadius:'0px'}],{duration:MOT.base,easing:SOFT,fill:'forwards'}).onfinish=()=>{
-    update();const pg=$('#view>.page');pg&&[...pg.children].slice(0,6).forEach((c,i)=>c.animate([{opacity:0,transform:'translateY(8px)'},{opacity:1,transform:'none'}],{duration:MOT.base,delay:i*18,easing:EASE,fill:'backwards'}));
-    box.animate([{opacity:1},{opacity:0}],{duration:MOT.fast,easing:EASE,fill:'forwards'}).onfinish=()=>box.remove();};
-}
 /* "What should I do now?": spin through what's on your plate, land on the pick, then let the rest settle */
 function nowReveal(){
   const card=$('.nowcard');if(!card||!motionOK())return;const first=card.querySelector('.list .li .tt');if(!first)return;
@@ -284,13 +257,6 @@ function nowReveal(){
 }
 
 /* ---------- round 5 ---------- */
-/* Time grid: ease down to the current hour on open; the now line draws in */
-function gridGlide(g,gw,to,isToday){
-  if(!motionOK()||!g.animate){g.scrollTop=to;return;}
-  const from=Math.max(0,to-1.5*HH);g.scrollTop=from;const t0=performance.now(),d=360;
-  const step=t=>{const k=Math.min(1,(t-t0)/d),e=1-Math.pow(1-k,3);g.scrollTop=from+(to-from)*e;if(k<1)requestAnimationFrame(step);};requestAnimationFrame(step);
-  if(isToday){const b=gw.querySelector('.now .bar');b&&b.animate([{transform:'scaleX(0)'},{transform:'none'}],{duration:MOT.base,delay:180,easing:EASE,fill:'backwards'});}
-}
 /* Sheets that open from a row you just tapped unfold from that row */
 let lastTap=null;
 document.addEventListener('pointerdown',e=>{const n=e.target.closest&&e.target.closest('.trow,.t3row,.li,.blk,.wkrow .it,.dayline,.habit-mini,.stepin');if(!n)return;lastTap={r:n.getBoundingClientRect(),t:Date.now()};},{passive:true,capture:true});
@@ -744,13 +710,6 @@ function heldPlay(root){const d=App.state._held;if(!d)return;App.state._held=0;i
   tg.forEach(n=>n.animate([{filter:from},{filter:to}],{duration:MOT.slow,easing:EASE}));const b=pg.querySelector('[data-hb]');if(b&&d>0)b.animate([{opacity:0,transform:'translateX(-10px)'},{opacity:1,transform:'none'}],{duration:MOT.base,delay:120,easing:SOFT,fill:'backwards'});}
 /* Top 3: drag a priority by its handle; the others make room and the numbers roll to the new order */
 function t3Move(dk,from,to){const l=t3Get(dk).slice();const prev={};l.forEach((x,i)=>prev[x.id]=i);const[x]=l.splice(from,1);l.splice(to,0,x);App.state._t3prev=prev;t3Set(dk,l);}
-function t3Grip(dk,i){const g=el('span',{class:'t3grip',role:'button','aria-label':'Drag to reorder',html:'<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="9" cy="6" r="1.7"/><circle cx="15" cy="6" r="1.7"/><circle cx="9" cy="12" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="9" cy="18" r="1.7"/><circle cx="15" cy="18" r="1.7"/></svg>'});
-  g.addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();const row=g.closest('.t3row'),card=row.parentElement,rows=[...card.querySelectorAll(':scope>.t3row')],H=row.offsetHeight,i0=rows.indexOf(row),y0=e.clientY;let to=i0;App.dragging=true;row.classList.add('t3lift');buzz(6);
-    const mv=ev=>{const dy=Math.max(-H*i0-8,Math.min(H*(rows.length-1-i0)+8,ev.clientY-y0));row.style.transform=`translateY(${dy}px) scale(1.02)`;const t=Math.max(0,Math.min(rows.length-1,i0+Math.round(dy/H)));if(t!==to){to=t;buzz(4);}
-      rows.forEach((o,j)=>{if(o===row)return;let s=0;if(i0<to&&j>i0&&j<=to)s=-H;if(i0>to&&j<i0&&j>=to)s=H;o.style.transition='transform var(--dur-base) var(--ease)';o.style.transform=s?`translateY(${s}px)`:'';});};
-    const up=()=>{removeEventListener('pointermove',mv);removeEventListener('pointerup',up);removeEventListener('pointercancel',up);App.dragging=false;
-      if(to===i0){row.classList.remove('t3lift');row.style.transition='transform var(--dur-base) var(--soft)';row.style.transform='';return;}t3Move(dk,i0,to);};
-    addEventListener('pointermove',mv);addEventListener('pointerup',up);addEventListener('pointercancel',up);});return g;}
 function t3Roll(root){const prev=App.state._t3prev;if(!prev)return;App.state._t3prev=null;if(!motionOK())return;root.querySelectorAll('.t3row[data-k]').forEach((r,i)=>{const id=r.dataset.k.slice(3),p=prev[id];if(p==null||p===i)return;const n=r.querySelector('.t3n');if(!n)return;
   const d=i<p?1:-1;n.classList.add('t3roll');const nw=el('span',{class:'t3new'},n.textContent);n.textContent='';const old=el('span',{class:'t3old'},String(p+1));n.append(nw,old);nw.animate([{transform:`translateY(${90*d}%)`,opacity:0},{transform:'none',opacity:1}],{duration:MOT.slow,easing:SOFT});
   old.animate([{transform:'none',opacity:1},{transform:`translateY(${-90*d}%)`,opacity:0}],{duration:MOT.base,easing:EASE,fill:'forwards'}).onfinish=()=>{old.remove();n.classList.remove('t3roll');};});}

@@ -171,10 +171,7 @@ function viewPlan(root,id){
   }
   root.append(page);
 }
-function moveTask(ts,t,dir){const i=ts.indexOf(t),j=i+dir;if(j<0||j>=ts.length)return;ts.forEach((x,n)=>{x.order=n;});ts[i].order=j;ts[j].order=i;ts.forEach(x=>put(x,{silent:true}));App.refresh();}
 function sectionSheet(t){let v=t.section||'',inst;inst=openSheet({title:'Section',left:{label:'Cancel'},right:{label:'Done',onclick:()=>{t.section=v.trim()||null;put(t);inst.close();}},build:b=>{const F=fieldTitle('f-sec','Section name','Plan, Buy, Install…',v,x=>v=x);b.append(F.wrap);focusTitle(F.input);}});}
-/* ---------- Routines ---------- */
-const RT_TEMPLATES=[['Morning',[['Water and stretch',5],['Shower and dress',15],['Breakfast',15],['Look over Today',5]]],['Wind down',[['Set out tomorrow',5],['Tidy up',10],['Read',20]]],['Workout',[['Warm up',5],['Main set',30],['Cool down',5]]],['Weekly reset',[['Empty Inbox',10],['Check next week',5],['Clear kitchen and desk',15],['Plan in Studio',15]]],['Focus block',[['Clear your desk',2],['Pick one thing',3],['Deep work',45],['Note what’s next',5]]]];
 function routineSheet(rec,{seed=null}={}){
   const isEdit=!!rec;const D=isEdit?clone(rec):Object.assign({title:'',notes:'',steps:[{id:uid('s'),t:'',min:5,habit:null}],days:[],setTime:null,startDate:todayK(),reminder:null,remUnit:'minute',area:null,color:defCol()},seed||{});
   let render;const inst=formSheet({title:isEdit?'Edit routine':'New routine',addLabel:isEdit?'Save':'Add',D,word:'routine',isEdit,canAdd:()=>!!D.title.trim(),commit:()=>{D.title=D.title.trim();D.steps=D.steps.filter(s=>s.t.trim()).map(s=>{delete s._more;return s;});if(isEdit){Object.assign(rec,D);put(rec);}else{const r=create('routine',D);setTimeout(()=>App.go('routine',{id:r.id}),350);}toast('Saved');},build:(body,update,i)=>{
@@ -214,7 +211,6 @@ setInterval(()=>{const PL=App.state&&App.state.player;if(!PL||!PL.run||App.state
 /* ---------- Lists ---------- */
 /* your saved templates show first wherever you make that kind of thing; press and hold one to delete it */
 function tplChip(t,use){const b=Chip([el('span',{style:'display:grid',html:ic('bookmark',IC.xs)}),t.t],{cls:'tplmine',onclick:use});onPress(b,(x,y)=>openMenu(x,y,[{label:'Delete template',icon:'trash',danger:true,onclick:()=>{const c=clone(get.id(t.id));remove(t.id);toast('Template deleted',()=>put(c));App.refresh();}}]));return b;}
-const LIST_TEMPLATES=[['Groceries',['Eggs','Milk','Bread','Coffee','Fruit','Vegetables'],true],['Packing',['Chargers','Toiletries','Medications','ID and wallet','Clothes'],true],['Gift ideas',[],false],['To watch',[],false],['To read',[],false]];
 function makeList(name,items=[],reusable=false){if(!name.trim())return null;const r=create('list',Object.assign({title:name.trim(),items:items.map(t=>({id:uid('i'),t,d:false})),reusable},name==='Packing'&&reusable?{packTpl:true}:{}));App.go('list',{id:r.id});return r;}
 function newListSheet(){let v='',inst;const make=(name,items=[],reusable=false)=>{if(!name.trim())return;inst.close();makeList(name,items,reusable);};
   inst=openSheet({title:'New list',left:{label:'Cancel'},right:{label:'Add',onclick:()=>make(v)},build:b=>{const T=fieldTitle('f-list-title','Name','Shopping, packing, anything','',x=>v=x,()=>make(v));b.append(T.wrap);{const mine=userTpls().filter(t=>t.kind==='list');if(mine.length)b.append(SectionLabel('Your templates'),el('div',{class:'chips'},mine.map(t=>tplChip(t,()=>{inst.close();addTemplate(t);}))));}focusIfKeyboard(T.input);}});}

@@ -12,14 +12,12 @@ const thisMonth=x=>(x.f.date||'').slice(0,7)===monthKey(today());
 const thisWeek=x=>{const[a,b]=weekRange(todayK());return (x.f.date||'')>=a&&(x.f.date||'')<=b;};
 const dueState=(x,f='every')=>{const last=x.f.last,ev=+x.f[f]||0;if(!ev)return{txt:last?`Last ${relDay(last)}`:'',over:false};if(!last)return{txt:'Not done yet',over:true,left:-1};const left=daysBetween(todayK(),addK(last,ev));return{txt:left<0?(left<-60?`${Math.round(-left/30)} months overdue`:`${-left} day${left<-1?'s':''} overdue`):left===0?'Due today':left>45?`Due ${dueMonth(addK(last,ev))}`:`In ${left} day${left>1?'s':''}`,over:left<=0,left};};
 const dueMonth=d=>{const x=fromK(d);return MONL[x.getMonth()]+(x.getFullYear()!==today().getFullYear()?` ${x.getFullYear()}`:'');};
-const rec2cal=(title,date,color,yearly)=>{const r=create('allday',{title,notes:'',start:date,end:null,repeat:yearly?{type:'custom',unit:'year',n:1,end:null}:{type:'never',end:null},reminder:null,area:null,color,icon:null});toast('Added to your calendar',null,'Undo',{open:dest('calendar')});return r;};
 /* keep one calendar item in step with a hub record */
 function syncCal(x,{title,start,end=null,yearly=false,color='sage',reminder=null}){if(x.f.added&&!x.f.calId)return;if(!start)return;const c=x.f.calId&&get.id(x.f.calId);if(c){c.title=title;c.start=start;c.end=end;put(c,{silent:true});return;}const r=create('allday',{title,notes:'',start,end,repeat:yearly?{type:'custom',unit:'year',n:1,end:null}:{type:'never',end:null},reminder,area:x.hub,color,icon:null});x.f.calId=r.id;put(x,{silent:true});}
 const newTask=(title,o={})=>create('task',Object.assign({title,notes:'',steps:[],date:null,time:null,repeat:{type:'never',end:null},reminder:null,deadline:null,priority:'normal',part:null,area:null,color:'sage',icon:null},o));
 const GIFT_ST=['Idea','Bought','Wrapped','Given'],WIN_KINDS=['Shipped','Led','Improved','Helped','Learned'],JOB_ST=['Saved','Applied','Interviewing','Offer','Closed'];
 const F=(id,label,type='text',extra={})=>Object.assign({id,label,type},extra);
 const DATE=F('date','Date','date');
-const doneAct={label:'Done',show:()=>true,run:x=>{x.f.last=todayK();put(x);toast('Marked done');}};
 
 /* small pieces the tool screens are built from */
 const later=()=>setTimeout(()=>App.refresh(),820);
@@ -42,8 +40,7 @@ const chipsH=(items,val,on)=>FilterRow(items,val,on,{cls:'hscroll'});
 const btnP=(label,fn,extra={})=>{const{icon,...x}=extra;return Button(icon?[el('span',{style:'display:grid',html:ic(icon,IC.sm)}),label]:label,{variant:'primary',onclick:fn,...x});};
 const btnL=(label,fn,extra={})=>Button(label,{variant:'secondary',onclick:fn,...extra});
 const btns=(...b)=>el('div',{class:'btnrow2'},b);
-const dtile=(dk,c='')=>DateBadge(dk,{tone:c==='warn'||c==='due'?'warn':null});const dtile0=(dk,c='')=>{const d=fromK(dk),n=daysBetween(todayK(),dk);return el('span',{class:'hdtile '+c},el('i',{},(n>=0&&n<=6?DOW[d.getDay()].slice(0,3):MON[d.getMonth()]).toUpperCase()),el('b',{},String(d.getDate())));};
-const wkDays=dk=>{const a=weekRange(dk)[0];return Array.from({length:7},(_,i)=>addK(a,i));};
+const dtile=(dk,c='')=>DateBadge(dk,{tone:c==='warn'||c==='due'?'warn':null});const wkDays=dk=>{const a=weekRange(dk)[0];return Array.from({length:7},(_,i)=>addK(a,i));};
 const PAL=['var(--red-soft)','var(--blue-soft)','var(--violet-soft)','var(--sage-100)','var(--amber-soft)','var(--a-travel-soft)','var(--a-relationships-soft)'];
 const avatar=(name,sz=36)=>{const s=String(name||'?'),h=[...s].reduce((n,c)=>n+c.charCodeAt(0),0);return el('span',{class:'avi',style:`width:${sz}px;height:${sz}px;background:${PAL[h%PAL.length]}`,'aria-hidden':'true'},s[0].toUpperCase());};
 const fmtH=m=>{m=Math.round(m||0);return m<60?`${m}m`:`${Math.floor(m/60)}h ${pad2(m%60)}m`;};
@@ -62,7 +59,6 @@ const toolHead=(page,hub,t,{sub,actions,add,ph}={})=>{page.append(pageHead(t.nam
   page.append(addField(ph||`Add ${/^[aeiou]/i.test(w)?'an':'a'} ${w}`,'tool-new-'+t.id,v=>{if(v&&hub==='Career'&&t.id==='wins'){create('entry',{hub,tool:'wins',f:{what:v,kind:WIN_KINDS[0],impact:'',date:todayK()}});toast('Win saved');return;}entrySheet(hub,t,null,v?{preset:{[f0.id]:v}}:{});}));};
 const plusB=(word,fn)=>IconButton(`New ${word}`,{cls:'green',html:ic('plus',IC.lg),onclick:fn});
 const moreB=(label,fn)=>IconButton(label,{cls:'green',html:sv('<circle cx="5" cy="12" r="1.8" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.8" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.8" fill="currentColor" stroke="none"/>',22),onclick:fn});
-const seedHub=name=>{App.state.params=Object.assign(App.state.params||{},{name});};
 const sVal=(key,def)=>{const S=App.state;return S['t_'+key]===undefined?def:S['t_'+key];};
 const sSet=(key,v)=>{App.state['t_'+key]=v;App.refresh();};
 const fileUrl=u=>/^www\./i.test(u)?'https://'+u:u;
@@ -169,11 +165,6 @@ function areaNexts(){const tk=todayK(),we=k(addD(weekStartOf(today()),6)),first=
   const out={};Object.keys(first).forEach(a=>{const f=first[a];out[a]=`${f.t} ${f.d===tk?(f.tm!=null?'at '+fmtT(f.tm):'today'):relDay(f.d).replace(/^Tomorrow$/,'tomorrow')}${(n[a]||0)>1?` · ${n[a]} this week`:''}`;});return out;}
 function areaRecords(a){return{tasks:get.all('task').filter(r=>r.area===a&&isOpenTask(r)),habits:get.all('habit').filter(r=>r.area===a),goals:get.all('goal').filter(r=>r.area===a),projects:get.all('project').filter(r=>r.area===a),resources:get.all('resource').filter(r=>r.area===a)};}
 function hubHidden(name){const s=get.settings(),off=(s.hubHidden||{})[name]||[],on=(s.hubShown||{})[name]||[];return[...off,...toolsOf(name).filter(t=>t.optIn&&!on.includes(t.id)).map(t=>t.id)];}
-function editToolsSheet(name,hub){const inst=openSheet({title:'Modules',left:{label:'Done'},build:b=>{const draw=()=>{b.innerHTML='';b.append(Caption('Turn off a module you don’t use. Nothing in it is deleted.',{as:'p'}),el('div',{class:'list'},toolsOf(name).filter(t=>!t.hide).map(t=>{const on=toolOn(name,t.id);return Switch({on,label:t.name,weight:400,lead:el('span',{style:'display:grid;color:var(--action-text)',html:ic(t.icon,IC.md)}),onChange:v=>{setToolOn(name,t.id,v);draw();}});})),Button('Build your own module',{variant:'secondary',full:true,style:'margin-top:var(--s3)',onclick:()=>{inst.close();App.state.params={name};modSheet(null);}}),Button('All modules',{variant:'link',size:'sm',style:'margin-top:var(--s1)',onclick:()=>{inst.close();App.go('modules');}}));};draw();}});}
-function toolTile(name,t){const l=entries(name,t.id),d=t.tile?t.tile(l,name):{v:String(l.length),sub:l.length?t.sum(l):'Nothing yet'};
-  return el('button',{class:'tc'+(d.off?' off':''),'aria-label':`${t.name}${d.sub?', '+d.sub:''}`,onclick:()=>App.go('tool',{hub:name,tool:t.id})},
-    el('span',{class:'tt2'},IconTile(null,{html:ic(t.icon||'grid',IC.md)}),d.tag?pill(d.tag,d.tagc||''):null),
-    el('span',{class:'tb'},d.v!=null?el('span',{class:'tv serif'},String(d.v),d.small?el('small',{},' '+d.small):null):null,el('span',{class:'tn'},t.name),d.sub?el('span',{class:'ts clip'},d.sub):null,d.viz?el('span',{class:'vz'},d.viz):null));}
 function viewArea(root,name){
   if(!name){viewAreas(root);return;}
   markGs('area');

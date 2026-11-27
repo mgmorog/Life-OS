@@ -135,8 +135,6 @@ HUBS.Health.tools.push(
    sumX:l=>{const c=cycleStats(l);return c.next?`Next around ${mD(c.next)}`:`${l.length} days logged`;},tileX:l=>{const c=cycleStats(l);return c.day?{v:String(c.day),sub:'cycle day'}:{v:String(l.length),sub:'logged'};}}));
 function cycleStats(l){const st=[...new Set(l.filter(x=>x.f.kind==='Period started').map(x=>x.f.date))].sort();if(!st.length)return{};const gaps=[];for(let i=1;i<st.length;i++){const g=daysBetween(st[i-1],st[i]);if(g>=15&&g<=60)gaps.push(g);}const recent=gaps.slice(-6),avg=recent.length?Math.round(recent.reduce((a,b)=>a+b,0)/recent.length):null,last=st[st.length-1];let next=avg?addK(last,avg):null;while(next&&next<todayK())next=addK(next,avg);return{avg,next,day:daysBetween(last,todayK())+1};}
 
-/* ---------- private modules stay out of search, reviews and Discover ---------- */
-const isPriv=(hub,id)=>{const t=toolOf(hub,id);return !!(t&&t.priv);};
 
 /* ---------- bank CSV import for Spending ---------- */
 function parseCSV(txt){const rows=[];let row=[],cur='',q=false;for(let i=0;i<txt.length;i++){const c=txt[i];if(q){if(c==='"'){if(txt[i+1]==='"'){cur+='"';i++;}else q=false;}else cur+=c;}else if(c==='"')q=true;else if(c===','){row.push(cur);cur='';}else if(c==='\n'||c==='\r'){if(c==='\r'&&txt[i+1]==='\n')i++;row.push(cur);cur='';if(row.some(v=>v.trim()))rows.push(row);row=[];}else cur+=c;}if(cur||row.length){row.push(cur);if(row.some(v=>v.trim()))rows.push(row);}return rows;}

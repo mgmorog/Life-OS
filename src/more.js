@@ -8,10 +8,6 @@ const PLACES={
 /* v325 · the page you came from, even when it's the same kind of page */
 function sameSpot(a,b){if(!a||!b||a.view!==b.view)return false;try{return JSON.stringify(a.params||{})===JSON.stringify(b.params||{});}catch(e){return true;}}
 const backBtn=(label='More',to='more')=>{const st=App.state.stack||[];let i=st.length-1;while(i>=0&&sameSpot(st[i],App.state))i--;const top=st[i];if(top&&top.t)label=top.t;return el('button',{class:'back',onclick:()=>App.back(to),html:ic('chevl',IC.md)+`<span class="clip">${esc(label)}</span>`});};
-/* module pages show their icon beside the title, the same icon used for them in lists, so the two are learned together */
-const titleIc=i=>el('span',{class:'tic','aria-hidden':'true',html:ic(i,IC.lg)});
-/* page titles stand on their own; the icon tile beside them only repeated the name */
-const withIc=(i,h)=>h;
 function pageHead(title,sub,{back='More',to='more',actions=null,icon=null}={}){return PageHeader({back:{label:back,to},title,subtitle:sub,actions});}
 function placeCount(id){
   const tk=todayK();
@@ -126,13 +122,6 @@ function viewSearch(root){
   };
   draw();root.append(page);if(!isTouch())setTimeout(()=>input.focus({preventScroll:true}),60);
 }
-function subList(title,ids,root,icon){
-  const page=el('div',{class:'page'});page.append(pageHead(title,null,{icon}));
-  page.append(el('div',{class:'list'},ids.map(id=>{const p=PLACES[id],c=placeCount(id);return Row({style:'',onclick:()=>App.go(id)},IconTile(null,{html:ic(p.i,IC.md)}),el('span',{class:'grow'},el('b',{style:'font-size:var(--fs-headline)'},p.n)),RowEnd('chevron'));})));
-  root.append(page);
-}
-const viewOrganize=root=>subList('Organize',['inbox','tasks','habits','routines','projects','goals','lists'],root,'grid');
-const viewReflect=root=>subList('Reflect',['reviews','insights'],root,'clip');
 
 /* Inbox: oldest first, every entry is an idea */
 function tidySheet(list){list=list.map((x,n)=>[x,n]).sort((a,b)=>((ideaHome(b[0])?1:0)-(ideaHome(a[0])?1:0))||a[1]-b[1]).map(x=>x[0]);
@@ -231,99 +220,17 @@ function viewInsights(root){
   const bd=byDow.indexOf(Math.max(...byDow));if(byDow[bd])page.append(Card({title:'Your strongest day',as:'div'},el('h2',{},DOW[bd]),el('p',{class:'sub'},`${byDow[bd]} things finished on ${DOW[bd]}s in the last 8 weeks.`)));
   root.append(page);
 }
-/* Discover */
-const IDEAS=[
-['Health','tool','Add your medications and checkups','Get supply warnings and never lose track of when the dentist is due.','care'],
-['Health','habit','Take a 20-minute walk','A short walk most days is the easiest movement to keep.'],
-['Health','tool','Log a workout','Your week of movement shows up on the Health page.','workouts'],
-['Health','habit','Stop screens 30 minutes before bed','Protect your sleep with a small boundary.'],
-['Health','project','Organize your workout space','Make a small space easier to use for your routine.'],
-['Home','tool','Set up your chores','Each one comes back on its own schedule, so nothing piles up.','chores'],
-['Home','tool','Add home upkeep','Smoke alarms, filters, gutters. The app reminds you when each is due.','upkeep'],
-['Home','project','Declutter one closet','Finish one small space before starting another.'],
-['Home','habit','Do a 10-minute evening reset','Wake up to a calmer home.'],
-['Home','tool','Save your home info','Wi-Fi, shutoffs, warranties and the plumber’s number in one place.','info'],
-['Finances','tool','List your bills','See what’s due this week and what’s on autopay.','bills'],
-['Finances','tool','Review your subscriptions','Add them to Bills and flag the ones you barely use.','bills'],
-['Finances','tool','Start a savings goal','Set a target and a monthly amount. The app shows when you’ll get there.','savings'],
-['Finances','habit','Do a weekly money check-in','Ten minutes keeps surprises small.'],
-['Relationships','tool','Add the people you want to keep close','Pick how often to reach out. They show up when it’s been a while.','people'],
-['Relationships','tool','Add birthdays and anniversaries','Get a heads-up with time to pick a gift.','dates'],
-['Relationships','task','Plan a dinner with family','Pick a date and ask this week.'],
-['Relationships','habit','Reach out to one friend a week','Small, regular contact keeps people close.'],
-['Career','tool','Log a recent win','Reviews and resumes write themselves when you keep notes.','wins'],
-['Career','task','Update your resume with this year’s wins','Easier while the details are fresh.'],
-['Career','tool','Pick a skill to grow','Rate where you are and where you want to be.','skills'],
-['Career','goal','Learn one skill for your next role','Name it, then break it into steps.'],
-['Learning','tool','Start your reading list','Track what you’re reading and what’s next.','reading'],
-['Learning','habit','Read for 20 minutes','A little most days adds up to a lot of books.'],
-['Learning','tool','Add a course you’re taking','See progress and how much time is left.','courses'],
-['Learning','project','Take a short online course','Pick one you can finish in a month.'],
-['Recreation','tool','Save outing ideas','So the next free Saturday already has a plan.','outings'],
-['Recreation','project','Plan a day trip within 2 hours','Somewhere you’ve never been.'],
-['Recreation','tool','Track a hobby','Set how often you want to do it and see your time add up.','hobbies'],
-['Recreation','habit','Protect one free evening a week','Nothing planned is a plan too.'],
-['Travel','tool','Plan your next trip','Bookings, packing and days away all in one place.','trips'],
-['Travel','tool','Save your travel documents','Passport expiry and traveler numbers, ready at the airport.','docs'],
-['Travel','goal','Take one trip you’ve been putting off','Pick the place, then the month.'],
-['Personal growth','tool','Write down your top values','A short compass for hard choices.','compass'],
-['Personal growth','tool','Rate your life wheel','Two minutes shows which area needs you most.','wheel'],
-['Personal growth','habit','Write three lines in a journal','Short is easier to keep.'],
-['Personal growth','tool','Try a two-week experiment','Test one change and decide with real data.','experiments'],
-['Personal growth','goal','Do one thing that scares you this quarter','Small counts.']];
-const ideaDone=i=>{const[area,kind,title,,tool]=i;if(kind==='tool')return entries(area,tool).length>0;const t=title.toLowerCase();return get.all(kind).some(r=>(r.title||'').toLowerCase()===t);};
 const andList=a=>a.length>1?`${a.slice(0,-1).join(', ')} and ${a[a.length-1]}`:a[0]||'';
-function viewDiscover(root){
-  const S=App.state,seen=get.id('discover')||{id:'discover',kind:'discover',seen:{}},areas=get.settings().areas||AREAS;S.discArea=S.discArea||null;
-  const mix={};let dk=k(addD(today(),-13));while(dk<=todayK()){const d=dayItems(dk);[...d.timed,...d.anytime].forEach(e=>{if(!['task','step','habit','routine'].includes(e.kind))return;const a=e.area||'No area';mix[a]=(mix[a]||0)+1;});dk=addK(dk,1);}
-  areas.forEach(a=>{const n=get.all('entry').filter(x=>x.hub===a&&(Date.now()-(x.updatedAt||x.createdAt||0))<14*864e5).length;if(n)mix[a]=(mix[a]||0)+n;});
-  const base=IDEAS.filter(i=>areas.includes(i[0])&&!seen.seen[i[2]]&&!ideaDone(i)&&(!S.discArea||i[0]===S.discArea));
-  const order=[...new Set(base.map(i=>i[0]))].sort((a,b)=>(mix[a]||0)-(mix[b]||0)),buckets=order.map(a=>base.filter(i=>i[0]===a)),pool=[];
-  while(buckets.some(b=>b.length))buckets.forEach(b=>{if(b.length)pool.push(b.shift());});const fi=pool.findIndex(i=>i[2]===S.discFirst);if(fi>0)pool.unshift(pool.splice(fi,1)[0]);
-  const page=el('div',{class:'page'});
-  page.append(pageHead('Discover',`${pool.length} idea${pool.length===1?'':'s'} picked for you`,{back:'More',to:'more',icon:'compass'}));
-  page.append(el('div',{class:'chips',style:'flex-wrap:nowrap;overflow-x:auto;margin:0 calc(var(--s4) * -1);padding:0 var(--s4) var(--nudge);scrollbar-width:none'},[null,...areas].map(a=>el('button',{class:'chip ichip'+(S.discArea===a?' on':''),style:'flex:none',onclick:()=>{S.discArea=a;App.refresh();}},a?areaChipIc(a):null,a||'For you'))));
-  const ent=Object.entries(mix).sort((a,b)=>b[1]-a[1]),tot=ent.reduce((n,e)=>n+e[1],0);
-  if(tot&&!S.discArea){const shades=['var(--accent)','var(--h3)','var(--h2)','var(--h1)'],top=ent.slice(0,3);const other=tot-top.reduce((n,e)=>n+e[1],0);const parts=[...top,...(other?[['Other',other]]:[])],quiet=areas.filter(a=>!mix[a]);
-    page.append(Card({as:'div',style:'border-radius:var(--r-card)'},el('div',{style:'display:flex;justify-content:space-between'},el('span',{class:'lbl',style:'font-size:var(--fs-small)'},'Last 2 weeks'),Caption(`Mostly ${top[0][0]}`,{as:'span'})),el('div',{class:'mix'},parts.map((p,i)=>el('i',{style:`flex:${p[1]};background:${shades[i]}`}))),Caption(parts.map(p=>el('span',{},`${p[0]} ${Math.round(p[1]/tot*100)}%`)),{as:'div',style:'display:flex;gap:var(--s3);flex-wrap:wrap;margin-top:var(--s2)'}),quiet.length?el('p',{class:'small',style:'margin-top:var(--s2);color:var(--text-muted)'},`Quiet lately: ${andList(quiet.slice(0,3))}${quiet.length>3?` and ${quiet.length-3} more`:''}.`):null));}
-  if(!S.discArea){const dm=discoverMods();if(dm)page.append(dm);}
-  const idea=pool[0];
-  if(!idea){page.append(el('div',{class:'list'},emptyState(S.discArea?`Nothing new for ${S.discArea}`:'You’ve seen them all',S.discArea?'Try another area, or start over.':'Ideas you skipped can come back.',Object.keys(seen.seen).length?Button('Bring skipped ideas back',{variant:'secondary',onclick:()=>{seen.seen={};put(seen);}}):null)));root.append(page);return;}
-  const[area,kind,title,text,tool]=idea,T=kind==='tool'?toolOf(area,tool):null;
-  const why=!mix[area]?`Nothing in ${area} has been on your plan for two weeks.`:kind==='tool'?`You haven’t set up ${T?T.name:'this'} in ${area} yet.`:`A small step to add to what you’re doing in ${area}.`;
-  page.append(el('div',{class:'deck'},SectionLabel(`${area} · ${kind==='tool'?(T?T.name:'Tool'):kind[0].toUpperCase()+kind.slice(1)}`,{style:'color:var(--action-text)'}),el('h2',{},title),el('p',{class:'muted'},text),el('div',{class:'why'},el('b',{},'Why this: '),why)));
-  const mark=()=>{seen.seen[title]=Date.now();S.discLast=title;put(seen);};
-  page.append(el('div',{style:'display:flex;gap:var(--s2)'},
-    Button('Skip',{variant:'secondary',style:'flex:1',onclick:()=>{mark();toast('Skipped',()=>{delete seen.seen[title];put(seen);});}}),
-    Button('Save',{variant:'secondary',style:'flex:1',onclick:()=>{mark();create('idea',{title,notes:kind==='tool'?`${text}\nOpen ${area} › ${T?T.name:''} to set it up.`:text,photos:[],source:'Discover'});toast('Saved to Inbox',null,'Undo',{open:dest('inbox')});}}),
-    Button(kind==='tool'?`Open ${T?T.name:'it'}`:'Add to plan',{variant:'primary',style:'flex:1.4',onclick:()=>{if(kind==='tool'){App.go('tool',{hub:area,tool});return;}watchCreate(kind,get.all(kind).length,mark);if(kind==='task')taskSheet(null,{title,notes:text,area,date:null});else if(kind==='habit')habitSheet(null,{title,notes:text,area});else if(kind==='goal')goalSheet(null,{seed:{title,notes:text,area}});else projectSheet(null,{seed:{title,notes:text,area}});}})));
-  if(pool.length>1)page.append(SectionLabel('Also for you'),el('div',{class:'list'},pool.slice(1,4).map(i=>Row({style:'',onclick:()=>{S.discFirst=i[2];App.refresh();window.scrollTo({top:0,behavior:'smooth'});}},el('span',{class:'grow'},el('b',{style:'font-weight:500'},i[2]),el('small',{},`${i[0]} · ${i[1]==='tool'?((toolOf(i[0],i[4])||{}).name||'Tool'):i[1][0].toUpperCase()+i[1].slice(1)}`)),RowEnd('chevron')))));
-  root.append(page);
-}
 /* Tools */
 const TEMPLATES=[{t:'Packing list',kind:'list',items:['Chargers','Toiletries','Medications','ID and wallet','Clothes for each day','Snacks']},{t:'Grocery staples',kind:'list',items:['Eggs','Milk','Bread','Coffee','Fruit','Vegetables','Rice or pasta']},{t:'Weekly reset',kind:'routine',steps:[['Empty Inbox',10],['Check next week’s calendar',5],['Clear the kitchen and desk',15],['Plan the week in Studio',15]]},{t:'Morning routine',kind:'routine',steps:[['Water and stretch',5],['Shower and dress',15],['Breakfast',15],['Look over Today',5]]},{t:'Shutdown routine',kind:'routine',steps:[['Capture loose ends',5],['Check tomorrow',5],['Set out what you need',5]]},{t:'Home upkeep basics',kind:'upkeep',items:[['Test smoke alarms',180],['Replace furnace filter',90],['Clean gutters',365],['Check fire extinguisher',365],['Clean dryer vent',365]]}];
 function saveTemplate(kind,r){const name=r.title.replace(/ copy$/,'');const ex=get.all('tpl').find(x=>x.t===name&&x.tk===kind);const data=kind==='list'?{items:(r.items||[]).map(i=>i.t)}:kind==='project'?{items:projectTasks(r).map(t=>t.title),notes:r.notes||''}:{steps:(r.steps||[]).map(s=>[s.t,s.min||0])};if(ex){Object.assign(ex,data);put(ex);toast('Template updated');return;}create('tpl',Object.assign({t:name,tk:kind,title:name},data));toast(`Saved as a template. It’s under Your templates when you add a new ${kind}.`);}
 const userTpls=()=>get.all('tpl').map(x=>({t:x.t,kind:x.tk,items:x.items,steps:x.steps,notes:x.notes,id:x.id,mine:true}));
-const tplHave=t=>t.kind==='upkeep'?t.items.every(([w])=>entries('Home','upkeep').some(x=>(x.f.what||'').toLowerCase()===w.toLowerCase())):get.all(t.kind).find(r=>r.title===(t.kind==='list'&&t.t==='Packing list'?'Packing list':t.t));
 function addTemplate(t){
   if(t.kind==='upkeep'){const have=entries('Home','upkeep').map(x=>(x.f.what||'').toLowerCase());let n=0;t.items.forEach(([w,ev])=>{if(!have.includes(w.toLowerCase())){create('entry',{hub:'Home',tool:'upkeep',f:{what:w,every:ev,last:addK(todayK(),7*(n+1)-ev)}});n++;}});App.go('tool',{hub:'Home',tool:'upkeep'});toast(n>1?`${n} added, spread over the next ${n} weeks`:`${n} upkeep item added`);return;}
   if(t.kind==='project'){const r=create('project',{title:t.t,notes:t.notes||'',status:'active',color:defCol(),createdAt:Date.now()});(t.items||[]).forEach((x,i)=>create('task',{title:x,notes:'',steps:[],date:null,time:null,repeat:{type:'never',end:null},priority:'normal',part:r.id,order:i}));App.go('plan',{id:r.id});toast(`${t.t} started with ${(t.items||[]).length} tasks`);return;}
   if(t.kind==='list'){const r=create('list',{title:t.t,items:t.items.map(x=>({id:uid('i'),t:x,d:false})),packTpl:t.t==='Packing list'?true:undefined,reusable:true});App.go('list',{id:r.id});}
   else{const r=create('routine',{title:t.t,steps:t.steps.map(([x,m])=>({id:uid('s'),t:x,min:m}))});App.go('routine',{id:r.id});}
   toast(`${t.t} added`);}
-function viewTools(root){
-  const S=App.state,all=get.all('resource').sort((a,b)=>(b.createdAt||0)-(a.createdAt||0)),page=el('div',{class:'page'});
-  const used=[...new Set(all.map(r=>r.area).filter(Boolean))];if(S.resArea&&!used.includes(S.resArea))S.resArea=null;
-  const res=S.resArea?all.filter(r=>r.area===S.resArea):all;
-  page.append(pageHead('Tools & Resources',all.length?`${all.length} saved`:'',{icon:'books',actions:IconButton('New resource',{cls:'green',html:ic('plus',IC.lg),onclick:()=>resourceSheet(null)})}));
-  const host=u=>{try{return new URL(/^https?:/i.test(u)?u:'https://'+u).hostname.replace(/^www\./,'');}catch(e){return '';}};
-  const meta=r=>{const nl=(r.notes||'').trim().split('\n')[0];return joinMeta([r.area,r.url?host(r.url):null,nl&&!r.url?(nl.length>34?nl.slice(0,32).trim()+'…':nl):null,(r.photos||[]).length?el('span',{class:'omi',html:ic('image',IC.xs)+` ${(r.photos||[]).length}`}):null].filter(Boolean));};
-  page.append(SectionLabel('Saved'));
-  if(used.length>1)page.append(el('div',{class:'chips'},[null,...used].map(a=>el('button',{class:'chip ichip'+(S.resArea===a?' on':''),onclick:()=>{S.resArea=a;App.refresh();}},a?areaChipIc(a):null,a?`${a} · ${all.filter(r=>r.area===a).length}`:`All · ${all.length}`))));
-  page.append(all.length?el('div',{class:'list'},res.map(r=>Row({as:'div',style:''},el('button',{class:'grow',style:'text-align:left;min-width:0',onclick:()=>openRec(r)},el('b',{},r.title),el('small',{class:'ometa clip'},meta(r))),/^https?:\/\//i.test(r.url||'')?el('a',{href:r.url,target:'_blank',rel:'noopener',class:'chip',style:'height:var(--size-32);text-decoration:none;flex:none','aria-label':`Open ${r.title}`},'Open',el('span',{style:'display:grid;margin-left:var(--s1)',html:ic('arrow',IC.xs)})):null))):el('div',{class:'list'},emptyState('Nothing saved yet','Guides, links and notes you want to find again. Anything you capture with a link can land here.',Button('Add a resource',{variant:'secondary',onclick:()=>resourceSheet(null)}))));
-  const mine=userTpls();if(mine.length)page.append(SectionLabel('Your templates'),el('div',{class:'list'},mine.map(t=>withPress(Row({style:'',onclick:()=>addTemplate(t)},IconTile(null,{html:ic(t.kind==='list'?'list':t.kind==='project'?'project':'routine',IC.md)}),el('span',{class:'grow'},el('b',{},t.t),el('small',{},t.kind==='project'?`Project · ${t.items.length} task${t.items.length===1?'':'s'}`:t.kind==='list'?`List · ${t.items.slice(0,3).join(', ')}${t.items.length>3?'…':''}`:`Routine · ${t.steps.length} steps, ${t.steps.reduce((n,x)=>n+x[1],0)} min`)),el('span',{class:'linkbtn small'},'Use')),(x,y)=>openMenu(x,y,[{label:'Delete template',icon:'trash',danger:true,onclick:()=>{const c=clone(get.id(t.id));remove(t.id);toast('Template deleted',()=>put(c));}}])))));
-  root.append(page);
-}
 /* Archive */
 const trashTitle=t=>{const r=t.rec||{};if(r.kind==='entry'){const x=toolOf(r.hub,r.tool);return (x&&x.title(r))||'Item';}return r.title||r.notes||'Untitled';};
 const trashWhat=t=>{const r=t.rec||{};if(r.kind==='entry'){const x=toolOf(r.hub,r.tool);return x?x.name:'Life area';}return KINDN[r.kind]||'Item';};

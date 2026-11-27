@@ -374,8 +374,6 @@ function alldaySheet(rec,seed={}){
 
 function archiveFlow(rec,inst){rec.archived=true;rec.archivedAt=Date.now();put(rec);inst&&inst.close();toast('Moved to Archive',()=>{rec.archived=false;put(rec);});}
 
-/* ---------- Quick capture: behaves like the other add sheets ---------- */
-function watchCreate(kind,before,fn){const iv=setInterval(()=>{if(get.all(kind).length>before){clearInterval(iv);fn();}else if(!sheetStack.length){clearInterval(iv);}},300);}
 function pickListSheet(text,done,photos=[]){
   const inst=openSheet({title:'Add to a list',build:body=>{
     const lists=get.all('list');let item=text||'';

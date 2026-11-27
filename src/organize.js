@@ -24,11 +24,6 @@ function viewsRow(items,val,on,key,pool){
 }
 function areaOnly(list,key){const S=App.state,cur=S['af'+key];if(!(cur instanceof Set)||!cur.size)return list;return list.filter(r=>cur.has(r.area));}
 const areaNote=()=>null;
-/* a life-area card with a fold, the same shape Habits uses */
-function areaFold(page,key,a,rows,sub){const S=App.state;S['fold'+key]=S['fold'+key]||new Set();const shut=S['fold'+key].has(a);
-  /* v250 · flat: a small area heading (tap to fold) over one plain list, no ring card */
-  page.append(el('button',{class:'aflat'+(shut?' shut':''),'aria-expanded':String(!shut),onclick:()=>{if(shut)S._reveal='af'+key+a;shut?S['fold'+key].delete(a):S['fold'+key].add(a);App.refresh();}},el('span',{class:'grow'},a),el('small',{},sub.t),el('span',{class:'hachev',html:ic('chevd',IC.xs)})));
-  if(!shut)page.append(el('div',{class:'card flush afbody'},Array.isArray(rows)?revealRows(capRows(rows,'af'+key+a,6),'af'+key+a):rows));}
 function byArea(list){const m=new Map();list.forEach(r=>{const a=r.area||'No area';if(!m.has(a))m.set(a,[]);m.get(a).push(r);});return[...m.entries()].sort((a,b)=>a[0]==='No area'?1:b[0]==='No area'?-1:a[0].localeCompare(b[0]));}
 const withPress=(node,fn)=>holdMenu(node,fn,{skip:'.tick-hit'});
 /* an empty hub says so in one quiet line under its Add bar, not a big illustrated card */
@@ -97,7 +92,6 @@ function dayChips(title,opts,dflt,cb){let inst;inst=openSheet({title,build:b=>{c
 /* v288 · every place an idea can go, and a picker for when the suggestion is wrong */
 function homeFromKey(i,key){if(!key)return null;if(key.startsWith('k:')){const kd=key.slice(2),T=TURN.find(x=>x[0]===kd);return T?{kind:kd,label:T[2],icon:T[1],key}:null;}const [hub,tid]=key.slice(2).split('|'),tl=HUBS[hub]&&toolsOf(hub).find(x=>x.id===tid);if(!tl)return null;const g=tid==='gifts'?giftParts(i.title||''):null;return{hub,tool:tl,label:tid==='queue'?'Watch & listen':tl.name,icon:tl.icon||'grid',title:g?(g.what||ideaTitle(i)):ideaTitle(i),f:g?{who:g.who}:null,key};}
 function homeKey(h){return !h?'':h.key||(h.tool?`h:${h.hub}|${h.tool.id}`:`k:${h.kind}`);}
-function ideaDests(){const out=TURN.filter(x=>x[0]!=='list').map(x=>[`k:${x[0]}`,x[2]]);(get.settings().areas||AREAS).forEach(hub=>toolsOf(hub).filter(t=>!t.hide&&!t.wheel&&!hubHidden(hub).includes(t.id)&&t.fields).forEach(t=>out.push([`h:${hub}|${t.id}`,`${t.id==='queue'?'Watch & listen':t.name} · ${hub}`])));return out;}
 function pickHome(i,cur,cb){const ck=homeKey(cur);let inst;inst=openSheet({title:'Where should it go?',build:b=>{b.classList.add('mtsheet');const secs=[],cap=w=>w[0].toUpperCase()+w.slice(1);
   const pick=key=>{const h=homeFromKey(i,key);inst.close();if(h)cb(h,key);};
   const chip=(label,icon,key,words)=>{const c=el('button',{class:'mtchip'+(key===ck?' on':''),'aria-pressed':String(key===ck),onclick:()=>pick(key)},el('span',{style:'display:grid',html:ic(icon||'list',IC.sm)}),label);c._w=(label+' '+(words||'')).toLowerCase();return c;};
@@ -219,17 +213,10 @@ function selBar(){const S=App.state,ids=[...S.taskSel],ts=ids.map(get.id).filter
   const move=d=>act(t=>{if(t.repeat&&t.repeat.type!=='never')return;if(t.date&&t.date!==d)t.moves=(t.moves||0)+1;t.date=d;},`${n} moved to ${relDay(d).toLowerCase()}`);
   return el('div',{class:'selbar'},el('div',{class:'bl'},el('b',{},n?`${n} selected`:'Select tasks'),Button('Cancel',{variant:'link',onclick:()=>{S.taskSel=null;App.refresh();}})),
     el('div',{class:'chips'},Chip('Done',{onclick:()=>act(t=>setTaskDoneRaw(t,t.date&&occursOn(t.date,t.repeat,tk,t.skip)?tk:(t.date||tk),true,{quiet:true}),`${n} finished`)}),Chip('Today',{onclick:()=>move(tk)}),Chip('Tomorrow',{onclick:()=>move(addK(tk,1))}),Chip('Pick a date…',{onclick:()=>{if(!n){toast('Tap tasks to select them');return;}askFields({title:`Move ${n} task${n>1?'s':''}`,fields:[F('d','Date','date')],D:{d:addK(tk,2)},addLabel:'Move',save:D=>{if(D.d)move(D.d);}});}}),Chip('Project…',{onclick:()=>{if(!n){toast('Tap tasks to select them');return;}const ps=get.all('project').filter(p=>!p.finished);if(!ps.length){toast('No open projects yet');return;}Picker({title:`Move ${n} task${n>1?'s':''} to`,recentKey:'project',items:ps.map(p=>({value:p.id,label:p.title,sub:p.area||null})),onPick:id=>{const p=get.id(id);act(t=>{t.part=p.id;if(!t.area&&p.area)t.area=p.area;},`${n} moved to ${p.title}`);}});}}),Chip('Delete',{cls:'line',style:'color:var(--danger)',onclick:()=>{if(!n){toast('Tap tasks to select them');return;}const cs=ts.map(clone);ts.forEach(t=>remove(t.id));S.taskSel=null;App.refresh();toast(`${n} deleted`,()=>{cs.forEach(c=>put(c));});}})));}
-/* one card to plan every weekly habit that's behind, instead of a note under each */
-function weekPlanCard(hs){const tk=todayK(),ws=weekStartOf(today()),days=[];for(let i=0;i<7;i++){const d=k(addD(ws,i));if(d>tk)days.push(d);}
-  const nm=d=>DOW[fromK(d).getDay()].slice(0,3);if(!days.length)return null;
-  return Card({title:'Plan the rest of your week',cls:'wkplan'},Caption('Tap a day to plan a session. Tap it again to take it off.',{as:'p'}),el('div',{class:'wkgrid',style:`grid-template-columns:minmax(0,1fr) repeat(${days.length},36px)`},el('span'),...days.map(d=>Caption(nm(d),{as:'span',style:'text-align:center;font-weight:500'})),
-      ...hs.flatMap(h=>{const left=Math.max(0,(h.target||1)-habitWeek(h,tk)),pl=days.filter(d=>(h.sessions||{})[d]).length;return[el('span',{class:'wkname'},el('b',{},h.title),el('small',{class:pl>=left?'':'late'},pl>=left?'All planned':`${left-pl} to plan`)),...days.map(d=>{const on=!!(h.sessions||{})[d];return el('button',{class:'wkcell'+(on?' on':''),'aria-pressed':String(on),'aria-label':`${on?'Unplan':'Plan'} ${h.title} on ${DOW[fromK(d).getDay()]}`,onclick:()=>{h.sessions=h.sessions||{};if(on)delete h.sessions[d];else h.sessions[d]={time:h.setTime??null};put(h);}},on?el('span',{html:ic('check',IC.xs)}):null);})];})));}
 /* v293 · a chore or life-area item in Tasks: its area's icon instead of a tick, the kind in front, swipe right still finishes it */
 function choreRow(r){const w=areaRow(r);w.classList.add('li','chore');const th=w.querySelector('.tick-hit');if(th&&r.tick){const ico=el('span',{class:'tick-hit aiopen','aria-hidden':'true',html:ic(areaIcon(r.area||''),IC.sm)});th.replaceWith(ico);const t=w.querySelector('.t');if(t&&!w.querySelector('.aichev'))t.after(el('span',{class:'aichev',html:ic('chevr',IC.sm)}));}const m=w.querySelector('.meta');if(m&&r.kind&&!m.textContent.startsWith(r.kind))m.prepend(`${r.kind} · `);return w;}
 /* v286 · move each section's rows into the card that holds its heading */
 function mergeSecs(page){[...page.querySelectorAll(':scope>.tsec')].forEach(sec=>{if(sec.classList.contains('shut'))return;let n=sec.nextElementSibling;const pre=[];while(n&&!n.classList.contains('list')){pre.push(n);n=n.nextElementSibling;}if(!n||n.classList.contains('tsec'))return;[...n.classList].forEach(c=>{if(c!=='list')sec.classList.add(c);});sec.append(...n.childNodes);n.remove();pre.forEach(p=>sec.before(p));});}
-/* v286 · check-ins read as a question */
-const ciQ=t=>{t=String(t||'').trim();if(/\?$/.test(t))return t;const m=t.match(/^Follow up with (.+)$/i);if(m)return `Time to follow up on ${m[1]}?`;return t+'?';};
 function viewTasks(root){
   const S=App.state;if(!['all','today','upcoming','anytime','waiting','done','hold','priority'].includes(S.taskTab))S.taskTab='all';
   /* sort: due date (default), priority, or newest; ties fall back to due date */
@@ -375,7 +362,6 @@ function habitMenu(h,dk,x,y){const y1=addK(dk,-1),skipped=!!(h.skips&&h.skips[dk
   {const act=get.all('habit').filter(x=>!x.paused);if(act.length>1)items.push({label:'Reorder habits…',icon:'list',onclick:()=>reorderSheet({title:'Reorder habits',items:act.sort(habOrd).map(x=>({id:x.id,n:x.title,s:x.area||null})),onDone:D=>{D.forEach((x,i)=>{const r=get.id(x.id);if(r){r.order=i;put(r,{silent:true});}});App.refresh();toast('Order saved');}})});}
   items.push({label:'Edit',icon:'edit',onclick:()=>habitSheet(h)},{label:h.paused?'Resume':'Pause',icon:'time',onclick:()=>{setHabitPaused(h,!h.paused);toast(h.paused?'Paused. History kept.':'Resumed',()=>{setHabitPaused(h,!h.paused);App.refresh();});App.refresh();}});
   openMenu(x,y,items);}
-function usualTime(h){const v=Object.values(h.logT||{});if(v.length<5||h.setTime!=null)return null;const srt=v.slice(-30).sort((a,b)=>a-b),m=srt[srt.length>>1];return fmtT(Math.round(m/15)*15);}
 const missedYesterday=h=>{if(habitWeekly(h)||h.everyN)return false;const y=addK(todayK(),-1);return h.days.includes(monIdx(fromK(y)))&&(!h.startDate||y>=h.startDate)&&!habitDone(h,y)&&!(h.skips&&h.skips[y]);};
 const habOrd=(a,b)=>(a.order??1e9)-(b.order??1e9)||(a.createdAt||0)-(b.createdAt||0);
 function reorderSheet({title,items,onDone}){let D=items.slice(),inst,box;const draw=()=>{box.innerHTML='';box.append(el('p',{class:'small',style:'color:var(--text-muted)'},'Drag to set the order.'));const list=el('div',{class:'list'});D.forEach((x,i)=>{const r=Row({as:'div',style:'','data-i':String(i)},el('span',{class:'grow'},el('b',{style:'font-weight:500'},x.n),x.s?el('small',{},x.s):null));const h=el('span',{class:'grip','aria-label':`Drag ${x.n} to reorder`,html:sv('<circle cx="9" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="18" r="1"/>',18)});r.append(h);list.append(r);reorderable(h,r,list,()=>{const c=D.slice();D=[...list.children].map(n=>c[+n.dataset.i]);draw();});});box.append(list);};inst=openSheet({title,left:{label:'Cancel'},right:{label:'Done',onclick:()=>{onDone(D);inst.close();}},build:b=>{box=el('div',{style:'display:grid;gap:var(--s3)'});b.append(box);draw();}});return inst;}
@@ -453,8 +439,6 @@ function viewHabits(root){
   root.append(page);
 }
 
-/* ---------- Goals ---------- */
-const paceClass=pa=>pa==='Behind'||pa==='Overdue'?'warn':pa==='A bit behind'?'neu':'soft';
 const gNum=(v,u)=>{const n=(+v||0).toLocaleString('en-US',{maximumFractionDigits:2});u=(u||'').trim();return /^[$€£¥]$/.test(u)?u+n:u?`${n} ${u}`:n;};
 const goalNumText=g=>{const a=+g.numStart||0,b=+g.numTarget||0,c=+(g.numCur??a),u=g.numUnit,left=Math.abs(b-c),done=b>=a?c>=b:c<=b;return done?`${gNum(c,u)} · goal reached`:b>=a?`${gNum(c,u)} of ${gNum(b,u)}`:`${gNum(c,u)} now · ${gNum(left,u)} to go`;};
 const goalLate=g=>g.deadline&&!g.finished&&g.deadline<todayK();
@@ -521,39 +505,19 @@ function viewPlans(root,kind){
 }
 
 /* ---------- Projects ---------- */
-/* one compact row per project: title and progress, then the next task you can tick */
-function projRow(r){const ts=projectTasks(r),d=ts.filter(taskDone).length,next=ts.find(t=>!taskDone(t)),pc=ts.length?d/ts.length:0,dl=r.deadline&&dayCount(r.deadline);
-  const meta=[ts.length?`${d} of ${ts.length}`:'No tasks yet',r.deadline?(dl<0?el('span',{class:'olate'},`${-dl} day${dl<-1?'s':''} late`):`Due ${fmtMD(r.deadline)}`):null];
-  const top=el('button',{class:'prow',onclick:()=>App.go('plan',{id:r.id})},el('span',{class:'prtop'},el('b',{},r.title)),ts.length?meter(pc):null,el('small',{class:'ometa'},joinMeta(meta)));
-  const nx=next?el('div',{class:'prnext tick-host'},el('span',{class:'tick-hit'},tickBtn(false,on=>{setTaskDone(next,next.date||todayK(),on);toast(`${next.title} done`,()=>{setTaskDone(next,next.date||todayK(),false);App.refresh();});setTimeout(()=>App.refresh(),450);})),el('button',{class:'grow',style:'text-align:left;min-width:0',onclick:()=>openRec(next)},el('span',{class:'tt'},next.title))):!ts.length?el('button',{class:'prnext praddt',onclick:()=>App.go('plan',{id:r.id})},el('span',{class:'tick-hit','aria-hidden':'true',html:ic('plus',IC.sm)}),el('span',{class:'grow',style:'text-align:left'},'Add a task')):null;
-  return withPress(el('div',{class:'prwrap'},top,nx),(x,y)=>openMenu(x,y,[{label:'Open',icon:'chevr',onclick:()=>App.go('plan',{id:r.id})},{label:'Put on hold',icon:'time',onclick:()=>{r.paused=true;put(r);toast('On hold',()=>{r.paused=false;put(r);});}},{label:'Mark done',icon:'check',onclick:()=>{r.finished=true;r.finishedAt=Date.now();put(r);toast('Project done',()=>{r.finished=false;r.finishedAt=null;put(r);});}}]));}
 /* v298 · project rows like goals: a ring, then the next task with a small tick in the grey line */
 function projRowV(r){const ts=projectTasks(r),d=ts.filter(taskDone).length,next=ts.find(t=>!taskDone(t)),pc=ts.length?d/ts.length:0,pa=projectPace(r,pc);
   const nxEl=next?el('span',{class:'gnx'},el('button',{class:'gnxt','aria-label':`Mark ${next.title} done`,onclick:e=>{e.stopPropagation();buzz(6);setTaskDone(next,next.date||todayK(),true);toast(`${next.title} done`,()=>{setTaskDone(next,next.date||todayK(),false);App.refresh();});setTimeout(()=>App.refresh(),350);}}),el('button',{class:'gnxl',onclick:e=>{e.stopPropagation();openRec(next);}},next.title)):null;
   const meta=!ts.length?el('button',{class:'gfirst',onclick:e=>{e.stopPropagation();App.state._focusPt=true;App.go('plan',{id:r.id});}},'+ Add the first task'):el('small',{class:'ometa'},joinMeta([nxEl,next?null:'Every task is done',weeksLeft(r),pa==='Behind'||pa==='A bit behind'?el('span',{class:'olate'},pa):null].filter(Boolean)));
   const top=el('div',{class:'row grow2'},el('button',{class:'gring','aria-label':`Open ${r.title}`,onclick:()=>App.go('plan',{id:r.id})},habRing(pc,ic(areaIcon(r.area),IC.md),null)),el('div',{class:'grow gtx'},el('button',{class:'gtt',onclick:()=>App.go('plan',{id:r.id})},el('b',{},r.title)),meta));
   return withPress(el('div',{class:'gwrap'},top),(x,y)=>openMenu(x,y,[{label:'Open',icon:'chevr',onclick:()=>App.go('plan',{id:r.id})},{label:'Edit',icon:'edit',onclick:()=>projectSheet(r)},{label:'Put on hold',icon:'time',onclick:()=>{r.paused=true;put(r);toast('On hold',()=>{r.paused=false;put(r);});}},{label:'Mark done',icon:'check',onclick:()=>finishProject(r)}]));}
-function projectCard(r){
-  const ts=projectTasks(r),d=ts.filter(taskDone).length,next=ts.find(t=>!taskDone(t)),pc=ts.length?d/ts.length:0,parent=r.part&&get.id(r.part),stale=next&&Date.now()-lastProgress(r)>14*864e5;
-  const dl=r.deadline&&dayCount(r.deadline);
-  const metaParts=[r.area,r.deadline?`Due ${relDay(r.deadline)}`:null,r.deadline?(dl<0?el('span',{class:'olate'},`${-dl} day${dl<-1?'s':''} late`):dl>1?`${dl} days left`:null):null,parent?`Part of ${parent.title}`:null,stale&&!(dl<0)?el('span',{class:'olate'},'No progress in 2 weeks'):null];
-  const main=el('button',{class:'ocm',onclick:()=>App.go('plan',{id:r.id})},el('span',{class:'oserif'},r.title),metaParts.some(Boolean)?el('small',{class:'ometa'},joinMeta(metaParts)):null,ts.length?el('span',{class:'obar'},meter(pc),el('span',{class:'small muted tnum'},`${d} of ${ts.length}`)):null);
-  let foot;
-  if(!ts.length)foot=el('div',{class:'ofoot'},el('span',{class:'grow muted'},'No tasks yet'),Button('Add a task',{variant:'link',size:'sm',onclick:()=>App.go('plan',{id:r.id})}));
-  else if(!next)foot=el('div',{class:'ofoot'},el('span',{class:'grow muted'},'Every task is done'),Button('Mark project done',{variant:'link',size:'sm',onclick:()=>{r.finished=true;r.finishedAt=Date.now();put(r);toast('Project done',()=>{r.finished=false;r.finishedAt=null;put(r);});}}));
-  else{const row=el('div',{class:'ofoot tick-host'},el('span',{class:'tick-hit'},tickBtn(false,on=>{setTaskDone(next,next.date||todayK(),on);toast(`${next.title} done`,()=>{setTaskDone(next,next.date||todayK(),false);App.refresh();});setTimeout(()=>App.refresh(),820);})),el('button',{class:'grow',style:'text-align:left;min-width:0',onclick:()=>openRec(next)},el('span',{class:'tt'},next.title),el('small',{},'Next · ',ptMeta(next))));foot=row;}
-  return withPress(el('div',{class:'ocard'},main,foot),(x,y)=>openMenu(x,y,[{label:'Open',icon:'arrow',onclick:()=>App.go('plan',{id:r.id})},{label:'Edit',icon:'edit',onclick:()=>projectSheet(r)},{label:r.paused?'Resume':'Put on hold',icon:'time',onclick:()=>{r.paused=!r.paused;put(r);toast(r.paused?'On hold':'Resumed',()=>{r.paused=!r.paused;put(r);});}},r.finished?{label:'Reopen',icon:'undo',onclick:()=>{r.finished=false;r.status='active';put(r);}}:{label:'Mark done',icon:'task',onclick:()=>finishProject(r)},{label:'Archive',icon:'archive',onclick:()=>archiveFlow(r)},{label:'Delete',icon:'trash',danger:true,onclick:()=>{const c=clone(r);remove(r.id);toast('Project deleted',()=>put(c));}}]));
-}
 function projectPace(r,pc){if(!r.deadline||r.finished||r.paused)return null;if(r.deadline<todayK())return'Overdue';const s=r.createdAt||Date.now(),e=fromK(r.deadline).getTime();if(e<=s)return'Behind';const used=Math.min(1,Math.max(0,(Date.now()-s)/(e-s)));if(used<.05)return'On pace';return pc>=used-.1?'On pace':pc>=used-.3?'A bit behind':'Behind';}
 
-/* ---------- Routines ---------- */
-const RT_LOOK={'Morning':['sun','var(--a-recreation)'],'Wind down':['time','var(--a-career)'],'Workout':['habit','var(--a-relationships)'],'Weekly reset':['rep','var(--accent)'],'Focus block':['target','var(--a-learning)']};
 const rtOn=(r,dk)=>(r.days||[]).includes(monIdx(fromK(dk)))&&(!r.startDate||dk>=r.startDate);
 function rtStreak(r){let n=0,d=todayK();for(let i=0;i<800;i++){if(rtOn(r,d)){if((r.runs||{})[d])n++;else if(d!==todayK())break;}if(r.startDate&&d<r.startDate)break;d=addK(d,-1);}return n;}
 function rtWhen(r){const ds=r.days||[];if(!ds.length)return'On demand';const set=ds.slice().sort().join('');return(set==='0123456'?'Every day':set==='01234'?'Weekdays':set==='56'?'Weekends':ds.slice().sort().map(i=>WDN[i].slice(0,3)).join(', '))+(r.setTime!=null?` · ${fmtT(r.setTime)}`:'');}
 const rtMins=r=>(r.steps||[]).reduce((n,s)=>n+(s.min||0),0);
 const rtCircle=(icon,c)=>IconTile(null,{html:ic(icon,IC.md),tone:c});
-const rtIcon=r=>IconTile(null,{html:r.icon&&glyph(r.icon,20)?glyph(r.icon,20):ic((RT_LOOK[r.title]||['routine'])[0],IC.md),tone:colorHex(r.color)});
 const runRt=r=>{App.state.player=null;App.go('player',{id:r.id});};
 const clockOf=ts=>{const d=new Date(ts);return fmtT(d.getHours()*60+d.getMinutes());};
 function viewRoutines(root){
@@ -801,9 +765,6 @@ function goalBody(page,r){
   const recent=[...st.filter(s=>s.d&&s.doneAt).map(s=>({at:s.doneAt,t:`Checked off ${s.t}`,w:relDay(k(new Date(s.doneAt)))})),...(r.numLog||[]).map(x=>({at:x.at,t:`Logged ${x.v} ${r.numUnit||''}`.trim(),w:relDay(k(new Date(x.at)))}))].sort((a,b)=>b.at-a.at).slice(0,6);
   if(recent.length){const op=!!S2._gRec;const c=Card({as:'div',cls:'dlcard'},el('button',{class:'donefold'+(op?' open':''),style:'border-top:0','aria-expanded':String(op),onclick:()=>{S2._gRec=!op;if(!op)S2._reveal='gRec';App.refresh();}},el('span',{},`Recent · ${recent.length}`),el('span',{class:'chev',html:ic('chevd',IC.sm)})));if(op)c.append(...revealRows([el('div',{class:'orecent',style:'padding-bottom:var(--s3)'},recent.map(x=>el('div',{},el('i'),el('span',{},el('span',{style:'display:block'},x.t),el('small',{},x.w)))))],'gRec'));page.append(c);}
 }
-const ptLate=t=>!taskDone(t)&&t.date&&(!t.repeat||t.repeat.type==='never')&&t.date<todayK();
-const ptMeta=t=>{if(ptLate(t)){const n=daysBetween(t.date,todayK());return el('span',{class:'olate'},n<=1?'1 day late':`${n} days late`);}return ptWhen(t);};
-const ptWhen=t=>t.date?relDay(nextOcc(t))+(t.time!=null?' · '+fmtT(t.time):''):t.planWeek?`Week of ${shortDay(t.planWeek)}`:'Not planned yet';
 const habitsToday=(dk=todayK())=>get.all('habit').filter(h=>habitDue(h,dk)&&(!habitWeekly(h)||habitDone(h,dk)||habitWeek(h,dk)<(h.target||1)));
 
 /* v235 · share a list by private link: anyone with it can see the list and check items off; turn it off anytime */

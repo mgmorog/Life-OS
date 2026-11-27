@@ -66,24 +66,7 @@ function taskQuickAdd(page,seedDate){
   const box=el('div',{class:'oquick'},el('div',{style:'display:flex;align-items:center;gap:var(--s3)'},el('button',{class:'oqplus','aria-label':'New task with all the details',onpointerdown:()=>{inp._skip=true;},onclick:()=>{const t=(inp.value||'').trim();inp.value='';inp._skip=false;taskSheet(null,{date:seedDate,title:t});},html:ic('plus',IC.md)}),inp,addB),chips,el('div',{class:'oqhint'},el('b',{},'!'),' high priority · ',el('b',{},'#home'),' area · ',el('b',{},'fri 9am'),' when'));
   draw();page.append(box);
 }
-function carriedPrompt(tasks){const tk=todayK(),t=tasks.find(x=>x.date&&isOpenTask(x)&&(!x.repeat||x.repeat.type==='never')&&((x.date<tk&&daysBetween(x.date,tk)>=3)||(x.moves||0)>=3)&&x.nudgeOff!==tk);if(!t)return null;
-  const n=t.date<tk?daysBetween(t.date,tk):0,c=t.date&&clone(t);
-  const card=Card({},el('div',{class:'lbl olate'},n>=3?`Waiting ${n} days`:`Moved ${t.moves} times`),el('div',{class:'oserif',style:'font-size:var(--fs-title);line-height:28px;margin-top:var(--s2)'},`${t.title} keeps moving. What’s the plan?`),el('div',{class:'ochk',style:'margin-top:var(--s3)'},btnP('Do it today',()=>{t.date=tk;t.moves=0;t.nudgeOff=tk;put(t);}),btnL('Pick a day',()=>{t.nudgeOff=tk;t.moves=0;put(t,{silent:true});taskSheet(t);}),btnL('Drop it',()=>{t.archived=true;t.archivedAt=Date.now();put(t);toast('Dropped',()=>{t.archived=false;put(t);});})));card._tid=t.id;return card;}
 
-/* ---------- Habits: what's left this week ---------- */
-function habitLeftNote(h){
-  /* One round chip per day left this week. Tap to plan that day, tap again to take it off. Planned days are filled. */
-  const tk=todayK(),target=h.target||1,left=target-habitWeek(h,tk),ws=weekStartOf(today()),days=[];
-  for(let i=0;i<7;i++){const d=k(addD(ws,i));if(d>=tk)days.push(d);}
-  const rs=h.link&&h.link.log?wkRoutines(h):[],S=h.sessions||{},doneT=habitDone(h,tk),plan=days.filter(d=>S[d]&&!(d===tk&&doneT));
-  if(!days.length||(left<=0&&!plan.length))return null;
-  const nm=d=>DOW[fromK(d).getDay()].slice(0,3),full=d=>d===tk?'today':DOW[fromK(d).getDay()];
-    const doneN=habitWeek(h,tk),text=el('span',{class:'dpstat'},el('b',{},String(doneN)),' Done',el('i',{'aria-hidden':'true'},'|'),el('b',{},String(plan.length)),' Planned');
-  const toggle=d=>{buzz(6);h.sessions=h.sessions||{};if(h.sessions[d]){delete h.sessions[d];put(h);}else{h.sessions[d]={time:h.setTime??null};put(h);}};
-  return el('div',{class:'ohnext'},el('div',{class:'small',style:'color:var(--text-muted)'},text),
-    el('div',{class:'daytogs',role:'group','aria-label':`Plan ${h.title} this week`},days.map(d=>{const on=!!S[d]&&!(d===tk&&doneT),busy=!on&&freeMinutes(d)<(h.dur||30);
-      const b=el('button',{class:'daytog'+(d===tk?' today':'')+(on?' on':'')+(busy?' busy':''),disabled:d===tk&&doneT,'aria-pressed':String(on),'aria-label':`${on?'Planned':'Plan'} ${h.title} ${full(d)}${busy?', busy day':''}${rs.length?'. Press and hold to pick the routine':''}`,onclick:e=>{e.stopPropagation();toggle(d);}},nm(d));
-      if(!rs.length)return b;const pr=on&&S[d].rid&&get.id(S[d].rid);return el('span',{class:'daycol'},withPress(b,()=>wkPinSheet(h,d)),el('small',{class:pr?'on':''},on?(pr?shortR(pr):'Any'):''));})),rs.length?Caption('Press and hold a day to pick its routine.',{as:'p',style:'margin-top:var(--s2)'}):null);}
 
 /* ---------- Routines: what your runs show ---------- */
 function routineInsights(r){const log=rtLog(r);if(log.length<5)return[];const off=r.insightOff||{},out=[],mins=rtMins(r),steps=r.steps||[];const dismiss=key=>{r.insightOff=Object.assign({},off,{[key]:true});put(r);};
@@ -113,7 +96,6 @@ function listSuggestBox(l,inp,S){const box=el('div',{class:'tags',style:'margin-
   return box;}
 function listUsuals(l,S){const open=new Set(l.items.filter(i=>!i.d).map(i=>i.t.toLowerCase())),often=Object.values(l.hist||{}).filter(h=>h.n>=2&&!open.has(h.t.toLowerCase())).sort((a,b)=>b.n-a.n).slice(0,4);if(!often.length)return null;
   return [el('div',{class:'osech',style:'margin-top:var(--nudge);min-height:var(--size-28)'},el('span',{class:'lbl'},'You often add')),el('div',{class:'tags',style:'margin-top:0;flex-wrap:wrap'},often.map(h=>el('button',{class:'ochip line',style:'min-height:var(--size-40)',onclick:()=>{const old=l.items.find(i=>i.d&&i.t.toLowerCase()===h.t.toLowerCase());if(old){old.d=false;listRemember(l,old);}else listPush(l,h.t,h.note,listSecGuess(l,h.t));put(l);}},`+ ${h.t}`)))];}
-function pinnedListsToday(){const ls=get.all('list').filter(l=>l.pinned&&(l.items||[]).some(i=>!i.d)).slice(0,2);if(!ls.length)return null;return el('div',{class:'list'},ls.map(l=>{const o=l.items.filter(i=>!i.d);return Row({style:'',onclick:()=>App.go('list',{id:l.id})},el('span',{class:'grow'},el('b',{},l.title),el('small',{},`${o.length} left · ${o.slice(0,3).map(i=>i.t).join(', ')}${o.length>3?'…':''}`)),RowEnd('chevron'));}));}
 
 /* ---------- Capture that sorts itself (asks Claude, only when you tap) ---------- */
 let samplePromise=null;const getSample=()=>{if(!samplePromise)samplePromise=window.claude&&window.claude.use?window.claude.use('sample').catch(()=>null):Promise.resolve(null);return samplePromise;};

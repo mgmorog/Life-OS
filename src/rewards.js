@@ -276,5 +276,4 @@ function rwSettings(page,ctx){const s=get.settings(),r=rwRec();
     setToggle(ctx,gh,null,'Use freezes automatically','Spend one on a miss without asking',!!s.rwFrzAuto,v=>setSettings({rwFrzAuto:v}));}
   grp('Progress',['rwLevels','rwBadges','rwBests']);
   grp('Reviews and Inbox',['rwScore','rwGarden']);
-  {const g=el('div',{class:'list'});page.append(SectionLabel('Motion'),g);g.append(setRow('Celebration',null,({flow:'Soft halo',subtle:'Subtle',off:'Off'})[s.celebrate]||'Soft halo',()=>App.go('setpage',{id:'display'})));
-    if(s.reduceMotion)page.append(Caption('Reduce motion is on, so rewards appear without animation.',{as:'p',style:'padding:var(--s2) var(--s1) 0'}));}}
+  if(s.reduceMotion)page.append(Caption('Reduce motion is on, so rewards appear without animation.',{as:'p',style:'padding:var(--s2) var(--s1) 0'}));}

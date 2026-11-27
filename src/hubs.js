@@ -217,6 +217,7 @@ function entrySheet(hub,t,rec,{seed=null,after=null,type=null,preset=null}={}){
   if(!isEdit&&ty)D.t=ty;
   if(!isEdit&&preset)Object.assign(D,preset);
   const titleF=fields[0].type==='select'?fields[1]:fields[0];
+  /* v354 · a fresh journal entry starts with today’s prompt */if(!isEdit&&t.id==='journal'&&!D.note){try{D.note=journalPrompt();}catch(e){}}
   if(seed){const raw=seed.title&&seed.title!=='Unnamed Idea'?seed.title:'',w=parseWhen(raw,new Date());D[titleF.id]=w.title||raw;const nf=fields.find(f=>['note','val','why','result'].includes(f.id)&&f.id!==titleF.id);if(nf&&seed.notes)D[nf.id]=seed.notes;const df=fields.find(f=>f.type==='date'&&f.id!=='last');if(df&&(w.date||w.deadline))D[df.id]=w.date||w.deadline;if((seed.photos||[]).length)D.photos=seed.photos;if(seed.f)Object.assign(D,seed.f);}
   const can=()=>titleF.type==='number'?true:!!String(D[titleF.id]??'').trim();
   const hasPhotos=def.photos||(t.photos&&def===t)||(D.photos||[]).length;

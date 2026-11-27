@@ -4566,3 +4566,20 @@ body.sheet-open .fab.fabfloat,body:has(.sheet.open) .fab.fabfloat{opacity:0;poin
 .dashgrid .dchart{width:100%;height:auto}
 .dkpi{display:flex;align-items:center;gap:var(--s3);padding-top:var(--s2)}
 @media print{body.printrep .nav,body.printrep .vwfoot,body.printrep .pghead,body.printrep .fchips,body.printrep #toast{display:none!important}body.printrep .page{padding:0}}
+/* v354 · goals overview, year, ask */
+.gsum{display:grid;grid-template-columns:repeat(auto-fit,minmax(80px,1fr));gap:var(--s2);margin:var(--s2) 0}
+.gsumi{background:var(--card-bg);border-radius:var(--r-row);padding:var(--s3);display:flex;flex-direction:column;box-shadow:var(--e-raised)}.gsumi b{font-size:var(--fs-title);font-weight:var(--fw-strong)}.gsumi small{color:var(--text-muted)}
+.gsumi.behind b,.gsumi.well-behind b{color:var(--overdue)}
+.ggrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:var(--s3)}
+.gcard{display:flex;align-items:center;gap:var(--s3);background:var(--card-bg);border-radius:var(--r-row);padding:var(--s3) var(--s4);box-shadow:var(--e-raised);border:var(--hairline) solid var(--edge);text-align:left;font:inherit;color:var(--text)}
+.gct{display:flex;flex-direction:column;gap:2px;min-width:0}.gct b{font-weight:var(--fw-medium)}.gst{color:var(--text-muted)}.gst.behind,.gst.well-behind{color:var(--overdue)}.gst.ontrack{color:var(--action-text)}
+.ygrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:var(--s3)}
+.ymon{background:var(--card-bg);border-radius:var(--r-row);padding:var(--s3);display:flex;flex-direction:column;gap:4px;min-height:110px;box-shadow:var(--e-raised);border:var(--hairline) solid var(--edge)}
+.ymon.cur{box-shadow:inset 0 0 0 2px var(--action)}
+.ymh{background:none;font:inherit;font-weight:var(--fw-medium);text-align:left;padding:0 0 var(--s1);color:var(--text)}
+.yev{display:flex;align-items:center;gap:6px;background:none;font:inherit;font-size:var(--fs-small);color:var(--text);text-align:left;padding:0;min-width:0}
+.yev span{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.yev i{width:8px;height:8px;border-radius:50%;flex:none;background:var(--action)}
+.yev.trip i{background:#C08A3E}.yev.deadline i{background:var(--overdue)}.yev.event i{background:var(--line-strong)}
+.ylegend{display:flex;flex-wrap:wrap;gap:var(--s4);margin:var(--s2) var(--s1) var(--s3)}
+.askcard{display:flex;flex-direction:column;gap:2px;background:var(--selected);border-radius:var(--r-card);padding:var(--s4)}.askcard .big{font-size:32px;font-weight:var(--fw-strong);color:var(--accent-deep)}

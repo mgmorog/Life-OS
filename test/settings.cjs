@@ -182,4 +182,9 @@ const CHROME=process.env.CHROME||'/opt/pw-browsers/chromium-1243/chrome-linux64/
    await go('mydash');ok('v353 dashboard shows tiles',await p.evaluate(()=>document.querySelectorAll('.dashgrid > *').length>=2));
    await p.evaluate(()=>{window.__lifeos.App.state._vw=null;window.__lifeos.App.go('view',{src:'task',fresh:true,layout:'list'});});await p.waitForTimeout(400);await p.evaluate(()=>[...document.querySelectorAll('#view .vwlay')].find(b=>/Table/.test(b.textContent)).click());await p.waitForTimeout(400);ok('v353 switching layout on a new view sticks',await p.evaluate(()=>!!document.querySelector('#view .vwtbl')));
    await go('more');ok('v353 More lists Reports and Trackers',/Reports[\s\S]*Trackers/.test(await p.evaluate(()=>document.querySelector('.page').innerText)));}
+  // v354 · goals overview, year at a glance, ask your data
+  {await p.evaluate(()=>{const L=window.__lifeos,dl=new Date().getFullYear()+'-12-15';L.create('goal',{title:'Glance goal',steps:[],deadline:dl,area:'Health'});const tk=L.todayK();L.create('entry',{hub:'Health',tool:'workouts',f:{what:'Run',min:30,date:tk}});});
+   await go('goalsboard');ok('v354 goals overview lists goals',/Glance goal/.test(await p.evaluate(()=>document.querySelector('.page').innerText)));
+   await go('year');ok('v354 year at a glance shows the goal',/Glance goal/.test(await p.evaluate(()=>document.querySelector('.page').innerText)));
+   await go('search');await p.fill('.searchbox input, #q','workouts this month');await p.waitForTimeout(400);ok('v354 ask your data answers',/Workouts this month/.test(await p.evaluate(()=>document.querySelector('.askcard')?.innerText||'')));}
   ok('no page errors',!errs.length,errs);await b.close();process.exit(fails?1:0);})();

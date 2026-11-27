@@ -143,3 +143,19 @@ global.__todayMore.push(async({p,ev,ok,set,today,W})=>{
   await set({rwRing:true});await today();
   ok('v315 the ring never shows on another day',await ev(async()=>{const L=window.__lifeos;L.App.state.sel=L.todayK().slice(0,8)+'01'===L.todayK()?'2020-01-02':L.todayK().slice(0,8)+'01';L.App.go('today');await new Promise(r=>setTimeout(r,400));const none=!document.querySelector('.dring');L.App.state.sel=L.todayK();L.App.go('today');return none;}));
 });
+// v318 · Settings › Today: icons, no "Built in", options below; Add to Today: a line for every module, search
+(global.__todayMore=global.__todayMore||[]).push(async({p,ev,ok,W,set})=>{
+  await set({todayLayout:null,todayPins:[]});
+  await ev(()=>window.__lifeos.App.go('setpage',{id:'today'}));await W(500);
+  const pg=await ev(()=>({txt:document.querySelector('.page').innerText,icons:document.querySelectorAll('.tsrow .tmci svg').length,rows:document.querySelectorAll('.tsrow').length,labels:[...document.querySelectorAll('.page .list')].length}));
+  ok('v318 no "Built in" under built-in cards',!/Built in/.test(pg.txt));
+  ok('v318 every row on Settings › Today has an icon',pg.icons===pg.rows&&pg.rows>=4,pg);
+  ok('v318 Top 3, nudges and carry-over live on Settings › Today',/Top 3/.test(pg.txt)&&/Inbox nudge/.test(pg.txt)&&/Carry over unfinished tasks/.test(pg.txt)&&/Change with the time of day/.test(pg.txt));
+  await ev(()=>document.querySelector('.tsaddrow').click());await W(500);
+  const miss=await ev(()=>[...document.querySelectorAll('.sheet .tsaddli')].filter(r=>!(r.querySelector('small')||{}).textContent).map(r=>r.querySelector('b').textContent));
+  ok('v318 every module in Add to Today has a description',!miss.length,miss);
+  await p.fill('.sheet .tsaddq input','journal');await W(300);
+  const hits=await ev(()=>[...document.querySelectorAll('.sheet .tsaddli b')].map(n=>n.textContent));
+  ok('v318 Add to Today search finds Journal',hits.length>=1&&hits.includes('Journal'),hits);
+  await ev(()=>{document.querySelectorAll('.sheet button').forEach(b=>{if(/^Done$/.test(b.textContent.trim()))b.click();});});await W(400);
+});

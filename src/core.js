@@ -657,7 +657,23 @@ const clearPreviewSafe=()=>{const p=document.getElementById('drop-prev');p&&p.re
 const EMPTY_ART='<svg class="eart" width="72" height="56" viewBox="0 0 88 70" aria-hidden="true"><path d="M53 60H24a10 10 0 0 1-10-10V20a10 10 0 0 1 10-10h40a10 10 0 0 1 10 10v19"/><path d="M26 28h36M26 40h22"/><circle cx="66" cy="52" r="11"/><path d="M61.2 52.2l3.3 3.3 6.3-6.8"/></svg>';
 /* v229 · the compact form of the same empty state, for spots inside cards and sheets */
 /* v239 · one empty state: Empty({icon, title, body, action, size}) */
-function Empty({icon=null,title,body=null,action=null,size='lg',cls=''}={}){let art;if(icon)art=IconTile(icon,{size:size==='sm'?'md':'lg',cls:'eic'});else{const a=document.createElement('span');a.innerHTML=EMPTY_ART;art=a.firstChild;}
+/* v342 · illustrated empty states: a soft backdrop and a drawing that matches what's empty */
+const EART=(body)=>`<svg class="eart ill" width="88" height="70" viewBox="0 0 88 70" aria-hidden="true"><circle class="ebg" cx="44" cy="36" r="31"/>${body}</svg>`;
+const EMPTY_ARTS=[
+ [/^nothing for|search|no match|find/i,'<circle cx="40" cy="33" r="13"/><path d="M50 43l11 11"/>'],
+ [/inbox|idea|captur/i,'<path d="M22 40l7-17h30l7 17v10a4 4 0 0 1-4 4H26a4 4 0 0 1-4-4z"/><path d="M22 40h13l3 5h12l3-5h13"/><path d="M66 13v6M63 16h6"/>'],
+ [/task|to do|to-do|left|done|finish|checklist|step/i,'<rect x="24" y="14" width="40" height="44" rx="7"/><path d="M32 27l3 3 6-6M46 27h10M32 41l3 3 6-6M46 41h10"/>'],
+ [/habit|streak|routine/i,'<path d="M30 30a14 14 0 0 1 25-8M58 42a14 14 0 0 1-25 8"/><path d="M55 15v7h-7M33 57v-7h7"/><circle cx="44" cy="36" r="3"/>'],
+ [/goal|aim|target|plan/i,'<circle cx="42" cy="38" r="17"/><circle cx="42" cy="38" r="9"/><path d="M42 38l16-16M53 21h5v5"/>'],
+ [/calendar|event|schedul|day|week|month|date|holiday/i,'<rect x="22" y="18" width="44" height="38" rx="7"/><path d="M22 29h44M32 13v9M56 13v9"/><path d="M38 43l4 4 8-8"/>'],
+ [/photo|image|picture/i,'<rect x="20" y="18" width="48" height="36" rx="7"/><circle cx="34" cy="30" r="4"/><path d="M22 50l14-12 10 8 8-6 12 10"/>'],
+ [/money|spend|bill|budget|income|saving|expense|\$|subscri|net worth|tax/i,'<ellipse cx="44" cy="24" rx="16" ry="6"/><path d="M28 24v10c0 3.3 7.2 6 16 6s16-2.7 16-6V24M28 34v10c0 3.3 7.2 6 16 6s16-2.7 16-6V34"/>'],
+ [/people|person|friend|family|contact|gift|birthday/i,'<circle cx="35" cy="28" r="7"/><circle cx="55" cy="30" r="6"/><path d="M22 54c1-9 6-14 13-14s12 5 13 14M48 54c1-7 4-11 8-11s8 4 9 11"/>'],
+ [/trip|travel|pack|flight/i,'<rect x="22" y="24" width="44" height="30" rx="6"/><path d="M36 24v-6a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v6M22 36h44"/>'],
+ [/book|read|course|learn|note|journal/i,'<path d="M44 20c-6-4-14-5-22-4v36c8-1 16 0 22 4 6-4 14-5 22-4V16c-8-1-16 0-22 4z"/><path d="M44 20v36"/>'],
+];
+function emptyArt(t,b){const m=EMPTY_ARTS.find(([re])=>re.test(t||''))||EMPTY_ARTS.find(([re])=>re.test(b||''));return m?EART(m[1]):EART('<path d="M53 60H24a10 10 0 0 1-10-10V20a10 10 0 0 1 10-10h40a10 10 0 0 1 10 10v19"/><path d="M26 28h36M26 40h22"/><circle cx="66" cy="52" r="11"/><path d="M61.2 52.2l3.3 3.3 6.3-6.8"/>');}
+function Empty({icon=null,title,body=null,action=null,size='lg',cls=''}={}){let art;if(icon)art=IconTile(icon,{size:size==='sm'?'md':'lg',cls:'eic'});else{const a=document.createElement('span');a.innerHTML=emptyArt(String(title||''),String(typeof body==='string'?body:''));art=a.firstChild;}
   return el('div',{class:['empty',size==='sm'?'sm':'',cls].filter(Boolean).join(' ')},art,el('b',{},title),body?el('div',{},body):null,action?el('div',{class:'eact'},action):null);}
 function emptySm(title,text,action){return Empty({title,body:text,action,size:'sm'});}
 function emptyState(title,text,action){return Empty({title,body:text,action});}
@@ -751,6 +767,7 @@ const defCol=()=>{const s=get.settings(),p=PALETTES.find(x=>x[0]===(s.palette||'
 function applyTheme(){const s=get.settings(),R=document.documentElement,dark=s.mode==='dark'||(s.mode==='auto'&&matchMedia('(prefers-color-scheme: dark)').matches);
   R.dataset.mode=dark?'dark':'light';R.dataset.font=s.titleFont||'serif';R.dataset.bg=s.bgTone||'warm';R.dataset.density=s.density||'comfortable';R.dataset.labels=s.tabLabels===false?'off':'on';
   /* v337 · look: accent strength, corners, card style, body font */R.dataset.accent=s.accentStr||'standard';R.dataset.corners=s.corners||'round';R.dataset.cards=s.cardStyle||'lifted';R.dataset.body=s.bodyFont||'figtree';R.dataset.four=s.navFour?'on':'off';
+  /* v342 · Home Screen icon: iPhone reads it when you add the app */try{const li=document.querySelector('link[rel=apple-touch-icon]');if(li){const want=s.appIcon&&s.appIcon!=='sage'?`/icons/apple-touch-icon-${s.appIcon}.png`:'/icons/apple-touch-icon.png';if(li.getAttribute('href')!==want)li.setAttribute('href',want);}}catch(e){}
   const a=safeAccent(themeOf(s)),W=[255,255,255],K=[0,0,0],st=R.style,set=(k,c)=>st.setProperty(k,typeof c==='string'?c:rgb2hx(c));
   const isDefault=(s.palette||'sage')==='sage'&&!dark;
   const RAMP=[[50,W,.93],[100,W,.85],[200,W,.74],[300,W,.6],[400,W,.48],[500,W,.22],[600,null,0],[700,K,.1],[800,K,.32],[900,K,.5]];const OLD=['--accent','--accent-text','--accent-deep','--accent-soft','--accent-wash','--accent-mid','--accent-light','--accent-pale','--h0','--h1','--h2','--h3','--h4','--tint-1','--tint-3'];

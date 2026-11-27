@@ -4430,3 +4430,14 @@ body.sheet-open .fab.fabfloat,body:has(.sheet.open) .fab.fabfloat{opacity:0;poin
 .rorow{display:flex;align-items:center;gap:var(--s1);padding-right:var(--s2);border-bottom:var(--hairline) solid var(--line)}
 .rorow:last-child{border-bottom:0}
 .rorow>:first-child{flex:1;min-width:0;border-bottom:0}
+/* v342 · Home Screen icon picker */
+.aicrow{display:flex;gap:var(--s2);flex-wrap:wrap;justify-content:flex-end;max-width:60%}
+.aicon{width:var(--size-44);height:var(--size-44);border-radius:var(--r-inner);padding:2px;background:transparent;display:grid;place-items:center;border:2px solid transparent}
+.aicon img,.aicon .aiph{width:36px;height:36px;border-radius:9px;display:block;box-shadow:0 0 0 var(--hairline) var(--line)}
+.aiph{background:var(--c)}
+.aicon.on{border-color:var(--action)}
+/* v342 · illustrated empty states */
+.empty .eart.ill circle.ebg{fill:var(--accent-soft);stroke:none}
+:root[data-mode=dark] .empty .eart.ill circle.ebg{fill:var(--tint-1)}
+.empty .eart.ill ellipse{fill:none;stroke:var(--action);stroke-width:var(--stroke);stroke-linecap:round}
+.empty.sm .eart.ill{width:var(--size-56);height:var(--size-44)}

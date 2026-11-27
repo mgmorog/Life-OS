@@ -72,13 +72,15 @@ const PWA={
       const on=p.wanted();
       setToggle(ctx,g,null,'Reminders when the app is closed','Sent to this device',on,async v=>{if(v){const r=await p.enable();if(r!=='ok'){toast(r==='denied'?'Notifications are off for Life OS in your phone’s Settings.':'Couldn’t turn on notifications. Try again.');App.refresh();return;}this._sig.r=null;this.afterChange();toast('Reminders will reach you here');}else{await p.disable();toast('Notifications off on this device');}App.refresh();});
       if(on)g.append(condRow(Row({style:'color:var(--action-text);font-weight:500',onclick:async()=>{const r=await p.test();toast(r?'Sent. It should arrive in a few seconds.':'Couldn’t send a test. Check your connection.');}},'Send a test notification')));
-      {const gh=group('Evening habit nudge'),hn=s.habitNudge||{};setToggle(ctx,gh,null,'Evening habit nudge','Habits still open that day, once. Nothing if they’re all done.',hn.on!==false,v=>{setSettings({habitNudge:{...hn,on:v}});App.refresh();});
-        if(hn.on!==false){const t=hn.time!=null?hn.time:1200,inp=pickControl('time',fromMinT(t),v=>{const m=toMinT(v);if(m!=null)setSettings({habitNudge:{...hn,time:m}});},{label:'Nudge time',clear:false,cls:'tinput'});gh.append(Row({as:'div'},el('span',{class:'grow'},el('b',{style:'font-weight:500'},'Send at')),inp));}}
-      {const g3=group('Morning digest'),dg=s.digest||{};
-        setToggle(ctx,g3,null,'Morning digest','Your Top 3, first commitment and habits, once a day',!!dg.on,v=>{setSettings({digest:{...dg,on:v}});App.refresh();});
-        if(dg.on){const t=dg.time!=null?dg.time:450,inp=pickControl('time',fromMinT(t),v=>{const m=toMinT(v);if(m!=null)setSettings({digest:{...dg,on:true,time:m}});},{label:'Digest time',clear:false,cls:'tinput'});inp.setAttribute('aria-label','Digest time');
-          g3.append(Row({as:'div'},el('span',{class:'grow'},el('b',{style:'font-weight:500'},'Send at'),el('small',{},'Uses your quiet hours too')),inp));
-          g3.append(Row({as:'div',style:'display:block;padding-block:var(--s3)'},el('small',{style:'white-space:normal'},'Tomorrow: '+digestText(addK(todayK(),1)))));}}
+      /* v324 · one "What to send" list, time rows like the rest of Settings */
+      {const gw=group('What to send'),hn=s.habitNudge||{},dg=s.digest||{};
+        if(!on)gw.append(Row({as:'div',style:'display:block;padding-block:var(--s3)'},el('small',{style:'white-space:normal'},'These need Reminders when the app is closed, above.')));
+        setToggle(ctx,gw,null,'Evening habit nudge','Habits still open that day. Nothing if they’re all done.',hn.on!==false,v=>{setSettings({habitNudge:{...hn,on:v}});App.refresh();});
+        if(hn.on!==false){const t=hn.time!=null?hn.time:1200;gw.append(condRow(setRow('Send the nudge at',null,fmtT(t),()=>timeSheet('Evening habit nudge',t,m=>setSettings({habitNudge:{...(get.settings().habitNudge||{}),time:m}})))));}
+        setToggle(ctx,gw,null,'Morning digest','Your Top 3, first commitment and habits',!!dg.on,v=>{setSettings({digest:{...dg,on:v}});App.refresh();});
+        if(dg.on){const t=dg.time!=null?dg.time:450;gw.append(condRow(setRow('Send the digest at','Tomorrow: '+digestText(addK(todayK(),1)),fmtT(t),()=>timeSheet('Morning digest',t,m=>setSettings({digest:{...(get.settings().digest||{}),on:true,time:m}})))));}
+        gw.append(setRow('Review reminder',null,s.revRemind!==false?fmtT(s.revAt??1080):'Off',()=>App.go('setpage',{id:'reviews'})));
+        if(jobsOf(s).some(j=>j.flex))setToggle(ctx,gw,null,'Work hours','When a flexible job needs next period’s hours',s.flexRemind!==false,v=>setSettings({flexRemind:v}));}
       if('setAppBadge' in navigator){const g2=group('App icon badge');
         setToggle(ctx,g2,null,'Overdue tasks','Counted on the Life OS icon',s.badgeOverdue!==false,v=>{setSettings({badgeOverdue:v});this.badge();});
         setToggle(ctx,g2,null,'New ideas in the Inbox','Counted until you open the Inbox',s.badgeIdeas!==false,v=>{setSettings({badgeIdeas:v});this.badge();});}

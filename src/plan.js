@@ -33,10 +33,11 @@ const frSecs=fr=>Math.max(0,Math.round(((fr.pausedAt||Date.now())-fr.start-(fr.p
 function startFocus(t,min,opts={}){const cur=frNow();if(cur&&cur.id&&t&&cur.id===t.id){App.go('timer');return;}if(cur)finishFocus({quiet:true});
   const plan=min||(t&&planMin(t))||25;setSettings({focusBreak:null,focusRun:{mod:opts.mod||null,id:t?t.id:null,title:t?t.title:(opts.mod&&opts.mod.what)||'Focus',area:t?areaOfTask(t):null,start:Date.now(),plan,paused:0,pausedAt:null,buzzed:false}});closeMenu();App.go('timer');}
 /* how long? 25 or 50 minutes, the estimate, or your own */
-function focusLenSheet(t){const est=t&&planMin(t);let custom=est&&![25,50].includes(est)?est:30;const inst=openSheet({title:t?`Focus on ${t.title}`:'Focus',left:{label:'Cancel'},build:b=>{
+function focusLenSheet(t){const est=t&&planMin(t);let custom=est&&![25,50,+get.settings().focusLen||25].includes(est)?est:30;const inst=openSheet({title:t?`Focus on ${t.title}`:'Focus',left:{label:'Cancel'},build:b=>{
   const go=m=>{inst.close();startFocus(t,m);};
-  b.append(el('div',{class:'flen'},[25,50].map(m=>Button(`${m} min`,{variant:m===25?'primary':'secondary',size:'lg',onclick:()=>go(m)}))),
-    est&&![25,50].includes(est)?Button(`Your estimate · ${fmtDurS(est)}`,{variant:'secondary',full:true,onclick:()=>go(est),style:'margin-top:var(--s2)'}):null,
+  const m1=+get.settings().focusLen||25,m2=m1===25?50:25,opts=[m1,m2];/* v320 · your usual length comes first */
+  b.append(el('div',{class:'flen'},opts.map(m=>Button(`${m} min`,{variant:m===m1?'primary':'secondary',size:'lg',onclick:()=>go(m)}))),
+    est&&!opts.includes(est)?Button(`Your estimate · ${fmtDurS(est)}`,{variant:'secondary',full:true,onclick:()=>go(est),style:'margin-top:var(--s2)'}):null,
     el('div',{class:'list',style:'margin-top:var(--s3)'},Row({as:'div'},el('span',{class:'grow'},el('b',{style:'font-weight:500'},'Your own')),Stepper(custom,{min:5,max:240,step:5,format:fmtDurS,label:'Minutes',onChange:v=>{custom=v;}}),Button('Start',{size:'sm',variant:'primary',onclick:()=>go(custom)}))));}});}
 function pauseFocus(){const fr=frNow();if(!fr)return;if(fr.pausedAt){fr.paused=(fr.paused||0)+(Date.now()-fr.pausedAt);fr.pausedAt=null;}else fr.pausedAt=Date.now();setSettings({focusRun:Object.assign({},fr)});}
 function logFocus(id,m,area){const t=id&&get.id(id);if(t){t.spent=(+t.spent||0)+m;t.focusLog=[...(t.focusLog||[]),{d:todayK(),m,at:Date.now()}];put(t,{silent:true});return t;}const s=get.settings(),l=[...(s.focusFree||[]),{d:todayK(),m,area:area||null,at:Date.now()}].slice(-300);setSettings({focusFree:l});return null;}

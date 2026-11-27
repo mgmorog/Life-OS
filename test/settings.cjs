@@ -17,5 +17,10 @@ const CHROME=process.env.CHROME||'/opt/pw-browsers/chromium-1243/chrome-linux64/
   await go('setpage',{id:'tasks'});const tt=await p.evaluate(()=>document.querySelector('.page').innerText);ok('tasks has focus timer + check-in notes',/Focus timer/i.test(tt)&&/Check-in notes/.test(tt)&&/Timer chime/.test(tt));
   await go('setpage',{id:'display'});const dt=await p.evaluate(()=>document.querySelector('.page').innerText);ok('display no longer has timer/notes',!/Timer chime|Check-in notes/.test(dt));
   await go('prefs');await p.fill('#f-set-q','chime');await p.waitForTimeout(300);const r=await p.evaluate(()=>document.querySelector('.setres').innerText);ok('search finds chime in Tasks',/Timer chime[\s\S]*Tasks, habits/.test(r),r);
+  await go('setpage',{id:'tasks'});const t2=await p.evaluate(()=>document.querySelector('.page').innerText);
+  ok('v320 tasks page has sort, focus length and capture confirmation',/Sort tasks by/.test(t2)&&/Session length/.test(t2)&&/Confirm each capture/.test(t2),t2);
+  const ord=['Tasks','Habits','Capture','Focus timer'].map(x=>t2.indexOf('\n'+x+'\n'));ok('v320 groups in order',ord.every((v,i)=>v>=0&&(i===0||v>ord[i-1])),ord);
+  await p.evaluate(()=>window.__lifeos.t.setSettings({focusLen:45}));const fl=await p.evaluate(async()=>{window.__lifeos.t.focusLenSheet&&window.__lifeos.t.focusLenSheet(null);await new Promise(r=>setTimeout(r,400));return [...document.querySelectorAll('.sheet .flen button')].map(b=>b.textContent);});
+  if(fl.length)ok('v320 focus sheet leads with your length',fl[0]==='45 min',fl);
   await p.screenshot({path:'/tmp/set-hub.png'});
   ok('no page errors',!errs.length,errs);await b.close();process.exit(fails?1:0);})();

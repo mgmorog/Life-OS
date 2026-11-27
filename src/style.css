@@ -4392,3 +4392,17 @@ textarea.big.gstep{font-size:var(--fs-row);font-family:inherit}
 @keyframes tipin{from{opacity:0;transform:translateY(-6px)}}
 .a-motion .tipb{animation:none}
 .hstep{flex:none;width:24px;height:24px;border-radius:50%;background:var(--selected);color:var(--action-text);display:grid;place-items:center;font-size:var(--fs-small);font-weight:var(--fw-medium)}
+/* v337 · look settings: accent strength, corner style, card style, body font (Settings › Display & motion) */
+:root[data-accent=soft]{--selected:var(--accent-wash);--btn-primary-bg:var(--accent-soft);--btn-primary-fg:var(--accent-deep);--prio-set-ring:var(--accent-light)}
+:root[data-accent=bold]{--selected:var(--accent-pale);--chip-on-bg:var(--action);--chip-on-fg:var(--on-accent);--prio-ring:var(--accent-mid);--prio-set-ring:var(--action)}
+:root[data-mode=dark][data-accent=soft]{--selected:var(--tint-1);--btn-primary-bg:var(--accent-soft);--btn-primary-fg:var(--accent-text)}
+:root[data-mode=dark][data-accent=bold]{--selected:var(--tint-3)}
+:root[data-corners=rounder]{--r-sheet:34px;--r-card:26px;--r-row:18px;--r-inner:13px;--r-micro:8px}
+:root[data-corners=crisp]{--r-sheet:18px;--r-card:12px;--r-row:9px;--r-inner:6px;--r-micro:4px}
+:root[data-cards=outlined]{--e-raised:none;--edge:var(--n5)}
+:root[data-cards=flat]{--e-raised:none;--edge:transparent;--card-bg:var(--n2)}
+:root[data-cards=flat] .list,:root[data-cards=flat] .group{background:var(--n2)}
+:root[data-mode=dark][data-cards=flat]{--card-bg:var(--n3)}
+:root[data-mode=dark][data-cards=flat] .list,:root[data-mode=dark][data-cards=flat] .group{background:var(--n3)}
+:root[data-body=system]{--body:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif}
+:root[data-body=rounded]{--body:ui-rounded,"SF Pro Rounded","Nunito","Varela Round",-apple-system,system-ui,sans-serif}

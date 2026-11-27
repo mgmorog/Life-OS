@@ -488,7 +488,7 @@ function toast(msg,undo,label='Undo',{open=null,edit=null,force=false}={}){if(!f
 const IOS=/iP(hone|ad|od)/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
 const iosTap=(()=>{let l=null;return()=>{if(!l){const i=document.createElement('input');i.type='checkbox';i.setAttribute('switch','');i.id='hx-tap';i.tabIndex=-1;i.setAttribute('aria-hidden','true');i.style.display='none';l=document.createElement('label');l.htmlFor='hx-tap';l.style.display='none';l.setAttribute('aria-hidden','true');const stop=e=>e.stopPropagation();i.addEventListener('click',stop);l.addEventListener('click',stop);document.body.append(i,l);}l.click();};})();
 const canBuzz=()=>!!navigator.vibrate||IOS;
-const buzz=ms=>{if(!get.settings().haptics)return;try{if(navigator.vibrate)navigator.vibrate(ms);else if(IOS)iosTap();}catch(e){}};
+const buzz=ms=>{const st=get.settings();if(!st.haptics)return;const firm=st.hapticLevel==='firm';try{if(navigator.vibrate)navigator.vibrate(firm?[ms*2,40,ms*2]:ms);else if(IOS){iosTap();if(firm)setTimeout(iosTap,70);}}catch(e){}};
 function flowTick(btn){const m=get.settings().celebrate;buzz(8);if(m==='off')return;btn.classList.remove('flow');void btn.offsetWidth;btn.classList.add('flow');if(m==='subtle')btn.classList.add('subtle');}
 function tickBtn(on,onToggle,label='Mark done'){
   const b=el('button',{class:'tick'+(on?' on':''),'aria-label':on?'Mark not done':label,'aria-pressed':String(!!on),html:ic('check',IC.xs),onclick:e=>{e.stopPropagation();const nowOn=!b.classList.contains('on');b.classList.toggle('on',nowOn);b.setAttribute('aria-pressed',String(nowOn));const row=b.parentElement;if(row&&row.classList.contains('tick-host'))row.classList.toggle('done',nowOn);if(nowOn)flowTick(b);App.state._flipUntil=Date.now()+1600;onToggle(nowOn);}});
@@ -744,6 +744,7 @@ const themeOf=s=>{const p=PALETTES.find(x=>x[0]===(s.palette||'sage'));if(p)retu
 const defCol=()=>{const s=get.settings(),p=PALETTES.find(x=>x[0]===(s.palette||'sage'))||(typeof RW_PALS!=='undefined'&&RW_PALS.find(x=>x[0]===s.palette));return p?p[3]:'sage';};
 function applyTheme(){const s=get.settings(),R=document.documentElement,dark=s.mode==='dark'||(s.mode==='auto'&&matchMedia('(prefers-color-scheme: dark)').matches);
   R.dataset.mode=dark?'dark':'light';R.dataset.font=s.titleFont||'serif';R.dataset.bg=s.bgTone||'warm';R.dataset.density=s.density||'comfortable';R.dataset.labels=s.tabLabels===false?'off':'on';
+  /* v337 · look: accent strength, corners, card style, body font */R.dataset.accent=s.accentStr||'standard';R.dataset.corners=s.corners||'round';R.dataset.cards=s.cardStyle||'lifted';R.dataset.body=s.bodyFont||'figtree';
   const a=safeAccent(themeOf(s)),W=[255,255,255],K=[0,0,0],st=R.style,set=(k,c)=>st.setProperty(k,typeof c==='string'?c:rgb2hx(c));
   const isDefault=(s.palette||'sage')==='sage'&&!dark;
   const RAMP=[[50,W,.93],[100,W,.85],[200,W,.74],[300,W,.6],[400,W,.48],[500,W,.22],[600,null,0],[700,K,.1],[800,K,.32],[900,K,.5]];const OLD=['--accent','--accent-text','--accent-deep','--accent-soft','--accent-wash','--accent-mid','--accent-light','--accent-pale','--h0','--h1','--h2','--h3','--h4','--tint-1','--tint-3'];

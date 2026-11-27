@@ -39,4 +39,16 @@ const CHROME=process.env.CHROME||'/opt/pw-browsers/chromium-1243/chrome-linux64/
   await p.fill('.page input[type=search]','swipe');await p.waitForTimeout(300);const hs=await p.evaluate(()=>document.querySelector('.page').innerText);ok('v336 help search finds Today',/Today/.test(hs)&&!/Photos and files/.test(hs),hs.slice(0,200));
   await p.evaluate(()=>{window.__lifeos.App.state.ob=null;window.__lifeos.App.go('welcome');});await p.waitForTimeout(400);ok('v336 welcome shows',/Welcome to Life OS/.test(await p.evaluate(()=>document.body.innerText)));
   await p.screenshot({path:'/tmp/set-hub.png'});
+  // v337 · Look group, haptic strength, reset with undo
+  await go('setpage',{id:'display'});const lk=await p.evaluate(()=>document.querySelector('.page').innerText);
+  ok('v337 look rows',/Accent strength/.test(lk)&&/Corners/.test(lk)&&/Cards/.test(lk)&&/Body font/.test(lk)&&/Reset Display & motion to defaults/.test(lk),lk.slice(0,200));
+  await p.evaluate(()=>window.__lifeos.t.setSettings({accentStr:'bold',corners:'crisp',cardStyle:'outlined',bodyFont:'rounded'}));await go('setpage',{id:'display'});
+  const ds=await p.evaluate(()=>{const R=document.documentElement,cs=getComputedStyle(R);return {a:R.dataset.accent,c:R.dataset.corners,k:R.dataset.cards,b:R.dataset.body,rc:cs.getPropertyValue('--r-card').trim(),er:cs.getPropertyValue('--e-raised').trim(),body:cs.getPropertyValue('--body')};});
+  ok('v337 attributes and tokens follow settings',ds.a==='bold'&&ds.c==='crisp'&&ds.k==='outlined'&&ds.b==='rounded'&&ds.rc==='12px'&&ds.er==='none'&&/rounded/.test(ds.body),ds);
+  await p.evaluate(()=>[...document.querySelectorAll('.page button.li')].find(n=>/^Reset Display & motion to defaults$/.test(n.textContent.trim())).click());await p.waitForTimeout(400);
+  await p.evaluate(()=>[...document.querySelectorAll('.sheet button, dialog button, .modal button, button')].find(n=>n.textContent.trim()==='Reset').click());await p.waitForTimeout(500);
+  const rs=await p.evaluate(()=>{const s=window.__lifeos.t.get?window.__lifeos.t.get.settings():null;const R=document.documentElement;return {c:R.dataset.corners,a:R.dataset.accent};});
+  ok('v337 reset puts display back',rs.c==='round'&&rs.a==='standard',rs);
+  const ttx=await p.evaluate(()=>document.querySelector('#toast')?.innerText||'');ok('v337 reset toast has Undo',/reset/i.test(ttx)&&/Undo/.test(ttx),ttx);
+  await go('setpage',{id:'notify'});ok('v337 no reset on Notifications',!/Reset .* to defaults/.test(await p.evaluate(()=>document.querySelector('.page').innerText)));
   ok('no page errors',!errs.length,errs);await b.close();process.exit(fails?1:0);})();

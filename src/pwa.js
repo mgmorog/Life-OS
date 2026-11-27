@@ -62,6 +62,8 @@ const PWA={
   feedUrl(tok){return `webcal://${location.host}/cal/${tok}.ics`;},
   newToken(){const b=new Uint8Array(18);crypto.getRandomValues(b);return [...b].map(x=>x.toString(16).padStart(2,'0')).join('');},
   /* extra rows on Settings pages */
+  /* v323 · whether this device gets push notifications */
+  pushOn(){try{const a=this.api();return !!(this.on&&a&&a.push&&a.push.wanted());}catch(e){return false;}},
   settings(id,group,page,setRow,ctx){
     const a=this.api();if(!this.on||!a)return;const s=get.settings();
     if(id==='reviews'){

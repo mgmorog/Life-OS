@@ -4406,3 +4406,10 @@ textarea.big.gstep{font-size:var(--fs-row);font-family:inherit}
 :root[data-mode=dark][data-cards=flat] .list,:root[data-mode=dark][data-cards=flat] .group{background:var(--n3)}
 :root[data-body=system]{--body:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif}
 :root[data-body=rounded]{--body:ui-rounded,"SF Pro Rounded","Nunito","Varela Round",-apple-system,system-ui,sans-serif}
+/* v338 · motion level, colour-blind status, hide empty, sticky headers, filled active icons */
+.a-calm{--dur-fast:.26s;--dur-base:.44s;--dur-slow:.72s;--dur-celebrate:1.4s}
+.a-cb{--overdue:#C2410C;--now:#C2410C}
+.a-cb :is(.late,.olate,.meta.late,small.late,.over,.ovr)::before{content:"! ";font-weight:var(--fw-strong)}
+.a-hideempty :is(.card,.list,.group)>.empty:not(:has(button)),.a-hideempty .list:has(>.empty:only-child),.a-hideempty .slabel:has(+.list>.empty:only-child){display:none}
+.a-sticky .page>.slabel{position:sticky;top:env(safe-area-inset-top,0px);z-index:calc(var(--z-raised) + 2);background:var(--surface);padding-block:var(--s2)}
+.a-fill .nav .tab.act .ic svg,.a-fill .chip[aria-pressed=true] svg,.a-fill .chip.on svg,.a-fill .seg [aria-pressed=true] svg{fill:currentColor;fill-opacity:.2}

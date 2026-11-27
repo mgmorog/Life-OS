@@ -51,4 +51,13 @@ const CHROME=process.env.CHROME||'/opt/pw-browsers/chromium-1243/chrome-linux64/
   ok('v337 reset puts display back',rs.c==='round'&&rs.a==='standard',rs);
   const ttx=await p.evaluate(()=>document.querySelector('#toast')?.innerText||'');ok('v337 reset toast has Undo',/reset/i.test(ttx)&&/Undo/.test(ttx),ttx);
   await go('setpage',{id:'notify'});ok('v337 no reset on Notifications',!/Reset .* to defaults/.test(await p.evaluate(()=>document.querySelector('.page').innerText)));
+  // v338 · motion, colour-blind, relative dates, layout toggles, rename
+  await p.evaluate(()=>window.__lifeos.t.setSettings({motionCalm:true,reduceMotion:false,cbSafe:true,hideEmpty:true,stickyHeads:true,relDates:true}));await go('setpage',{id:'display'});
+  const cl=await p.evaluate(()=>document.documentElement.className);ok('v338 classes follow settings',/a-calm/.test(cl)&&/a-cb/.test(cl)&&/a-hideempty/.test(cl)&&/a-sticky/.test(cl)&&/a-fill/.test(cl),cl);
+  const rd=await p.evaluate(()=>{const t=window.__lifeos.t,d=new Date();d.setDate(d.getDate()+9);const k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');return t.relDay?t.relDay(k):null;});
+  if(rd!==null)ok('v338 relative dates',rd==='In 9 days',rd);
+  await p.evaluate(()=>window.__lifeos.t.setSettings({names:{studio:'Planner',areas:'Roles'}}));await go('studio');await p.waitForTimeout(300);
+  const bar=await p.evaluate(()=>document.body.innerText);ok('v338 rename swaps Studio everywhere',/Planner/.test(bar)&&!/\bStudio\b/.test(bar),bar.match(/.{0,20}(Studio|Planner).{0,20}/g));
+  await p.evaluate(()=>window.__lifeos.t.setSettings({names:{},motionCalm:false,cbSafe:false,hideEmpty:false,stickyHeads:false,relDates:false}));await go('today');await p.waitForTimeout(400);
+  ok('v338 rename off brings names back',/Studio/.test(await p.evaluate(()=>document.body.innerText)));
   ok('no page errors',!errs.length,errs);await b.close();process.exit(fails?1:0);})();

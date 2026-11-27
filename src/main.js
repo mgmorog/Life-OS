@@ -63,7 +63,7 @@ const App={
     const anyFav=fav.some(isAct)||!!origin;
     /* The bar is built once and kept, so the sliding highlight is never torn out mid-glide.
        It is only rebuilt when the chosen favorites change. */
-    const sig=fav.join('|');
+    const sig=fav.join('|')+JSON.stringify(s.names||{});
     if(nav._sig!==sig){
       nav.innerHTML='';nav._sig=sig;
       const tab=(id,label,icon)=>{const b=el('button',{class:'tab','data-tab':id,onclick:()=>{

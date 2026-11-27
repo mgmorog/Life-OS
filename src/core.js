@@ -308,7 +308,7 @@ const daysBetween=(a,b)=>Math.round((fromK(b)-fromK(a))/864e5);
 const mdS=d=>get.settings().dateFmt==='dm'?`${d.getDate()} ${MON[d.getMonth()]}`:MON[d.getMonth()]+' '+d.getDate();
 /* one way to write a date: Nov 23, with the year only when it isn't this year */
 const shortDay=s=>{const d=fromK(s);return mdS(d)+(d.getFullYear()!==today().getFullYear()?`, ${d.getFullYear()}`:'');};
-const relDay=s=>{if(!s)return 'No date';const diff=daysBetween(todayK(),s);if(diff===0)return 'Today';if(diff===1)return 'Tomorrow';if(diff===-1)return 'Yesterday';if(diff>1&&diff<=6)return DOW[fromK(s).getDay()];return shortDay(s);};
+const relDay=s=>{if(!s)return 'No date';const diff=daysBetween(todayK(),s);if(diff===0)return 'Today';if(diff===1)return 'Tomorrow';if(diff===-1)return 'Yesterday';if(get.settings().relDates&&Math.abs(diff)<=31)return diff>0?`In ${diff} days`:`${-diff} days ago`;if(diff>1&&diff<=6)return DOW[fromK(s).getDay()];return shortDay(s);};
 const timeAgo=ts=>{const days=daysBetween(k(new Date(ts)),todayK());if(days<=0)return 'Today';if(days===1)return 'Yesterday';if(days<7)return `${days} days ago`;if(days<30)return `${Math.floor(days/7)} wk ago`;return shortDay(k(new Date(ts)));};
 
 /* ---------- store: one document per record, private to the signed-in person ---------- */

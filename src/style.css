@@ -1305,10 +1305,16 @@ a.linkbtn{text-decoration:none}
 .ob-foot{margin-top:auto;display:flex;flex-direction:column;gap:var(--s2);padding-top:var(--s2)}
 .ob-cta{height:var(--size-56);font-size:var(--fs-headline);border-radius:var(--r-row)}
 .ob-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s3)}
-.ob-opt{text-align:left;min-height:74px;border-radius:var(--card-radius);padding:var(--s3) var(--s4);display:flex;flex-direction:column;gap:var(--s1);background:var(--surface-raised);border:var(--ring-strong) solid var(--border);color:var(--text)}
+.ob-opt{position:relative;text-align:left;min-height:74px;border-radius:var(--card-radius);padding:var(--s3) var(--s4);display:flex;flex-direction:column;gap:var(--s1);background:var(--card-bg);border:var(--hairline) solid var(--edge);box-shadow:var(--e-raised);color:var(--text);hyphens:none;-webkit-hyphens:none;text-wrap:pretty;transition:background var(--dur-fast,160ms) ease,box-shadow var(--dur-fast,160ms) ease}
 .ob-opt b{font-weight:var(--fw-medium);font-size:var(--fs-row)}
 .ob-opt small{font-size:var(--fs-small);color:var(--text-muted);line-height:var(--lh-ui)}
-.ob-opt.on{background:var(--selected);border-color:var(--action)}
+.ob-oi{display:grid;color:var(--text-muted);margin-bottom:var(--nudge)}
+.ob-ock{position:absolute;top:var(--s3);right:var(--s3);width:22px;height:22px;border-radius:50%;display:grid;place-items:center;background:var(--action);color:var(--on-action,#fff);opacity:0;transform:scale(.6);transition:opacity var(--dur-fast,160ms) ease,transform var(--dur-fast,160ms) cubic-bezier(.3,1.4,.5,1)}
+.ob-opt.on .ob-ock,.ob-opt.have .ob-ock{opacity:1;transform:none}
+.ob-opt.on .ob-oi{color:var(--action)}
+.ob-opt.have{box-shadow:none;background:transparent;opacity:.6}
+.ob-opt.have .ob-ock{background:var(--text-muted)}
+.ob-opt.on{background:var(--selected);border-color:transparent}
 .ob-sw{flex:none;width:50px;height:var(--size-32);border-radius:var(--r-full);border:0;padding:var(--s1);display:flex;background:var(--line-3);transition:background var(--dur-fast)}
 .ob-sw i{width:var(--size-24);height:var(--size-24);border-radius:var(--r-full);background:var(--surface-raised);box-shadow:var(--e-raised);transition:transform var(--dur-fast)}
 .ob-sw.on{background:var(--action)}

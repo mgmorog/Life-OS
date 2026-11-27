@@ -159,3 +159,14 @@ global.__todayMore.push(async({p,ev,ok,set,today,W})=>{
   ok('v318 Add to Today search finds Journal',hits.length>=1&&hits.includes('Journal'),hits);
   await ev(()=>{document.querySelectorAll('.sheet button').forEach(b=>{if(/^Done$/.test(b.textContent.trim()))b.click();});});await W(400);
 });
+// v319 · starter set: icons on tiles, and anything already on Today shows as added
+(global.__todayMore=global.__todayMore||[]).push(async({p,ev,ok,W,set})=>{
+  await set({todayLayout:[{id:'tasks'},{id:'habits'},{id:'sched'},{id:'m:Health|workouts',when:'always'},{id:'also'}]});
+  await ev(()=>window.__lifeos.t.setSettings({}));
+  const r=await ev(async()=>{const L=window.__lifeos;L.App.go('setpage',{id:'today'});await new Promise(r=>setTimeout(r,400));const row=[...document.querySelectorAll('.page b')].find(n=>n.textContent==='Add a starter set');row.closest('button,[role],div').click();await new Promise(r=>setTimeout(r,500));
+    const tiles=[...document.querySelectorAll('.sheet .ob-opt')];const w=tiles.find(t=>t.querySelector('b').textContent==='Workouts');const out={icons:tiles.filter(t=>t.querySelector('.ob-oi svg')).length,n:tiles.length,have:w&&w.classList.contains('have')&&w.disabled};
+    document.querySelectorAll('.sheet button').forEach(b=>{if(/^Cancel$/.test(b.textContent.trim()))b.click();});return out;});
+  await W(400);
+  ok('v319 every starter tile has an icon',r.icons===r.n&&r.n>0,r);
+  ok('v319 a module already on Today shows as added',!!r.have,r);
+});

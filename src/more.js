@@ -2,7 +2,7 @@
 const PLACES={
  inbox:{n:'Inbox',i:'inbox',g:'organize'},tasks:{n:'Tasks',i:'task',g:'organize'},habits:{n:'Habits',i:'habit',g:'organize'},routines:{n:'Routines',i:'routine',g:'organize'},projects:{n:'Projects',i:'project',g:'organize'},goals:{n:'Goals',i:'target',g:'organize'},lists:{n:'Lists',i:'list',g:'organize'},done:{n:'Done',i:'check',g:'organize'},
  photos:{n:'Photos',i:'image'},trash:{n:'Recently deleted',i:'trash'},
- reviews:{n:'Reviews',i:'clip',g:'reflect'},insights:{n:'Insights',i:'chart',g:'reflect'},discover:{n:'Discover',i:'compass'},tools:{n:'Tools & Resources',i:'books'},archive:{n:'Archive',i:'archive'},areas:{n:'Life Areas',i:'heart'},
+ reviews:{n:'Reviews',i:'clip',g:'reflect'},insights:{n:'Insights',i:'chart',g:'reflect'},discover:{n:'Discover',i:'compass'},tools:{n:'Tools & Resources',i:'books'},archive:{n:'Archive',i:'archive'},areas:{n:'Life areas',i:'leaf'},
  today:{n:'Today',i:'sun'},studio:{n:'Studio',i:'layers'},calendar:{n:'Calendar',i:'cal'},
 };
 /* v325 · the page you came from, even when it's the same kind of page */
@@ -60,18 +60,20 @@ function viewMore(root){
   root.append(page);
 }
 /* choose a few places and put them in order: used by pins and the bottom bar */
-function orderSheet({title,init,max,word,limit,groups,info,exact=false,onDone}){
-  let D=init.slice(),inst,nudge='';
-  inst=openSheet({title,left:{label:'Cancel'},right:{label:'Done',onclick:()=>{if(exact&&D.length!==max){nudge=`Pick ${max} to finish.`;draw();return;}onDone(D);inst.close();}},build:body=>{
+function orderSheet({title,init,max,word,limit,groups,info,exact=false,onDone,preview=null,extra=null}){
+  let D=init.slice(),inst,nudge='';const X=extra?Object.assign({},extra.init):{};
+  inst=openSheet({title,left:{label:'Cancel'},right:{label:'Done',onclick:()=>{if(exact&&D.length!==max){nudge=`Pick ${max} to finish.`;draw();return;}onDone(D,X);inst.close();}},build:body=>{
     box=el('div',{style:'display:grid;gap:var(--s4)'});draw();body.append(box);}});
   var box;
   function toTop(){const sb=box.closest('.sbody');if(sb)sb.scrollTop=0;}
   function draw(){if(!box)return;box.innerHTML='';const full=D.length>=max;
     box.append(el('p',{class:'small',role:'status',style:nudge?'font-weight:500;color:var(--now)':'color:var(--ink-2)'},nudge||(full?`${D.length} of ${max} ${word}. Remove one to add another.`:`${D.length} of ${max} ${word}. Drag to set the order.`)));
+    if(preview)box.append(preview(D,X));
     const icon=id=>IconTile(null,{html:ic(info(id).i,IC.md)});
     if(D.length){const list=el('div',{class:'list'});D.forEach((id,i)=>{const r=Row({as:'div',style:'','data-i':String(i)},icon(id),el('span',{class:'grow'},el('b',{style:'font-weight:500'},info(id).n)),IconButton(`Remove ${info(id).n}`,{style:'color:var(--ink-3)',html:ic('x',IC.sm),onclick:()=>{D=D.filter(x=>x!==id);nudge='';draw();}}));const h=el('span',{class:'grip','aria-label':`Drag ${info(id).n} to reorder`,html:sv('<circle cx="9" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="18" r="1"/>',18)});r.append(h);list.append(r);reorderable(h,r,list,()=>{const c=D.slice();D=[...list.children].map(n=>c[+n.dataset.i]);draw();});});box.append(list);}
     const pickRow=id=>el('button',{class:'li'+(full?' pinfull':''),style:'',onclick:()=>{if(full){nudge=limit;draw();toTop();return;}D.push(id);nudge='';draw();toTop();}},icon(id),el('span',{class:'grow'},el('b',{style:'font-weight:500'},info(id).n)),el('span',{style:`display:grid;color:${full?'var(--ink-faint)':'var(--action-text)'}`,'aria-hidden':'true',html:ic('plus',IC.md)}));
-    groups.forEach(([label,ids])=>{const f=ids.filter(x=>!D.includes(x));if(f.length)box.append(SectionLabel(label),el('div',{class:'list'},f.map(pickRow)));});}
+    groups.forEach(([label,ids])=>{const f=ids.filter(x=>!D.includes(x));if(f.length)box.append(SectionLabel(label),el('div',{class:'list'},f.map(pickRow)));});
+    if(extra)box.append(extra.build(X,draw));}
   return inst;
 }
 const pinInfo=id=>{if(id&&id.startsWith('area:')){const a=id.slice(5);return (get.settings().areas||AREAS).includes(a)?{n:a,i:areaIcon(a),go:()=>App.go('area',{name:a}),c:''}:null;}const p=PLACES[id];if(!p||id==='tools'||id==='discover')return null;return{n:p.n,i:p.i,go:()=>App.go(id),c:placeCount(id).c};};
@@ -382,7 +384,13 @@ function viewArchive(root){
 /* Settings */
 function setRow(label,sub,val,on){return Row({style:'',onclick:on},el('span',{class:'grow'},el('b',{style:'font-weight:500'},label),sub?el('small',{},sub):null),val?Caption(val,{as:'span','data-roll':'sr:'+label}):null,/App\.go|setpage/.test(String(on))?RowEnd('chevron'):null);}
 function pickOne(title,opts,val,on){Picker({title,items:opts,selected:[val],onPick:on,left:'Close'});}
-function navSheet(){const s=get.settings();orderSheet({title:'Bottom bar',init:s.nav||[],max:3,exact:true,word:'chosen',limit:'Three is the limit. Remove one to add another.',info:id=>PLACES[id],groups:[['Places',['today','studio','calendar','inbox','tasks','habits','goals','projects','routines','lists','reviews','areas']]],onDone:D=>setSettings({nav:D})});}
+/* v329 · a live preview of the bar, and its labels switch, in the same sheet */
+function navSheet(){const s=get.settings();orderSheet({title:'Bottom bar',init:s.nav||[],max:3,exact:true,word:'chosen',limit:'Three is the limit. Remove one to add another.',info:id=>PLACES[id],
+  groups:[['Places',['today','studio','calendar','inbox','tasks','habits','goals','projects','routines','lists','reviews','areas']]],
+  preview:(D,X)=>{const slot=id=>id?el('span',{class:'nvp'},el('i',{html:ic(PLACES[id].i,IC.md)}),X.labels?el('small',{},PLACES[id].n):null):el('span',{class:'nvp empty'},el('i'),X.labels?el('small',{},' '):null);
+    return el('div',{class:'navprev','aria-label':'Preview of the bottom bar'},slot(D[0]),slot(D[1]),el('span',{class:'nvplus',html:ic('plus',IC.md)}),slot(D[2]),el('span',{class:'nvp'},el('i',{html:sv('<circle cx="5" cy="12" r="1.8" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.8" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.8" fill="currentColor" stroke="none"/>',22)}),X.labels?el('small',{},'More'):null));},
+  extra:{init:{labels:s.tabLabels!==false},build:(X,draw)=>{const l=el('div',{class:'list'});l.append(Switch({on:X.labels,label:'Show labels',sub:'Names under each icon',onChange:v=>{X.labels=v;draw();}}));return el('div',{},SectionLabel('Look'),l);}},
+  onDone:(D,X)=>setSettings({nav:D,tabLabels:X.labels})});}
 function areasSheet(){
   const s=get.settings();let D=[...(s.areas||AREAS)];let v='';let inst;
   inst=openSheet({title:'Life areas',left:{label:'Cancel'},right:{label:'Done',onclick:()=>{setSettings({areas:D,foundation:{...(s.foundation||{}),areas:true}});inst.close();}},build:body=>{

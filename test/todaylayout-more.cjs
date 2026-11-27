@@ -221,3 +221,11 @@ global.__todayMore.push(async({ev,ok,today})=>{
   await ev(()=>window.__lifeos.t.setSettings({noticedCard:false}));await today();ok('v350 noticed card can be turned off',await ev(()=>!document.querySelector('.ncard')));
   await ev(()=>window.__lifeos.t.setSettings({noticedCard:true}));
 });
+
+// v352 · This time last year shows when something was done a year ago, and can be turned off
+global.__todayMore.push(async({ev,ok,today})=>{
+  await ev(()=>{const L=window.__lifeos,d=new Date();d.setFullYear(d.getFullYear()-1);const ly=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');const t=L.create('task',{title:'Last year thing',steps:[],notes:'',photos:[],repeat:{type:'never'},priority:'normal',date:ly});t.doneDates={[ly]:d.getTime()};L.put(t);L.t.setSettings({lastYear:true});});
+  await today();ok('v352 last year card',await ev(()=>/Last year thing/.test(document.querySelector('.lycard')?.innerText||'')));
+  await ev(()=>window.__lifeos.t.setSettings({lastYear:false}));await today();ok('v352 last year card can be turned off',await ev(()=>!document.querySelector('.lycard')));
+  await ev(()=>window.__lifeos.t.setSettings({lastYear:true}));
+});

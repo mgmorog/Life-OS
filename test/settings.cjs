@@ -165,4 +165,10 @@ const CHROME=process.env.CHROME||'/opt/pw-browsers/chromium-1243/chrome-linux64/
    ok('v351 repeat words',JSON.stringify(r)===JSON.stringify(['Every 3 days','Every other Tuesday','Mon, Thu','Every 3 months']),r);
    await p.evaluate(()=>window.__lifeos.t.setSettings({shorthand:[{w:'rx',to:'Medication refill'}]}));ok('v351 shorthand expands',await p.evaluate(()=>window.__lifeos.t.expandWords('rx for dad'))==='Medication refill for dad');
    await p.evaluate(()=>window.__lifeos.t.setSettings({shorthand:[]}));}
+  // v352 · review draft, your questions, month story
+  {await p.evaluate(()=>{const L=window.__lifeos,tk=L.todayK();const t=L.create('task',{title:'Draft me',steps:[],notes:'',photos:[],repeat:{type:'never'},priority:'high',date:tk});t.doneDates={[tk]:Date.now()};L.put(t);L.t.setSettings({rvQs:[{id:'q1',q:'What gave you energy?',per:[]}]});try{localStorage.removeItem('lo-rv-draft');}catch(e){}L.App.state.rv=null;L.App.go('review',{period:'month'});});await p.waitForTimeout(700);
+   const r=await p.evaluate(()=>({wins:document.querySelector('#f-rv-wins')?.value||'',q:!!document.querySelector('#f-rvq-q1'),story:/Month story/.test(document.querySelector('.page').innerText)}));
+   ok('v352 review drafts wins, asks your question, tells the month story',/Draft me/.test(r.wins)&&r.q&&r.story,r);
+   await go('setpage',{id:'reviews'});ok('v352 reviews settings: your questions and drafts',/Your questions[\s\S]*Draft my review/.test(await p.evaluate(()=>document.querySelector('.page').innerText)));
+   await p.evaluate(()=>{window.__lifeos.t.setSettings({rvQs:[]});try{localStorage.removeItem('lo-rv-draft');}catch(e){}window.__lifeos.App.state.rv=null;});}
   ok('no page errors',!errs.length,errs);await b.close();process.exit(fails?1:0);})();

@@ -4549,3 +4549,7 @@ body.sheet-open .fab.fabfloat,body:has(.sheet.open) .fab.fabfloat{opacity:0;poin
 .nwhy{margin:var(--s1) 0 0}
 .nacts{display:flex;flex-wrap:wrap;gap:var(--s2) var(--s3);align-items:center}
 .ncard .nrow{padding:var(--s2) 0 0;border:0}
+/* v352 · month story, last year */
+.mval{display:flex;flex-direction:column;align-items:flex-end;gap:2px}.mval b{font-weight:var(--fw-strong);font-variant-numeric:tabular-nums}
+.mval small.up{color:var(--action-text)}.mval small.down{color:var(--overdue)}
+.lycard p{line-height:var(--lh-read)}

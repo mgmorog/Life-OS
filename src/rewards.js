@@ -220,7 +220,10 @@ function rwBadgeTile(def,date,fresh){const [id,n,say,icn,,pal]=def,got=!!date;
 function rwHex(icn){return el('span',{class:'rwhex',html:`<svg viewBox="0 0 40 44" aria-hidden="true"><path d="M20 2l17 10v20L20 42 3 32V12z"/></svg>`+ic(icn,IC.md)});}
 function rwReviewsSection(page){if(!rwOn())return;const r=rwRec();
   if(rwOn('rwBadges')){const got=RW_BADGES.filter(b=>r.badges[b[0]]).length,order=[...RW_BADGES].sort((a,b)=>(r.badges[b[0]]?1:0)-(r.badges[a[0]]?1:0));
-    page.append(SectionLabel('Badges',{count:`${got} of ${RW_BADGES.length}`}),Card({cls:'rwbds'},el('div',{class:'rwbdg'},order.map(b=>rwBadgeTile(b,r.badges[b[0]],r.badges[b[0]]&&!r.seen[b[0]])))));
+    /* v334 · earned plus the next few to go for; the rest behind See all */
+    const tile=b=>rwBadgeTile(b,r.badges[b[0]],r.badges[b[0]]&&!r.seen[b[0]]),earned=order.filter(b=>r.badges[b[0]]),next=order.filter(b=>!r.badges[b[0]]).slice(0,Math.max(3,Math.ceil((earned.length+1)/3)*3-earned.length)),shown=[...earned,...next];
+    const all=()=>openSheet({title:`Badges · ${got} of ${RW_BADGES.length}`,left:{label:'Close'},build:b=>b.append(el('div',{class:'rwbdg'},order.map(tile)))});
+    page.append(SectionLabel('Badges',{count:`${got} of ${RW_BADGES.length}`,action:shown.length<RW_BADGES.length?lnk('See all',all):null}),Card({cls:'rwbds'},el('div',{class:'rwbdg'},shown.map(tile))));
     const fresh=RW_BADGES.filter(b=>r.badges[b[0]]&&!r.seen[b[0]]);if(fresh.length)setTimeout(()=>{const q=rwRec();fresh.forEach(b=>q.seen[b[0]]=1);put(q,{silent:true});},1500);}
   if(rwOn('rwBests')){const rows=Object.entries(r.bests).filter(([key,v])=>RW_BEST_L[key]&&v.v>=(RW_BEST_MIN[key]||1)).map(([key,v])=>Row({as:'div'},el('span',{class:'grow'},el('b',{style:'font-weight:500'},RW_BEST_L[key]),el('small',{},relDay(v.d)==='Today'?'Today':fmtMD(v.d))),el('b',{class:'tnum'},key==='weekScore'?`${v.v}%`:String(v.v))));
     const hs=get.all('habit').map(h=>[h,rwHabitBest(h),habitStreak(h).unit]).filter(x=>x[1]>=3).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([h,n,u])=>Row({as:'div'},el('span',{class:'grow'},el('b',{style:'font-weight:500'},`${h.title} streak`),el('small',{},'Longest run')),el('b',{class:'tnum'},`${n} ${u==='week'?'wk':'d'}`)));

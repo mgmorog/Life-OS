@@ -79,7 +79,8 @@ const PWA={
         if(hn.on!==false){const t=hn.time!=null?hn.time:1200;gw.append(condRow(setRow('Send the nudge at',null,fmtT(t),()=>timeSheet('Evening habit nudge',t,m=>setSettings({habitNudge:{...(get.settings().habitNudge||{}),time:m}})))));}
         setToggle(ctx,gw,null,'Morning digest','Your Top 3, first commitment and habits',!!dg.on,v=>{setSettings({digest:{...dg,on:v}});App.refresh();});
         if(dg.on){const t=dg.time!=null?dg.time:450;gw.append(condRow(setRow('Send the digest at','Tomorrow: '+digestText(addK(todayK(),1)),fmtT(t),()=>timeSheet('Morning digest',t,m=>setSettings({digest:{...(get.settings().digest||{}),on:true,time:m}})))));}
-        gw.append(setRow('Review reminder',null,s.revRemind!==false?fmtT(s.revAt??1080):'Off',()=>App.go('setpage',{id:'reviews'})));
+        setToggle(ctx,gw,null,'Review reminder','On your review day, while a review is waiting',s.revRemind!==false,v=>{setSettings({revRemind:v});App.refresh();});
+        if(s.revRemind!==false)gw.append(condRow(setRow('Send the reminder at',null,fmtT(s.revAt??1080),()=>timeSheet('Review reminder',s.revAt??1080,m=>setSettings({revAt:m})))));
         if(jobsOf(s).some(j=>j.flex))setToggle(ctx,gw,null,'Work hours','When a flexible job needs next period’s hours',s.flexRemind!==false,v=>setSettings({flexRemind:v}));}
       if('setAppBadge' in navigator){const g2=group('App icon badge');
         setToggle(ctx,g2,null,'Overdue tasks','Counted on the Life OS icon',s.badgeOverdue!==false,v=>{setSettings({badgeOverdue:v});this.badge();});

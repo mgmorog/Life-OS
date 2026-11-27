@@ -229,3 +229,11 @@ global.__todayMore.push(async({ev,ok,today})=>{
   await ev(()=>window.__lifeos.t.setSettings({lastYear:false}));await today();ok('v352 last year card can be turned off',await ev(()=>!document.querySelector('.lycard')));
   await ev(()=>window.__lifeos.t.setSettings({lastYear:true}));
 });
+
+// v355 · theme chip, morning card (dismissable), shutdown quiets the evening
+global.__todayMore.push(async({ev,ok,today})=>{
+  await ev(()=>{const d=new Date().getDay();window.__lifeos.t.setSettings({themes:{[d]:{name:'Admin day'}},morningDone:null,morningPlan:true});});await today();
+  ok('v355 theme chip on Today',await ev(()=>/Admin day/.test(document.querySelector('.themechip')?.textContent||'')));
+  const h=new Date().getHours();if(h>=5&&h<11){ok('v355 morning card shows',await ev(()=>!!document.querySelector('.mcard')));await ev(()=>document.querySelector('.mcard .notex').click());await today();ok('v355 morning card dismissed',await ev(()=>!document.querySelector('.mcard')));}
+  await ev(()=>window.__lifeos.t.setSettings({themes:{},morningDone:null}));
+});

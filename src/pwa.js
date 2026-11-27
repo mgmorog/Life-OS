@@ -9,6 +9,7 @@ const PWA={
     const push=(e,dk,base,m,sfx='')=>{const key=e.id+'|'+dk+sfx,v=st.map[key];if(v==='x')return;let fire=typeof v==='number'?v:base-m*6e4;if(fire<=now)return;
       if(e.kind==='allday'&&typeof v!=='number'){const d=new Date(fire),h=d.getHours();if(h<8||h>=21){const t=new Date(d.getFullYear(),d.getMonth(),d.getDate()+(h>=21?1:0),9,0);fire=t.getTime();if(fire<=now)return;}}
       if(fEnd&&fire>now&&fire<fEnd)fire=fEnd+3e4;
+      /* v355 · done for the day: evening reminders wait for morning */if(get.settings().shutdownAt===todayK()){const d=new Date(fire),mo=new Date();mo.setDate(mo.getDate()+1);mo.setHours(7,0,0,0);if(d.toDateString()===new Date().toDateString())fire=mo.getTime();}
       if(q.on&&inQuiet(new Date(fire))){const d=new Date(fire);let t=new Date(d.getFullYear(),d.getMonth(),d.getDate(),Math.floor(q.to/60),q.to%60);if(t.getTime()<fire)t=new Date(t.getTime()+864e5);fire=t.getTime();}
       const when=e.kind==='allday'?(dk===tk?'Today':relDay(dk)):`${dk===tk?'':relDay(dk)+', '}${fmtT(e.time)}`;
       out.push({key,fire_at:new Date(fire).toISOString(),title:e.title,body:m>0&&e.kind!=='allday'?`${when} · ${remLabel(m).replace(' before','')} from now`:when,url:e.kind==='task'||e.kind==='habit'?'/#rem?k='+encodeURIComponent(key):'/#today'});};

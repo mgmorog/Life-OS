@@ -187,4 +187,11 @@ const CHROME=process.env.CHROME||'/opt/pw-browsers/chromium-1243/chrome-linux64/
    await go('goalsboard');ok('v354 goals overview lists goals',/Glance goal/.test(await p.evaluate(()=>document.querySelector('.page').innerText)));
    await go('year');ok('v354 year at a glance shows the goal',/Glance goal/.test(await p.evaluate(()=>document.querySelector('.page').innerText)));
    await go('search');await p.fill('.searchbox input, #q','workouts this month');await p.waitForTimeout(400);ok('v354 ask your data answers',/Workouts this month/.test(await p.evaluate(()=>document.querySelector('.askcard')?.innerText||'')));}
+  // v355 · planning settings, what if, shutdown, weather toggle
+  {await go('setpage',{id:'planning'});const pt=await p.evaluate(()=>document.querySelector('.page').innerText);ok('v355 planning: theme days, breathing room, morning, shutdown, fill the gap, what if',/Theme days[\s\S]*Breathing room[\s\S]*Morning plan[\s\S]*Evening shutdown[\s\S]*Fill the gap[\s\S]*What if/.test(pt),pt.slice(0,300));
+   await p.evaluate(()=>[...document.querySelectorAll('#view .page button')].find(b=>/What if/.test(b.textContent)).click());await p.waitForTimeout(500);ok('v355 what-if shows the week',await p.evaluate(()=>document.querySelectorAll('.wifd').length===7));
+   await p.evaluate(()=>document.querySelectorAll('.sheet button').forEach(b=>{if(b.textContent.trim()==='Close')b.click();}));await p.waitForTimeout(300);
+   await go('setpage',{id:'today'});ok('v355 weather toggle on Today settings',/Weather on Today/.test(await p.evaluate(()=>document.querySelector('.page').innerText)));
+   const tk=await p.evaluate(()=>window.__lifeos.todayK());await p.evaluate(tk=>window.__lifeos.t.setSettings({shutdownAt:tk}),tk);
+   ok('v355 shutdown recorded',await p.evaluate(tk=>window.__lifeos.get.id('settings').shutdownAt===tk,tk));await p.evaluate(()=>window.__lifeos.t.setSettings({shutdownAt:null}));}
   ok('no page errors',!errs.length,errs);await b.close();process.exit(fails?1:0);})();

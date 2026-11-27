@@ -4583,3 +4583,15 @@ body.sheet-open .fab.fabfloat,body:has(.sheet.open) .fab.fabfloat{opacity:0;poin
 .yev.trip i{background:#C08A3E}.yev.deadline i{background:var(--overdue)}.yev.event i{background:var(--line-strong)}
 .ylegend{display:flex;flex-wrap:wrap;gap:var(--s4);margin:var(--s2) var(--s1) var(--s3)}
 .askcard{display:flex;flex-direction:column;gap:2px;background:var(--selected);border-radius:var(--r-card);padding:var(--s4)}.askcard .big{font-size:32px;font-weight:var(--fw-strong);color:var(--accent-deep)}
+/* v355 · planning */
+.mcard .mlines p{margin:0 0 var(--s1);line-height:var(--lh-read)}
+.mcard .row2{display:flex;gap:var(--s2);margin-top:var(--s2)}
+.chip.themechip{background:var(--selected);color:var(--accent-deep);font-weight:var(--fw-medium)}
+.chip.wxchip{display:inline-flex;align-items:center;gap:6px}
+.fsteps{margin-top:var(--s4);text-align:left}
+.wifdays{display:grid;grid-template-columns:repeat(7,1fr);gap:var(--s2);margin-bottom:var(--s3)}
+.wifd{display:flex;flex-direction:column;align-items:center;gap:2px;padding:var(--s2) 0;border-radius:var(--r-row);background:var(--card-bg);box-shadow:var(--e-raised);position:relative;overflow:hidden;min-height:84px;font:inherit;color:var(--text)}
+.wifd i{position:absolute;left:0;right:0;bottom:0;background:var(--accent-soft);z-index:0}.wifd small,.wifd b{position:relative;z-index:1}
+.wifd.full i,.wifd.over i{background:color-mix(in srgb,var(--overdue) 25%,transparent)}
+.wifd.off{opacity:.45;box-shadow:inset 0 0 0 2px var(--overdue)}
+.mcard .bl{display:flex;align-items:center}.mcard .notex{margin-left:auto}

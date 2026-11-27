@@ -4553,3 +4553,16 @@ body.sheet-open .fab.fabfloat,body:has(.sheet.open) .fab.fabfloat{opacity:0;poin
 .mval{display:flex;flex-direction:column;align-items:flex-end;gap:2px}.mval b{font-weight:var(--fw-strong);font-variant-numeric:tabular-nums}
 .mval small.up{color:var(--action-text)}.mval small.down{color:var(--overdue)}
 .lycard p{line-height:var(--lh-read)}
+/* v353 · reports, trackers, dashboard */
+.repsum{display:flex;align-items:baseline;gap:var(--s2);margin:var(--s2) var(--s1)}
+.repcard .dchart{width:100%;height:auto}
+.repsplit .grow{display:flex;flex-direction:column;gap:4px}
+.repbar{display:block;height:6px;border-radius:var(--r-full);background:var(--seg);overflow:hidden}.repbar i{display:block;height:100%;background:var(--action);border-radius:inherit}
+.trgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:var(--s3);margin-bottom:var(--s3)}
+.trcard{background:var(--card-bg);border-radius:var(--card-radius);box-shadow:var(--e-raised);border:var(--hairline) solid var(--edge);padding:var(--s3) var(--s4);display:flex;flex-direction:column;gap:var(--s2)}
+.trtop{display:flex;align-items:center;gap:var(--s3)}.trname{display:flex;flex-direction:column;align-items:flex-start;background:none;font:inherit;color:var(--text);text-align:left;padding:0}.trname small{color:var(--text-muted)}
+.trspark{color:var(--action)}
+.dashgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:var(--s3)}
+.dashgrid .dchart{width:100%;height:auto}
+.dkpi{display:flex;align-items:center;gap:var(--s3);padding-top:var(--s2)}
+@media print{body.printrep .nav,body.printrep .vwfoot,body.printrep .pghead,body.printrep .fchips,body.printrep #toast{display:none!important}body.printrep .page{padding:0}}

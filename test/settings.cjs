@@ -171,4 +171,15 @@ const CHROME=process.env.CHROME||'/opt/pw-browsers/chromium-1243/chrome-linux64/
    ok('v352 review drafts wins, asks your question, tells the month story',/Draft me/.test(r.wins)&&r.q&&r.story,r);
    await go('setpage',{id:'reviews'});ok('v352 reviews settings: your questions and drafts',/Your questions[\s\S]*Draft my review/.test(await p.evaluate(()=>document.querySelector('.page').innerText)));
    await p.evaluate(()=>{window.__lifeos.t.setSettings({rvQs:[]});try{localStorage.removeItem('lo-rv-draft');}catch(e){}window.__lifeos.App.state.rv=null;});}
+  // v353 · reports, trackers, dashboard
+  {await p.evaluate(()=>window.__lifeos.App.go('report',{id:'b:tasks'}));await p.waitForTimeout(500);ok('v353 a ready-made report draws a chart',await p.evaluate(()=>!!document.querySelector('.repage .dchart')));
+   await p.evaluate(()=>{window.__lifeos.App.state._rep=null;window.__lifeos.App.go('report',{fresh:true});});await p.waitForTimeout(400);
+   await p.evaluate(()=>[...document.querySelectorAll('#view .repage .chip')].find(b=>/^Bar|^Line|^Table/.test(b.textContent)).click());await p.waitForTimeout(300);await p.evaluate(()=>[...document.querySelectorAll('[role=menuitem]')].filter(b=>b.textContent.trim()==='Table').pop().click());await p.waitForTimeout(400);
+   ok('v353 a report can be a table',await p.evaluate(()=>!!document.querySelector('#view .repage .reptbl')));
+   await p.evaluate(()=>{const L=window.__lifeos;L.t.setToolOn('Health','measure',true);L.create('entry',{hub:'Health',tool:'measure',f:{t:'',what:'Water',unit:'cups',goal:8,agg:'sum',step:1,logs:[]}});});await go('trackers');
+   await p.evaluate(()=>[...document.querySelectorAll('.trcard')].find(c=>/Water/.test(c.innerText)).querySelector('button.btn,button:last-child').click());await p.waitForTimeout(400);
+   ok('v353 tracker + adds to today',/1 of 8 cups today/.test(await p.evaluate(()=>document.querySelector('.page').innerText)));
+   await go('mydash');ok('v353 dashboard shows tiles',await p.evaluate(()=>document.querySelectorAll('.dashgrid > *').length>=2));
+   await p.evaluate(()=>{window.__lifeos.App.state._vw=null;window.__lifeos.App.go('view',{src:'task',fresh:true,layout:'list'});});await p.waitForTimeout(400);await p.evaluate(()=>[...document.querySelectorAll('#view .vwlay')].find(b=>/Table/.test(b.textContent)).click());await p.waitForTimeout(400);ok('v353 switching layout on a new view sticks',await p.evaluate(()=>!!document.querySelector('#view .vwtbl')));
+   await go('more');ok('v353 More lists Reports and Trackers',/Reports[\s\S]*Trackers/.test(await p.evaluate(()=>document.querySelector('.page').innerText)));}
   ok('no page errors',!errs.length,errs);await b.close();process.exit(fails?1:0);})();

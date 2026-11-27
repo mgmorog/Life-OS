@@ -3,7 +3,7 @@ const PLACES={
  inbox:{n:'Inbox',i:'inbox',g:'organize'},tasks:{n:'Tasks',i:'task',g:'organize'},habits:{n:'Habits',i:'habit',g:'organize'},routines:{n:'Routines',i:'routine',g:'organize'},projects:{n:'Projects',i:'project',g:'organize'},goals:{n:'Goals',i:'target',g:'organize'},lists:{n:'Lists',i:'list',g:'organize'},done:{n:'Done',i:'check',g:'organize'},
  photos:{n:'Photos',i:'image'},trash:{n:'Recently deleted',i:'trash'},
  reviews:{n:'Reviews',i:'clip',g:'reflect'},insights:{n:'Insights',i:'chart',g:'reflect'},discover:{n:'Discover',i:'compass'},tools:{n:'Tools & Resources',i:'books'},archive:{n:'Archive',i:'archive'},areas:{n:'Life areas',i:'leaf'},
- today:{n:'Today',i:'sun'},studio:{n:'Studio',i:'layers'},calendar:{n:'Calendar',i:'cal'},views:{n:'Views',i:'grid'},noticed:{n:'Noticed',i:'spark'},
+ today:{n:'Today',i:'sun'},studio:{n:'Studio',i:'layers'},calendar:{n:'Calendar',i:'cal'},views:{n:'Views',i:'grid'},noticed:{n:'Noticed',i:'spark'},reports:{n:'Reports',i:'chart'},trackers:{n:'Trackers',i:'heart'},mydash:{n:'My dashboard',i:'grid'},
 };
 /* v325 · the page you came from, even when it's the same kind of page */
 function sameSpot(a,b){if(!a||!b||a.view!==b.view)return false;try{return JSON.stringify(a.params||{})===JSON.stringify(b.params||{});}catch(e){return true;}}
@@ -50,7 +50,7 @@ function viewMore(root){
   const row=(i,n,sub,on,subCls)=>Row({style:'',onclick:on},IconTile(null,{html:ic(i,IC.md)}),el('span',{class:'grow'},el('b',{style:'font-size:var(--fs-headline)'},n),sub?el('small',{class:subCls||null},sub):null),RowEnd('chevron'));
   const place=id=>id==='reviews'?(()=>{const nr=nextReviewLine();return row(PLACES[id].i,PLACES[id].n,(nr&&nr[0])||(rwBadgeDot()?'New badge':null),()=>App.go(id),nr&&nr[1]?'duenow':null);})():row(PLACES[id].i,PLACES[id].n,null,()=>App.go(id));
   /* anything pinned above isn't listed a second time below */
-  const pinS=new Set(S.pinned||[]),planL=['inbox','tasks','habits','goals','routines','projects','lists','views','noticed','done','reviews'].filter(x=>!(S.moreHideP||[]).includes(x)).filter(x=>!pinS.has(x));
+  const pinS=new Set(S.pinned||[]),planL=['inbox','tasks','habits','goals','routines','projects','lists','views','reports','trackers','mydash','noticed','done','reviews'].filter(x=>!(S.moreHideP||[]).includes(x)).filter(x=>!pinS.has(x));
   mark('plan');if(planL.length)page.append(SectionLabel('Plan'),el('div',{class:'list'},planL.map(place)));
   mark('saved');page.append(SectionLabel('Saved'),el('div',{class:'list'},row('image','Photos',null,()=>App.go('photos')),row('archive','Archive',null,()=>App.go('archive')),row('share','Import tasks','From Todoist, TickTick or a list',importTasksSheet)));
   mark('end');{/* v340 · your order and hidden sections */const kids=[...page.childNodes],order=['pinned','views','areas','plan','saved'],chunk={};order.forEach((id,i)=>{chunk[id]=kids.slice(secAt[id],secAt[order[i+1]||'end']);});const head=kids.slice(0,secAt.pinned);page.replaceChildren(...head,...MS.filter(x=>!x.hidden).flatMap(x=>chunk[x.id]||[]));}

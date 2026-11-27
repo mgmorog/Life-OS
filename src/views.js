@@ -50,7 +50,8 @@ function vwEditCell(r,key,label){const f=key.startsWith('cf:')?cfById(key.slice(
   askFields({title:`${label} · ${vwTitle(r)}`,req:false,D:{v:cur??''},fields:[F('v',label,type,{blank:true})],save:D=>{let x=D.v;if(type==='number')x=x===''||x==null?null:+x;vwSet(r,key,x===''?null:x);App.refresh();}});}
 
 function viewView(root){const S=App.state,P=S.params||{};let v=P.id?vwById(P.id):null;if(P.id&&!v){root.append(el('div',{class:'page'},pageHead('View',null,{back:'More',to:'more'}),Empty({title:'This view is gone',body:'It may have been deleted on another device.'})));return;}
-  if(!v){S._vw=S._vw&&S._vw.src===(P.src||S._vw.src)&&!P.fresh?S._vw:{id:null,name:P.name||null,src:P.src||'task',layout:P.layout||'list',filter:Object.assign({done:'open'},P.filter||{}),group:P.group||'none',sort:P.sort||'due',dir:'asc',cols:null};v=S._vw;}
+  const fresh=!!P.fresh;if(fresh)delete P.fresh;
+  if(!v){S._vw=S._vw&&S._vw.src===(P.src||S._vw.src)&&!fresh?S._vw:{id:null,name:P.name||null,src:P.src||'task',layout:P.layout||'list',filter:Object.assign({done:'open'},P.filter||{}),group:P.group||'none',sort:P.sort||'due',dir:'asc',cols:null};v=S._vw;}
   else v=S._vwEdit&&S._vwEdit.id===v.id?S._vwEdit:clone(v);
   const save=()=>{if(v.id){S._vwEdit=v;}App.refresh();};
   const srcName=(vwSources().find(x=>x[0]===v.src)||[v.src,'Items'])[1];

@@ -170,3 +170,19 @@ global.__todayMore.push(async({p,ev,ok,set,today,W})=>{
   ok('v319 every starter tile has an icon',r.icons===r.n&&r.n>0,r);
   ok('v319 a module already on Today shows as added',!!r.have,r);
 });
+
+// v339 · fold a card, header icons, pinned note, quiet weekends
+global.__todayMore.push(async({ev,ok,setL,today,base,W})=>{
+  await setL(base);await today();
+  await ev(()=>window.__lifeos.t.setSettings({todayFold:[],hdIcons:['inbox','search'],todayNote:{t:'Call the vet',until:null},quietWkd:false}));await today();
+  let r=await ev(()=>({fold:!!document.querySelector('[data-tk=tasks] > .bl .foldb'),icons:[...document.querySelectorAll('header .icons button')].map(b=>b.getAttribute('aria-label')),note:document.querySelector('.notecard')?.innerText||''}));
+  ok('v339 cards have a fold button',r.fold,r);
+  ok('v339 header icons follow settings',r.icons.some(x=>/^Search/.test(x))&&r.icons.some(x=>/^Inbox/.test(x)),r.icons);
+  ok('v339 pinned note shows',/Call the vet/.test(r.note),r.note);
+  await ev(()=>document.querySelector('[data-tk=tasks] > .bl .foldb').click());await W(400);
+  r=await ev(()=>{const c=document.querySelector('[data-tk=tasks]');return{folded:c.classList.contains('folded'),kids:[...c.children].filter(n=>getComputedStyle(n).display!=='none').length};});
+  ok('v339 fold hides everything but the title',r.folded&&r.kids===1,r);
+  await ev(()=>window.__lifeos.t.setSettings({todayFold:[],hdIcons:null,todayNote:null}));await today();
+  r=await ev(()=>({folded:document.querySelector('[data-tk=tasks]').classList.contains('folded'),note:!!document.querySelector('.notecard')}));
+  ok('v339 unfold and unpin restore Today',!r.folded&&!r.note,r);
+});

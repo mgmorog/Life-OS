@@ -116,9 +116,8 @@ function viewToday(root){
       el('button',{class:'date'+(S.dateDrop?' open':''),'aria-label':'Pick a date','aria-expanded':String(!!S.dateDrop),onclick:()=>dateDrop(),html:`<span>${isToday?DOW[sel.getDay()]:DOW[sel.getDay()].slice(0,3)}, ${mdS(sel)}${sel.getFullYear()!==today().getFullYear()?`, ${sel.getFullYear()}`:''}</span>`+ic('chevd',IC.md)}),
       el('div',{class:'icons'},
         !isToday?Button('Today',{variant:'link',cls:'hdtoday',onclick:()=>goDay(tk)}):null,
-        isToday&&!(S.loading&&!recs.size)?rwRing(dk):null,
-        IconButton(inboxNew()?'Inbox, something new':'Inbox',{html:ic('inbox',IC.lg)+(inboxNew()||newVerN()?'<span class="badge dot"></span>':''),onclick:()=>App.go('inbox')}),
-        moreB('Today options',e=>Menu([{label:'Share this day',icon:'share',onclick:()=>shareDaySheet(dk)},{label:'Plan tomorrow',icon:'cal',onclick:()=>planTomorrowSheet(todayK())},{label:'See what you’ve done',icon:'check',onclick:()=>App.go('done')},{label:'Edit Today',icon:'layers',onclick:()=>App.go('setpage',{id:'today'})}],{at:e})))),
+        ...hdIconsOf(get.settings()).map(id=>id==='rewards'?(isToday&&!(S.loading&&!recs.size)?rwRing(dk):null):id==='inbox'?IconButton(inboxNew()?'Inbox, something new':'Inbox',{html:ic('inbox',IC.lg)+(inboxNew()||newVerN()?'<span class="badge dot"></span>':''),onclick:()=>App.go('inbox')}):id==='search'?IconButton('Search',{html:ic('search',IC.lg),onclick:()=>App.go('search')}):id==='done'?IconButton('What you’ve done',{html:ic('check',IC.lg),onclick:()=>App.go('done')}):id==='focus'?IconButton('Focus',{html:ic('time',IC.lg),onclick:()=>App.go('tasks')}):null),
+        moreB('Today options',e=>Menu([{label:'Share this day',icon:'share',onclick:()=>shareDaySheet(dk)},{label:'Plan tomorrow',icon:'cal',onclick:()=>planTomorrowSheet(todayK())},{label:'See what you’ve done',icon:'check',onclick:()=>App.go('done')},{label:get.settings().todayNote?'Edit pinned note':'Pin a note',icon:'pin',onclick:()=>noteSheet()},{label:'Edit Today',icon:'layers',onclick:()=>App.go('setpage',{id:'today'})}],{at:e})))),
     S.dateDrop?dateDropEl(dk):null,S.dateDrop?null:weekStrip(dk),
     hdChips(dk,isToday)));
   if(S.loading&&!recs.size){page.append(...todaySkeleton());root.append(page);return;}
@@ -126,6 +125,7 @@ function viewToday(root){
   {const fr=frNow(),onPrio=fr&&isToday&&t3Get(dk).some(x=>x.id===fr.id);const fc=onPrio?null:focusRunChip();if(fc)page.append(fc);}
   {try{const yc=yirNudge(dk);if(yc)page.append(yc);}catch(e){}}
   if(!s.introDone&&!recs.size)page.append(introCard());
+  if(isToday&&s.todayNote&&s.todayNote.t&&!(s.todayNote.until&&s.todayNote.until<tk))page.append(noteCard(s.todayNote));
   if(isToday){const gc=gsCard();if(gc)page.append(gc);}
 
   /* v308 · Today is laid out from Settings › Today: built-in sections and module cards, in your order */
@@ -133,7 +133,8 @@ function viewToday(root){
   if(isToday){try{const fz=rwFreezeCard();if(fz)extras.push(fz);}catch(e){console.warn(e);}const pe=planEveCard(dk);if(pe)extras.push(pe);}
   const rem=reminderCard();if(rem)extras.push(rem);
   const look=[];
-  const also=[];const aRow=(t,sub,fn)=>also.push(Row({onclick:fn},el('span',{class:'grow'},el('b',{},t),sub?el('small',{},sub):null),RowEnd('chevron')));
+  const qw=quietWkd(dk);
+  const also=[];const aRow=(t,sub,fn)=>qw?null:also.push(Row({onclick:fn},el('span',{class:'grow'},el('b',{},t),sub?el('small',{},sub):null),RowEnd('chevron')));
   if(isToday&&s.checkinCard&&reviewPeriod(dk)&&sel.getDay()===(s.reviewDay??0)&&s.checkinDone!==dk&&!(s.onboardedAt&&Date.now()-s.onboardedAt<6*864e5))aRow('Weekly review','A few minutes on the week behind and ahead',()=>App.go('review'));
   if(isToday){const gz=goalPulseCard();if(gz)extras.push(gz);
     const g=get.all('goal').find(x=>goalCheckDue(x)&&App.state.goalLater!==x.id+todayK());if(g)aRow(`Check in on ${g.title}`,'How is this going?',()=>{const inst=openSheet({title:'Goal check-in',left:{label:'Close'},build:b=>{const c=goalCheckCard();if(c){c.style.boxShadow='none';c.style.padding='0';b.append(c);b.addEventListener('click',e=>{if(e.target.closest('.chip'))setTimeout(()=>inst.close(),150);});}}});});
@@ -142,7 +143,9 @@ function viewToday(root){
     {const ideas=get.all('idea').filter(i=>!(i.snooze&&i.snooze>todayK()));if(s.inboxNudge!==false&&ideas.length>=5)aRow(`${ideas.length} ideas in Inbox`,'Tidy up in a couple of minutes',()=>tidySheet(ideas.sort((a,b)=>a.createdAt-b.createdAt)));}
     get.all('list').filter(l=>l.pinned&&(l.items||[]).some(i=>!i.d)).slice(0,2).forEach(l=>{const o2=l.items.filter(i=>!i.d);aRow(l.title,`${o2.length} left · ${o2.slice(0,3).map(i=>i.t).join(', ')}${o2.length>3?'…':''}`,()=>App.go('list',{id:l.id}));});}
   {const tc=tripTodayCard(dk);if(tc)extras.push(tc);}
-  {let xd=false;if(!App.state._tdWin)App.state._tdWin=tdWindow();todayLayout().forEach(x=>{if(x.hidden)return;if(x.id==='also'){extras.forEach(n=>page.append(n));xd=true;if(also.length)page.append(el('div',{class:'lbl alsol'},'Also today'),el('div',{class:'list'},also));return;}if(x.id.startsWith('m:')){if(isToday){let c=null;try{c=todayModCard(x);}catch(e){console.warn(e);}if(c)page.append(c);}return;}if(secs[x.id])page.append(secs[x.id]);});if(!xd)extras.forEach(n=>page.append(n));rest.forEach(n=>page.append(n));}
+  {let xd=false;if(!App.state._tdWin)App.state._tdWin=tdWindow();todayLayout().forEach(x=>{if(x.hidden)return;if(x.id==='also'){extras.forEach(n=>page.append(n));xd=true;if(also.length)page.append(el('div',{class:'lbl alsol'},'Also today'),el('div',{class:'list'},also));return;}if(x.id.startsWith('m:')){if(isToday){let c=null;try{c=todayModCard(x);}catch(e){console.warn(e);}if(c){if(c.dataset&&!c.dataset.tk)c.dataset.fold=x.id;page.append(c);}}return;}if(secs[x.id])page.append(secs[x.id]);});if(!xd)extras.forEach(n=>page.append(n));rest.forEach(n=>page.append(n));}
+  /* v339 · fold any card: the chevron on its title folds it to one line, remembered */
+  {const fold=new Set(s.todayFold||[]);page.querySelectorAll(':scope > section.card[data-tk], :scope > .card[data-fold]').forEach(c=>{const key=c.dataset.fold||c.dataset.tk,hd=c.querySelector(':scope > .bl');if(!hd||!key||key==='note')return;const f=fold.has(key);c.classList.toggle('folded',f);hd.append(el('button',{class:'foldb','aria-label':f?'Unfold card':'Fold card','aria-expanded':String(!f),html:ic('chevd',IC.sm),onclick:e=>{e.stopPropagation();const L=new Set(get.settings().todayFold||[]);L.has(key)?L.delete(key):L.add(key);setSettings({todayFold:[...L]});buzz(6);}}));});}
   {const tp=isToday?tipCard(dk):null;if(tp){const t=page.querySelector('[data-tk="tasks"]')||page.querySelector('[data-tk]');if(t)t.after(tp);else page.append(tp);}}
   /* v228 · wide screens: your list on the left, Coming up (and the expanded day) on the right */
   if(innerWidth>=BP.tablet&&!(innerWidth>=BP.desktop&&innerWidth<BP.wide)){const kids=[...page.children],up=kids.find(n=>n.classList&&n.classList.contains('upcard'));if(up&&kids.length>2){const L=el('div',{class:'tcol'}),R=el('div',{class:'tcol tcol-r'});kids.slice(1).forEach(n=>(n===up?R:L).append(n));page.classList.add('today-wide');page.append(el('div',{class:'tcols'},L,R));}}
@@ -194,7 +197,8 @@ const GRIPSVG='<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColo
 function dGrip(){return el('span',{class:'t3grip dgrip',role:'button','aria-label':'Drag to reorder or make it a priority',html:GRIPSVG,onclick:ev=>ev.stopPropagation()});}
 function dayCard(dk){
   const S=App.state,tk=todayK(),isToday=dk===tk,isPast=dk<tk,first=!S._painted,fu=first?' fade-up':'';
-  const{timed,anytime}=dayItems(dk);
+  let{timed,anytime}=dayItems(dk);
+  /* v339 · quiet weekends: work-area tasks wait for Monday */if(quietWkd(dk)){const W=quietAreas();if(W.length){const keep=e=>!(e.kind==='task'&&W.includes(areaOfTask(e.rec)));timed=timed.filter(keep);anytime=anytime.filter(keep);}}
   const nowM=nowMin(),late=isToday&&get.settings().carryOver?carried():[];
   const t3on=!isPast||t3Get(dk).length>0,t3ids=new Set(t3on?t3Get(dk).map(x=>x.id):[]),t3es=t3on?t3Get(dk).map(x=>t3Entry(x,dk)).filter(Boolean):[];
   const notT3=x=>!t3ids.has(x.id);
@@ -646,3 +650,11 @@ function tabSkeleton(kind){const bar=(w,h=12,x='')=>el('div',{class:'skel',style
   else{page.append(bar('100%',46,'border-radius:12px'),el('div',{class:'sk-pins'},[0,1,2,3].map(()=>el('span',{class:'sk-ring',style:'width:var(--size-52);height:var(--size-52);border-width:0;background:var(--line-2)'}))),
     Card({cls:'sk-card'},...[0,1,2,3].map(()=>el('div',{class:'sk-row'},el('span',{class:'sk-tick',style:'border-radius:var(--r-row)'}),bar('50%')))));}
   return page;}
+
+/* v339 · Today header icons you choose, a pinned note, quiet weekends */
+const HD_ICONS=[['rewards','Rewards ring'],['inbox','Inbox'],['search','Search'],['done','What you’ve done'],['focus','Tasks']];
+const hdIconsOf=s=>Array.isArray(s.hdIcons)?s.hdIcons.filter(id=>HD_ICONS.some(h=>h[0]===id)).slice(0,2):['rewards','inbox'];
+const quietAreas=()=>{const s=get.settings();if(Array.isArray(s.quietAreas))return s.quietAreas;return(s.areas||[]).filter(a=>/work|job|office/i.test(typeof a==='string'?a:(a.name||a.id||''))).map(a=>typeof a==='string'?a:(a.id||a.name));};
+const quietWkd=dk=>{const s=get.settings();if(!s.quietWkd)return false;const d=fromK(dk).getDay();return d===0||d===6;};
+function noteCard(n){return el('section',{class:'card notecard','data-tk':'note'},el('div',{class:'bl'},el('span',{class:'lbl'},'Pinned note'),IconButton('Unpin note',{html:ic('x',IC.sm),cls:'notex',onclick:e=>{e.stopPropagation();const was=get.settings().todayNote;setSettings({todayNote:null});toast('Note unpinned',()=>setSettings({todayNote:was}));}})),el('button',{class:'notebody',onclick:()=>noteSheet()},n.t));}
+function noteSheet(){const cur=get.settings().todayNote||{},D={t:cur.t||'',until:cur.until||''};askFields({title:cur.t?'Pinned note':'Pin a note',D,req:true,fields:[F('t','Note','area',{ph:'A reminder, a quote, a word for the day'}),F('until','Keep it until','date',{blank:true,hint:'Leave empty to keep it until you unpin it'})],save:v=>{const t=String(v.t||'').trim();setSettings({todayNote:t?{t,until:v.until||null}:null});}});}

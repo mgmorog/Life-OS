@@ -4413,3 +4413,13 @@ textarea.big.gstep{font-size:var(--fs-row);font-family:inherit}
 .a-hideempty :is(.card,.list,.group)>.empty:not(:has(button)),.a-hideempty .list:has(>.empty:only-child),.a-hideempty .slabel:has(+.list>.empty:only-child){display:none}
 .a-sticky .page>.slabel{position:sticky;top:env(safe-area-inset-top,0px);z-index:calc(var(--z-raised) + 2);background:var(--surface);padding-block:var(--s2)}
 .a-fill .nav .tab.act .ic svg,.a-fill .chip[aria-pressed=true] svg,.a-fill .chip.on svg,.a-fill .seg [aria-pressed=true] svg{fill:currentColor;fill-opacity:.2}
+/* v339 · fold cards, pinned note */
+.foldb{margin-left:auto;width:var(--size-32);height:var(--size-32);display:grid;place-items:center;border-radius:var(--r-full);color:var(--text-muted);background:transparent;flex:none;transition:transform var(--dur-base) var(--ease-out,ease)}
+.bl .foldb{margin-right:calc(var(--s2) * -1)}
+.card.folded>.bl .foldb{transform:rotate(-90deg)}
+.card.folded>:not(.bl){display:none!important}
+.card.folded{padding-block:var(--s3)}
+.card.folded>.bl{margin-bottom:0}
+.notecard .bl{display:flex;align-items:center}
+.notecard .notex{margin-left:auto;width:var(--size-32);height:var(--size-32)}
+.notebody{display:block;width:100%;text-align:left;background:none;font:inherit;font-size:var(--fs-row);line-height:var(--lh-read);color:var(--text);white-space:pre-wrap;padding:var(--s1) 0 0}

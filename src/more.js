@@ -98,7 +98,7 @@ function searchIndex(){
   get.all('resource').forEach(r=>push('Resources',r.title,r.area?`Resource · ${r.area}`:'Resource','books',()=>r.area?App.go('area',{name:r.area}):openRec(r)));
   [...userTpls(),...TEMPLATES.filter(t=>t.kind!=='upkeep')].forEach(t=>push('Templates',t.t,`${t.mine?'Your template':'Template'} · ${t.kind[0].toUpperCase()+t.kind.slice(1)}`,'books',()=>addTemplate(t)));
   Object.entries(PLACES).filter(([id])=>!['tools','discover'].includes(id)).forEach(([id,p])=>push('Pages',p.n,'Open','arrow',()=>App.go(id)));
-  SET_INDEX.forEach(([l,id])=>{const pg=SET_PAGES.find(x=>x[0]===id);push('Settings',l,`Settings › ${pg?pg[1]:id==='modules'?'Modules':'Settings'}`,'gear',()=>id==='nav'?navSheet():id==='modules'?App.go('modules'):id==='foundation'?App.go('foundation'):App.go('setpage',{id}),(SET_WORDS[l]||''));});
+  SET_INDEX.forEach(([l,id])=>{const pg=SET_PAGES.find(x=>x[0]===id);push('Settings',l,`Settings › ${pg?pg[1]:id==='modules'?'Modules':id==='help'?'How Life OS works':'Settings'}`,'gear',()=>id==='help'?App.go('help'):id==='nav'?navSheet():id==='modules'?App.go('modules'):App.go('setpage',{id}),(SET_WORDS[l]||''));});
   return out;
 }
 const readSearches=()=>{try{return JSON.parse(localStorage.getItem('lifeos-searches')||'[]');}catch(e){return[];}};

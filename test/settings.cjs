@@ -34,5 +34,9 @@ const CHROME=process.env.CHROME||'/opt/pw-browsers/chromium-1243/chrome-linux64/
   let h1=await p.evaluate(()=>document.querySelector('.page h1').textContent);ok('v325 back from Holidays lands on Planning',/Planning/.test(h1),h1);
   await p.evaluate(()=>document.querySelector('#view .back').click());await p.waitForTimeout(500);
   h1=await p.evaluate(()=>document.querySelector('.page h1').textContent);ok('v325 then back to Settings',/Settings/.test(h1),h1);
+  // v336 · help page and onboarding
+  await go('help');const hn=await p.evaluate(()=>document.querySelectorAll('.page .list .li, .page .list > *').length);ok('v336 help lists guides',hn>=13,hn);
+  await p.fill('.page input[type=search]','swipe');await p.waitForTimeout(300);const hs=await p.evaluate(()=>document.querySelector('.page').innerText);ok('v336 help search finds Today',/Today/.test(hs)&&!/Photos and files/.test(hs),hs.slice(0,200));
+  await p.evaluate(()=>{window.__lifeos.App.state.ob=null;window.__lifeos.App.go('welcome');});await p.waitForTimeout(400);ok('v336 welcome shows',/Welcome to Life OS/.test(await p.evaluate(()=>document.body.innerText)));
   await p.screenshot({path:'/tmp/set-hub.png'});
   ok('no page errors',!errs.length,errs);await b.close();process.exit(fails?1:0);})();

@@ -4376,3 +4376,19 @@ textarea.big.gstep{font-size:var(--fs-row);font-family:inherit}
 .a-solid .nav,.a-solid .mini,.a-solid .commitbar{background:var(--surface)!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
 .a-solid .cscrim,.a-solid .cscrim.on{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
 .a-solid *{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+
+/* v336 · onboarding and help */
+.ob-mark{width:64px;height:64px;border-radius:20px;background:var(--action);color:var(--on-action);display:grid;place-items:center;margin-top:var(--s5)}
+.ob-prog2{flex:1;display:flex;align-items:center;gap:var(--s3);font-size:var(--fs-small);color:var(--text-muted);white-space:nowrap}
+.ob-prog2 .obbar{flex:1;height:4px;border-radius:4px;background:var(--line);overflow:hidden;display:block}
+.ob-prog2 .obbar>span{display:block;height:100%;background:var(--action);border-radius:4px;transition:width var(--dur-base) var(--ease)}
+.obwd{display:flex;justify-content:space-between;gap:var(--s1)}
+.gs .gsline{display:flex;align-items:center;gap:var(--s3);width:100%;text-align:left;background:none;border:0;padding:0;color:inherit}
+.gs .gsline b{display:block;font-weight:var(--fw-medium)}.gs .gsline small{display:block;color:var(--text-muted);font-size:var(--fs-small)}
+.gsring{display:grid;flex:none}.gsring circle:last-child{transition:stroke-dasharray var(--dur-slow) var(--ease)}
+.gsf{padding-block:var(--s3)}
+.tipb{display:flex;align-items:center;gap:var(--s3);background:var(--ink);color:var(--surface);border-radius:var(--r-card);padding:var(--s3) var(--s4);font-size:var(--fs-small);line-height:1.4;animation:tipin var(--dur-base) var(--ease) both}
+.tipok{flex:none;background:none;border:0;color:inherit;opacity:.75;font:inherit;font-weight:var(--fw-medium);min-height:36px;padding:0 var(--s1)}
+@keyframes tipin{from{opacity:0;transform:translateY(-6px)}}
+.a-motion .tipb{animation:none}
+.hstep{flex:none;width:24px;height:24px;border-radius:50%;background:var(--selected);color:var(--action-text);display:grid;place-items:center;font-size:var(--fs-small);font-weight:var(--fw-medium)}

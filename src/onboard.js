@@ -11,7 +11,7 @@ function applyStarters(ids){const s=get.settings(),picks=TRACK_SET.filter(x=>ids
   cards=want.filter(key=>todayLayout().some(x=>x.id===key)).length;return{mods,cards};}
 /* v319 · tiles carry the module's icon; from Settings, ones already on Today show as added */
 function starterHave(h,tool){try{return toolOn(h,tool)&&todayLayout().some(x=>x.id==='m:'+pinKey(h,tool));}catch(e){return false;}}
-function starterGrid(sel,max,onTap,opts={}){return el('div',{class:'ob-grid'},TRACK_SET.map(([id,t,sub,h,tool])=>{const on=sel.has(id),have=opts.have&&starterHave(h,tool);let icn='grid';try{icn=(toolOf(h,tool)||{}).icon||'grid';}catch(e){}
+function starterGrid(sel,max,onTap,opts={}){return el('div',{class:'ob-grid'},TRACK_SET.filter(x=>!opts.only||opts.only.includes(x[0])||sel.has(x[0])).map(([id,t,sub,h,tool])=>{const on=sel.has(id),have=opts.have&&starterHave(h,tool);let icn='grid';try{icn=(toolOf(h,tool)||{}).icon||'grid';}catch(e){}
   return el('button',{class:'ob-opt'+(on?' on':'')+(have?' have':''),'aria-pressed':String(on||have),disabled:have||null,onclick:()=>{if(!on&&sel.size>=max){toast(`Up to ${max} to start`);return;}on?sel.delete(id):sel.add(id);onTap();}},
     el('span',{class:'ob-oi','aria-hidden':'true',html:ic(icn,IC.md)}),el('span',{class:'ob-ock','aria-hidden':'true',html:ic('check',IC.xs)}),el('b',{},t),el('small',{},have?'On Today':sub));}));}
 function starterSheet(){const sel=new Set(),L0=todayLayout();const inst=openSheet({title:'Starter set',left:{label:'Cancel'},right:{label:'Add',onclick:()=>{if(!sel.size){inst.close();return;}const before=clone({l:get.settings().todayLayout||null,p:get.settings().todayPins||[],h:get.settings().hubShown||{},x:get.settings().hubHidden||{},a:get.settings().areas});const r=applyStarters([...sel]);inst.close();App.refresh();toast(`${r.cards} card${r.cards===1?'':'s'} added to Today`,()=>{setSettings({todayLayout:before.l,todayPins:before.p,hubShown:before.h,hubHidden:before.x,areas:before.a});App.refresh();},'Undo',{force:true});}},build:b=>{const draw=()=>{b.innerHTML='';b.append(el('p',{class:'small muted',style:'margin:0 var(--s1) var(--s3)'},'Pick up to six things to keep track of. Daily ones get a card on Today. Nothing you already have changes.'),starterGrid(sel,6,draw,{have:true}));};draw();}});return inst;}
@@ -32,62 +32,96 @@ function obCreate(p){if(p.kind==='habit'){const d=p.rp.days;return create('habit
   if(p.kind==='block')return create('block',{title:p.title,notes:'',date:p.date,start:p.start,dur:60,repeat:{type:'never',end:null},reminder:null,part:null,area:p.area,color:defCol(),icon:null});
   if(p.kind==='allday')return create('allday',{title:p.title,notes:'',start:p.date,end:null,repeat:{type:'never',end:null},reminder:null,area:p.area,color:defCol(),icon:null});
   return newTask(p.title,{date:p.date,deadline:p.deadline,area:p.area});}
+/* v336 · new-person flow: welcome, name and a preview, then five named steps:
+   areas, what to keep track of, your week, staying on track (notifications, calendars), what's on your mind */
+const OB_STEPS=[['Areas','leaf','Your life areas'],['Tracking','spark','What to keep track of'],['Your week','cal','Your week'],['Reminders','bell','Reminders and calendars'],['Brain dump','task','What’s on your mind']];
 function viewWelcome(root){
-  const S=App.state,s=get.settings();
-  if(!S.ob)S.ob={step:0,name:s.userName||'',help:new Set(),areas:null,days:(s.workDays||[0,1,2,3,4]).slice(),start:(s.work||{}).start??540,end:(s.work||{}).end??1020,evenings:s.protectEvenings!==false,review:s.reviewDay??0,items:[],text:''};
-  const O=S.ob,page=el('div',{class:'page ob'});root.append(page);
-  const areasFrom=()=>{const set=new Set();O.help.forEach(id=>(OB_HELP.find(h=>h[0]===id)||[])[3].forEach(a=>set.add(a)));if(!set.size)['Health','Home','Finances'].forEach(a=>set.add(a));if(set.size<3)set.add('Home');return AREAS.filter(a=>set.has(a));};
-  const go=n=>{if(n===2&&!O.areas)O.areas=areasFrom();O.step=n;draw();window.scrollTo(0,0);};
-  const bar=()=>el('div',{class:'ob-top'},O.step>0?IconButton('Back',{html:ic('chevl',IC.md),onclick:()=>go(O.step-1)}):el('span',{style:'width:8px'}),el('div',{class:'ob-prog','aria-label':`Step ${O.step+1} of 6`},[0,1,2,3,4,5].map(i=>el('i',{class:i<=O.step?'on':''}))),O.step>0?Button('Skip',{variant:'link',onclick:()=>O.step===5?finish():go(O.step+1)}):el('span',{style:'width:8px'}));
+  const S=App.state,s=get.settings(),replay=!!s.onboardedAt;
+  if(!S.ob)S.ob={step:replay?2:0,name:s.userName||'',areas:(s.areas||['Health','Home','Finances']).slice(),days:(s.workDays||[0,1,2,3,4]).slice(),start:(s.work||{}).start??540,end:(s.work||{}).end??1020,evenings:s.protectEvenings!==false,review:s.reviewDay??0,items:[],text:'',track:new Set(),nudge:(s.habitNudge||{}).on!==false,rev:s.revRemind!==false,digest:!!(s.digest||{}).on};
+  if(!replay&&S.ob.step===0&&!S.ob._init){S.ob.areas=['Health','Home','Finances'];S.ob._init=1;}
+  const O=S.ob,page=el('div',{class:'page ob'});root.append(page);const ctx=formCtx(()=>draw());
+  const go=n=>{O.step=n;draw();window.scrollTo(0,0);};
+  const bar=()=>{const k=O.step-1;if(O.step===0)return el('div',{class:'ob-top'});
+    return el('div',{class:'ob-top'},IconButton('Back',{html:ic('chevl',IC.md),onclick:()=>O.step===2&&replay?(S.ob=null,App.back('prefs')):go(O.step-1)}),
+      k>=1?el('div',{class:'ob-prog2'},el('span',{class:'obbar'},el('span',{style:`width:${k*20}%`})),el('span',{},`${k} of 5 · ${OB_STEPS[k-1][0]}`)):el('span',{class:'grow'}),
+      k>=1?Button('Skip',{variant:'link',onclick:()=>O.step===6?finish():go(O.step+1)}):el('span',{style:'width:8px'}));};
   const head=(h,p)=>el('div',{class:'ob-head'},el('h1',{},h),p?el('p',{},p):null);
-  const cta=(label,fn)=>el('div',{class:'ob-foot'},Button(label,{variant:'primary',full:true,cls:'ob-cta',onclick:fn}));
-  const chip=(on,label,fn,extra)=>el('button',{class:'ob-pill'+(on?' on':''),'aria-pressed':String(!!on),onclick:fn,...(extra||{})},label);
-  function finish(){const made=O.items.map(obParse).filter(Boolean).map(obCreate);
-    const cur=get.settings(),areas=O.areas||cur.areas;
-    setSettings({userName:O.name.trim()||null,areas,workDays:O.days.slice().sort((a,b)=>a-b),work:Object.assign({},cur.work,{start:O.start,end:O.end}),protectEvenings:O.evenings,reviewDay:O.review,introDone:true,onboardedAt:Date.now(),seenVer:APP_VER,gs:{},foundation:{areas:true,work:true,review:true,goal:!!(cur.foundation||{}).goal,calendar:!!(cur.foundation||{}).calendar}});
-    if(O.track&&O.track.size)applyStarters([...O.track]);
-    S.ob=null;S.stack=[];App.go('today');toast(made.length?`${made.length} thing${made.length>1?'s':''} added. Welcome${O.name.trim()?', '+O.name.trim():''}.`:`Welcome${O.name.trim()?', '+O.name.trim():''}.`);}
+  const cta=(label,fn,more)=>el('div',{class:'ob-foot'},Button(label,{variant:'primary',full:true,cls:'ob-cta',onclick:fn}),more||null);
+  const tile=(on,icon,t,sub,fn)=>el('button',{class:'ob-opt'+(on?' on':''),'aria-pressed':String(on),onclick:fn},el('span',{class:'ob-oi','aria-hidden':'true',html:ic(icon,IC.md)}),el('span',{class:'ob-ock','aria-hidden':'true',html:ic('check',IC.xs)}),el('b',{},t),el('small',{},sub));
+  function finish(){const made=O.items.map(obParse).filter(Boolean).map(obCreate),cur=get.settings(),nm=O.name.trim();
+    const hn=cur.habitNudge||{},dg=cur.digest||{},hasJobs=Array.isArray(cur.jobs)&&cur.jobs.length;
+    setSettings({userName:nm||null,areas:O.areas.length?O.areas:cur.areas,...(hasJobs?{}:{workDays:O.days.slice().sort((a,b)=>a-b),work:Object.assign({},cur.work,{start:O.start,end:O.end})}),protectEvenings:O.evenings,reviewDay:O.review,introDone:true,onboardedAt:cur.onboardedAt||Date.now(),seenVer:APP_VER,gs:Object.assign({},cur.gs,{basics:true}),foundation:{...(cur.foundation||{}),areas:true,work:true,review:true},habitNudge:{...hn,on:O.nudge},revRemind:O.rev,digest:{...dg,on:O.digest}});
+    let tr=0;if(O.track.size){tr=O.track.size;applyStarters([...O.track]);}
+    S.ob=null;S.stack=[];App.go('today');
+    const bits=[`${O.areas.length} area${O.areas.length===1?'':'s'}`,tr?`${tr} tracker${tr===1?'':'s'}`:null,made.length?`${made.length} item${made.length===1?'':'s'}`:null].filter(Boolean);
+    toast(replay?'Setup updated':`Welcome${nm?', '+nm:''}. ${andList(bits)} ${bits.length>1||!/^1 /.test(bits[0])?'are':'is'} ready.`);}
   function draw(){page.innerHTML='';page.append(bar());
-    if(O.step===0){const name=el('input',{id:'ob-name',type:'text',placeholder:'Your first name',autocomplete:'given-name',value:O.name,oninput:e=>O.name=e.target.value,onkeydown:e=>{if(e.key==='Enter')go(1);}});
-      page.append(el('div',{class:'ob-head'},el('h1',{class:'ob-big'},'Welcome to Life OS'),el('p',{},'One calm place for what needs you today, across your whole life.')),
-        el('div',{class:'ob-why'},[['sun','Today shows what needs you','Tasks, habits, bills and plans in one list.'],['layers','Plan your week in a few taps','Studio finds room around your work hours.'],['rep','Look back once a week','See what got done and set up the next week.']].map(([i,a,b])=>el('div',{},el('span',{class:'ob-ic',html:ic(i,IC.md)}),el('span',{},el('b',{},a),el('small',{},b))))),
-        el('label',{class:'ob-field',for:'ob-name'},'What should we call you?',name),
-        el('div',{class:'ob-foot'},Button('Get started',{variant:'primary',full:true,cls:'ob-cta',onclick:()=>go(1)}),Button('Look around with examples first',{variant:'link',style:'align-self:center',onclick:()=>{loadExamples();setSettings({onboardedAt:Date.now(),gs:{basics:true},seenVer:APP_VER});S.ob=null;App.go('today');}}),Caption('Takes about a minute. You can skip any step.',{as:'p',style:'text-align:center'})));}
-    else if(O.step===1){const n=O.help.size;
-      page.append(head('What do you want help with?','Pick as many as you like. We’ll set up the right places and keep the rest out of your way.'),
-        el('div',{class:'ob-grid'},OB_HELP.map(([id,t,sub])=>el('button',{class:'ob-opt'+(O.help.has(id)?' on':''),'aria-pressed':String(O.help.has(id)),onclick:e=>{O.help.has(id)?O.help.delete(id):O.help.add(id);O.areas=null;draw();}},el('b',{},t),el('small',{},sub)))),
-        cta(n?`Continue with ${n}`:'Continue',()=>go(2)));}
-    else if(O.step===2){const why=a=>{const h=OB_HELP.find(x=>O.help.has(x[0])&&x[3].includes(a));return h?`From “${h[1]}”`:OB_AREA_SUB[a];};
-      page.append(head('Your life areas','We turned these on from your answers. Each one gets its own page. Change them any time in Settings.'),
-        el('div',{class:'list'},AREAS.map(a=>{const on=O.areas.includes(a);return Switch({on,label:a,weight:600,sub:on?why(a):OB_AREA_SUB[a],onChange:()=>{O.areas=on?O.areas.filter(x=>x!==a):AREAS.filter(x=>x===a||O.areas.includes(x));draw();}});})),
-        cta('Continue',()=>{if(!O.areas.length){toast('Pick at least one area');return;}go(3);}));}
-    else if(O.step===3){if(!O.track)O.track=new Set();const n=O.track.size;
-      page.append(head('What do you want to keep track of?','Pick up to six. Each one is ready to use, and daily ones get a card on Today. You can change all of it later.'),starterGrid(O.track,6,draw),cta(n?`Continue with ${n}`:'Skip for now',()=>go(4)));}
-    else if(O.step===4){const tsel=(id,v,on)=>{const sl=el('select',{id,onchange:e=>on(+e.target.value)});for(let m=5*60;m<=23*60;m+=30){const o=el('option',{value:m},fmtT(m));if(m===v)o.selected=true;sl.append(o);}return sl;};
-      page.append(head('Your week','So Studio plans around your work, and knows when to ask you to look back.'),
-        Card({title:'Work days',cls:'ob-card'},el('div',{class:'ob-days'},WD.map((d,i)=>chip(O.days.includes(i),d,()=>{O.days=O.days.includes(i)?O.days.filter(x=>x!==i):[...O.days,i];draw();},{'aria-label':WDN[i]}))),el('span',{class:'lbl'},'Hours'),el('div',{class:'ob-2'},el('label',{class:'ob-field',for:'ob-st'},'Start',tsel('ob-st',O.start,v=>O.start=v)),el('label',{class:'ob-field',for:'ob-en'},'End',tsel('ob-en',O.end,v=>O.end=v))),el('label',{class:'ob-check'},el('input',{type:'checkbox',checked:O.evenings||null,onchange:e=>O.evenings=e.target.checked}),'Keep evenings free on work days')),
-        Card({title:'Weekly look back',cls:'ob-card'},el('div',{class:'ob-row'},[5,6,0,1].map(d=>chip(O.review===d,DOW[d].slice(0,3),()=>{O.review=d;draw();},{'aria-label':DOW[d]}))),Caption('Your first one comes after you’ve used Life OS for a week, so there’s something to look back on.',{as:'p'})),
+    if(O.step===0){
+      page.append(el('div',{class:'ob-mark',html:ic('leaf',IC.xl)}),el('div',{class:'ob-head'},el('h1',{class:'ob-big'},'Welcome to Life OS'),el('p',{},'One calm place for what needs you today, across your whole life.')),
+        el('div',{class:'list'},[['Today shows what needs you','Tasks, habits, bills and plans in one list'],['Plan your week in a few taps','Studio finds room around your work'],['Look back once a week','See what got done, set up the next']].map(([a,b])=>Row({as:'div'},el('span',{class:'grow'},el('b',{style:'font-weight:500'},a),el('small',{},b))))),
+        cta('Set it up for me',()=>go(1),el('div',{style:'display:contents'},Button('Explore with the demo first',{variant:'text',full:true,onclick:()=>askConfirm({title:'Try the demo?',body:'Fills every area with realistic data so you can see the app at full use. Clear it any time from Data & help.',yes:'Load demo',danger:false,no:'Cancel',onYes:()=>{loadDemo();setSettings({onboardedAt:Date.now(),gs:{basics:true},seenVer:APP_VER,introDone:true});S.ob=null;App.go('today');}})}),Caption('About two minutes. Skip anything.',{as:'p',style:'text-align:center'}))));}
+    else if(O.step===1){const name=el('input',{id:'ob-name',type:'text',placeholder:'Your first name',autocomplete:'given-name',value:O.name,oninput:e=>O.name=e.target.value,onkeydown:e=>{if(e.key==='Enter')go(2);}});
+      page.append(head('Hi there','What should we call you?'),el('label',{class:'ob-field',for:'ob-name'},el('span',{class:'sr'},'Your first name'),name),
+        SectionLabel('Next, five quick questions'),el('div',{class:'list'},OB_STEPS.map(([,i,t],k)=>Row({as:'div'},IconTile(null,{html:ic(i,IC.md)}),el('span',{class:'grow'},el('b',{style:'font-weight:500'},t)),Caption(String(k+1),{as:'span'})))),
+        cta('Continue',()=>go(2)));setTimeout(()=>{if(!O.name&&!isTouch())name.focus();},50);}
+    else if(O.step===2){const all=[...AREAS,...OPT_AREAS],sub=a=>OB_AREA_SUB[a]||'';
+      page.append(head('Which parts of life?','Each one gets its own page. Change them any time in Settings.'),
+        el('div',{class:'ob-grid'},all.map(a=>{const on=O.areas.includes(a);return tile(on,areaIcon(a),a,sub(a),()=>{O.areas=on?O.areas.filter(x=>x!==a):all.filter(x=>x===a||O.areas.includes(x));draw();});})),
+        cta(O.areas.length?`Continue with ${O.areas.length}`:'Pick at least one',()=>{if(!O.areas.length){toast('Pick at least one area');return;}go(3);}));}
+    else if(O.step===3){const n=O.track.size,only=TRACK_SET.filter(x=>O.areas.includes(x[3])).map(x=>x[0]);
+      page.append(head('What do you want to keep track of?','Pick up to six. Daily ones get a card on Today.'),starterGrid(O.track,6,draw,{only:only.length>=3?only:null}),cta(n?`Continue with ${n}`:'Skip for now',()=>go(4)));}
+    else if(O.step===4&&Array.isArray(get.settings().jobs)&&get.settings().jobs.length){const g=el('div',{class:'list'});g.append(setRow('Working hours',jobsSummary(get.settings()),null,workSheet));
+      page.append(head('Your week','So Studio plans around your work.'),g,Card({cls:'ob-card'},el('span',{class:'lbl'},'Weekly look back'),el('div',{class:'ob-row'},[5,6,0,1].map(d=>Chip(DOW[d].slice(0,3),{selected:O.review===d,'aria-label':DOW[d],onclick:()=>{O.review=d;draw();}})))),cta('Continue',()=>go(5)));}
+    else if(O.step===4){const g=el('div',{class:'list'});
+      g.append(ctx.row('st','time','Start',fmtT(O.start),{valOn:true}));if(ctx.open==='st')g.append(ctx.panel('st','wide',ctx.wheel(()=>O.start,v=>{O.start=v;})));
+      g.append(ctx.row('en','ends','End',fmtT(O.end),{valOn:true}));if(ctx.open==='en')g.append(ctx.panel('en','wide',ctx.wheel(()=>O.end,v=>{O.end=v;})));
+      g.append(Switch({on:O.evenings,label:'Keep evenings free',sub:'Nothing planned after work',onChange:v=>{O.evenings=v;}}));
+      page.append(head('Your week','So Studio plans around your work.'),
+        Card({cls:'ob-card'},el('span',{class:'lbl'},'Work days'),el('div',{class:'wdays obwd'},wdMap((d,i)=>{const on=O.days.includes(i);return el('button',{class:on?'on':'','aria-label':WDN[i],'aria-pressed':String(on),onclick:()=>{O.days=on?O.days.filter(x=>x!==i):[...O.days,i];draw();}},d);}))),
+        g,Card({cls:'ob-card'},el('span',{class:'lbl'},'Weekly look back'),el('div',{class:'ob-row'},[5,6,0,1].map(d=>Chip(DOW[d].slice(0,3),{selected:O.review===d,'aria-label':DOW[d],onclick:()=>{O.review=d;draw();}}))),Caption('Your first one comes after a week, so there’s something to look back on.',{as:'p'})),
         cta('Continue',()=>go(5)));}
+    else if(O.step===5){const g=el('div',{class:'list'}),api=PWA.on&&PWA.api?PWA.api():null,p=api&&api.push,can=!!(p&&p.supported()),on=can&&p.wanted();
+      if(PWA.on){if(can)g.append(Switch({on,label:'Turn on reminders',sub:on?'Notifications are on for this phone':'Allow notifications on this phone',onChange:async v=>{if(v){const r=await p.enable();if(r!=='ok')toast(r==='denied'?'Notifications are off for Life OS in your phone’s Settings.':'Couldn’t turn on notifications. Try again.');else{PWA.afterChange();toast('Reminders are on');}}else await p.disable();draw();}}));
+        else g.append(Row({as:'div'},el('span',{class:'grow'},el('b',{style:'font-weight:500'},'Reminders'),el('small',{style:'white-space:normal'},p?p.why():'Add Life OS to your Home Screen to get reminders.'))));}
+      g.append(Switch({on:O.nudge,label:'Evening habit nudge',sub:'8:00 PM, only if habits are still open',onChange:v=>{O.nudge=v;}}),Switch({on:O.rev,label:'Review reminder',sub:`${DOW[O.review]} ${fmtT(1080)}, while a review is waiting`,onChange:v=>{O.rev=v;}}),Switch({on:O.digest,label:'Morning digest',sub:'Your Top 3 and first commitment at 7:30 AM',onChange:v=>{O.digest=v;}}));
+      const cal=el('div',{class:'list'});cal.append(Row({style:'',onclick:()=>PWA.on?icalFeedSheet(null):App.go('setpage',{id:'calendar'})},IconTile(null,{html:ic('cal',IC.md)}),el('span',{class:'grow',style:'text-align:left'},el('b',{style:'font-weight:500'},'Bring in a calendar'),el('small',{},`${(get.settings().icalFeeds||[]).length?(get.settings().icalFeeds||[]).length+' added · ':''}Google, iCloud or Outlook, read-only`)),RowEnd('chevron')));
+      let standalone=false;try{standalone=matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;}catch(e){}
+      page.append(head('Stay on track','Life OS only nudges you when something needs you.'),g,cal,!PWA.on?Caption('Reminders show while Life OS is open. Notifications when it’s closed need the home-screen app.',{as:'p'}):null,
+        PWA.on&&!standalone?Card({cls:'ob-card'},el('div',{style:'display:flex;gap:var(--s3);align-items:center'},el('span',{class:'ob-ic',html:ic('share',IC.md)}),el('small',{class:'muted'},'Not on your Home Screen yet? In Safari, tap Share, then Add to Home Screen.'))):null,
+        cta('Continue',()=>go(6)));}
     else{const list=el('div'),inp=el('input',{id:'ob-cap',type:'text',placeholder:'e.g. Call the dentist Thursday',autocomplete:'off',enterkeyhint:'done',value:O.text,oninput:e=>O.text=e.target.value,onkeydown:e=>{if(e.key==='Enter'){e.preventDefault();add(O.text);}}}),
         ctaBtn=Button(null,{variant:'primary',full:true,cls:'ob-cta',onclick:finish}),ideas=el('div',{class:'ob-row'});
       function add(t){t=(t||'').trim();if(!t){inp.focus();return;}O.items.push(t);O.text='';inp.value='';drawList();inp.focus({preventScroll:true});}
       function drawList(){list.innerHTML='';const ps=O.items.map(obParse);
         if(ps.length)list.append(el('div',{class:'list'},ps.map((p,i)=>Row({as:'div',style:'padding-right:var(--s2)'},el('span',{class:'grow',style:'min-width:0'},el('b',{style:'font-weight:500;overflow-wrap:anywhere'},p.title),el('span',{class:'tags',style:'margin-top:var(--s1)'},pill(OB_KIND[p.kind],'soft'),pill(p.label,'neu'),p.area?pill(p.area,'neu'):null)),IconButton(`Remove ${p.title}`,{html:ic('x',IC.xs),onclick:()=>{O.items.splice(i,1);drawList();}})))),Caption('We read the type, day and area from your words. Tap an item later to change any of it.',{as:'p',style:'padding:0 var(--s1)'}));
-        ideas.innerHTML='';OB_IDEAS.filter(x=>!O.items.includes(x)).forEach(x=>ideas.append(el('button',{class:'ob-pill',onclick:()=>add(x)},`+ ${x}`)));
-        ctaBtn.textContent=O.items.length?`Add ${O.items.length} and open Today`:'Open Today';}
-      page.append(head('What’s on your mind?','Add whatever you need to do or remember, one at a time. Type it the way you’d say it.'),
+        ideas.innerHTML='';OB_IDEAS.filter(x=>!O.items.includes(x)).forEach(x=>ideas.append(Chip(`+ ${x}`,{onclick:()=>add(x)})));
+        ctaBtn.textContent=replay?(O.items.length?`Add ${O.items.length} and finish`:'Finish'):O.items.length?`Add ${O.items.length} and open Today`:'Open Today';}
+      page.append(head('What’s on your mind?','One at a time, the way you’d say it.'),
         el('div',{class:'ob-add'},el('label',{for:'ob-cap',class:'sr'},'Something on your mind'),inp,Button(null,{variant:'primary','aria-label':'Add it',html:ic('plus',IC.lg),onclick:()=>add(O.text)})),
         list,el('div',{class:'ob-ideas'},el('span',{class:'lbl'},'Need ideas? Tap to add'),ideas),el('div',{class:'ob-foot'},ctaBtn));drawList();}
   }
   draw();
 }
 /* ---------- Getting started on Today ---------- */
-const GS_STEPS=[['basics','Set up your basics','Areas, work hours and review day'],['item','Add your first item','A task, habit or event'],['hold','Touch and hold anything','Edit, move or delete from the menu'],['swipe','Swipe a task','Right to finish it, left to move it to tomorrow'],['capture','Capture with +','Get a thought out of your head in two taps'],['area','Open one of your life areas','Each one suggests what to fill in first']];
-function gsState(){const s=get.settings(),g=Object.assign({},s.gs);g.basics=g.basics||!!s.onboardedAt;g.item=g.item||[...recs.values()].some(r=>['task','habit','block','allday','goal','project'].includes(r.kind)&&!r.example);return g;}
+/* v336 · one Getting started card: five steps, a ring, folds to one line after day one */
+const GS_STEPS=[['basics','Set up your basics','Areas, your week and reminders'],['item','Add your first item','A task, habit or event'],['hold','Hold anything for options','Edit, move or delete from the menu'],['swipe','Swipe a task to tomorrow','Swipe left on any task'],['area','Open one of your life areas','Each one suggests what to fill in first']];
+function gsState(){const s=get.settings(),g=Object.assign({},s.gs);g.basics=g.basics||!!s.onboardedAt;g.item=g.item||[...recs.values()].some(r=>['task','habit','block','allday','goal','project'].includes(r.kind)&&!r.example&&!r.demo);return g;}
 function markGs(k){const s=get.settings();if(!s||!s.onboardedAt||s.gsOff||(s.gs||{})[k])return;put(Object.assign({},DEFAULT_SETTINGS,s,{gs:Object.assign({},s.gs,{[k]:true})}),{silent:true});}
-function gsCard(){const s=get.settings();if(!s.onboardedAt||s.gsOff)return null;const g=gsState(),n=GS_STEPS.filter(x=>g[x[0]]).length;if(n===GS_STEPS.length)return null;
-  return Card({cls:'gs'},el('div',{class:'bl'},el('span',{class:'lbl',style:'color:var(--action-text)'},'Getting started'),el('span',{style:'display:flex;align-items:center;gap:var(--s1)'},el('span',{class:'small muted tnum'},`${n} of ${GS_STEPS.length}`),IconButton('Hide Getting started',{size:'sm',html:ic('x',IC.xs),onclick:()=>{setSettings({gsOff:true});toast('Hidden. Find it again in Settings › Help.',()=>setSettings({gsOff:false}));}}))),meter(n/GS_STEPS.length),el('div',{class:'list',style:'box-shadow:none;border:0;background:none'},GS_STEPS.map(([k,t,sub])=>{const on=!!g[k];return el('div',{class:'li tick-host'+(on?' done':''),style:'padding-inline:0'},el('span',{class:'tick-hit'},tickBtn(on,v=>{const cur=get.settings();setSettings({gs:Object.assign({},cur.gs,{[k]:v})});},on?`Mark not done: ${t}`:`Mark done: ${t}`)),el('button',{class:'grow',style:'text-align:left',onclick:()=>gsGo(k)},el('span',{class:'tt',style:'font-weight:500'},t),el('small',{},sub)));})));}
-function gsGo(k){if(k==='basics')App.go('foundation');else if(k==='item'||k==='capture')captureSheet(null);else if(k==='area')App.go('areas');else if(k==='hold')toast(isTouch()?'Touch and hold any task, habit or list item':'Right-click any task, habit or list item');else if(k==='swipe')App.go('tasks');}
+function gsRing(p){const C=2*Math.PI*15;return el('span',{class:'gsring','aria-hidden':'true',html:`<svg viewBox="0 0 36 36" width="32" height="32"><circle cx="18" cy="18" r="15" fill="none" stroke="var(--track-bg)" stroke-width="4"/><circle cx="18" cy="18" r="15" fill="none" stroke="var(--accent)" stroke-width="4" stroke-linecap="round" stroke-dasharray="${(C*p).toFixed(1)} ${C.toFixed(1)}" transform="rotate(-90 18 18)"/></svg>`});}
+function gsCard(){const s=get.settings();if(!s.onboardedAt||s.gsOff)return null;const g=gsState(),n=GS_STEPS.filter(x=>g[x[0]]).length,N=GS_STEPS.length;if(n===N)return null;
+  const S=App.state,folded=!S.gsOpen&&Date.now()-s.onboardedAt>864e5,next=GS_STEPS.find(x=>!g[x[0]]);
+  const hide=()=>{setSettings({gsOff:true});toast('Hidden. Bring it back from Data & help › How Life OS works.',()=>setSettings({gsOff:false}));};
+  if(folded)return Card({cls:'gs gsf'},el('button',{class:'gsline',onclick:()=>{S.gsOpen=true;App.refresh();}},gsRing(n/N),el('span',{class:'grow'},el('b',{},`Getting started · ${n} of ${N}`),el('small',{},`Next: ${next[1].toLowerCase()}`)),RowEnd('chevron')));
+  return Card({cls:'gs'},el('div',{class:'gsline'},gsRing(n/N),el('span',{class:'grow'},el('b',{},'Getting started'),el('small',{},`${n} of ${N} · about ${Math.max(1,N-n)} minute${N-n===1?'':'s'} left`)),Button('Hide',{variant:'link',size:'sm',onclick:hide})),
+    el('div',{class:'list',style:'box-shadow:none;border:0;background:none'},GS_STEPS.map(([k,t,sub])=>{const on=!!g[k];return el('div',{class:'li tick-host'+(on?' done':''),style:'padding-inline:0'},el('span',{class:'tick-hit'},tickBtn(on,v=>{const cur=get.settings();setSettings({gs:Object.assign({},cur.gs,{[k]:v})});},on?`Mark not done: ${t}`:`Mark done: ${t}`)),el('button',{class:'grow',style:'text-align:left',onclick:()=>gsGo(k)},el('span',{class:'tt',style:'font-weight:500'},t),el('small',{},sub)));})));}
+function gsGo(k){if(k==='basics'){App.state.ob=null;App.go('welcome');}else if(k==='item')captureSheet(null);else if(k==='area')App.go('more');else if(k==='hold')toast(isTouch()?'Touch and hold any task, habit or list item':'Right-click any task, habit or list item');else if(k==='swipe')App.go('tasks');}
+/* v336 · tips where they happen: one at a time, at most one a day, only in the first week */
+const TIPS=[['swipe','Swipe a task left to move it to tomorrow. Hold it for more.'],['hold','Touch and hold anything on Today to edit, move or delete it.'],['capture','Tap + to capture anything, in your own words.'],['top3','Pick your Top 3 to keep the day focused.']];
+function tipCard(dk){const s=get.settings();if(dk!==todayK()||!s.onboardedAt||s.tipsOff||Date.now()-s.onboardedAt>7*864e5)return null;const seen=s.tipsSeen||{},tk=todayK();
+  if(s.tipDay===tk&&s.tipShown&&seen[s.tipShown])return null;/* one a day */
+  const t=TIPS.find(x=>!seen[x[0]]&&!(x[0]==='hold'&&!isTouch()));if(!t)return null;
+  if(s.tipDay!==tk||s.tipShown!==t[0])setTimeout(()=>put(Object.assign({},DEFAULT_SETTINGS,get.settings(),{tipDay:tk,tipShown:t[0]}),{silent:true}),0);
+  return el('div',{class:'tipb',role:'note'},el('span',{class:'grow'},t[1]),el('button',{class:'tipok',onclick:()=>{setSettings({tipsSeen:Object.assign({},get.settings().tipsSeen||{},{[t[0]]:1})});}},'Got it'));}
 /* ---------- First use of a module ---------- */
 const TI_W={T:['sun','Today'],C:['cal','Calendar'],R:['rep','Weekly review'],I:['chart','Insights'],S:['chart','Spending'],P:['heart','People'],F:['search','Search']};
 const TOOL_INTRO={
@@ -134,10 +168,11 @@ function toolIntroPage(page,hub,t){const ti=TOOL_INTRO[t.id]||t.intro,key=toolKe
     if(ti.ask==='prep'){const d=c.f.day;return[el('b',{style:'font-weight:500'},'Which day do you usually prep?'),el('div',{class:'ob-row'},[0,6,1,3].map(n=>el('button',{class:'ob-pill'+(d===n?' on':''),'aria-pressed':String(d===n),onclick:()=>{c.f.day=n;put(c);}},DOW[n])))];}
     if(ti.ask==='reading'){return[el('b',{style:'font-weight:500'},'How many books would you like to read this year?'),el('div',{class:'ob-row'},[6,12,24,52].map(n=>el('button',{class:'ob-pill'+(c.f.goal===n?' on':''),'aria-pressed':String(c.f.goal===n),onclick:()=>{c.f.goal=n;put(c);}},String(n))))];}
     return null;})();
-  page.append(Card({cls:'ob-card'},el('p',{class:'ob-say'},ti.say),el('span',{class:'lbl'},'Where it shows up'),el('div',{class:'ob-why'},ti.shows.map(([w,txt])=>el('div',{},el('span',{class:'ob-ic',html:ic(TI_W[w][0],IC.md)}),el('span',{},el('b',{},TI_W[w][1]),el('small',{},txt)))))));
+  /* v336 · same four parts for every module: what it does, where it shows up, one question, starters */
+  page.append(Card({cls:'ob-card'},el('p',{class:'ob-say'},ti.say),el('span',{class:'lbl'},'Shows up on'),el('div',{class:'ob-row'},ti.shows.map(([w,txt])=>Chip(TI_W[w][1],{as:'span',selected:true,icon:TI_W[w][0],title:txt})))));
   if(ask)page.append(Card({cls:'ob-card'},...ask));
   const sb=starterBlock(hub,t);if(sb)page.append(sb);const pickN=((App.state.obPick||{})[pinKey(hub,t.id)]||[]).length;
-  page.append(el('div',{style:'display:flex;flex-direction:column;gap:var(--s2)'},pickN?btnP(`Add ${pickN} and start`,()=>{const n=starterMake(hub,t);toolMark('toolSeen',key);toast(`${n} added`);App.refresh();},{style:'width:100%',icon:'check'}):btnP(ti.add,()=>{if(ti.run)ti.run(hub,t);else entrySheet(hub,t);},{style:'width:100%',icon:'plus'}),btnL('Look around first',()=>{toolMark('toolSeen',key);App.refresh();},{style:'width:100%'})));}
+  page.append(el('div',{style:'display:flex;flex-direction:column;gap:var(--s2)'},pickN?btnP(`Add ${pickN} and start`,()=>{const n=starterMake(hub,t);toolMark('toolSeen',key);toast(`${n} added`);App.refresh();},{style:'width:100%',icon:'check'}):btnP(ti.add,()=>{if(ti.run)ti.run(hub,t);else entrySheet(hub,t);},{style:'width:100%',icon:'plus'}),btnL('Start empty',()=>{toolMark('toolSeen',key);App.refresh();},{style:'width:100%'})));}
 function toolAfterNote(hub,t){const s=get.settings(),key=toolKey(hub,t.id),ti=TOOL_INTRO[t.id]||t.intro;if(!ti||!(s.toolFresh||{})[key]||(s.toolNoted||{})[key])return null;const l=entries(hub,t.id);if(!l.length)return null;
   const first=l.slice().sort((a,b)=>(a.createdAt||0)-(b.createdAt||0))[0],name=t.title?t.title(first):(first.f.what||''),places=ti.shows.map(([w])=>TI_W[w][1]).filter(x=>x!=='Search');
   const where=places.length?`It shows up ${andList(places.map(p=>p==='Today'?'on Today':p==='Calendar'?'on your calendar':p==='Weekly review'?'in your weekly review':p==='People'?'on their People page':'in '+p))}.`:'Find it any time from search.';

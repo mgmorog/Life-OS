@@ -4354,3 +4354,7 @@ textarea.big.gstep{font-size:var(--fs-row);font-family:inherit}
 .a-motion .dring.glow,.a-motion .rwbars i{animation:none}
 .fhabt .hstk{font-size:var(--fs-small);color:var(--text-muted);font-weight:var(--fw-regular);align-self:flex-start;white-space:nowrap}
 .rwdone .tickp.on{display:grid;place-items:center;color:var(--on-accent)}
+
+/* v326 · capacity preview: empty days and the None key still show their outline */
+.capprev .heat.heat:not(.l1):not(.l2):not(.l3):not(.l4){background:var(--track-bg)}
+.capkey span:first-child i{background:var(--track-bg)!important}

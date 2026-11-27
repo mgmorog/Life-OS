@@ -5,11 +5,13 @@ const PWA={
   /* reminders that will fire in the next 14 days, for push notifications when the app is closed */
   upcoming(){
     const now=Date.now(),tk=todayK(),st=remState(),out=[],q=get.settings().quiet||{};
+    /* v341 · quiet during focus: anything due while a focus session runs arrives when it ends */const fr=get.settings().focusRun,fEnd=fr&&get.settings().focusQuiet!==false&&!fr.pausedAt?fr.start+(+fr.paused||0)+(+fr.plan||25)*6e4:0;
     const push=(e,dk,base,m,sfx='')=>{const key=e.id+'|'+dk+sfx,v=st.map[key];if(v==='x')return;let fire=typeof v==='number'?v:base-m*6e4;if(fire<=now)return;
       if(e.kind==='allday'&&typeof v!=='number'){const d=new Date(fire),h=d.getHours();if(h<8||h>=21){const t=new Date(d.getFullYear(),d.getMonth(),d.getDate()+(h>=21?1:0),9,0);fire=t.getTime();if(fire<=now)return;}}
+      if(fEnd&&fire>now&&fire<fEnd)fire=fEnd+3e4;
       if(q.on&&inQuiet(new Date(fire))){const d=new Date(fire);let t=new Date(d.getFullYear(),d.getMonth(),d.getDate(),Math.floor(q.to/60),q.to%60);if(t.getTime()<fire)t=new Date(t.getTime()+864e5);fire=t.getTime();}
       const when=e.kind==='allday'?(dk===tk?'Today':relDay(dk)):`${dk===tk?'':relDay(dk)+', '}${fmtT(e.time)}`;
-      out.push({key,fire_at:new Date(fire).toISOString(),title:e.title,body:m>0&&e.kind!=='allday'?`${when} · ${remLabel(m).replace(' before','')} from now`:when,url:'/#today'});};
+      out.push({key,fire_at:new Date(fire).toISOString(),title:e.title,body:m>0&&e.kind!=='allday'?`${when} · ${remLabel(m).replace(' before','')} from now`:when,url:e.kind==='task'||e.kind==='habit'?'/#rem?k='+encodeURIComponent(key):'/#today'});};
     /* flexible jobs: a reminder at 6 PM, four days before the next period starts */
     try{const S0=get.settings();if(S0.flexRemind!==false)jobsOf(S0).filter(j=>j.flex).forEach(j=>{const len=j.cycle==='2week'?14:7;[0,1].forEach(n=>{const st=addK(flexStart(j,tk),len*(n+(n?0:1))),m=(S0.flexHours||{})[j.id]||{};if(m['_'+st])return;const d=fromK(addK(st,-4)),fire=new Date(d.getFullYear(),d.getMonth(),d.getDate(),18,0).getTime();if(fire<=now)return;out.push({key:'flex|'+j.id+'|'+st,fire_at:new Date(fire).toISOString(),title:`Add your ${j.name&&j.name!=='Work'?j.name+' ':'work '}hours`,body:`For the week of ${fmtMD(st)}`,url:'/#inbox'});});});}catch(e){}
     for(let i=0;i<=14;i++){const dk=addK(tk,i),d=dayItems(dk);

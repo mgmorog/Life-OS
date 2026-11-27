@@ -75,4 +75,13 @@ const CHROME=process.env.CHROME||'/opt/pw-browsers/chromium-1243/chrome-linux64/
   await go('setpage',{id:'calendar'});const ct=await p.evaluate(()=>document.querySelector('.page').innerText);ok('v340 calendar display group',/Calendar display/.test(ct)&&/Opens to/.test(ct),ct.slice(0,200));
   await go('setpage',{id:'planning'});ok('v340 planning has fiscal year and Studio view',/Year starts in/.test(await p.evaluate(()=>document.querySelector('.page').innerText)));
   await go('setpage',{id:'tasks'});ok('v340 tasks has default length and reminder',/Default length[\s\S]*Default reminder/.test(await p.evaluate(()=>document.querySelector('.page').innerText)));
+  // v341 · a tapped reminder opens Done / later / tomorrow; &do=done finishes it directly
+  {const tk=await p.evaluate(()=>window.__lifeos.todayK());const id=await p.evaluate(()=>{const L=window.__lifeos;return L.create('task',{title:'Call the bank',date:L.todayK(),time:600,reminder:0}).id;});
+   await p.evaluate(([id,tk])=>{location.hash='rem?k='+encodeURIComponent(id+'|'+tk);},[id,tk]);await p.waitForTimeout(900);
+   ok('v341 reminder sheet offers actions',/Remind me in an hour/.test(await p.evaluate(()=>document.querySelector('.sheet')?.innerText||'')));
+   await p.evaluate(()=>[...document.querySelectorAll('.sheet button')].find(b=>b.textContent.trim()==='Done').click());await p.waitForTimeout(500);
+   ok('v341 Done in the sheet finishes it',await p.evaluate(([id,tk])=>!!(window.__lifeos.get.id(id).doneDates||{})[tk],[id,tk]));
+   const id2=await p.evaluate(()=>{const L=window.__lifeos;return L.create('task',{title:'Water plants',date:L.todayK(),time:700,reminder:0}).id;});
+   await p.evaluate(([id,tk])=>{location.hash='rem?k='+encodeURIComponent(id+'|'+tk)+'&do=done';},[id2,tk]);await p.waitForTimeout(900);
+   ok('v341 the notification Done button finishes it',await p.evaluate(([id,tk])=>!!(window.__lifeos.get.id(id).doneDates||{})[tk],[id2,tk]));}
   ok('no page errors',!errs.length,errs);await b.close();process.exit(fails?1:0);})();

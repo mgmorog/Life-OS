@@ -28,10 +28,13 @@ self.addEventListener('fetch', e => {
 });
 self.addEventListener('push', e => {
   let d = {}; try { d = e.data ? e.data.json() : {}; } catch (err) { d = { title: e.data && e.data.text() }; }
-  e.waitUntil(self.registration.showNotification(d.title || 'Life OS', { body: d.body || '', tag: d.tag || undefined, icon: '/icons/icon-192.png', badge: '/icons/icon-192.png', data: { url: d.url || '/#today' } }));
+  // v341 · reminders for tasks and habits carry Done and Snooze buttons where the system shows them (Android, desktop)
+  const acts = /#rem\?/.test(d.url || '') ? [{ action: 'done', title: 'Done' }, { action: 'snooze', title: 'In 1 hour' }] : undefined;
+  e.waitUntil(self.registration.showNotification(d.title || 'Life OS', { body: d.body || '', tag: d.tag || undefined, icon: '/icons/icon-192.png', badge: '/icons/icon-192.png', actions: acts, data: { url: d.url || '/#today' } }));
 });
 self.addEventListener('notificationclick', e => {
   e.notification.close();
-  const url = (e.notification.data && e.notification.data.url) || '/#today';
+  let url = (e.notification.data && e.notification.data.url) || '/#today';
+  if (e.action && /#rem\?/.test(url)) url += '&do=' + e.action;
   e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(cs => { const c = cs.find(x => new URL(x.url).origin === location.origin); if (c) { c.navigate(url).catch(() => {}); return c.focus(); } return self.clients.openWindow(url); }));
 });

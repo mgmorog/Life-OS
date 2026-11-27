@@ -105,7 +105,7 @@ function reminderCard(){
       el('span',{class:'remacts'},e.kind!=='allday'?Chip('Done',{onclick:()=>{toggleItem(e,dk);setRem(key,'x');buzz(8);}}):null,Chip('10 min',{onclick:()=>{setRem(key,Date.now()+10*6e4);toast('Reminding you in 10 minutes');}}),IconButton(`Dismiss ${e.title}`,{size:'sm',html:ic('x',IC.sm),onclick:()=>setRem(key,'x')})))));
 }
 const toastedRem=new Set();
-function checkReminders(){dueReminders().forEach(({e,key})=>{if(toastedRem.has(key))return;toastedRem.add(key);if(App.state.view==='today'&&!sheetStack.length){App.refresh();return;}buzz(30);toast(`Reminder: ${e.title}`);});}
+function checkReminders(){{const s=get.settings(),fr=s.focusRun;if(fr&&s.focusQuiet!==false&&!fr.pausedAt)return;}dueReminders().forEach(({e,key})=>{if(toastedRem.has(key))return;toastedRem.add(key);if(App.state.view==='today'&&!sheetStack.length){App.refresh();return;}buzz(30);toast(`Reminder: ${e.title}`);});}
 function viewToday(root){
   const S=App.state,dk=S.sel,sel=fromK(dk),tk=todayK(),isToday=dk===tk;
   const first=!S._painted;

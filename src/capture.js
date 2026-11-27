@@ -162,7 +162,7 @@ function captureSheet(rec,{from=null,photo=false,listen=false}={}){
     else{go(g.kind);return;}
     markTurn(g.kind);done();App.refresh();toast(msg,()=>{remove(made.id,{hard:true});App.refresh();},'Undo',{edit,force:true});};
   const multiMake=asTasks=>{const ls=lines();const made=ls.map(x=>asTasks?newTask(x.slice(0,120),{date:todayK(),color:defCol()}):create('idea',{title:x.slice(0,120),notes:'',photos:[],source:from||null}));done();App.refresh();toast(asTasks?`${made.length} tasks added for today`:`${made.length} ideas saved`,()=>{made.forEach(r=>remove(r.id,{hard:true}));App.refresh();},'Undo',{force:true});};
-  const drawChips=()=>{if(!chips)return;chips.innerHTML='';const r=D.title.trim()?rd():null;const hs=r?r.hits:[];chips.hidden=!hs.length;
+  const drawChips=()=>{if(!chips)return;chips.innerHTML='';const r=D.title.trim()?rd():null;const hs=r?r.hits:[];chips.hidden=!hs.length;try{capMarks(T&&T.input,hs);}catch(e){}
     hs.forEach(h=>chips.append(el('span',{class:'capchip'},h.label,el('button',{'aria-label':`Keep “${h.s}” as words`,html:ic('x',IC.xs),onclick:()=>{if(h.guess)D.noArea=true;else D.keep.push(h.s);touched();T.input.focus({preventScroll:true});}}))));};
   const refreshHint=()=>{drawChips();hint.innerHTML='';if(ex)ex.hidden=!!(D.title.trim()||D.notes.trim());
     if(dupe){const dd=D.title.trim()&&!multi?capDupe(rd().title||D.title):null;dupe.innerHTML='';dupe.hidden=!dd||(isEdit&&dd.label==='Already in your Inbox');if(dd)dupe.append(el('span',{class:'grow'},dd.label),Button('Open',{variant:'link',size:'sm',onclick:dd.open}));}

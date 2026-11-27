@@ -295,7 +295,7 @@ function deleteFlow(rec,occ,inst){
 /* ---------- New time block ---------- */
 function blockSheet(rec,seed={}){
   const isEdit=!!rec;const lateNight=seed.start==null&&App.state.sel===todayK()&&Math.ceil(nowMin()/15)*15>=1440,n=lateNight?0:nextFreeSlot(App.state.sel||todayK());
-  const D=isEdit?clone(rec):Object.assign({title:'',notes:'',date:lateNight?addK(todayK(),1):App.state.sel,start:n,dur:60,repeat:{type:'never',end:null},reminder:null,remUnit:'minute',part:null,area:null,color:defCol(),icon:null},seed);
+  const D=isEdit?clone(rec):Object.assign({title:'',notes:'',date:lateNight?addK(todayK(),1):App.state.sel,start:n,dur:60,repeat:{type:'never',end:null},reminder:get.settings().blockRem??null,remUnit:'minute',part:null,area:null,color:defCol(),icon:null},seed);
   delete D.occ;delete D._after;const occ=isEdit&&seed.occ&&rec.repeat&&rec.repeat.type!=='never'?seed.occ:null;if(occ)D.date=occ;
   let render;
   const inst=formSheet({title:isEdit?'Edit time block':'New time block',addLabel:isEdit?'Save':'Add',D,word:'time block',isEdit,canAdd:()=>!!D.title.trim(),commit:()=>commit(),
@@ -325,6 +325,8 @@ function blockSheet(rec,seed={}){
         ctx.reminderRow(when,D,{word:'the start'});
         {const tr=+D.travel||0;when.append(ctx.row('travel','car','Travel time',tr?fmtDurS(tr):'None',{valOn:!!tr}));
           if(ctx.open==='travel')when.append(ctx.panel('travel','wide',Segmented([[0,'None'],[15,'15m'],[30,'30m'],[45,'45m'],[60,'1h']],tr,v=>{D.travel=v||null;ctx.open=null;render();}),Caption('Blocks out the trip before it and reminds you when it’s time to leave.',{as:'p',style:'margin:var(--s2) var(--nudge) 0'})));}
+        /* v361 · busy or free, and another time zone */when.append(ctx.row('free','sun','Show as',D.free?'Free':'Busy',{valOn:!!D.free}));if(ctx.open==='free')when.append(ctx.panel('free','wide',Segmented([[0,'Busy'],[1,'Free']],D.free?1:0,v=>{D.free=!!+v||undefined;ctx.open=null;render();}),Caption('Free time doesn’t count toward a full day, clashes or free slots.',{as:'p',style:'margin:var(--s2) var(--nudge) 0'})));
+        {const tzN=(CAL_TZ.find(x=>x[0]===(D.tz||''))||[0,D.tz])[1];when.append(ctx.row('tz','globe','Time zone',D.tz?tzN:'This phone',{valOn:!!D.tz}));if(ctx.open==='tz'){const sel=el('select',{class:'tzsel','aria-label':'Time zone',onchange:e=>{D.tz=e.target.value||undefined;ctx.open=null;render();}},CAL_TZ.map(([v,l])=>el('option',{value:v,selected:(D.tz||'')===v},l)));when.append(ctx.panel('tz','wide',sel,D.tz?Caption(tzLine(D,D.date)||'Same time as here',{as:'p',style:'margin:var(--s2) var(--nudge) 0'}):null));}}
         ctx.partRow(det,D,{types:['habit','goal','project'],onPick:(o,prev)=>{const t=D.title.trim();if(o&&(!t||(prev&&t===prev.title))){D.title=o.title;T.input.value=o.title;T.input._size();update();}if(!D.lookTouched){D.color=o&&o.color||'sage';D.icon=o&&o.icon||null;}}});
         const p=D.part?get.id(D.part):null;
         if(p&&p.kind==='habit')det.append(el('div',{class:'note good',html:ic('task',IC.md)+`<span>This makes <b>${Math.min(habitWeek(p,D.date)+habitPlanned(p,D.date)+1,p.target||1)} of ${p.target||1}</b> ${esc(p.title)} sessions this week.</span>`}));
@@ -341,7 +343,7 @@ function blockSheet(rec,seed={}){
 /* ---------- New all-day item ---------- */
 function alldaySheet(rec,seed={}){
   const isEdit=!!rec;
-  const D=isEdit?clone(rec):Object.assign({title:'',notes:'',start:App.state.sel,end:null,repeat:{type:'never',end:null},reminder:null,remUnit:'minute',area:null,color:defCol(),icon:null},seed);
+  const D=isEdit?clone(rec):Object.assign({title:'',notes:'',start:App.state.sel,end:null,repeat:{type:'never',end:null},reminder:get.settings().alldayRem??null,remUnit:'minute',area:null,color:defCol(),icon:null},seed);
   delete D.occ;delete D._after;const occ=isEdit&&seed.occ&&rec.repeat&&rec.repeat.type!=='never'?allDayOccStart(rec,seed.occ):null;if(occ){if(D.end)D.end=addK(occ,daysBetween(D.start,D.end));D.start=occ;}
   if(D.reminder!=null&&!D.rem)D.rem=D.reminder>=0?{n:Math.ceil(D.reminder/1440),unit:'day',at:(1440-D.reminder%1440)%1440}:{n:0,unit:'day',at:-D.reminder};
   let render;

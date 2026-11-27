@@ -48,7 +48,7 @@ function smMovedSheet(){const mv=get.settings().smMoved;if(!mv)return;let inst;i
   Button('Undo all',{variant:'secondary',full:true,style:'margin-top:var(--s4)',onclick:()=>{mv.list.forEach(([id,,from])=>{const r=get.id(id);if(r){r.date=from;put(r,{silent:true});}});setSettings({smMoved:null});inst.close();App.refresh();}}),
   Button('Got it',{variant:'text',full:true,onclick:()=>{setSettings({smMoved:Object.assign({},mv,{seen:true})});inst.close();}}));}});}
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&!App.state.loading){try{if(smReplan())App.refresh();}catch(e){}}});
-function smBoot(){try{smReplan();}catch(e){console.warn(e);}}
+function smBoot(){try{smReplan();}catch(e){console.warn(e);}try{calBirthdays();}catch(e){}}
 
 /* ---------- 10 · fill in from similar tasks, and 5 · a heads-up when a day is full ---------- */
 let smCreates=[];
@@ -97,7 +97,7 @@ function smLeaveSheet(e,place,tr){let inst,m=tr;const draw=b=>{b.replaceChildren
 const ctxStep=(v,on)=>el('div',{class:'stepper'},IconButton('Less',{size:'sm',html:ic('minus',IC.sm),onclick:()=>on(Math.max(5,v-5))}),el('b',{class:'tnum',style:'min-width:56px;text-align:center'},fmtDurS(v)),IconButton('More',{size:'sm',html:ic('plus',IC.sm),onclick:()=>on(Math.min(180,v+5))}));
 
 /* ---------- 8 · clash check ---------- */
-function smClash(tk){const L=dayItems(tk).timed.filter(e=>e.time!=null&&!e.done&&!e.cont&&e.kind!=='habit'&&e.kind!=='routine'&&e.kind!=='step');for(let i=0;i<L.length;i++)for(let j=i+1;j<L.length;j++){const a=L[i],b=L[j];if(a.time<b.time+(b.dur||30)&&b.time<a.time+(a.dur||30)){
+function smClash(tk){const L=dayItems(tk).timed.filter(e=>e.time!=null&&!e.done&&!e.cont&&!(e.rec&&e.rec.free)&&e.kind!=='habit'&&e.kind!=='routine'&&e.kind!=='step');for(let i=0;i<L.length;i++)for(let j=i+1;j<L.length;j++){const a=L[i],b=L[j];if(a.time<b.time+(b.dur||30)&&b.time<a.time+(a.dur||30)){
   const mov=[a,b].find(x=>(x.kind==='block'||x.kind==='task')&&!(x.rec.repeat&&x.rec.repeat.type!=='never'));const other=mov===a?b:a;if(get.settings().smClashNo===tk+'|'+a.id+'|'+b.id)continue;
   let fix=null;if(mov){let t=other.time+(other.dur||30);for(let g=0;g<20;g++){const hit=L.find(x=>x!==mov&&t<x.time+(x.dur||30)&&x.time<t+(mov.dur||30));if(!hit)break;t=hit.time+(hit.dur||30);}if(t+(mov.dur||30)<=23*60)fix=t;}
   return{a:mov||a,b:other===(mov||a)?b:other,fix,key:tk+'|'+a.id+'|'+b.id};}}return null;}
@@ -160,7 +160,7 @@ async function smEmailSheet(idea){let inst,D=null;const tk=todayK();const local=
   if(!D)D=local();draw(inst.body);}
 
 /* ---------- 9 · when can I fit it? ---------- */
-function smSlots(min,days=7){const tk=todayK(),out=[];for(let i=0;i<days;i++){const dk=addK(tk,i);if(typeof Holidays!=='undefined'&&Holidays.off&&Holidays.off(dk))continue;const busy=[...dayItems(dk).timed.filter(e=>e.time!=null&&e.kind!=='habit'),...spill(dk)].map(e=>[e.time,e.time+(e.dur||30)]).sort((a,b)=>a[0]-b[0]);
+function smSlots(min,days=7){const tk=todayK(),out=[];for(let i=0;i<days;i++){const dk=addK(tk,i);if(typeof Holidays!=='undefined'&&Holidays.off&&Holidays.off(dk))continue;const busy=[...dayItems(dk).timed.filter(e=>e.time!=null&&e.kind!=='habit'&&!(e.rec&&e.rec.free)),...spill(dk)].map(e=>[e.time,e.time+(e.dur||30)]).sort((a,b)=>a[0]-b[0]);
   let t=Math.max(8*60,i?0:Math.ceil((nowMin()+15)/15)*15);const end=21*60;for(const[a,b]of [...busy,[end,end]]){if(a-t>=min&&t+min<=end){out.push({dk,start:t,len:Math.min(a,end)-t});if(out.filter(x=>x.dk===dk).length>=2)break;}t=Math.max(t,b);if(t>=end)break;}}return out;}
 function smFitSheet(seedMin){let inst,min=seedMin||60;const draw=b=>{const S=smSlots(min);b.replaceChildren(Caption('Open time in the next seven days, between 8 AM and 9 PM.',{as:'p',style:'padding:0 var(--s1) var(--s3)'}),Segmented([[30,'30 min'],[60,'1 h'],[120,'2 h'],[180,'3 h']],min,v=>{min=+v;draw(b);}),
   S.length?el('div',{class:'list',style:'margin-top:var(--s3)'},S.slice(0,10).map(x=>Row({onclick:()=>{inst.close();menuAt([{label:'New time block here',onclick:()=>blockSheet(null,{date:x.dk,start:x.start,dur:min})},{label:'Put a task here',onclick:()=>{const L=get.all('task').filter(t=>isOpenTask(t)&&!onHold(t)&&!t.archived&&!(t.repeat&&t.repeat.type!=='never'));pickSheet('Which task?',L.map(t=>[t.id,t.title]),id=>{const t=get.id(id);if(!t)return;t.date=x.dk;t.time=x.start;t.dur=t.dur||min;put(t);toast(`${t.title} · ${relDay(x.dk)}, ${fmtT(x.start)}`,null,'Undo',{force:true});App.refresh();});}}]);}},el('span',{class:'grow'},el('b',{style:'font-weight:500'},`${relDay(x.dk)}, ${fmtT(x.start)}`),el('small',{},`${fmtDurS(x.len)} free`)),RowEnd('chevron')))):Caption('No gap that long this week. Try a shorter length.',{as:'p',style:'padding:var(--s3) var(--s1)'}));};

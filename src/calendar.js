@@ -1,45 +1,46 @@
 /* ---------- Calendar: Quarter, Month, Week. One header, one heat map, one filter sheet ---------- */
-function calState(){const S=App.state;if(!S.cal){let m='quarter';try{m=localStorage.getItem('lifeos-cal-mode')||'quarter';}catch(e){}{const dv=(get.settings().defView||{}).calendar;if(dv&&dv!=='last')m=dv;}if(!['quarter','month','week'].includes(m))m='quarter';let tl=false,mc=false;try{tl=!!localStorage.getItem('lifeos-cal-tl');mc=!!localStorage.getItem('lifeos-cal-mcal');}catch(e){}S.cal={mcal:mc,mode:m,anchor:todayK(),sel:todayK(),weekOpen:null,showEarlier:false,timeline:tl};}return S.cal;}
+function calState(){const S=App.state;if(!S.cal){let m='quarter';try{m=localStorage.getItem('lifeos-cal-mode')||'quarter';}catch(e){}{const dv=(get.settings().defView||{}).calendar;if(dv&&dv!=='last')m=dv;}if(!['quarter','month','week','year','list'].includes(m))m='quarter';let tl=false,mc=false;try{tl=!!localStorage.getItem('lifeos-cal-tl');mc=!!localStorage.getItem('lifeos-cal-mcal');}catch(e){}{let ml=null;try{ml=localStorage.getItem('lifeos-cal-mlev');}catch(e){}if(ml!=null)mc=+ml>=2;S.cal={mlev:ml!=null?+ml:null,mcal:mc,mode:m,anchor:todayK(),sel:todayK(),weekOpen:null,showEarlier:false,timeline:tl};}}return S.cal;}
 function calCommit(){App.render();scrollTo(0,0);}
-const isCurrentFor=(mode,d)=>{const t=today();return mode==='quarter'?(d.getFullYear()===t.getFullYear()&&quarterOf(d)===quarterOf(t)):mode==='month'?monthKey(d)===monthKey(t):weekKey(d)===weekKey(t);};
+const isCurrentFor=(mode,d)=>{const t=today();if(mode==='list')return true;if(mode==='year')return d.getFullYear()===t.getFullYear();return mode==='quarter'?(d.getFullYear()===t.getFullYear()&&quarterOf(d)===quarterOf(t)):mode==='month'?monthKey(d)===monthKey(t):weekKey(d)===weekKey(t);};
 function calStep(dir){
   const C=calState(),d=fromK(C.anchor);
-  if(C.mode==='quarter')d.setMonth(d.getMonth()+3*dir,1);else if(C.mode==='month')d.setMonth(d.getMonth()+dir,1);else d.setDate(d.getDate()+7*dir);
+  if(C.mode==='list')return;if(C.mode==='year')d.setFullYear(d.getFullYear()+dir,0,1);else if(C.mode==='quarter')d.setMonth(d.getMonth()+3*dir,1);else if(C.mode==='month')d.setMonth(d.getMonth()+dir,1);else d.setDate(d.getDate()+7*dir);
   C.anchor=k(d);C.anim=dir>0?'slide-l':'slide-r';C.weekOpen=null;
   if(C.mode==='month')C.sel=isCurrentFor('month',d)?todayK():k(new Date(d.getFullYear(),d.getMonth(),1));
   calCommit();
 }
 function calNow(){const C=calState();C.anchor=todayK();C.sel=todayK();C.weekOpen=null;calCommit();}
-function calRange(C){const a=fromK(C.anchor);if(C.mode==='quarter'){const q=quarterOf(a),y=a.getFullYear();return[k(new Date(y,q*3,1)),k(new Date(y,q*3+3,0))];}if(C.mode==='month')return[k(new Date(a.getFullYear(),a.getMonth(),1)),k(new Date(a.getFullYear(),a.getMonth()+1,0))];const s=weekStartOf(a);return[k(s),k(addD(s,6))];}
+function calRange(C){const a=fromK(C.anchor);if(C.mode==='year')return[k(new Date(a.getFullYear(),0,1)),k(new Date(a.getFullYear(),11,31))];if(C.mode==='list')return[todayK(),addK(todayK(),60)];if(C.mode==='quarter'){const q=quarterOf(a),y=a.getFullYear();return[k(new Date(y,q*3,1)),k(new Date(y,q*3+3,0))];}if(C.mode==='month')return[k(new Date(a.getFullYear(),a.getMonth(),1)),k(new Date(a.getFullYear(),a.getMonth()+1,0))];const s=weekStartOf(a);return[k(s),k(addD(s,6))];}
 function viewCalendar(root){
   if(App.state.loading&&!recs.size){root.append(tabSkeleton('calendar'));return;}
   const C=calState(),a=fromK(C.anchor),mode=C.mode,y=a.getFullYear(),q=quarterOf(a),qM=[q*3,q*3+1,q*3+2];
   const current=isCurrentFor(mode,a),wS=weekStartOf(a),wE=addD(wS,6);
   const rangeD=wS.getMonth()===wE.getMonth()?`${mdS(wS)} – ${wE.getDate()}`:`${mdS(wS)} – ${mdS(wE)}`;
-  const thisY=y===today().getFullYear()&&wE.getFullYear()===today().getFullYear(),eyebrow=mode==='quarter'?`${MON[qM[0]]} – ${MON[qM[2]]}${thisY?'':' '+y}`:thisY?'':String(mode==='week'?wE.getFullYear():y);App.state._tcId=null;
-  const title=mode==='quarter'?`Q${q+1}`:mode==='month'?MONL[a.getMonth()]:rangeD;
-  const miniTitle=mode==='quarter'?`Q${q+1} ${y}`:mode==='month'?`${MONL[a.getMonth()]} ${y}`:`${rangeD}, ${wE.getFullYear()}`;
+  const thisY=y===today().getFullYear()&&wE.getFullYear()===today().getFullYear(),eyebrow=mode==='year'||mode==='list'?'':mode==='quarter'?`${MON[qM[0]]} – ${MON[qM[2]]}${thisY?'':' '+y}`:thisY?'':String(mode==='week'?wE.getFullYear():y);App.state._tcId=null;
+  const title=mode==='year'?String(y):mode==='list'?'Upcoming':mode==='quarter'?`Q${q+1}`:mode==='month'?MONL[a.getMonth()]:rangeD;
+  const miniTitle=mode==='year'?String(y):mode==='list'?'Upcoming':mode==='quarter'?`Q${q+1} ${y}`:mode==='month'?`${MONL[a.getMonth()]} ${y}`:`${rangeD}, ${wE.getFullYear()}`;
   const f=get.settings().filters||{},filtered=(f.areas&&f.areas.length)||Object.values(f.types||{}).some(v=>v===false);
-  const arrows=()=>el('div',{class:'arrows'},IconButton(`Previous ${mode}`,{cls:'green',html:ic('chevl',IC.md),onclick:()=>calStep(-1)}),IconButton(`Next ${mode}`,{cls:'green',html:ic('chevr',IC.md),onclick:()=>calStep(1)}),IconButton('Filters',{cls:'green',html:ic('filter',IC.md)+(filtered?'<span class="dot"></span>':''),onclick:e=>filterSheet({anchor:e.currentTarget.getBoundingClientRect()})}),moreB('Calendar options',e=>{const r=e.currentTarget.getBoundingClientRect(),ws=weekStartOf(fromK(C.sel||C.anchor||todayK()));openMenu(r.right,r.bottom+4,[mode==='week'?{label:C.timeline?'Show as a list':'Show as a timeline',icon:C.timeline?'list':'time',onclick:()=>{C.timeline=!C.timeline;try{localStorage.setItem('lifeos-cal-tl',C.timeline?'1':'');}catch(e){}calCommit();}}:null,{label:'Print this week',icon:'share',onclick:()=>printWeek(k(ws))}]);}));
-  const ORDERM=['week','month','quarter'];const modeSeg=()=>seg([['week','Week'],['month','Month'],['quarter','Quarter']],mode,v=>{const[s,e]=calRange(C);if(C.sel&&C.sel>=s&&C.sel<=e)C.anchor=C.sel;const dir=ORDERM.indexOf(v)>ORDERM.indexOf(C.mode)?1:-1;C.mode=v;C.weekOpen=null;try{localStorage.setItem('lifeos-cal-mode',v);}catch(e){}glideSwap(()=>calCommit(),[['#cal-body','x'],['#cal-h .tbtn span','y'],['#cal-h .cal-eyebrow','y']],dir);});
+  const arrows=()=>el('div',{class:'arrows'},mode==='list'?null:IconButton(`Previous ${mode}`,{cls:'green',html:ic('chevl',IC.md),onclick:()=>calStep(-1)}),mode==='list'?null:IconButton(`Next ${mode}`,{cls:'green',html:ic('chevr',IC.md),onclick:()=>calStep(1)}),IconButton('Filters',{cls:'green',html:ic('filter',IC.md)+(filtered?'<span class="dot"></span>':''),onclick:e=>filterSheet({anchor:e.currentTarget.getBoundingClientRect()})}),moreB('Calendar options',e=>{const r=e.currentTarget.getBoundingClientRect(),ws=weekStartOf(fromK(C.sel||C.anchor||todayK()));openMenu(r.right,r.bottom+4,[mode==='week'?{label:C.timeline?'Show as a list':'Show as a timeline',icon:C.timeline?'list':'time',onclick:()=>{C.timeline=!C.timeline;try{localStorage.setItem('lifeos-cal-tl',C.timeline?'1':'');}catch(e){}calCommit();}}:null,{label:'Print this week',icon:'share',onclick:()=>printWeek(k(ws))}]);}));
+  const ORDERM=['list','week','month','quarter','year'];const modeSeg=()=>seg([['list','List'],['week','Week'],['month','Month'],['quarter','Qtr'],['year','Year']],mode,v=>{const[s,e]=calRange(C);if(C.sel&&C.sel>=s&&C.sel<=e)C.anchor=C.sel;const dir=ORDERM.indexOf(v)>ORDERM.indexOf(C.mode)?1:-1;C.mode=v;C.weekOpen=null;try{localStorage.setItem('lifeos-cal-mode',v);}catch(e){}C.zoom={dir};calCommit();});App._calSeg=modeSeg;
   const pill=()=>!current?Chip('Today',{variant:'status',cls:'pill-today',onclick:calNow}):null;
   const page=el('div',{class:'page'});
   page.append(el('header',{class:'phead cal-h',id:'cal-h'},
-    el('div',{class:'cal-title'},el('button',{class:'tbtn ptitle'+(mode==='week'?' mid':'')+(App.state.pdrop==='cal'?' open':''),'aria-label':`Choose ${mode}`,'aria-expanded':App.state.pdrop==='cal'?'true':'false',onclick:()=>periodDrop('cal'),html:`<span>${esc(title)}</span>`+ic('chevd',IC.md)}),arrows()),
+    el('div',{class:'cal-title'},el('button',{class:'tbtn ptitle'+(mode==='week'?' mid':'')+(App.state.pdrop==='cal'?' open':''),'aria-label':`Choose ${mode}`,'aria-expanded':App.state.pdrop==='cal'?'true':'false',onclick:()=>mode==='year'?pickOne('Year',[-3,-2,-1,0,1,2,3].map(n=>[today().getFullYear()+n,String(today().getFullYear()+n)]),y,v=>{C.anchor=k(new Date(+v,0,1));calCommit();}):mode==='list'?null:periodDrop('cal'),html:`<span>${esc(title)}</span>`+(mode==='list'?'':ic('chevd',IC.md))}),arrows()),
     eyebrow||!current?el('div',{class:'cal-eyebrow hq'},eyebrow?el('span',{class:'hquiet'},eyebrow):el('span'),pill()):null,
     App.state.pdrop==='cal'?periodDropEl(mode,C.anchor,key=>{C.anchor=key;if(mode==='month')C.sel=isCurrentFor('month',fromK(key))?todayK():key;if(mode==='week'){C.sel=key;C.weekOpen=null;}periodDrop('cal',false);setTimeout(calCommit,MOT.base);}):null,
-    el('div',{style:'margin-top:var(--s2)'},modeSeg())));
+    null));
   const compact=el('div',{class:'cal-compact',id:'cal-compact'},el('div',{class:'cc-in'},
-    el('div',{class:'cal-title',style:'min-height:var(--size-44)'},el('button',{class:'tbtn cc-title ptitle','aria-label':`Choose ${mode}`,onclick:()=>{scrollTo({top:0,behavior:motionOK()?'smooth':'auto'});if(App.state.pdrop!=='cal')periodDrop('cal',true);},html:`<span>${esc(miniTitle)}</span>`+ic('chevd',IC.sm)}),el('span',{style:'display:flex;align-items:center;gap:var(--nudge)'},pill(),arrows())),
-    modeSeg(),mode==='month'?el('div',{class:'wd-row'},wdLabels().map(l=>el('span',{},l))):null));
+    el('div',{class:'cal-title',style:'min-height:var(--size-44)'},el('button',{class:'tbtn cc-title ptitle','aria-label':`Choose ${mode}`,onclick:()=>{scrollTo({top:0,behavior:motionOK()?'smooth':'auto'});if(App.state.pdrop!=='cal'&&mode!=='year'&&mode!=='list'&&!(mode==='month'&&C.mcal))periodDrop('cal',true);},html:`<span>${esc(miniTitle)}</span>`+ic('chevd',IC.sm)}),el('span',{style:'display:flex;align-items:center;gap:var(--nudge)'},pill(),arrows())),
+    mode==='month'&&!C.mcal?calWeekStrip(C):null));
   const body=el('div',{class:'page '+(C.anim||''),id:'cal-body'});C.anim=null;
-  const fk=mode==='quarter'?`q-${y}-${q}`:mode==='month'?`m-${monthKey(a)}`:`w-${weekKey(a)}`;
+  const fk=mode==='year'?`y-${y}`:mode==='list'?'list':mode==='quarter'?`q-${y}-${q}`:mode==='month'?`m-${monthKey(a)}`:`w-${weekKey(a)}`;
   /* focus is set in Studio; Calendar only shows it, as one quiet line, once it exists */
   {const fr=focusRec(fk),ar=fr?fr.areas||[]:[],rg=calRange(C);if(ar.length)body.append(el('button',{class:'focus-quiet',onclick:()=>{App.state.studio=Object.assign(App.state.studio||{},{mode:mode==='quarter'?'q':mode==='month'?'m':'w',anchor:rg[0]});App.go('studio');}},el('span',{class:'k'},mode==='quarter'?`Q${q+1} focus`:mode==='month'?`${MONL[a.getMonth()]} focus`:'Week focus'),el('span',{},ar.join(', '))));}
-  if(mode!=='week'){const tl=tripLine();if(tl)body.append(tl);}
-  if(mode==='quarter')quarterBody(body,y,qM,C);else if(mode==='month'){body.append(el('div',{class:'tlswitch'},Segmented([['dots','Overview'],['cal','Calendar']],C.mcal?'cal':'dots',v=>{C.mcal=v==='cal';try{localStorage.setItem('lifeos-cal-mcal',C.mcal?'1':'');}catch(e){}calCommit();},{size:'sm'})));if(C.mcal)monthCalendar(body,a,C);else monthBody(body,a,C);}else{body.append(el('div',{class:'tlswitch'},Segmented([['list','List'],['tl','Timeline']],C.timeline?'tl':'list',v=>{C.timeline=v==='tl';try{localStorage.setItem('lifeos-cal-tl',C.timeline?'1':'');}catch(e){}calCommit();},{size:'sm'})));if(C.timeline)weekTimeline(body,wS,C);else weekBody(body,wS,C);}
-  dragSwipe(body,()=>calStep(1),()=>calStep(-1));
-  page.append(body);root.append(page,compact);
+  {const un=calUpNext();if(un)body.append(un);}
+  if(mode!=='week'&&mode!=='list'){const tl=tripLine();if(tl)body.append(tl);}
+  if(mode==='year')yearBody(body,y,C);else if(mode==='list')listBody(body,C);else if(mode==='quarter')quarterBody(body,y,qM,C);else if(mode==='month'){body.append(el('div',{class:'tlswitch'},Segmented([[0,'Overview'],[1,'Bars'],[2,'Titles'],[3,'Times']],calLevel(C),v=>calSetLevel(C,+v),{size:'sm'})));if(C.mcal)monthCont(body,a,C);else monthBody(body,a,C);calPinch(body,C);}else{body.append(el('div',{class:'tlswitch'},Segmented([['list','List'],['tl','Timeline']],C.timeline?'tl':'list',v=>{C.timeline=v==='tl';try{localStorage.setItem('lifeos-cal-tl',C.timeline?'1':'');}catch(e){}calCommit();},{size:'sm'})));if(C.timeline)weekTimeline(body,wS,C);else weekBody(body,wS,C);}
+  if(!(mode==='month'&&C.mcal)&&mode!=='list')dragSwipe(body,()=>calStep(1),()=>calStep(-1));
+  page.append(body);root.append(page,compact,calBar(C,mode,current,modeSeg));calZoomIn(body,C);
   const sync=()=>{const h=$('#cal-h'),c=$('#cal-compact');if(h&&c)c.classList.toggle('on',h.getBoundingClientRect().bottom<=(parseFloat(getComputedStyle(c).top)||0)+8);};
   removeEventListener('scroll',App._calS);App._calS=sync;addEventListener('scroll',sync,{passive:true});requestAnimationFrame(sync);
 }
@@ -74,7 +75,7 @@ function calGestures(node,e,dk){
   node.addEventListener('contextmenu',ev=>{ev.preventDefault();ev.stopPropagation();if(lastPointer==='mouse')itemMenu(e,dk,ev.clientX,ev.clientY);});
   draggable(node,{label:e.title,hold:(x,y)=>itemMenu(e,dk,x,y),move:(x,y)=>{hoverCal(x,y);autoscrollGrid(x,y);},drop:(x,y)=>{const d=hoverCal(x,y);clearCalHover();if(d&&d!==dk)moveAny(e,dk,d);}});
 }
-function dayMenu(dk,x,y){openMenu(x,y,[{label:'Open in Today',icon:'sun',onclick:()=>{App.state.sel=dk;App.state._fresh=true;App.go('today');}},{label:'Add a task',icon:'task',onclick:()=>taskSheet(null,{date:dk})},{label:'Add a time block',icon:'hour',onclick:()=>blockSheet(null,{date:dk,start:nextFreeSlot(dk)})},{label:'Add an all-day item',icon:'cal',onclick:()=>alldaySheet(null,{start:dk})}]);}
+function dayMenu(dk,x,y){openMenu(x,y,[{label:'Open in Today',icon:'sun',onclick:()=>{App.state.sel=dk;App.state._fresh=true;App.go('today');}},{label:'Add a task',icon:'task',onclick:()=>taskSheet(null,{date:dk})},{label:'Add a time block',icon:'hour',onclick:()=>blockSheet(null,{date:dk,start:nextFreeSlot(dk)})},{label:'Add an all-day item',icon:'cal',onclick:()=>alldaySheet(null,{start:dk})},App.state.calClip?{label:`Paste ${App.state.calClip.rec.title}`,icon:'copy',onclick:()=>calPaste(dk,null)}:null]);}
 /* v278 · shared pieces so week, month and quarter look alike */
 function adPills(adS,dk){return el('div',{class:'wkadrow'},adS.map(e=>{const b=el('button',{class:'wkadc',style:`--c:${e.color||'var(--ink-3)'}`,onclick:ev2=>{ev2.stopPropagation();if(e.holiday)App.go('setpage',{id:'holidays'});else openItem(e,dk);}},e.holiday?el('span',{class:'wkadi','aria-hidden':'true',html:ic(e.hicon||'holiday',IC.sm)}):el('i',{class:'wkadd','aria-hidden':'true'}),el('span',{class:'clip'},e.holiday?Holidays.name(dk):e.title));if(!e.holiday)calGestures(b,e,dk);return b;}));}
 function holLine(y,m){if(typeof Holidays==='undefined')return null;const hs=Holidays.recs(y).filter(r=>fromK(r.off).getMonth()===m&&fromK(r.off).getFullYear()===y);if(!hs.length)return null;return el('div',{class:'qhol'},hs.map(r=>el('button',{class:'qholc',onclick:()=>App.go('setpage',{id:'holidays'})},el('span',{class:'wkadi','aria-hidden':'true',html:ic(HOL_ICON[r.id]||'holiday',IC.sm)}),`${r.n} · ${mdS(fromK(r.off))}`)));}
@@ -101,13 +102,13 @@ function quarterBody(body,y,months,C){
     const sec=el('section',{},el('button',{class:'m-head',onclick:()=>{const gr=sec.querySelector('.qgrid'),r0=gr&&gr.getBoundingClientRect();C.mode='month';C.anchor=k(new Date(y,m,1));const t=today();C.sel=(t.getFullYear()===y&&t.getMonth()===m)?tk:k(new Date(y,m,1));calCommit();zoomGrid(r0);}},MONL[m],el('span',{class:'m-go',html:ic('chevr',IC.xs)})));
     sec.append(el('div',{class:'wd-row',style:'margin:0 0 var(--s2)'},wdLabels().map(l=>el('span',{},l))));firstShown=false;
     const grid=el('div',{class:'qgrid',style:'display:grid;gap:var(--s2)'});
-    weeks.forEach(w=>{const row=el('div',{class:'heat-row'+(k(w[0])===curW?' curwk':'')});w.forEach(d=>row.append(heatCell(d,{month:m,tk,C,showSel:false,onTap:()=>{C.mode='week';C.anchor=k(d);C.sel=k(d);C.weekOpen=k(d);calCommit();}})));grid.append(row);{const tl=tripBand(row,w);if(tl)grid.append(tl);}});
+    weeks.forEach(w=>{const row=el('div',{class:'heat-row'+(k(w[0])===curW?' curwk':'')});if(get.settings().weekNums){row.classList.add('wn');row.append(el('span',{class:'wkn','aria-hidden':'true'},String(isoWeek(w[0]))));}w.forEach(d=>row.append(heatCell(d,{month:m,tk,C,showSel:false,onTap:()=>calGo(C,'week',k(d),k(d),row)})));grid.append(row);{const tl=tripBand(row,w);if(tl)grid.append(tl);}adBand(row,w);});
     sec.append(grid);{const hl=holLine(y,m);if(hl)sec.append(hl);}body.append(sec);
   });
 }
 function monthBody(body,a,C){
   const tk=todayK(),y=a.getFullYear(),m=a.getMonth(),grid=el('div',{id:'month-grid',style:'display:grid;gap:var(--s2)'});
-  const selK=C.sel&&monthKey(fromK(C.sel))===monthKey(a)?C.sel:null;weeksOf(y,m).forEach(w=>{const row=el('div',{class:'heat-row'});w.forEach(d=>row.append(heatCell(d,{month:m,tk,C,bars:true,onTap:(dk,out)=>{if(out){C.anim=dk>C.anchor?'slide-l':'slide-r';C.anchor=dk;}else if(C.sel&&dk!==C.sel)panelOut(dk>C.sel?1:-1);C.sel=dk;App.refresh();}})));grid.append(row);{const tl=tripBand(row,w);if(tl)grid.append(tl);}});
+  const selK=C.sel&&monthKey(fromK(C.sel))===monthKey(a)?C.sel:null;weeksOf(y,m).forEach(w=>{const row=el('div',{class:'heat-row'});if(get.settings().weekNums){row.classList.add('wn');row.append(el('span',{class:'wkn','aria-hidden':'true'},String(isoWeek(w[0]))));}w.forEach(d=>row.append(heatCell(d,{month:m,tk,C,bars:calLevel(C)>=1,onTap:(dk,out)=>{if(out){C.anim=dk>C.anchor?'slide-l':'slide-r';C.anchor=dk;}else if(C.sel&&dk!==C.sel)panelOut(dk>C.sel?1:-1);C.sel=dk;App.refresh();}})));grid.append(row);{const tl=tripBand(row,w);if(tl)grid.append(tl);}adBand(row,w);});
   body.append(el('div',{class:'wd-row',style:'margin:0 0 calc(var(--s2) * -1)'},wdLabels().map(l=>el('span',{},l))),grid,holLine(y,m),dayPanel(C.sel&&monthKey(fromK(C.sel))===monthKey(a)?C.sel:k(new Date(y,m,1))));
 }
 /* v279 · Month as a calendar: each day shows its all-day items and first events by name */
@@ -195,7 +196,7 @@ function filterSheet(opts={}){
     draw=()=>{box.innerHTML='';inst.titleEl.textContent=step==='cap'?'Daily capacity':'Filters';$('.l',inst.sheet).textContent=step==='cap'?(opts.capacity?'Close':'Back'):'Reset';
       if(step==='main'){
         const types=el('div',{class:'group'});[['task','task','Tasks and steps'],['block','hour','Time blocks'],['allday','cal','All-day items'],['habit','habit','Habits']].forEach(([id,icon,n])=>types.append(ctx.row(id,icon,n,null,{expand:false,trailing:ctx.sw(f.types[id]!==false,n,on=>{f.types[id]=on;draw();})})));
-        box.append(SectionLabel('Show'),types,SectionLabel('Life areas'),el('div',{class:'chips'},[...(s.areas||AREAS),'None'].map(a=>el('button',{class:'chip ichip'+((f.areas||[]).includes(a)?' on':''),'aria-pressed':String((f.areas||[]).includes(a)),onclick:()=>{f.areas=f.areas||[];f.areas.includes(a)?f.areas=f.areas.filter(x=>x!==a):f.areas.push(a);draw();}},a!=='None'?areaChipIc(a):null,a))));
+        box.append(SectionLabel('Show'),types,SectionLabel('Life areas'),calAreaList(f,draw));
         if(showHeat){const g=el('div',{class:'group'});g.append(ctx.row('dc','grid','Daily capacity',cap.mode==='hours'?`${cap.hours} hours`:`${cap.full} items`,{tap:()=>{step='cap';draw();},expand:false,trailing:RowEnd('chevron')}));box.append(SectionLabel('Heat map'),g);}
       }else{
         const full=cap.mode==='hours'?cap.hours:cap.full,unit=cap.mode==='hours'?'h':'';
@@ -239,34 +240,35 @@ function TimeGrid(body,start,C){const tk=todayK(),wide=innerWidth>=BP.tablet,day
   const head=el('div',{class:'tlhead',style:`grid-template-columns:${cols}`},wide?el('span'):el('span',{class:'tlnav'},IconButton('Earlier days',{size:'sm',html:ic('chevl',IC.sm),disabled:C.tlOff<=0,onclick:()=>{C.tlOff=Math.max(0,C.tlOff-3);App.refresh();}})),
     ...show.map((dk,i)=>{const d=fromK(dk);return el('button',{class:'tlday'+(dk===tk?' today':'')+(dk===C.sel?' sel':''),onclick:()=>{App.state.sel=dk;App.state._fresh=true;App.go('today');},'aria-label':`Open ${shortDay(dk)} in Today`},el('i',{},DOW[d.getDay()].slice(0,3)),el('b',{},String(d.getDate())));}));
   if(!wide&&C.tlOff<4)head.append(el('span',{class:'tlnavr'},IconButton('Later days',{size:'sm',html:ic('chevr',IC.sm),onclick:()=>{C.tlOff=Math.min(4,C.tlOff+3);App.refresh();}})));
-  const allRow=its.some(o=>o.all.length)?el('div',{class:'tlall',style:`grid-template-columns:${cols}`},el('span',{class:'tlhl'},'All day'),...its.map(o=>el('div',{},o.all.slice(0,3).map(e=>el('button',{class:'tlad',style:`--c:${e.color||'var(--action)'}`,onclick:()=>openItem(e,o.dk)},e.title))))):null;
+  const allRow=its.some(o=>o.all.length)?el('div',{class:'tlall',style:`grid-template-columns:${cols}`},el('span',{class:'tlhl'},'All day'),...its.map(o=>{const lim=C.adOpen?99:2,L=o.all;return el('div',{},...L.slice(0,lim).map(e=>el('button',{class:'tlad'+(calMulti(e)?' span':''),style:`--c:${e.color||'var(--action)'}`,onclick:()=>openItem(e,o.dk)},(e.rec&&e.rec.icon==='cake'?'🎂 ':'')+(e.holiday?Holidays.name(o.dk):e.title))),L.length>lim?el('button',{class:'tladmore',onclick:()=>{C.adOpen=true;App.refresh();}},`+${L.length-lim} more`):null);})):null;
   const grid=el('div',{class:'tlgrid',style:`grid-template-columns:${cols};height:${(h1-h0)*HH}px`});
   grid.append(el('div',{class:'tlhours'},hours.slice(0,-1).map(h=>el('span',{style:`top:${(h-h0)*HH}px`},get.settings().clock===24?`${pad2(h)}:00`:`${h%12||12} ${h<12?'AM':'PM'}`))));
   its.forEach(o=>{const col=el('div',{class:'tlcol'+(o.dk===tk?' today':''),'aria-label':`${shortDay(o.dk)} timeline`,'data-dk':o.dk});
     for(let h=h0;h<h1;h++)col.append(el('i',{class:'tlln',style:`top:${(h-h0)*HH}px`}));
-    col.addEventListener('click',ev=>{if(ev.target.closest('.tlev'))return;const r=col.getBoundingClientRect(),m=Math.round(((ev.clientY-r.top)/HH*60+h0*60)/15)*15;blockSheet(null,{date:o.dk,start:Math.max(0,Math.min(23*60+45,m)),dur:60});});
+    col.addEventListener('click',ev=>{if(ev.target.closest('.tlev')||col._made){col._made=false;return;}const r=col.getBoundingClientRect(),m=Math.round(((ev.clientY-r.top)/HH*60+h0*60)/15)*15;blockSheet(null,{date:o.dk,start:Math.max(0,Math.min(23*60+45,m)),dur:60});});tlCreate(col,o.dk,{h0,HH,grid});
     const ps=gridLanes(o.timed);
     ps.forEach(p=>{const n=p.n,e=p.e,top=(e.time-h0*60)/60*HH,ht=Math.max((Math.max(e.dur||30,20))/60*HH-2,18),tr=+(e.rec&&e.rec.travel)||0;const pos=`left:calc(${p.c}/${n}*100% + 1px);width:calc(100%/${n} - 3px)`;
       {const tb=travelBand(e,top,{pos:pos+';right:auto'});if(tb)col.append(tb);}
-      const ev=el('button',{class:'tlev'+(e.done?' done':'')+(e.kind==='task'?' task':''),style:`top:${top}px;height:${ht}px;${pos};--c:${e.color||'var(--action)'}`,onclick:ev2=>{if(ev._dragged){ev._dragged=false;return;}openItem(e,o.dk);},'aria-label':`${fmtT(e.time)} ${e.title}`},el('b',{},e.title),ht>30?el('small',{},fmtT(e.time)):null);col.append(ev);if(e.kind==='block'&&e.rec&&!e.cont)tlDrag(ev,e,o.dk,{h0,HH,grid});});
+      const ev=el('button',{class:'tlev'+(e.done?' done':'')+(e.kind==='task'?' task':'')+(e.rec&&e.rec.free?' free':''),style:`top:${top}px;height:${ht}px;${pos};--c:${e.color||'var(--action)'}`,onclick:ev2=>{if(ev._dragged){ev._dragged=false;return;}openItem(e,o.dk);},'aria-label':`${fmtT(e.time)} ${e.title}`},el('b',{},e.title),ht>30?el('small',{},fmtT(e.time)):null);col.append(ev);if(e.kind==='block'&&e.rec&&!e.cont)tlDrag(ev,e,o.dk,{h0,HH,grid});});
     if(o.dk===tk){const nm=nowMin();if(nm>=h0*60&&nm<=h1*60)col.append(nowLine((nm-h0*60)/60*HH));}
     grid.append(col);});
   body.append(el('div',{class:'tlwrap'},head,allRow,grid));
   {const tr=tlTray(days,{h0,HH,grid});if(tr)body.append(tr);}}
 
 /* v238 · drag in the week timeline: press and drag a block to another time or day, or drag its bottom edge */
-function tlDrag(ev,e,dk,{h0,HH,grid}){const r=e.rec,rep=r.repeat&&r.repeat.type!=='never',grip=el('i',{class:'tlgrip','aria-hidden':'true'});ev.append(grip);
+function tlDrag(ev,e,dk,{h0,HH,grid}){const r=e.rec,rep=r.repeat&&r.repeat.type!=='never',grip=el('i',{class:'tlgrip','aria-hidden':'true'}),gripT=el('i',{class:'tlgrip top','aria-hidden':'true'});ev.append(gripT,grip);let lastTip='';
   let mode=null,t=null,sx=0,sy=0,top0=0,h0px=0,col0=null,target=null,moved=false;const q=HH/4,snap=v=>Math.round(v/q)*q;
-  const label=()=>{const top=parseFloat(ev.style.top),ht=parseFloat(ev.style.height),s=h0*60+Math.round(top/HH*60),d=Math.round(ht/HH*60),sm=ev.querySelector('small');ev.dataset.tip=`${fmtT(s)} – ${fmtT(s+d)}`;if(sm)sm.textContent=fmtT(s);return{s,d};};
+  const label=()=>{const top=parseFloat(ev.style.top),ht=parseFloat(ev.style.height),s=h0*60+Math.round(top/HH*60),d=Math.round(ht/HH*60),sm=ev.querySelector('small');ev.dataset.tip=`${fmtT(s)} – ${fmtT(s+d)}`;if(ev.dataset.tip!==lastTip){if(lastTip)buzz(3);lastTip=ev.dataset.tip;}if(sm)sm.textContent=fmtT(s);return{s,d};};
   const begin=(m,pe)=>{if(rep){toast('Open a repeating block to move it, so you can choose this one or all of them');return;}mode=m;moved=false;top0=parseFloat(ev.style.top);h0px=parseFloat(ev.style.height);col0=ev.parentElement;target=col0;ev.classList.add('lift');buzz(8);try{ev.setPointerCapture(pe);}catch(err){}grid.classList.add('dragging');};
-  ev.addEventListener('pointerdown',pe=>{if(pe.button)return;sx=pe.clientX;sy=pe.clientY;const onGrip=pe.target===grip;clearTimeout(t);if(onGrip){pe.preventDefault();begin('size',pe.pointerId);}else t=setTimeout(()=>begin('move',pe.pointerId),pe.pointerType==='mouse'?120:300);});
+  ev.addEventListener('pointerdown',pe=>{if(pe.button)return;sx=pe.clientX;sy=pe.clientY;const onGrip=pe.target===grip,onTop=pe.target===gripT;clearTimeout(t);if(onTop){pe.preventDefault();begin('top',pe.pointerId);}else if(onGrip){pe.preventDefault();begin('size',pe.pointerId);}else t=setTimeout(()=>begin('move',pe.pointerId),pe.pointerType==='mouse'?120:300);});
   ev.addEventListener('pointermove',pe=>{if(!mode){if(Math.hypot(pe.clientX-sx,pe.clientY-sy)>8)clearTimeout(t);return;}pe.preventDefault();moved=true;const dy=pe.clientY-sy;
     if(mode==='size'){ev.style.height=Math.max(q*2,snap(h0px+dy))+'px';label();return;}
+    if(mode==='top'){const nt=Math.max(0,Math.min(top0+h0px-q*2,snap(top0+dy)));ev.style.top=nt+'px';ev.style.height=(top0+h0px-nt)+'px';label();return;}
     ev.style.top=Math.max(0,snap(top0+dy))+'px';const hit=document.elementsFromPoint(pe.clientX,pe.clientY).find(n=>n.classList&&n.classList.contains('tlcol'));if(hit&&hit!==target){target=hit;hit.append(ev);ev.style.left='calc(0% + 1px)';ev.style.width='calc(100% - 3px)';}label();});
   const end=()=>{clearTimeout(t);if(!mode)return;const m=mode;mode=null;ev.classList.remove('lift');grid.classList.remove('dragging');if(!moved){ev._dragged=false;return;}ev._dragged=true;
     const{s,d}=label(),nd=target&&target.dataset.dk||dk,was={date:r.date,start:r.start,dur:r.dur};
-    if(m==='size')r.dur=Math.max(15,d);else{r.start=Math.max(0,Math.min(1440-15,s));r.date=nd;}put(r);
-    toast(m==='size'?`${r.title} · ${fmtDurS(r.dur)}`:`${r.title} moved to ${nd===dk?'':relDay(nd)+', '}${fmtT(r.start)}`,()=>{Object.assign(r,was);put(r);App.refresh();});App.refresh();};
+    if(m==='size')r.dur=Math.max(15,d);else if(m==='top'){r.start=Math.max(0,s);r.dur=Math.max(15,d);}else{r.start=Math.max(0,Math.min(1440-15,s));r.date=nd;}put(r);
+    toast(m==='size'||m==='top'?`${r.title} · ${fmtRange(r.start,r.start+r.dur)}`:`${r.title} moved to ${nd===dk?'':relDay(nd)+', '}${fmtT(r.start)}`,()=>{Object.assign(r,was);put(r);App.refresh();});App.refresh();};
   ev.addEventListener('pointerup',end);ev.addEventListener('pointercancel',end);
   ev.addEventListener('contextmenu',x=>x.preventDefault());}
 

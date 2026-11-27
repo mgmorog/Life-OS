@@ -18,6 +18,7 @@ function itemMenu(e,dk,x,y){
     (e.title||'').length>48?{header:e.title}:null,
     {label:'Edit',icon:'edit',onclick:()=>openItem(e,dk)},
     e.kind==='task'&&!e.done?{label:'Help me start',icon:'spark',onclick:()=>smHelpStart(r)}:null,
+    ['block','allday','task'].includes(e.kind)?{label:'Copy',icon:'copy',onclick:()=>calCopy(e)}:null,
     ['task','block','allday','habit'].includes(e.kind)&&r&&r.title!=null?{label:'Rename',icon:'edit',onclick:()=>{const row=document.querySelector(`.trow[data-id="${CSS.escape(e.id)}"] .tt`)||document.querySelector(`[data-k="t:${CSS.escape(r.id)}"] .tt`);if(row){const t=[...row.childNodes].reverse().find(n=>n.nodeType===3)||row;const sp=document.createElement('span');row.replaceChildren(sp);renameInPlace(sp,r);}else askFields({title:'Rename',req:true,D:{t:r.title},fields:[F('t','Name','text')],save:v=>{const t=String(v.t||'').trim();if(t){r.title=t;put(r);App.refresh();}}});}}:null,
     e.kind==='task'&&App.state.view==='tasks'?{label:'Select',icon:'check',onclick:()=>{App.state.taskSel=new Set([r.id]);App.refresh();}}:null,
     e.kind!=='allday'?{label:e.done?'Mark not done':'Mark done',icon:'task',onclick:()=>{toggleItem(e,dk);App.refresh();}}:null,
@@ -42,6 +43,7 @@ function itemMenu(e,dk,x,y){
 function openItem(e,dk){
   if(e.rec&&e.rec.tripId&&get.id(e.rec.tripId)){App.go('trip',{id:e.rec.tripId});return;}
   if(e.rec&&e.rec.bookId){const bk=get.id(e.rec.bookId);if(bk&&bk.f.trip&&get.id(bk.f.trip)){App.go('trip',{id:bk.f.trip});return;}}
+  /* v361 · time blocks and all-day items open as a card first, like Apple Calendar */if((e.kind==='block'||e.kind==='allday')&&!e._edit&&!e.holiday&&typeof calCard==='function'&&get.settings().calCards!==false){calCard(e,dk);noteRecent(e.rec);return;}
   if(e.kind==='task')taskSheet(e.rec,{occ:dk});else if(e.kind==='block')blockSheet(e.rec,{occ:dk});else if(e.kind==='allday')alldaySheet(e.rec,{occ:dk});else if(e.kind==='habit')App.go('habit',{id:e.rec.id});else if(e.kind==='step')App.go('plan',{id:e.rec.id});else if(e.kind==='routine')App.go('routine',{id:e.rec.id});else if(e.kind==='gcal'){Gcal.details(e);return;}
   noteRecent(e.rec);
 }

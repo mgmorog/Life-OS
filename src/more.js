@@ -52,7 +52,7 @@ function viewMore(root){
   /* anything pinned above isn't listed a second time below */
   const pinS=new Set(S.pinned||[]),planL=['inbox','tasks','habits','goals','routines','projects','lists','views','reports','trackers','mydash','year','noticed','done','reviews'].filter(x=>!(S.moreHideP||[]).includes(x)).filter(x=>!pinS.has(x));
   mark('plan');if(planL.length)page.append(SectionLabel('Plan'),el('div',{class:'list'},planL.map(place)));
-  mark('saved');page.append(SectionLabel('Saved'),el('div',{class:'list'},row('image','Photos',null,()=>App.go('photos')),row('archive','Archive',null,()=>App.go('archive')),row('share','Import tasks','From Todoist, TickTick or a list',importTasksSheet)));
+  mark('saved');page.append(SectionLabel('Saved'),el('div',{class:'list'},row('image','Photos',null,()=>App.go('photos')),row('archive','Archive',null,()=>App.go('archive')),row('share','Import tasks','From Todoist, TickTick, Things, Reminders or a pasted list',importTasksSheet)));
   mark('end');{/* v340 · your order and hidden sections */const kids=[...page.childNodes],order=['pinned','views','areas','plan','saved'],chunk={};order.forEach((id,i)=>{chunk[id]=kids.slice(secAt[id],secAt[order[i+1]||'end']);});const head=kids.slice(0,secAt.pinned);page.replaceChildren(...head,...MS.filter(x=>!x.hidden).flatMap(x=>chunk[x.id]||[]));}
   page.append(el('div',{class:'morefoot'},Button('Edit this page',{variant:'link',size:'sm',onclick:moreEditSheet}),Button('Recently deleted',{variant:'link',size:'sm',onclick:()=>App.go('trash')})));
   root.append(page);
@@ -388,7 +388,7 @@ function importRowsFromCsv(txt,fileName=''){const rows=parseCSV(txt.replace(/^�
   const tc=col('title','name','task','content','summary');if(tc<0)return{tasks:[],src:'CSV'};const dc=col('due','due date','date','deadline'),nc=col('notes','description','note'),pc=col('project','list','list name');
   return{tasks:body.map(r=>{const w=dc>=0&&r[dc]?parseWhen(`x ${r[dc]}`,new Date()):{};const iso=dc>=0&&String(r[dc]).match(/\d{4}-\d{2}-\d{2}/);return{title:String(r[tc]||'').trim(),notes:nc>=0?r[nc]||'':'',date:iso?iso[0]:w.date||null,time:w.time??null,project:pc>=0?r[pc]||null:base||null};}).filter(t=>t.title),src:'CSV'};}
 function importRowsFromText(txt){return{tasks:String(txt).split(/\r?\n/).map(x=>x.replace(/^\s*(?:[-*•▢☐]|\[[ x]?\]|\d+[.)])\s*/i,'').trim()).filter(Boolean).map(l=>{const w=parseWhen(l,new Date());return{title:w.title||l,notes:'',date:w.date||null,time:w.time??null,deadline:w.deadline||null,project:null};}),src:'your list'};}
-function importTasksSheet(){let found=null,inst;const box=el('div',{});
+function importTasksSheet(){let found=null,inst;const box=el('div',{});/* v357 · from Things or Apple Reminders: copy the to-dos as text and paste them, one per line */
   const preview=()=>{box.innerHTML='';if(!found)return;const T=found.tasks;if(!T.length){box.append(Empty({icon:'task',title:'No tasks found',body:'Check that the file is a CSV export, or paste one task per line.',size:'sm'}));return;}
     const projs=[...new Set(T.map(t=>t.project).filter(Boolean))],dated=T.filter(t=>t.date).length;
     box.append(SectionLabel(`${T.length} task${T.length>1?'s':''} from ${found.src}`),Caption([dated?`${dated} with dates`:'No dates',projs.length?`${projs.length} project${projs.length>1?'s':''}: ${projs.slice(0,3).join(', ')}${projs.length>3?'…':''}`:null],{as:'p'}),

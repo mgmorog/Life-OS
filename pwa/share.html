@@ -50,8 +50,23 @@ const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;',
 const CHECK = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg>';
 let data = null, busy = false;
 const rowHtml = i => `<button class="row${i.d ? ' d' : ''}" data-id="${esc(i.id)}" role="checkbox" aria-checked="${i.d}"><span class="tick">${CHECK}</span><span><span class="t">${esc(i.t)}</span>${i.by ? `<span class="by">Added by ${esc(i.by)}</span>` : ''}</span></button>`;
+/* v357 · a shared habit or goal: progress, and a cheer */
+function drawProgress() {
+  document.title = data.title + ' · Life OS';
+  const cheers = (data.cheers || []).map(c => esc(c.by)).join(', ');
+  let body = '';
+  if (data.kind === 'habit') {
+    const done = data.days.filter(d => d.on).length;
+    body = `<p class="sub">${done} of the last 28 days${data.streak ? ` · ${data.streak} in a row` : ''} · shared from Life OS</p><div class="card" style="padding:16px"><div style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px">${data.days.map(d => `<span title="${d.d}" style="aspect-ratio:1;border-radius:999px;background:${d.on ? 'var(--acc)' : '#E4E6E1'}"></span>`).join('')}</div></div>`;
+  } else {
+    body = `<p class="sub">${data.pct}% done${data.deadline ? ` · by ${esc(data.deadline)}` : ''} · shared from Life OS</p><div class="card" style="padding:16px"><div style="height:10px;border-radius:999px;background:#E4E6E1;overflow:hidden"><i style="display:block;height:100%;width:${data.pct}%;background:var(--acc)"></i></div></div>` + (data.steps.length ? `<div class="card" style="margin-top:12px">${data.steps.map(i => `<div class="row${i.d ? ' d' : ''}" style="display:flex;align-items:center;gap:12px;min-height:48px;padding:8px 16px;border-bottom:1px solid var(--line2)"><span class="tick">${CHECK}</span><span class="t">${esc(i.t)}</span></div>`).join('')}</div>` : '');
+  }
+  m.innerHTML = `<h1>${esc(data.title)}</h1>${body}<div style="text-align:center;margin-top:20px"><button id="cheer" style="all:unset;cursor:pointer;background:var(--acc);color:#fff;font-weight:600;padding:12px 22px;border-radius:999px">Send a cheer</button>${cheers ? `<p class="foot">Cheered by ${cheers}</p>` : ''}</div>`;
+  document.getElementById('cheer').onclick = async () => { const n = (prompt('Your name', nameOf().trim()) || '').trim().slice(0, 40); if (!n) return; try { localStorage.setItem('lifeos-share-name', n); } catch (e) {} try { const r = await fetch('/api/list', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ t: tok, cheer: n }) }); if (r.ok) { data = await r.json(); drawProgress(); } } catch (e) {} };
+}
 function draw() {
   if (!data) return;
+  if (data.kind === 'habit' || data.kind === 'goal') { addBox.hidden = true; return drawProgress(); }
   document.title = data.title + ' · Life OS';
   const left = data.items.filter(i => !i.d).length;
   const groups = [{ id: null, name: '' }, ...data.sections].map(s => ({ s, items: data.items.filter(i => (i.sec || null) === s.id) })).filter(g => g.items.length);

@@ -146,6 +146,28 @@ try {
     ok('removing the reminder clears it on the server', !!(await wait(() => !S.T.reminders.find(x => x.key.startsWith(soon.id)), 9000)));
   }
 
+  /* v357 · add from anywhere and shared progress */
+  {const key = 'ab'.repeat(16);
+   await A.page.evaluate(k => window.__lifeos.t.setSettings({ inboxKey: k }), key);
+   ok('inbox key reaches the server', !!(await wait(() => S.T.records.find(r => r.id === 'settings' && r.data && r.data.inboxKey === key), 9000)));
+   let r = await fetch(BASE + '/api/inbox?key=' + 'cd'.repeat(16), { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ text: 'nope' }) });
+   ok('inbox refuses an unknown key', r.status === 404);
+   r = await fetch(BASE + '/api/inbox?key=' + key, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ text: 'Book the dentist', note: 'from a Shortcut' }) });
+   ok('a Shortcut adds an idea', r.status === 200 && !!S.T.records.find(x => x.data && x.data.kind === 'idea' && x.data.title === 'Book the dentist'));
+   r = await fetch(BASE + '/api/inbox?key=' + key, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ subject: 'Fwd: Invoice', text: 'Pay by Friday' }) });
+   ok('a forwarded email adds an idea', r.status === 200 && !!S.T.records.find(x => x.data && x.data.kind === 'idea' && x.data.title === 'Fwd: Invoice' && x.data.via === 'email'));
+   r = await fetch(BASE + '/api/inbox?key=' + key);
+   ok('Siri can read what’s on today', r.status === 200 && /today|Nothing left/.test(await r.text()));
+   const hid = await A.page.evaluate(() => { const L = window.__lifeos; const h = L.create('habit', { title: 'Shared walk', target: 5, logs: {} }); h.shareToken = 'ef'.repeat(18); L.put(h); return h.id; });
+   ok('shared habit reaches the server', !!(await wait(() => S.T.records.find(x => x.id === hid && x.data && x.data.shareToken), 9000)));
+   r = await fetch(BASE + '/api/inbox?key=' + key, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ habit: 'shared walk' }) });
+   ok('Siri can log a habit by name', r.status === 200);
+   r = await fetch(BASE + '/api/list?t=' + 'ef'.repeat(18)); const pv = await r.json();
+   ok('a buddy sees the habit read-only', r.status === 200 && pv.kind === 'habit' && pv.days.length === 28 && pv.days[27].on === true, JSON.stringify(pv).slice(0, 120));
+   r = await fetch(BASE + '/api/list', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ t: 'ef'.repeat(18), cheer: 'Sam' }) });
+   ok('a buddy can send a cheer', r.status === 200 && (await r.json()).cheers.some(c => c.by === 'Sam'));
+  }
+
   /* settings pages */
   await A.page.evaluate(() => window.__lifeos.App.go('setpage', { id: 'data' }));
   ok('Settings shows the account and sign out', await A.page.evaluate(() => /Signed in/.test(document.body.innerText) && /me@example.com/.test(document.body.innerText) && /Sign out/.test(document.body.innerText)));

@@ -24,7 +24,8 @@ export function startServer(port) {
       const i = v.indexOf('.'), op = v.slice(0, i), val = v.slice(i + 1);
       const num = x => (typeof x === 'number' ? x : isNaN(+x) || /T/.test(String(x)) ? x : +x);
       const cmp = (a, b) => { const A = typeof a === 'string' && /^\d{4}-\d\d-\d\dT/.test(a) ? Date.parse(a) : a, B = typeof a === 'string' && /^\d{4}-\d\d-\d\dT/.test(a) ? Date.parse(b) : num(b); return A < B ? -1 : A > B ? 1 : 0; };
-      rows = rows.filter(r => op === 'eq' ? String(r[k]) === val : op === 'neq' ? String(r[k]) !== val : op === 'is' ? (val === 'null' ? r[k] == null : String(r[k]) === val) : op === 'gt' ? cmp(r[k], val) > 0 : op === 'gte' ? cmp(r[k], val) >= 0 : op === 'lt' ? cmp(r[k], val) < 0 : op === 'lte' ? cmp(r[k], val) <= 0 : true);
+      const gv = (r, k2) => { const m = /^data->>(.+)$/.exec(k2); return m ? (r.data || {})[m[1]] : r[k2]; };
+      rows = rows.filter(r => op === 'eq' ? String(gv(r, k)) === val : op === 'neq' ? String(r[k]) !== val : op === 'is' ? (val === 'null' ? r[k] == null : String(r[k]) === val) : op === 'gt' ? cmp(r[k], val) > 0 : op === 'gte' ? cmp(r[k], val) >= 0 : op === 'lt' ? cmp(r[k], val) < 0 : op === 'lte' ? cmp(r[k], val) <= 0 : true);
     }
     return rows;
   };
@@ -87,7 +88,7 @@ export function startServer(port) {
       /* ---- fake push service ---- */
       if (p === '/fakepush') { pushes.push({ headers: req.headers, len: (await body(req)).length }); res.writeHead(201); return res.end(); }
       /* ---- Vercel functions ---- */
-      const api = p === '/api/handoff' ? 'handoff' : p === '/api/push-tick' ? 'push-tick' : p === '/api/push-test' ? 'push-test' : p === '/api/claude' ? 'claude' : p === '/api/cal' || p.startsWith('/cal/') ? 'cal' : null;
+      const api = p === '/api/handoff' ? 'handoff' : p === '/api/push-tick' ? 'push-tick' : p === '/api/push-test' ? 'push-test' : p === '/api/claude' ? 'claude' : p === '/api/cal' || p.startsWith('/cal/') ? 'cal' : p === '/api/inbox' ? 'inbox' : p === '/api/list' ? 'list' : null;
       if (api) {
         const mod = await import(join(root, 'api', api + '.js'));
         const raw = await body(req); req.body = raw.length && /json/.test(req.headers['content-type'] || '') ? JSON.parse(raw) : {};

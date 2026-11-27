@@ -204,4 +204,13 @@ const CHROME=process.env.CHROME||'/opt/pw-browsers/chromium-1243/chrome-linux64/
    const made2=await p.evaluate(()=>window.__lifeos.get.all('task').filter(t=>/Send reminder to PIs|Update the FAQ/.test(t.title)).length);ok('v356 saving the event turns → lines into tasks',made2===2,made2);
    await p.evaluate(()=>{const L=window.__lifeos;L.t.setToolOn('Relationships','people',true);L.create('entry',{hub:'Relationships',tool:'people',f:{what:'Jordan Lee',topics:'Holiday plans\nThe album',every:30}});const tk=L.todayK();L.create('block',{title:'Coffee with Jordan',date:tk,start:900,dur:30,repeat:{type:'never'}});});
    await go('today');ok('v356 talk about next time shows on Today',/Talk to Jordan about[\s\S]*Holiday plans/.test(await p.evaluate(()=>document.querySelector('#view .page').innerText)));}
+  // v357 · cheers, receipt scanning, import wording
+  {const c=await p.evaluate(()=>{const L=window.__lifeos;const n=L.t.cheerLine({cheers:[{by:'Sam',at:Date.now()},{by:'Ana',at:Date.now()},{by:'Sam',at:Date.now()-20*864e5}]});const old=L.t.cheerLine({cheers:[{by:'Sam',at:Date.now()-20*864e5}]});return [n&&n.textContent,old];});
+   ok('v357 recent cheers are named once',/Sam, Ana cheered/.test(c[0])&&c[1]===null,c);
+   await p.evaluate(()=>window.__lifeos.t.setToolOn('Finances','spending',true));
+   await p.evaluate(()=>window.__lifeos.App.go('tool',{hub:'Finances',tool:'spending'}));await p.waitForTimeout(500);
+   await p.evaluate(()=>{document.querySelectorAll('.sheet,.menu').forEach(x=>x.remove());const b=document.querySelector('#view [aria-label="Spending options"]');const r=b.getBoundingClientRect();b.dispatchEvent(new MouseEvent('click',{bubbles:true,clientX:r.left+5,clientY:r.bottom}));});await p.waitForTimeout(300);
+   ok('v357 Spending offers Scan a receipt',await p.evaluate(()=>[...document.querySelectorAll('[role=menuitem]')].some(m=>m.textContent.trim()==='Scan a receipt')));
+   await p.keyboard.press('Escape');await p.waitForTimeout(200);
+   await go('more');ok('v357 import mentions Things and Reminders',/Things, Reminders/.test(await p.evaluate(()=>document.querySelector('#view').innerText)));}
   ok('no page errors',!errs.length,errs);await b.close();process.exit(fails?1:0);})();

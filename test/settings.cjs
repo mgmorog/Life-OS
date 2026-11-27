@@ -136,4 +136,16 @@ const CHROME=process.env.CHROME||'/opt/pw-browsers/chromium-1243/chrome-linux64/
    await p.evaluate(()=>document.querySelectorAll('.sheet button').forEach(b=>{if(b.textContent.trim()==='Cancel')b.click();}));await p.waitForTimeout(400);
    await go('setpage',{id:'tasks'});const tt=await p.evaluate(()=>document.querySelector('.page').innerText);ok('v347 tasks settings: rows, sheet, swipes',/Row details/.test(tt)&&/Swipe right/.test(tt)&&/Swipe left/.test(tt),tt.slice(0,200));
    await p.evaluate(()=>window.__lifeos.t.setSettings({rowHide:[],sheetHide:[]}));}
+  // v348 · arrange a module page; tab hold shortcuts
+  {await p.evaluate(()=>{window.__lifeos.t.setToolOn('Health','workouts',true);const L=window.__lifeos;L.create('entry',{hub:'Health',tool:'workouts',f:{what:'Run',min:30,date:L.todayK()}});});
+   await p.evaluate(()=>window.__lifeos.App.go('tool',{hub:'Health',tool:'workouts'}));await p.waitForTimeout(500);
+   const before=await p.evaluate(()=>[...document.querySelectorAll('#view .page > .slabel')].map(n=>(n.querySelector('.lbl')||n).textContent.replace(/\d+$/,'').trim()));
+   if(before.length>=2){await p.evaluate(b=>{const T=window.__lifeos.t;T.setSettings({pageLayout:{'tool:Health|workouts':[{label:b[b.length-1],hidden:false},{label:b[0],hidden:true}]}});},before);await p.evaluate(()=>window.__lifeos.App.refresh());await p.waitForTimeout(400);
+     const after=await p.evaluate(()=>[...document.querySelectorAll('#view .page > .slabel')].map(n=>(n.querySelector('.lbl')||n).textContent.replace(/\d+$/,'').trim()));
+     ok('v348 arranged sections follow your order and hide',after[0]===before[before.length-1]&&!after.includes(before[0]),{before,after});
+     await p.evaluate(()=>window.__lifeos.t.setSettings({pageLayout:{}}));}
+   else ok('v348 module page has sections to arrange',false,before);
+   await go('today');await p.evaluate(()=>{const b=document.querySelector('#nav-in .tab[data-tab="more"]');b.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true}));});await p.waitForTimeout(650);
+   ok('v348 holding a tab opens shortcuts',/Settings/.test(await p.evaluate(()=>document.querySelector('.menu,.ctxmenu,[role=menu]')?.innerText||'')));
+   await p.evaluate(()=>{document.querySelector('#nav-in .tab[data-tab="more"]').dispatchEvent(new PointerEvent('pointerup',{bubbles:true}));document.body.click();});await p.keyboard.press('Escape');await p.waitForTimeout(300);}
   ok('no page errors',!errs.length,errs);await b.close();process.exit(fails?1:0);})();

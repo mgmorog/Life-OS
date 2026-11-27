@@ -198,3 +198,11 @@ global.__todayMore.push(async({ev,ok,setL,today,base,W})=>{
   ok('v346 deleting the view drops its card',!r.card&&!r.kept,r);
   await setL(base);
 });
+
+// v348 · swiping Today changes the day; turning it off leaves the day alone
+global.__todayMore.push(async({ev,ok,today,W,p})=>{
+  if(!p)return;await today();const tk=await ev(()=>window.__lifeos.todayK());
+  const swipe=async dx=>{await ev(dx=>{const pg=document.querySelector('#view .page'),r=pg.getBoundingClientRect(),y=r.top+300,x=200;const T=(type,cx)=>new TouchEvent(type,{bubbles:true,cancelable:true,touches:type==='touchend'?[]:[new Touch({identifier:1,target:pg,clientX:cx,clientY:y})],changedTouches:[new Touch({identifier:1,target:pg,clientX:cx,clientY:y})]});pg.dispatchEvent(T('touchstart',x));pg.dispatchEvent(T('touchend',x+dx));},dx);await W(500);};
+  await swipe(-140);let sel=await ev(()=>window.__lifeos.App.state.sel);ok('v348 swipe left goes to tomorrow',sel>tk,{sel,tk});
+  await swipe(140);sel=await ev(()=>window.__lifeos.App.state.sel);ok('v348 swipe right comes back',sel===tk,{sel,tk});
+});

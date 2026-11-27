@@ -32,14 +32,14 @@ const App={
     document.body.classList.remove('has-commit');$('#commitbar').hidden=true;$('#mini').classList.remove('on');
     const views={welcome:viewWelcome,help:viewHelp,history:viewHistory,view:viewView,views:viewViews,trip:r=>viewTrip(r,P.id),today:viewToday,studio:viewStudio,calendar:viewCalendar,more:viewMore,habit:r=>viewHabit(r,P.id),player:r=>viewPlayer(r,P.id),tool:r=>viewTool(r,P.hub,P.tool),setpage:r=>viewSetPage(r,P.id),search:viewSearch,planweek:r=>viewPlanWeek(r,P.anchor),organize:viewMore,reflect:viewMore,inbox:viewInbox,tasks:viewTasks,habits:viewHabits,goals:r=>viewPlans(r,'goal'),projects:r=>viewPlans(r,'project'),plan:r=>viewPlan(r,P.id),routines:viewRoutines,routine:r=>viewRoutine(r,P.id),lists:viewLists,list:r=>viewList(r,P.id),areas:viewAreas,area:r=>viewArea(r,P.name),reviews:viewReviews,review:viewReview,done:viewDone,insights:viewInsights,discover:viewMore,tools:viewAreas,archive:viewArchive,trash:viewTrash,photos:viewPhotos,prefs:viewPrefs,foundation:viewFoundation,timer:viewTimer,modules:viewModules};
     document.body.classList.toggle('onboarding',S.view==='welcome');
-    try{applyTheme();}catch(e){}(views[S.view]||viewToday)(frag);S._reveal=null;frag.querySelectorAll('.pgtitle').forEach(fitTitle);if(!frag.querySelector('h1')){const nm={today:'Today',calendar:'Calendar',search:'Search',studio:'Studio'}[S.view]||String(S.view||'Today').replace(/^./,c=>c.toUpperCase());const pg=frag.querySelector('.page')||frag;pg.prepend(el('h1',{class:'sr-only'},nm));}
+    try{applyTheme();}catch(e){}(views[S.view]||viewToday)(frag);try{pageArrange(frag);if(S.view==='today')daySwipe(frag);}catch(e){console.warn(e);}S._reveal=null;frag.querySelectorAll('.pgtitle').forEach(fitTitle);if(!frag.querySelector('h1')){const nm={today:'Today',calendar:'Calendar',search:'Search',studio:'Studio'}[S.view]||String(S.view||'Today').replace(/^./,c=>c.toUpperCase());const pg=frag.querySelector('.page')||frag;pg.prepend(el('h1',{class:'sr-only'},nm));}
     const C0=S.cal||{},scope=`${S.view}|${S.sel}|${C0.mode}|${C0.anchor}|${JSON.stringify(P)}`;
     const opened=S.lastView!==S.view||!!S.entering;
     const listBefore=S.lastView===S.view&&S._scope===scope&&!S.entering?listSnap(root):null;S._scope=scope;const blkBefore=listBefore?blkSnap():null;
     closeFabMenu(true);
     const skelG=root.querySelector('.skel')?$$('#view .page>*').filter(n=>n.querySelector('.skel')||n.classList.contains('skel')).map(ghostOf).filter(Boolean):[];
     const noDepth=S._noDepth;S._noDepth=false;const depthDir=!S._searchFrom&&!noDepth&&S.entering&&(S.dir==='push'||S.dir==='pop')&&S._painted?S.dir:null,depthGhost=null; /* v103: no two-page slide; the light CSS slide below runs smoothly on iPhone */
-    root.replaceChildren(frag);try{a11yPass(root);}catch(e){}
+    root.replaceChildren(frag);try{a11yPass(root);}catch(e){}if(opened&&S.entering&&S.dir==='push'){try{growIn(root);}catch(e){}}
     /* v251 · one strong button per screen: the first solid one stays, the rest turn soft green */
     try{[...root.querySelectorAll('.btn.primary')].slice(1).forEach(b=>{b.classList.remove('primary');b.classList.add('tonal');});}catch(e){}
     animateFills(root,S);
@@ -78,7 +78,7 @@ const App={
         requestAnimationFrame(()=>setTimeout(()=>{nav._pending=null;
           if(mem&&mem.view!==id&&!TOPS.includes(mem.view)){S.view=mem.view;S.params=mem.params;S.stack=mem.stack;S.entering=true;S.dir='tab';App.render();scrollTo(0,mem.y||0);}
           else{App.go(id);if(mem&&mem.y)scrollTo(0,mem.y);}},0));
-      }},el('span',{class:'ic',html:icon}),el('span',{class:'tl-lbl'},label));return b;};
+      }},el('span',{class:'ic',html:icon}),el('span',{class:'tl-lbl'},label));try{wireTabHold(b,id);}catch(e){}return b;};
       const iconOf=id=>id==='more'?sv('<circle cx="5" cy="12" r="1.8" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.8" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.8" fill="currentColor" stroke="none"/>',22):ic(PLACES[id].i,IC.lg);
       const short=id=>({'tools':'Tools'})[id]||PLACES[id].n;
       {const old=document.querySelector('body > .fab.fabfloat');if(old)old.remove();}

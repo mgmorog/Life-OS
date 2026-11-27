@@ -122,7 +122,7 @@ function viewStudio(root){
   document.body.classList.remove('has-commit');const cbar=$('#commitbar');if(cbar)cbar.hidden=true;
   const page=el('div',{class:'page studio2'});
   const go=d=>{st.anchor=P.step(d);st.selCard=null;st.ghosts=[];st.open=null;App.refresh();};
-  const menu=e=>Menu([st.mode==='w'&&!P.slots.every(x=>x.past)?{label:'Copy last week’s plan',icon:'rep',onclick:()=>copyLastWeek(P)}:null,{label:'New task, habit or goal',icon:'plus',onclick:()=>newCardSheet(st,P)},committed?{label:'Replan',icon:'edit',onclick:()=>{planRec.committed=false;put(planRec);}}:null].filter(Boolean),{at:e});
+  const menu=e=>Menu([st.mode==='w'&&!P.slots.every(x=>x.past)?{label:'Copy last week’s plan',icon:'rep',onclick:()=>copyLastWeek(P)}:null,{label:'New task, habit or goal',icon:'plus',onclick:()=>newCardSheet(st,P)},st.mode==='w'?{label:'What if…',icon:'spark',onclick:()=>whatIfSheet()}:null,committed?{label:'Replan',icon:'edit',onclick:()=>{planRec.committed=false;put(planRec);}}:null].filter(Boolean),{at:e});
   const MODEN={w:'week',m:'month',q:'quarter'},pdOn=App.state.pdrop==='studio';
   page.append(PageHeader({title:el('button',{class:'tbtn ptitle'+(pdOn?' open':''),'aria-label':`Choose ${MODEN[st.mode]}`,'aria-expanded':pdOn?'true':'false',onclick:()=>periodDrop('studio'),html:`<span>${esc(P.head)}</span>`+ic('chevd',IC.md)}),titleClass:'serif',titleStyle:'font-size:34px;line-height:1.05;letter-spacing:-.01em;margin:0',rowClass:'cal-title',
     controls:el('div',{class:'arrows'},IconButton('Previous',{cls:'green',html:ic('chevl',IC.md),onclick:()=>go(-1)}),IconButton('Next',{cls:'green',html:ic('chevr',IC.md),onclick:()=>go(1)}),moreB('Studio options',menu)),

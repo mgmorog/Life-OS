@@ -23,7 +23,7 @@ const RW_RING=['var(--accent-deep)','var(--accent)','var(--accent-mid)'];
 function rwRingSvg(st,size=40){const r=size/2-5,C=2*Math.PI*r,T=Math.max(st.total,1);let off=0;
   const segs=[st.p[0],st.t[0],st.h[0]].map((n,i)=>{const len=n/T*C,o=off;off+=len;return n?`<circle class="drs" cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="${RW_RING[i]}" stroke-width="5" stroke-dasharray="${len.toFixed(2)} ${C.toFixed(2)}" stroke-dashoffset="${(-o).toFixed(2)}"/>`:'';}).join('');
   return `<svg viewBox="0 0 ${size} ${size}" width="${size}" height="${size}" style="transform:rotate(-90deg)" aria-hidden="true"><circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="var(--line)" stroke-width="5"/>${segs}</svg>`;}
-function rwRing(dk){if(!rwOn('rwRing'))return null;const st=rwDay(dk);if(!st.total)return null;const pc=Math.round(st.done/st.total*100);
+function rwRing(dk){if(!rwOn())return null;/* v358 · Settings › Today › Header icons is its only switch */const st=rwDay(dk);if(!st.total)return null;const pc=Math.round(st.done/st.total*100);
   const b=el('button',{class:'dring'+(st.done===st.total?' full':''),'aria-label':`Today so far: ${pc}%`,onclick:()=>rwRingSheet(dk),html:rwRingSvg(st)});
   const was=App.state._ringPc;App.state._ringPc=pc;
   if(was!=null&&was<pc&&pc===100&&motionOK())requestAnimationFrame(()=>b.classList.add('glow'));
@@ -270,12 +270,12 @@ function rwSettings(page,ctx){const s=get.settings(),r=rwRec();
   if(s.rwOn===false){page.append(Caption('Turned off. What you’ve earned is kept for when you turn it back on.',{as:'p',style:'padding:var(--s2) var(--s1)'}));return;}
   /* v332 · what you've earned first, then the switches grouped by where they show */
   {const got=RW_BADGES.filter(b=>r.badges[b[0]]).length,pals=RW_PALS.filter(p=>r.badges[p[4]]).length,gp=el('div',{class:'list'});page.append(SectionLabel('So far'),gp);
-    gp.append(setRow('Badges and personal bests',`${got} of ${RW_BADGES.length} badges · ${pals} of ${RW_PALS.length} palettes`,null,()=>App.go('reviews')));}
+    gp.append(setRow('Badges and personal bests',`${got} of ${RW_BADGES.length} badges · ${pals} of ${RW_PALS.length} palettes`,null,()=>openSheet({title:'Badges and personal bests',left:{label:'Close'},build:b=>{rwReviewsSection(b);if(!b.childElementCount)b.append(Caption('Badges and personal bests are turned off below.',{as:'p'}));}})));}
   const K=Object.fromEntries(RW_KEYS.map(x=>[x[0],x])),grp=(t,keys)=>{const g=el('div',{class:'list'});page.append(SectionLabel(t),g);keys.forEach(k=>{const[key,l,sub]=K[k];setToggle(ctx,g,null,l,sub,s[key]!==false,v=>setSettings({[key]:v}));});return g;};
-  grp('On Today',['rwRing','rwForecast']);
   const gh=grp('Habits',['rwStreaks','rwFreeze']);
   if(s.rwFreeze!==false){gh.append(condRow(Row({as:'div'},el('span',{class:'grow'},el('b',{style:'font-weight:500'},'Freezes saved'),el('small',{},`You can hold ${RW_FRZ_MAX}. ${r.frz.used?`Used ${r.frz.used} so far.`:'Each covers one missed day or week.'}`)),el('b',{class:'tnum'},String(r.frz.n)))));
     setToggle(ctx,gh,null,'Use freezes automatically','Spend one on a miss without asking',!!s.rwFrzAuto,v=>setSettings({rwFrzAuto:v}));}
   grp('Progress',['rwLevels','rwBadges','rwBests']);
   grp('Reviews and Inbox',['rwScore','rwGarden']);
+  page.append(Caption('The day ring and Tomorrow forecast are switched on or off in Settings › Today.',{as:'p',style:'padding:var(--s2) var(--s1) 0'}));
   if(s.reduceMotion)page.append(Caption('Reduce motion is on, so rewards appear without animation.',{as:'p',style:'padding:var(--s2) var(--s1) 0'}));}

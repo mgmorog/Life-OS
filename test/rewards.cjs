@@ -97,7 +97,7 @@ const SHOTS=process.env.SHOTS||'';
   // 12 · Settings › Rewards
   await go('setpage',{id:'rewards'});await shot('settings');
   const s12=await ev(()=>document.querySelectorAll('.page [role=switch],.page .switch,.page input[type=checkbox]').length);
-  ok('12 Settings › Rewards lists the master switch and each feature',s12>=10,s12);
+  ok('12 Settings › Rewards lists the master switch and each feature (day ring and forecast live in Settings › Today)',s12>=8,s12);
   await ev(()=>L.t.setSettings({rwOn:false}));await go('today');
   ok('12 the master switch hides the ring',!(await ev(()=>!!document.querySelector('.dring'))));
   await ev(()=>L.t.setSettings({rwOn:true}));

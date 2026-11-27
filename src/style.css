@@ -4598,3 +4598,7 @@ body.sheet-open .fab.fabfloat,body:has(.sheet.open) .fab.fabfloat{opacity:0;poin
 /* v357 · anywhere, cheers */
 .howto{margin:0 var(--s1) var(--s3);padding-left:1.2em;color:var(--text);line-height:var(--lh-read)}.howto li{margin-bottom:var(--s1)}
 .cheers{margin:var(--s2) var(--s1) 0;color:var(--accent-deep);font-weight:var(--fw-medium)}
+
+/* v358 · settings: header-icon switches rest once two are on; Home Screen icon choices sit under their label */
+.rest>.grow,.rest>.sw{opacity:.45}
+.aicli .aicrow{max-width:none;justify-content:flex-start}

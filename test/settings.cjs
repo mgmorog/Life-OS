@@ -9,7 +9,7 @@ const CHROME=process.env.CHROME||'/opt/pw-browsers/chromium-1243/chrome-linux64/
   const go=async(v,o)=>{await p.evaluate(([v,o])=>window.__lifeos.App.go(v,o),[v,o]);await p.waitForTimeout(500);};
   await go('prefs');
   const hub=await p.evaluate(()=>({labels:[...document.querySelectorAll('.setbody .sectionlabel, .setbody .slabel, .setbody h2, .setbody h3')].map(n=>n.textContent.trim()),rows:[...document.querySelectorAll('.setbody .list b')].map(n=>n.textContent.trim()),icons:[...document.querySelectorAll('.setbody .list .li, .setbody .list > *')].map(r=>(r.querySelector('svg')||{}).innerHTML).filter(Boolean)}));
-  ok('hub rows',JSON.stringify(hub.rows.filter(r=>r!=='Personalized foundation'))===JSON.stringify(['Today','Tasks, habits & capture','Reviews','Planning & availability','Life areas','Fields, tags & statuses','Smart','Bottom bar','Display & motion','Rewards','Calendars','Notifications','Data & help']),hub.rows);
+  ok('hub rows',JSON.stringify(hub.rows.filter(r=>r!=='Personalized foundation'))===JSON.stringify(['Today','Tasks, habits & capture','Reviews','Planning & availability','Life areas','Fields, tags & statuses','Smart','Bottom bar & More','Appearance','Accessibility & motion','Formats & start','Rewards','Calendars','Notifications','Data & help']),hub.rows);
   ok('no two hub icons alike',new Set(hub.icons).size===hub.icons.length,hub.icons.length);
   for(const id of ['fields','today','tasks','reviews','planning','areas','display','rewards','calendar','notify','data','holidays','connect']){await go('setpage',{id});const t=await p.evaluate(()=>document.querySelector('.page h1')?.textContent||'');ok('page '+id+' renders: '+t,!!t,t);}
   await go('setpage',{id:'connect'});ok('connect → Calendars',(await p.evaluate(()=>document.querySelector('.page h1').textContent)).includes('Calendars'));
@@ -41,11 +41,11 @@ const CHROME=process.env.CHROME||'/opt/pw-browsers/chromium-1243/chrome-linux64/
   await p.screenshot({path:'/tmp/set-hub.png'});
   // v337 · Look group, haptic strength, reset with undo
   await go('setpage',{id:'display'});const lk=await p.evaluate(()=>document.querySelector('.page').innerText);
-  ok('v337 look rows',/Accent strength/.test(lk)&&/Corners/.test(lk)&&/Cards/.test(lk)&&/Body font/.test(lk)&&/Reset Display & motion to defaults/.test(lk),lk.slice(0,200));
+  ok('v337 look rows',/Accent strength/.test(lk)&&/Corners/.test(lk)&&/Cards/.test(lk)&&/Body font/.test(lk)&&/Reset Appearance to defaults/.test(lk),lk.slice(0,200));
   await p.evaluate(()=>window.__lifeos.t.setSettings({accentStr:'bold',corners:'crisp',cardStyle:'outlined',bodyFont:'rounded'}));await go('setpage',{id:'display'});
   const ds=await p.evaluate(()=>{const R=document.documentElement,cs=getComputedStyle(R);return {a:R.dataset.accent,c:R.dataset.corners,k:R.dataset.cards,b:R.dataset.body,rc:cs.getPropertyValue('--r-card').trim(),er:cs.getPropertyValue('--e-raised').trim(),body:cs.getPropertyValue('--body')};});
   ok('v337 attributes and tokens follow settings',ds.a==='bold'&&ds.c==='crisp'&&ds.k==='outlined'&&ds.b==='rounded'&&ds.rc==='12px'&&ds.er==='none'&&/rounded/.test(ds.body),ds);
-  await p.evaluate(()=>[...document.querySelectorAll('.page button.li')].find(n=>/^Reset Display & motion to defaults$/.test(n.textContent.trim())).click());await p.waitForTimeout(400);
+  await p.evaluate(()=>[...document.querySelectorAll('.page button.li')].find(n=>/^Reset Appearance to defaults$/.test(n.textContent.trim())).click());await p.waitForTimeout(400);
   await p.evaluate(()=>[...document.querySelectorAll('.sheet button, dialog button, .modal button, button')].find(n=>n.textContent.trim()==='Reset').click());await p.waitForTimeout(500);
   const rs=await p.evaluate(()=>{const s=window.__lifeos.t.get?window.__lifeos.t.get.settings():null;const R=document.documentElement;return {c:R.dataset.corners,a:R.dataset.accent};});
   ok('v337 reset puts display back',rs.c==='round'&&rs.a==='standard',rs);
@@ -91,7 +91,7 @@ const CHROME=process.env.CHROME||'/opt/pw-browsers/chromium-1243/chrome-linux64/
    await p.evaluate(()=>[...document.querySelectorAll('.trow .t')].find(b=>/Gym/.test(b.textContent)).click());await p.waitForTimeout(700);
    const sh=await p.evaluate(()=>document.querySelector('.sheet .cfbox')?.innerText||'');ok('v343 task sheet edits status, tags and fields',/Status/.test(sh)&&/Context/.test(sh)&&/Per visit/.test(sh),sh.slice(0,200));
    await p.evaluate(()=>document.querySelectorAll('.sheet button').forEach(b=>{if(b.textContent.trim()==='Cancel')b.click();}));await p.waitForTimeout(400);
-   await go('setpage',{id:'fields'});const ft=await p.evaluate(()=>document.querySelector('.page').innerText);ok('v343 fields page lists fields, statuses, tags and area defaults',/Per visit/.test(ft)&&/Waiting/.test(ft)&&/Context/.test(ft)&&/45m · High · @home/.test(ft),ft.slice(0,300));
+   await go('setpage',{id:'fields'});const ft=await p.evaluate(()=>document.querySelector('.page').innerText);ok('v343 fields page lists fields, statuses, tags and area defaults',/Per visit/.test(ft)&&/Waiting/.test(ft)&&/Context/.test(ft)&&/Starting values by area/.test(ft),ft.slice(0,300));await go('setpage',{id:'areastart'});ok('v358 area starting values page',/45m · High · @home/.test(await p.evaluate(()=>document.querySelector('.page').innerText)));
    await go('search');await p.fill('.searchbox input, #q','@home');await p.waitForTimeout(400);ok('v343 search finds tags',/Gym membership/.test(await p.evaluate(()=>document.querySelector('.page').innerText)));
    await p.evaluate(()=>window.__lifeos.t.setSettings({fields:[],statuses:[],tagGroups:[],areaDefaults:{}}));}
   // v344 · links, change history, layout history
@@ -115,7 +115,7 @@ const CHROME=process.env.CHROME||'/opt/pw-browsers/chromium-1243/chrome-linux64/
    await p.waitForTimeout(300);for(const d of '1234'){await p.evaluate(d=>[...document.querySelectorAll('.lkk')].find(b=>b.textContent===d).click(),d);}await p.waitForTimeout(700);
    ok('v345 the right passcode opens the area',await p.evaluate(()=>!document.querySelector('.lockscr:not(.out)')&&window.__lifeos.App.state.view==='tool'));
    await p.evaluate(()=>{localStorage.removeItem('lifeos-lock');window.__lifeos.t.setSettings({lockMode:'off'});});
-   await go('setpage',{id:'display'});ok('v345 app lock row in Privacy',/App lock/.test(await p.evaluate(()=>document.querySelector('.page').innerText)));
+   await go('setpage',{id:'formats'});ok('v345 app lock row in Privacy',/App lock/.test(await p.evaluate(()=>document.querySelector('.page').innerText)));
    await go('setpage',{id:'data'});const dt=await p.evaluate(()=>document.querySelector('.page').innerText);ok('v345 data page has daily backups and history',/Daily backups/.test(dt)&&/Change history/.test(dt),dt.slice(0,200));}
   // v346 · views: table, board, gallery, timeline; save, pin to Today
   {await p.evaluate(()=>{const L=window.__lifeos,tk=L.todayK();L.t.setSettings({statuses:[{id:'s1',name:'In progress',sym:'◐'}]});const base={steps:[],notes:'',photos:[],repeat:{type:'never'},priority:'normal'};L.create('task',Object.assign({},base,{title:'View me',date:tk,deadline:tk,status:'s1',area:'Home'}));});
@@ -156,7 +156,7 @@ const CHROME=process.env.CHROME||'/opt/pw-browsers/chromium-1243/chrome-linux64/
    await p.evaluate(()=>window.__lifeos.t.setSettings({modes:[]}));await go('setpage',{id:'data'});ok('v349 share your setup rows',/Share your setup[\s\S]*Use a setup/.test(await p.evaluate(()=>document.querySelector('.page').innerText)));}
   // v350 · learning: Noticed page, Smart settings, slips counted, usual next step learned
   {await go('noticed');ok('v350 Noticed page opens',/Noticed/.test(await p.evaluate(()=>document.querySelector('.page').innerText)));
-   await go('setpage',{id:'smart'});const st=await p.evaluate(()=>document.querySelector('.page').innerText);ok('v350 Smart settings list learners',/Learn from my history/.test(st)&&/Slip warning/.test(st)&&/Reset what’s been learned/.test(st),st.slice(0,200));
+   await go('setpage',{id:'smart'});await go('setpage',{id:'learners'});ok('v358 learners page',/Slip warning/.test(await p.evaluate(()=>document.querySelector('.page').innerText)));await go('setpage',{id:'smart'});const st=await p.evaluate(()=>document.querySelector('.page').innerText);ok('v350 Smart settings list learners',/Learn from my history/.test(st)&&/Learners/.test(st)&&/Reset what’s been learned/.test(st),st.slice(0,200));
    const sl=await p.evaluate(()=>{const L=window.__lifeos,tk=L.todayK();const t=L.create('task',{title:'Slippy',steps:[],notes:'',photos:[],repeat:{type:'never'},priority:'normal',date:tk});const add=n=>{const d=new Date();d.setDate(d.getDate()+n);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};for(let i=1;i<=3;i++){t.date=add(i);L.put(t);}return L.get.id(t.id).slips;});
    ok('v350 moving a task forward counts slips',sl===3,sl);
    await go('noticed');ok('v350 slipping task is noticed',/Slippy has moved 3 times/.test(await p.evaluate(()=>document.querySelector('.page').innerText)));}
@@ -188,8 +188,8 @@ const CHROME=process.env.CHROME||'/opt/pw-browsers/chromium-1243/chrome-linux64/
    await go('year');ok('v354 year at a glance shows the goal',/Glance goal/.test(await p.evaluate(()=>document.querySelector('.page').innerText)));
    await go('search');await p.fill('.searchbox input, #q','workouts this month');await p.waitForTimeout(400);ok('v354 ask your data answers',/Workouts this month/.test(await p.evaluate(()=>document.querySelector('.askcard')?.innerText||'')));}
   // v355 · planning settings, what if, shutdown, weather toggle
-  {await go('setpage',{id:'planning'});const pt=await p.evaluate(()=>document.querySelector('.page').innerText);ok('v355 planning: theme days, breathing room, morning, shutdown, fill the gap, what if',/Theme days[\s\S]*Breathing room[\s\S]*Morning plan[\s\S]*Evening shutdown[\s\S]*Fill the gap[\s\S]*What if/.test(pt),pt.slice(0,300));
-   await p.evaluate(()=>[...document.querySelectorAll('#view .page button')].find(b=>/What if/.test(b.textContent)).click());await p.waitForTimeout(500);ok('v355 what-if shows the week',await p.evaluate(()=>document.querySelectorAll('.wifd').length===7));
+  {await go('setpage',{id:'planning'});const pt=await p.evaluate(()=>document.querySelector('.page').innerText);ok('v355 planning: theme days, breathing room',/Theme days[\s\S]*Breathing room/.test(pt),pt.slice(0,300));
+   await go('studio');await p.evaluate(()=>{const b=document.querySelector('#view [aria-label="Studio options"]');b&&b.click();});await p.waitForTimeout(400);await p.evaluate(()=>{const b=[...document.querySelectorAll('button,[role=menuitem]')].find(b=>/What if/.test(b.textContent));b&&b.click();});await p.waitForTimeout(500);ok('v355 what-if shows the week',await p.evaluate(()=>document.querySelectorAll('.wifd').length===7));
    await p.evaluate(()=>document.querySelectorAll('.sheet button').forEach(b=>{if(b.textContent.trim()==='Close')b.click();}));await p.waitForTimeout(300);
    await go('setpage',{id:'today'});ok('v355 weather toggle on Today settings',/Weather on Today/.test(await p.evaluate(()=>document.querySelector('.page').innerText)));
    const tk=await p.evaluate(()=>window.__lifeos.todayK());await p.evaluate(tk=>window.__lifeos.t.setSettings({shutdownAt:tk}),tk);

@@ -139,7 +139,13 @@ global.__todayMore.push(async({p,ev,ok,set,today,W})=>{
   ok('v315 ring shows when something is due today',st.total>0?has:!has,{st,has});
   if(has){await p.click('.hd .icons .dring');await W(500);const sh=await ev(()=>[...document.querySelectorAll('.sheet,[role=dialog]')].some(n=>/Today so far/.test(n.textContent)));ok('v315 tapping the ring opens Today so far',sh);await p.keyboard.press('Escape');await W(400);
     await ev(()=>{document.querySelectorAll('.sheet .sheet-left,.sheet button').forEach(b=>{if(/^Close$/.test(b.textContent.trim()))b.click();});});await W(400);}
-  await set({rwRing:false});await today();ok('v315 ring hides when turned off',!(await ev(()=>!!document.querySelector('.dring'))));
+  await set({hdIcons:['inbox']});await today();ok('v315 ring hides when turned off',!(await ev(()=>!!document.querySelector('.dring'))));
+  /* v358 · every card on Today is switched in Settings › Today, and only there */
+  await ev(()=>window.__lifeos.App.go('setpage',{id:'today'}));await p.waitForTimeout(400);{const tx=await ev(()=>document.querySelector('.page').innerText);
+    ok('v358 Today settings own the Today cards',['Morning plan','Evening','Shut down from','Fill the gap','Someday check','This time last year','Review day card','Swipe between days'].every(x=>tx.includes(x)),tx.slice(0,400));}
+  await ev(()=>window.__lifeos.App.go('setpage',{id:'planning'}));await p.waitForTimeout(400);{const tx=await ev(()=>document.querySelector('.page').innerText);ok('v358 Planning no longer repeats them',!/Morning plan|Evening shutdown|Fill the gap|What if/.test(tx),tx.slice(0,300));}
+  await set({hdIcons:null});await today();
+
   await set({rwRing:true});await today();
   ok('v315 the ring never shows on another day',await ev(async()=>{const L=window.__lifeos;L.App.state.sel=L.todayK().slice(0,8)+'01'===L.todayK()?'2020-01-02':L.todayK().slice(0,8)+'01';L.App.go('today');await new Promise(r=>setTimeout(r,400));const none=!document.querySelector('.dring');L.App.state.sel=L.todayK();L.App.go('today');return none;}));
 });

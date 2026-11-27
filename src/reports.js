@@ -20,9 +20,9 @@ function rvQSheet(q){const isEdit=!!q,D={q:q?q.q:'',per:q?(q.per||[]):[]};formSh
     if(isEdit)body.append(el('button',{class:'delete',onclick:()=>{setSettings({rvQs:rvQs().filter(x=>x.id!==q.id)});App.refresh();}},'Delete question'));}});}
 function rvQSettings(group,ctx){const s=get.settings(),g=group('Your questions');rvQs().forEach(q=>g.append(setRow(q.q,(q.per&&q.per.length?q.per.map(p=>({week:'Weekly',month:'Monthly',quarter:'Quarterly'})[p]).join(', '):'Every review'),null,()=>rvQSheet(q))));
   g.append(Row({style:'',onclick:()=>rvQSheet(null)},el('span',{class:'pplus',html:ic('plus',IC.xs)}),el('span',{class:'grow',style:'text-align:left'},el('b',{style:'font-weight:500;color:var(--action-text)'},'Add a question'),el('small',{},'Asked in your reviews, next to Wins'))));
-  if(!rvQs().length)g.append(Row({style:'color:var(--action-text);font-weight:500',onclick:()=>setSettings({rvQs:RV_QDEF.map(([q])=>({id:'q'+uid('').slice(1),q,per:['week']}))})},'Start with five good ones'));
+  if(!rvQs().length)g.append(quickRow('Start with five good ones','Ready-made questions you can edit or remove',()=>setSettings({rvQs:RV_QDEF.map(([q])=>({id:'q'+uid('').slice(1),q,per:['week']}))})));
   else setToggle(ctx,g,null,'Rotate questions I skip','Ones you leave blank come up less often',s.rvRotate!==false,v=>setSettings({rvRotate:v}));
-  const g2=group('Drafts');setToggle(ctx,g2,null,'Draft my review','Wins and what got in the way start filled in from your week',s.rvDraft!==false,v=>setSettings({rvDraft:v}));setToggle(ctx,g2,null,'This time last year','A card on Today when there’s something from a year ago',s.lastYear!==false,v=>setSettings({lastYear:v}));}
+  const g2=group('Drafts');setToggle(ctx,g2,null,'Draft my review','Wins and what got in the way start filled in from your week',s.rvDraft!==false,v=>setSettings({rvDraft:v}));}
 
 /* ---------- v353 · reports: what to count, how to group it, how to draw it ---------- */
 const REP_SPLITS={none:'Nothing',area:'Life area',habit:'Habit',cat:'Category',what:'Type'};

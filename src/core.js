@@ -168,7 +168,7 @@ function Picker({title,items,search=null,multi=false,selected=[],onPick,recentKe
   let rec=[];if(recentKey){try{rec=JSON.parse(localStorage.getItem('lifeos-pick-'+recentKey)||'[]');}catch(e){}}
   const remember=v=>{if(!recentKey)return;try{localStorage.setItem('lifeos-pick-'+recentKey,JSON.stringify([v,...rec.filter(x=>x!==v)].slice(0,4)));}catch(e){}};
   const sel=new Set(multi?selected:[]);let q='',inst;const box=el('div',{});
-  const useSearch=search??its.length>8;
+  const useSearch=search??its.length>12;/* v358 · a month list of 12 doesn't need search */
   const draw=()=>{box.innerHTML='';const f=q.trim();
     let xs=f?its.map(x=>[x,Math.max(fuzzyScore(String(x.label),f),x.sub?fuzzyScore(String(x.sub),f)*.6:0)]).filter(p=>p[1]>0).sort((a,b)=>b[1]-a[1]).map(p=>p[0]):its;
     const recent=!f&&rec.length&&its.length>6?rec.map(v=>its.find(x=>x.value===v)).filter(Boolean):[];
@@ -518,6 +518,8 @@ function openSheet({title,full=false,left,right,build,onClose,tryClose,raw=false
     const plainL=!left||/^(Close|Done|Cancel)$/i.test(String(left.label||'').trim());
     if(formy&&plainL)left={...(left||{}),label:'Cancel'};
     if(!left||!left.label)left={...(left||{}),label:'Close'};
+    /* v358 · a sheet with nothing to save always closes with Close, never Done or Cancel */
+    if(!right&&!left.onclick&&/^(Done|Cancel)$/i.test(String(left.label).trim()))left={...left,label:'Close'};
     const xClose=false;/* every sheet names its way out in words (Cancel or Close), never a bare ✕ */
     const lb=xClose?el('button',{class:'l sx','aria-label':'Close',onclick:()=>left&&left.onclick?left.onclick():requestClose()},el('span',{html:ic('x',IC.xs)})):el('button',{class:'l',onclick:()=>left&&left.onclick?left.onclick():requestClose()},left.label);
     const rb=right?el('button',{class:formy?'btn primary block sfoot-btn':'r',disabled:right.disabled,onclick:right.onclick},right.label):el('span');

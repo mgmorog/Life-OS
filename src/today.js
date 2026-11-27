@@ -147,8 +147,8 @@ function viewToday(root){
     try{talkRows().forEach(({x,line})=>aRow(`Talk to ${String(x.f.what).split(' ')[0]} about`,line,()=>App.go('tool',{hub:'Relationships',tool:'people'})));}catch(e){}
     /* v355 · fill the gap, someday, shutdown */try{if(get.settings().fillGap!==false&&!shutDown()){const g=nextGap();const pick=g&&gapPick(g.gap);if(pick)aRow(`${g.gap>=90?Math.floor(g.gap/60)+'h '+(g.gap%60?g.gap%60+'m':''):g.gap+' min'} free · ${pick.t.title}`,`${fmtDurS(pick.dur)}${pick.t.priority==='high'?' · important':''}. Tap to start focus`,()=>{try{startFocus(pick.t,pick.dur);}catch(e){taskSheet(pick.t);}});}}catch(e){}
     try{const sd=somedayDue();if(sd.length&&new Date().getDay()%6===0)aRow(`${sd.length} someday task${sd.length>1?'s':''} to look at`,'Keep, schedule or let go',()=>somedaySheet(sd));}catch(e){}
-    try{const h=new Date().getHours();if(get.settings().shutdown!==false&&h>=17&&!shutDown())aRow('Shut down for the day','Move what’s left, tidy the Inbox, glance at tomorrow',shutdownSheet);}catch(e){}
-    {const ideas=get.all('idea').filter(i=>!(i.snooze&&i.snooze>todayK()));if(s.inboxNudge!==false&&ideas.length>=5)aRow(`${ideas.length} ideas in Inbox`,'Tidy up in a couple of minutes',()=>tidySheet(ideas.sort((a,b)=>a.createdAt-b.createdAt)));}
+    try{const h=new Date().getHours();if(get.settings().shutdown!==false&&h*60+new Date().getMinutes()>=(get.settings().shutdownFrom??1020)&&!shutDown())aRow('Shut down for the day','Move what’s left, tidy the Inbox, glance at tomorrow',shutdownSheet);}catch(e){}
+    {const ideas=get.all('idea').filter(i=>!(i.snooze&&i.snooze>todayK()));if(s.inboxNudge!==false&&ideas.length>=(s.inboxAt||5))aRow(`${ideas.length} ideas in Inbox`,'Tidy up in a couple of minutes',()=>tidySheet(ideas.sort((a,b)=>a.createdAt-b.createdAt)));}
     get.all('list').filter(l=>l.pinned&&(l.items||[]).some(i=>!i.d)).slice(0,2).forEach(l=>{const o2=l.items.filter(i=>!i.d);aRow(l.title,`${o2.length} left · ${o2.slice(0,3).map(i=>i.t).join(', ')}${o2.length>3?'…':''}`,()=>App.go('list',{id:l.id}));});}
   {const tc=tripTodayCard(dk);if(tc)extras.push(tc);}
   if(isToday){try{const ly=lastYearCard(dk);if(ly)extras.push(ly);}catch(e){}}
@@ -663,7 +663,7 @@ function tabSkeleton(kind){const bar=(w,h=12,x='')=>el('div',{class:'skel',style
   return page;}
 
 /* v339 · Today header icons you choose, a pinned note, quiet weekends */
-const HD_ICONS=[['rewards','Rewards ring'],['inbox','Inbox'],['search','Search'],['done','What you’ve done'],['focus','Tasks']];
+const HD_ICONS=[['rewards','Day ring'],['inbox','Inbox'],['search','Search'],['done','What you’ve done'],['focus','Tasks']];
 const hdIconsOf=s=>Array.isArray(s.hdIcons)?s.hdIcons.filter(id=>HD_ICONS.some(h=>h[0]===id)).slice(0,2):['rewards','inbox'];
 const quietAreas=()=>{const s=get.settings();if(Array.isArray(s.quietAreas))return s.quietAreas;return(s.areas||[]).filter(a=>/work|job|office/i.test(typeof a==='string'?a:(a.name||a.id||''))).map(a=>typeof a==='string'?a:(a.id||a.name));};
 const quietWkd=dk=>{const s=get.settings();if(!s.quietWkd)return false;const d=fromK(dk).getDay();return d===0||d===6;};

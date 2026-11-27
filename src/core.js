@@ -351,11 +351,11 @@ async function flush(id,attempt=0){
 function flushAll(){[...dirty,...deleted].forEach(id=>flush(id));}
 addEventListener('online',flushAll);
 document.addEventListener('visibilitychange',()=>{if(document.hidden){cacheNow();flushAll();}else{App.refresh();}});
-function put(r,{silent=false}={}){r.updatedAt=Date.now();if(!r.createdAt)r.createdAt=r.updatedAt;recs.set(r.id,r);deleted.delete(r.id);queueWrite(r.id);const tr='del-'+r.id;if(recs.has(tr)){recs.delete(tr);deleted.add(tr);queueWrite(tr);}if(typeof wkHook==='function')wkHook(r);if(typeof rwHook==='function')rwHook(r);if(!silent)App.refresh();return r;}
+function put(r,{silent=false}={}){try{histNote(r);}catch(e){}r.updatedAt=Date.now();if(!r.createdAt)r.createdAt=r.updatedAt;recs.set(r.id,r);deleted.delete(r.id);queueWrite(r.id);const tr='del-'+r.id;if(recs.has(tr)){recs.delete(tr);deleted.add(tr);queueWrite(tr);}if(typeof wkHook==='function')wkHook(r);if(typeof rwHook==='function')rwHook(r);if(!silent)App.refresh();return r;}
 function create(kind,fields){return put(Object.assign({id:uid(kind[0]),kind},fields));}
 const NO_TRASH=new Set(['settings','remstate','focus','plan','trashed','areanote','discover','rewards']);
-function remove(id,{silent=false,hard=false}={}){const was=recs.get(id);if(was&&!hard&&!NO_TRASH.has(was.kind)&&!(was.f&&was.f.t==='cfg')&&!was.example){const tr={id:'del-'+id,kind:'trashed',rec:JSON.parse(JSON.stringify(was)),deletedAt:Date.now(),createdAt:Date.now(),updatedAt:Date.now()};recs.set(tr.id,tr);deleted.delete(tr.id);queueWrite(tr.id);}recs.delete(id);deleted.add(id);queueWrite(id);if(was&&typeof wkHook==='function')wkHook(was);if(was&&typeof rwHook==='function')rwHook(was,true);if(!silent)App.refresh();}
-function setSettings(patch){const s=Object.assign({},DEFAULT_SETTINGS,get.settings(),patch);put(s);}
+function remove(id,{silent=false,hard=false}={}){const was=recs.get(id);try{if(was)histNote(was,true);}catch(e){}if(was&&!hard&&!NO_TRASH.has(was.kind)&&!(was.f&&was.f.t==='cfg')&&!was.example){const tr={id:'del-'+id,kind:'trashed',rec:JSON.parse(JSON.stringify(was)),deletedAt:Date.now(),createdAt:Date.now(),updatedAt:Date.now()};recs.set(tr.id,tr);deleted.delete(tr.id);queueWrite(tr.id);}recs.delete(id);deleted.add(id);queueWrite(id);if(was&&typeof wkHook==='function')wkHook(was);if(was&&typeof rwHook==='function')rwHook(was,true);if(!silent)App.refresh();}
+function setSettings(patch){const cur=get.settings();try{if(typeof layoutNote==='function')layoutNote(cur,patch);}catch(e){}const s=Object.assign({},DEFAULT_SETTINGS,cur,patch);put(s);}
 async function connect(){
   const claude=window.claude;
   if(!claude||!claude.use){store.mode='local';App.dataReady();return;}

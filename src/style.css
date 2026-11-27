@@ -4462,3 +4462,6 @@ body.sheet-open .fab.fabfloat,body:has(.sheet.open) .fab.fabfloat{opacity:0;poin
 .cfic{width:var(--size-36);height:var(--size-36);border-radius:var(--r-inner);background:var(--selected);color:var(--accent-deep);display:grid;place-items:center;font-weight:var(--fw-strong);flex:none}
 .cftypes{display:flex;flex-wrap:wrap;gap:var(--s2);padding:var(--s1)}
 .cfmoney{flex:1;display:flex;align-items:center;justify-content:flex-end;gap:2px}.cfmoney .cfin{flex:0 1 8ch}.cfcur{color:var(--text-muted)}
+/* v344 · links, item type icons */
+.linksb{margin-top:var(--s3)}
+.chip.icchip{width:var(--size-40);height:var(--size-40);padding:0;display:grid;place-items:center}

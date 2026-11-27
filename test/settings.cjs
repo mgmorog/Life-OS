@@ -94,4 +94,15 @@ const CHROME=process.env.CHROME||'/opt/pw-browsers/chromium-1243/chrome-linux64/
    await go('setpage',{id:'fields'});const ft=await p.evaluate(()=>document.querySelector('.page').innerText);ok('v343 fields page lists fields, statuses, tags and area defaults',/Per visit/.test(ft)&&/Waiting/.test(ft)&&/Context/.test(ft)&&/45m · High · @home/.test(ft),ft.slice(0,300));
    await go('search');await p.fill('.searchbox input, #q','@home');await p.waitForTimeout(400);ok('v343 search finds tags',/Gym membership/.test(await p.evaluate(()=>document.querySelector('.page').innerText)));
    await p.evaluate(()=>window.__lifeos.t.setSettings({fields:[],statuses:[],tagGroups:[],areaDefaults:{}}));}
+  // v344 · links, change history, layout history
+  {const ids=await p.evaluate(()=>{const L=window.__lifeos,base={steps:[],notes:'',photos:[],repeat:{type:'never'},priority:'normal'};const a=L.create('task',Object.assign({title:'Book flights',date:L.todayK()},base)),g=L.create('goal',{title:'Japan trip',steps:[]});a.links=[g.id];L.put(a);return[a.id,g.id];});
+   await go('today');await p.evaluate(()=>[...document.querySelectorAll('.trow .t')].find(b=>/Book flights/.test(b.textContent)).click());await p.waitForTimeout(700);
+   ok('v344 task sheet shows its link',/Linked[\s\S]*Japan trip/.test(await p.evaluate(()=>document.querySelector('.sheet')?.innerText||'')));
+   await p.evaluate(()=>document.querySelectorAll('.sheet button').forEach(b=>{if(b.textContent.trim()==='Cancel')b.click();}));await p.waitForTimeout(400);
+   await p.evaluate(id=>{const L=window.__lifeos,r=L.get.id(id);r.title='Book flights to Tokyo';L.put(r);},ids[0]);await go('history');
+   const ht=await p.evaluate(()=>document.querySelector('.page').innerText);ok('v344 change history lists the edit',/Book flights to Tokyo/.test(ht)&&/Edited/.test(ht),ht.slice(0,200));
+   await p.evaluate(()=>[...document.querySelectorAll('.page button')].find(b=>b.textContent.trim()==='Undo').click());await p.waitForTimeout(400);
+   ok('v344 undo puts the old title back',await p.evaluate(id=>window.__lifeos.get.id(id).title,ids[0])==='Book flights');
+   await p.evaluate(()=>window.__lifeos.t.setSettings({hdIcons:['search']}));await p.evaluate(()=>window.__lifeos.t.setSettings({hdIcons:null}));
+   ok('v344 layout history keeps the layout before',await p.evaluate(()=>{try{return JSON.parse(localStorage.getItem('lifeos-layouts')||'[]').length>0;}catch(e){return false;}}));}
   ok('no page errors',!errs.length,errs);await b.close();process.exit(fails?1:0);})();

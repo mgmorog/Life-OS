@@ -269,6 +269,7 @@ function taskSheet(rec,seed={}){
       };
       ctxRender();
       /* v343 · status, tags and your fields */{const cfe=cfEditor(D,'task');if(cfe)body.append(cfe);}
+      if(isEdit){const lb=linksBlock(rec,{onChange:()=>{inst.close();taskSheet(get.id(rec.id));}});if(lb)body.append(lb);}
       if(isEdit&&isOpenTask(rec))body.append(Button([el('span',{style:'display:grid',html:ic('play',IC.sm)}),frNow()&&frNow().id===rec.id?'Back to the timer':'Start focus'],{variant:'secondary',full:true,style:'margin-top:var(--s2)',onclick:()=>{inst.close();frNow()&&frNow().id===rec.id?App.go('timer'):focusLenSheet(rec);}}));
       if(isEdit){const dk=occ||rec.date||todayK(),dn=isDone(rec,dk);body.append(Button([el('span',{style:'display:grid',html:ic(dn?'undo':'check',IC.sm)}),dn?'Mark not done':'Mark done'],{variant:'secondary',full:true,style:'margin-top:var(--s2)',onclick:()=>{setTaskDone(rec,dk,!dn,{quiet:true});inst.close();App.refresh();toast(dn?'Marked not done':'Done',()=>{setTaskDone(rec,dk,dn,{quiet:true});App.refresh();});}}));}
       if(isEdit)body.append(el('button',{class:'delete',onclick:()=>deleteFlow(rec,occ||null,inst)},'Delete task'));

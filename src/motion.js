@@ -177,7 +177,8 @@ function todayHeaderScroll(){
   const d=$('#view .hd .date'),eb=$('#view .hd-eyebrow'),p=Math.max(0,Math.min(1,scrollY/64));
   if(d){d.style.transformOrigin='left center';d.style.transform=motionOK()?`scale(${1-.28*p})`:'';d.style.opacity=String(1-Math.max(0,(p-.55)/.45));}
   if(eb)eb.style.opacity=String(1-Math.min(1,p*1.8));
-  Object.assign(m.style,{visibility:p>.02?'visible':'hidden',color:`rgba(30,38,34,${Math.max(0,(p-.6)/.4)})`,backgroundColor:`rgba(244,244,239,${p*.78})`,borderBottomColor:`rgba(229,231,225,${p})`,pointerEvents:p>.9?'auto':'none',boxShadow:p>=1?'0 6px 14px -10px rgba(20,30,25,.22)':'none',transition:'none'});
+  /* v332 · theme colours, so the bar is dark in dark mode */
+  Object.assign(m.style,{visibility:p>.02?'visible':'hidden',color:`color-mix(in srgb,var(--text) ${Math.round(Math.max(0,(p-.6)/.4)*100)}%,transparent)`,backgroundColor:`color-mix(in srgb,var(--surface) ${Math.round(p*78)}%,transparent)`,borderBottomColor:`color-mix(in srgb,var(--card-edge) ${Math.round(p*100)}%,transparent)`,pointerEvents:p>.9?'auto':'none',boxShadow:p>=1?'var(--e-raised)':'none',transition:'none'});
 }
 /* v229 · every page: its big title fades into the same compact bar as Today; tap the bar to go back to the top */
 function pageTitleScroll(m){const h=$('#view .pgtitle');if(!h){if(m._pg){m.style.cssText='';m.textContent='';m.onclick=null;m._pg=null;}return;}

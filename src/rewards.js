@@ -266,9 +266,15 @@ function rwForecast(dk){if(!rwOn('rwForecast'))return null;const tmk=addK(dk,1),
 function rwSettings(page,ctx){const s=get.settings(),r=rwRec();
   const g0=el('div',{class:'list'});page.append(g0);setToggle(ctx,g0,null,'Rewards','Rings, records, streaks, badges and levels',s.rwOn!==false,v=>setSettings({rwOn:v}));
   if(s.rwOn===false){page.append(Caption('Turned off. What you’ve earned is kept for when you turn it back on.',{as:'p',style:'padding:var(--s2) var(--s1)'}));return;}
-  const g=el('div',{class:'list'});page.append(SectionLabel('Show'),g);
-  RW_KEYS.forEach(([key,l,sub])=>setToggle(ctx,g,null,l,sub,s[key]!==false,v=>setSettings({[key]:v})));
-  if(s.rwFreeze!==false){const g2=el('div',{class:'list'});page.append(SectionLabel('Streak freezes'),g2);
-    g2.append(Row({as:'div'},el('span',{class:'grow'},el('b',{style:'font-weight:500'},'Freezes saved'),el('small',{},`You can hold ${RW_FRZ_MAX}. ${r.frz.used?`Used ${r.frz.used} so far.`:'Each covers one missed day or week.'}`)),el('b',{class:'tnum'},String(r.frz.n))));
-    setToggle(ctx,g2,null,'Use automatically','Spend a freeze on a miss without asking',!!s.rwFrzAuto,v=>setSettings({rwFrzAuto:v}));}
-  page.append(Caption('Motion follows Celebration in Display & motion, and Reduce motion turns it off everywhere.',{as:'p',style:'padding:var(--s3) var(--s1) 0'}));}
+  /* v332 · what you've earned first, then the switches grouped by where they show */
+  {const got=RW_BADGES.filter(b=>r.badges[b[0]]).length,pals=RW_PALS.filter(p=>r.badges[p[4]]).length,gp=el('div',{class:'list'});page.append(SectionLabel('So far'),gp);
+    gp.append(setRow('Badges and personal bests',`${got} of ${RW_BADGES.length} badges · ${pals} of ${RW_PALS.length} palettes`,null,()=>App.go('reviews')));}
+  const K=Object.fromEntries(RW_KEYS.map(x=>[x[0],x])),grp=(t,keys)=>{const g=el('div',{class:'list'});page.append(SectionLabel(t),g);keys.forEach(k=>{const[key,l,sub]=K[k];setToggle(ctx,g,null,l,sub,s[key]!==false,v=>setSettings({[key]:v}));});return g;};
+  grp('On Today',['rwRing','rwForecast']);
+  const gh=grp('Habits',['rwStreaks','rwFreeze']);
+  if(s.rwFreeze!==false){gh.append(condRow(Row({as:'div'},el('span',{class:'grow'},el('b',{style:'font-weight:500'},'Freezes saved'),el('small',{},`You can hold ${RW_FRZ_MAX}. ${r.frz.used?`Used ${r.frz.used} so far.`:'Each covers one missed day or week.'}`)),el('b',{class:'tnum'},String(r.frz.n)))));
+    setToggle(ctx,gh,null,'Use freezes automatically','Spend one on a miss without asking',!!s.rwFrzAuto,v=>setSettings({rwFrzAuto:v}));}
+  grp('Progress',['rwLevels','rwBadges','rwBests']);
+  grp('Reviews and Inbox',['rwScore','rwGarden']);
+  {const g=el('div',{class:'list'});page.append(SectionLabel('Motion'),g);g.append(setRow('Celebration',null,({flow:'Soft halo',subtle:'Subtle',off:'Off'})[s.celebrate]||'Soft halo',()=>App.go('setpage',{id:'display'})));
+    if(s.reduceMotion)page.append(Caption('Reduce motion is on, so rewards appear without animation.',{as:'p',style:'padding:var(--s2) var(--s1) 0'}));}}

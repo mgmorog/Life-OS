@@ -3089,7 +3089,7 @@ kbd{min-width:var(--size-28);height:var(--size-28);padding:0 var(--s2);box-sizin
 .toast.tstk{opacity:var(--o-strong)}
 /* frosted bars: the bottom bar and the compact title bar let what scrolls under them show through, softly */
 @media(width < $bp-desktop){
-  .nav{background:rgba(244,244,239,.78);-webkit-backdrop-filter:var(--blur-bar);backdrop-filter:var(--blur-bar)}
+  .nav{background:color-mix(in srgb,var(--surface) 78%,transparent);-webkit-backdrop-filter:var(--blur-bar);backdrop-filter:var(--blur-bar)}
 }
 /* green caret and selection */
 input,textarea,[contenteditable]{caret-color:var(--action)}

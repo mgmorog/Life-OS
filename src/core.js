@@ -332,7 +332,7 @@ function cacheNow(){try{localStorage.setItem(CACHE,JSON.stringify({uid:store.uid
 let cacheT;const scheduleCache=()=>{clearTimeout(cacheT);cacheT=setTimeout(cacheNow,250);};
 function loadCache(){try{const raw=localStorage.getItem(CACHE);if(!raw)return false;const p=JSON.parse(raw);(p.recs||[]).forEach(r=>recs.set(r.id,r));(p.dirty||[]).forEach(i=>dirty.add(i));(p.deleted||[]).forEach(i=>deleted.add(i));store.cachedUid=p.uid;return recs.size>0;}catch(e){return false;}}
 const timers=new Map();
-function queueWrite(id){dirty.add(id);scheduleCache();clearTimeout(timers.get(id));timers.set(id,setTimeout(()=>flush(id),350));}
+function queueWrite(id){dirty.add(id);if(navigator.onLine===false){const nb=document.querySelector('.netban.off');if(nb){const c=dirty.size+deleted.size;nb.textContent=`Offline · ${c} change${c===1?'':'s'} saved on this phone`;}}scheduleCache();clearTimeout(timers.get(id));timers.set(id,setTimeout(()=>flush(id),350));}
 async function flush(id,attempt=0){
   if(!store.coll)return;
   const ref=store.coll.doc(id),r=recs.get(id);

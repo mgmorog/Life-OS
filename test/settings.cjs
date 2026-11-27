@@ -105,4 +105,16 @@ const CHROME=process.env.CHROME||'/opt/pw-browsers/chromium-1243/chrome-linux64/
    ok('v344 undo puts the old title back',await p.evaluate(id=>window.__lifeos.get.id(id).title,ids[0])==='Book flights');
    await p.evaluate(()=>window.__lifeos.t.setSettings({hdIcons:['search']}));await p.evaluate(()=>window.__lifeos.t.setSettings({hdIcons:null}));
    ok('v344 layout history keeps the layout before',await p.evaluate(()=>{try{return JSON.parse(localStorage.getItem('lifeos-layouts')||'[]').length>0;}catch(e){return false;}}));}
+  // v345 · app lock (whole app and private areas), sync status row
+  {await p.evaluate(async()=>{const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode('life-os|1234'));const h=[...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('');localStorage.setItem('lifeos-lock',JSON.stringify({hash:h}));});
+   await p.evaluate(()=>window.__lifeos.t.setSettings({lockMode:'areas',lockAreas:['Finances']}));
+   await p.evaluate(()=>window.__lifeos.App.go('tool',{hub:'Finances',tool:'bills'}));await p.waitForTimeout(500);
+   ok('v345 a private area asks for the passcode',await p.evaluate(()=>!!document.querySelector('.lockscr')));
+   for(const d of '1235'){await p.evaluate(d=>[...document.querySelectorAll('.lkk')].find(b=>b.textContent===d).click(),d);}await p.waitForTimeout(500);
+   ok('v345 a wrong passcode keeps it locked',await p.evaluate(()=>!!document.querySelector('.lockscr')&&/Wrong/.test(document.querySelector('.lkmsg').textContent)));
+   await p.waitForTimeout(300);for(const d of '1234'){await p.evaluate(d=>[...document.querySelectorAll('.lkk')].find(b=>b.textContent===d).click(),d);}await p.waitForTimeout(700);
+   ok('v345 the right passcode opens the area',await p.evaluate(()=>!document.querySelector('.lockscr:not(.out)')&&window.__lifeos.App.state.view==='tool'));
+   await p.evaluate(()=>{localStorage.removeItem('lifeos-lock');window.__lifeos.t.setSettings({lockMode:'off'});});
+   await go('setpage',{id:'display'});ok('v345 app lock row in Privacy',/App lock/.test(await p.evaluate(()=>document.querySelector('.page').innerText)));
+   await go('setpage',{id:'data'});const dt=await p.evaluate(()=>document.querySelector('.page').innerText);ok('v345 data page has daily backups and history',/Daily backups/.test(dt)&&/Change history/.test(dt),dt.slice(0,200));}
   ok('no page errors',!errs.length,errs);await b.close();process.exit(fails?1:0);})();

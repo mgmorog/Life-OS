@@ -88,16 +88,16 @@ export function startServer(port) {
       /* ---- fake push service ---- */
       if (p === '/fakepush') { pushes.push({ headers: req.headers, len: (await body(req)).length }); res.writeHead(201); return res.end(); }
       /* ---- Vercel functions ---- */
-      const api = p === '/api/handoff' ? 'handoff' : p === '/api/push-tick' ? 'push-tick' : p === '/api/push-test' ? 'push-test' : p === '/api/claude' ? 'claude' : p === '/api/cal' || p.startsWith('/cal/') ? 'cal' : p === '/api/inbox' ? 'inbox' : p === '/api/list' ? 'list' : null;
+      const api = p === '/mcp' || p === '/api/mcp' ? 'mcp' : p === '/api/oauth' ? 'oauth' : p.startsWith('/.well-known/oauth-protected-resource') ? 'oauth' : p.startsWith('/.well-known/oauth-authorization-server') ? 'oauth' : p === '/api/handoff' ? 'handoff' : p === '/api/push-tick' ? 'push-tick' : p === '/api/push-test' ? 'push-test' : p === '/api/claude' ? 'claude' : p === '/api/cal' || p.startsWith('/cal/') ? 'cal' : p === '/api/inbox' ? 'inbox' : p === '/api/list' ? 'list' : null;
       if (api) {
         const mod = await import(join(root, 'api', api + '.js'));
-        const raw = await body(req); req.body = raw.length && /json/.test(req.headers['content-type'] || '') ? JSON.parse(raw) : {};
-        req.query = Object.fromEntries(q.entries()); if (p.startsWith('/cal/')) req.query.token = p.slice(5);
+        const raw = await body(req); req.body = raw.length && /json/.test(req.headers['content-type'] || '') ? JSON.parse(raw) : raw.length && /urlencoded/.test(req.headers['content-type'] || '') ? Object.fromEntries(new URLSearchParams(raw.toString())) : {};
+        req.query = Object.fromEntries(q.entries()); if (p.startsWith('/cal/')) req.query.token = p.slice(5); if (p.startsWith('/.well-known/oauth-protected')) req.query.x = 'prm'; if (p.startsWith('/.well-known/oauth-authorization')) req.query.x = 'meta';
         let code = 200; const r2 = { status(c) { code = c; return r2; }, setHeader: (k, v) => res.setHeader(k, v), json(o) { res.writeHead(code, { 'content-type': 'application/json' }); res.end(JSON.stringify(o)); }, send(s) { res.writeHead(code); res.end(s); }, end(s) { res.writeHead(code); res.end(s); } };
         return await mod.default(req, r2);
       }
       /* ---- static app ---- */
-      let f = join(root, 'dist-pwa', p === '/' ? 'index.html' : p);
+      let f = join(root, 'dist-pwa', p === '/' ? 'index.html' : p === '/oauth/authorize' ? 'authorize.html' : p);
       if (!existsSync(f) || statSync(f).isDirectory()) f = join(root, 'dist-pwa', 'index.html');
       const types = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.png': 'image/png', '.webmanifest': 'application/manifest+json' };
       res.writeHead(200, { 'content-type': types[extname(f)] || 'application/octet-stream', 'cache-control': /sw\.js|version|index/.test(f) ? 'no-cache' : 'max-age=60' });

@@ -7,7 +7,7 @@ One codebase, two places it runs:
 ## Code
 - `src/*.js` are concatenated in the order in `build.mjs` (`ORDER`) into one IIFE; `src/style.css` is the stylesheet. Top-level names are shared across files.
 - `src/pwa.js` holds the home-screen-only hooks (`PWA.on` is false on claude.ai): reminder schedule, the .ics feed, extra Settings rows.
-- `api/` are Vercel functions (`_lib.js` is shared). `pwa/` holds the shim, service worker, manifest, icons and pwa-only CSS.
+- `api/` are Vercel functions (`_lib.js` is shared). `api/mcp.js` is the Claude connector (remote MCP, tools over the `records` rows, logged as `claudelog`), `api/oauth.js` + `pwa/authorize.html` are its sign-in (OAuth 2.1 + PKCE, tokens stored hashed as `mcptoken`/`mcprt` records), and `api/_mcp.js` is their shared core. Keep the function count at 12 or fewer (Vercel Hobby). `pwa/` holds the shim, service worker, manifest, icons and pwa-only CSS.
 - Design rules from the owner: light mode only (white/green), circles never ovals, calm premium motion. Don't ask the owner questions; pick sensible defaults and fix.
 
 ## Shipping a change

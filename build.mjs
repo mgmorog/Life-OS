@@ -8,7 +8,7 @@ import { transform, build } from 'esbuild';
 const root = new URL('.', import.meta.url).pathname;
 const target = (process.argv.find(a => a.startsWith('--target=')) || '').split('=')[1] || process.argv[process.argv.indexOf('--target') + 1] || 'artifact';
 const minify = process.env.NOMIN !== '1';
-export const ORDER = ['core', 'sheets', 'capture', 'today', 'calendar', 'studio', 'more', 'demo', 'modules', 'organize', 'assist', 'hubs', 'tools', 'tools2', 'prep', 'onboard', 'focus', 'plan', 'mods', 'mods2', 'mods3', 'fitness', 'pwa', 'dash', 'travel', 'prefs', 'fields', 'lock', 'views', 'learn', 'reports', 'planx', 'smart', 'smart2', 'calx', 'motion', 'rewards', 'main'];
+export const ORDER = ['core', 'sheets', 'capture', 'today', 'calendar', 'studio', 'more', 'demo', 'modules', 'organize', 'assist', 'hubs', 'tools', 'tools2', 'prep', 'onboard', 'focus', 'plan', 'mods', 'mods2', 'mods3', 'fitness', 'pwa', 'dash', 'travel', 'prefs', 'fields', 'lock', 'views', 'learn', 'reports', 'planx', 'smart', 'smart2', 'claudecx', 'calx', 'motion', 'rewards', 'main'];
 
 const read = p => readFileSync(root + p, 'utf8');
 // media queries can't read custom properties, so the build fills in $bp-* from the --bp-* tokens in :root
@@ -99,7 +99,7 @@ ${BODY}
 `;
   writeFileSync(out + 'index.html', html);
   writeFileSync(out + 'version.json', JSON.stringify({ build: buildId, version: +ver }));
-  cpSync(root + 'pwa/icons', out + 'icons', { recursive: true }); cpSync(root + 'pwa/fonts', out + 'fonts', { recursive: true }); cpSync(root + 'pwa/share.html', out + 'share.html'); cpSync(root + 'pwa/splash', out + 'splash', { recursive: true });
+  cpSync(root + 'pwa/icons', out + 'icons', { recursive: true }); cpSync(root + 'pwa/fonts', out + 'fonts', { recursive: true }); cpSync(root + 'pwa/share.html', out + 'share.html'); cpSync(root + 'pwa/authorize.html', out + 'authorize.html'); cpSync(root + 'pwa/splash', out + 'splash', { recursive: true });
   writeFileSync(out + 'manifest.webmanifest', read('pwa/manifest.webmanifest'));
   const precache = ['/', '/index.html', `/${jsName}`, `/${cssName}`, `/${shimName}`, '/manifest.webmanifest', '/icons/icon-192.png', '/icons/icon-512.png', '/icons/apple-touch-icon.png', '/fonts/figtree.woff2', '/fonts/newsreader.woff2'];
   writeFileSync(out + 'sw.js', read('pwa/sw.js').replace('__BUILD__', buildId).replace('__PRECACHE__', JSON.stringify(precache)));

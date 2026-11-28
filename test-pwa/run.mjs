@@ -168,6 +168,70 @@ try {
    ok('a buddy can send a cheer', r.status === 200 && (await r.json()).cheers.some(c => c.by === 'Sam'));
   }
 
+  /* v365 · Life OS as a Claude connector: OAuth, then MCP */
+  {const meta = await (await fetch(BASE + '/.well-known/oauth-authorization-server')).json();
+   const prm = await (await fetch(BASE + '/.well-known/oauth-protected-resource')).json();
+   ok('connector discovery documents', meta.authorization_endpoint === BASE + '/oauth/authorize' && prm.resource === BASE + '/mcp' && meta.code_challenge_methods_supported.includes('S256'));
+   let r = await fetch(BASE + '/mcp', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'initialize', params: {} }) });
+   ok('MCP asks for sign-in with a pointer to the metadata', r.status === 401 && /resource_metadata=/.test(r.headers.get('www-authenticate') || ''));
+   const RED = 'https://claude.ai/api/mcp/auth_callback';
+   const reg = await (await fetch(BASE + '/api/oauth?x=register', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ client_name: 'Claude', redirect_uris: [RED] }) })).json();
+   ok('dynamic client registration', /^lo\./.test(reg.client_id || ''));
+   const ver = crypto.randomBytes(32).toString('base64url'), chal = crypto.createHash('sha256').update(ver).digest('base64url');
+   const url = `${BASE}/oauth/authorize?response_type=code&client_id=${encodeURIComponent(reg.client_id)}&redirect_uri=${encodeURIComponent(RED)}&state=st1&code_challenge=${chal}&code_challenge_method=S256&scope=lifeos`;
+   let landed = null; await A.page.route('https://claude.ai/**', rt => { landed = rt.request().url(); rt.fulfill({ status: 200, body: 'ok' }); });
+   await A.page.goto(url); await A.page.waitForSelector('#ok', { timeout: 8000 });
+   ok('consent page names the app and what it can do', /Connect Claude to Life OS\?/.test(await A.page.innerText('body')));
+   await A.page.click('#ok'); await wait(() => landed, 8000);
+   const code = landed && new URL(landed).searchParams.get('code');
+   await A.page.unroute('https://claude.ai/**'); await A.page.goto(BASE + '/'); await A.page.waitForFunction(() => window.__lifeos && window.__lifeos.recs && window.__lifeos.recs.size > 0, null, { timeout: 15000 });
+   ok('Allow returns a code to Claude', !!code && new URL(landed).searchParams.get('state') === 'st1');
+   const tokR = await fetch(BASE + '/api/oauth?x=token', { method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ grant_type: 'authorization_code', code, code_verifier: ver, client_id: reg.client_id, redirect_uri: RED }).toString() });
+   const tok = await tokR.json();
+   ok('the code becomes tokens', tokR.status === 200 && !!tok.access_token && !!tok.refresh_token);
+   ok('a code works only once', (await fetch(BASE + '/api/oauth?x=token', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ grant_type: 'authorization_code', code, code_verifier: ver }) })).status === 400);
+   let at = tok.access_token; const mcp = async (method, params, id = 1) => { const x = await fetch(BASE + '/mcp', { method: 'POST', headers: { 'content-type': 'application/json', accept: 'application/json, text/event-stream', authorization: 'Bearer ' + at }, body: JSON.stringify({ jsonrpc: '2.0', id, method, params }) }); return x.status === 200 ? (await x.json()) : { status: x.status }; };
+   const call = async (name, args) => { const x = await mcp('tools/call', { name, arguments: args }); return x.result ? (x.result.structuredContent || x.result) : x; };
+   const init = await mcp('initialize', { protocolVersion: '2025-06-18', capabilities: {}, clientInfo: { name: 'test' } });
+   ok('MCP initialize', init.result && init.result.serverInfo.name === 'life-os' && /Life OS/.test(init.result.instructions));
+   const tl = await mcp('tools/list', {});
+   ok('MCP lists the Life OS tools', tl.result && tl.result.tools.some(t => t.name === 'add_task') && tl.result.tools.find(t => t.name === 'get_today')._meta.ui.resourceUri === 'ui://lifeos/today');
+   const tday = await A.page.evaluate(() => { const L = window.__lifeos; return L.todayK(); });
+   const added = await call('add_task', { title: 'Call the plumber', date: tday, time: '5:30 pm', area: 'Home' });
+   ok('Claude adds a task', added.ok && !!S.T.records.find(x => x.id === added.id && x.data.title === 'Call the plumber' && x.data.time === 1050));
+   const today = await call('get_today', {});
+   ok('Claude reads today', today.tasks && today.tasks.some(t => t.title === 'Call the plumber' && t.time === '5:30 PM'));
+   const li = await call('add_list_item', { list: 'Groceries', items: ['Milk', 'Eggs'] });
+   ok('Claude adds to a list', li.ok && li.added.length === 2);
+   const hl = await call('log_habit', { habit: 'shared walk' });
+   ok('Claude logs a habit by name', hl.ok && hl.habit === 'Shared walk');
+   const fd = await call('find', { query: 'plumber' });
+   ok('Claude searches your history', fd.results && fd.results.some(x => x.title === 'Call the plumber'));
+   const ui = await mcp('resources/read', { uri: 'ui://lifeos/today' });
+   ok('Today renders as an MCP App', ui.result && /profile=mcp-app/.test(ui.result.contents[0].mimeType) && /ui\/initialize/.test(ui.result.contents[0].text));
+   ok('changes are logged for the Autopilot log', S.T.records.filter(x => x.data && x.data.kind === 'claudelog' && !x.deleted).length >= 3);
+   ok('the app syncs Claude’s task', !!(await wait(() => A.page.evaluate(async id => { await window.lifeosPWA.refresh(); const r = window.__lifeos.get.id(id); return r && r.title === 'Call the plumber'; }, added.id), 9000)));
+   const un = await call('undo_last', {});
+   ok('undo the last change', un.ok && /shared walk|Shared walk/i.test(un.undid));
+   await A.page.evaluate(() => window.__lifeos.t.setSettings({ claudeAccess: { areas: { Home: 'read' } } }));
+   await wait(() => S.T.records.find(x => x.id === 'settings' && x.data.claudeAccess), 9000);
+   const den = await mcp('tools/call', { name: 'add_task', arguments: { title: 'Paint the fence', area: 'Home' } });
+   ok('read-only areas are respected', den.result && den.result.isError && /Settings › Claude/.test(den.result.content[0].text));
+   await A.page.evaluate(() => window.__lifeos.t.setSettings({ claudeAccess: { areas: { Home: 'none' } } }));
+   await wait(() => S.T.records.find(x => x.id === 'settings' && x.data.claudeAccess && x.data.claudeAccess.areas.Home === 'none'), 9000);
+   const hid2 = await call('find', { query: 'plumber' });
+   ok('hidden areas stay hidden', hid2.results && !hid2.results.length);
+   await A.page.evaluate(() => window.__lifeos.t.setSettings({ claudeAccess: {} }));
+   const rf = await (await fetch(BASE + '/api/oauth?x=token', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ grant_type: 'refresh_token', refresh_token: tok.refresh_token, client_id: reg.client_id }) })).json();
+   ok('refresh gives a new token', !!rf.access_token && rf.access_token !== at); const oldAt = at; at = rf.access_token;
+   ok('the old token stops working', (await fetch(BASE + '/mcp', { method: 'POST', headers: { 'content-type': 'application/json', authorization: 'Bearer ' + oldAt }, body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'ping' }) })).status === 401);
+   await wait(() => A.page.evaluate(async () => { await window.lifeosPWA.refresh(); return window.__lifeos.get.all('mcptoken').length === 1; }), 9000);
+   await A.page.evaluate(() => window.__lifeos.App.go('setpage', { id: 'claude' })); await A.page.waitForTimeout(500);
+   ok('Settings › Claude lists the connection', /Connected/.test(await A.page.innerText('body')) && /\/mcp/.test(await A.page.innerText('body')));
+   await A.page.evaluate(() => window.__lifeos.get.all('mcptoken').forEach(t => window.__lifeos.remove(t.id)));
+   ok('disconnecting in Life OS cuts Claude off', !!(await wait(async () => (await mcp('ping', {})).status === 401, 9000)));
+  }
+
   /* settings pages */
   await A.page.evaluate(() => window.__lifeos.App.go('setpage', { id: 'data' }));
   ok('Settings shows the account and sign out', await A.page.evaluate(() => /Signed in/.test(document.body.innerText) && /me@example.com/.test(document.body.innerText) && /Sign out/.test(document.body.innerText)));

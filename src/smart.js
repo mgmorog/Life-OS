@@ -75,7 +75,8 @@ function smartTodayRows(dk,aRow,extras){const tk=todayK(),s=get.settings(),now=n
   if(smOn('touch')){const p=smTouch(tk);if(p)aRow(`It’s been ${p.ago}: ${p.x.f.what}`,'Text, call, or mark that you talked',()=>smTouchSheet(p.x));}
   if(smOn('low')){const lo=smRunningLow();if(lo)aRow('Probably running low',lo.items.map(h=>h.t).join(' · '),()=>smLowSheet(lo));}
   if(smOn('weekend')){const d=new Date().getDay();if((d===5&&now>=15*60)||(d===6&&now<11*60)){const w=smWeekendIdeas();if(w.length&&s.smWkNo!==tk)aRow('Weekend ideas',w.slice(0,2).map(x=>x.title).join(' · '),()=>smWeekendSheet(w));}}
-  if(smOn('email')){const em=get.all('idea').filter(i=>i.via==='email'&&!i.emailSeen);if(em.length)aRow(`Forwarded email: ${em[0].title}`,'Make it a task with its date and area',()=>smEmailSheet(em[0]));}}
+  if(smOn('email')){const em=get.all('idea').filter(i=>i.via==='email'&&!i.emailSeen);if(em.length)aRow(`Forwarded email: ${em[0].title}`,'Make it a task with its date and area',()=>smEmailSheet(em[0]));}
+  try{smart2TodayRows(dk,aRow,extras);}catch(e){console.warn(e);}}
 
 /* ---------- 7 · a suggested Top 3 ---------- */
 function smTop3Pick(tk){const slips=(learnStore().slips)||{};return get.all('task').filter(t=>isOpenTask(t)&&!onHold(t)&&!t.archived&&!(t.repeat&&t.repeat.type!=='never')&&(!t.date||t.date<=addK(tk,7))).map(t=>{let n=0,why=[];

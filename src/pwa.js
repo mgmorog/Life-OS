@@ -19,6 +19,7 @@ const PWA={
     for(let i=0;i<=14;i++){const dk=addK(tk,i),d=dayItems(dk);
       [...d.allDay,...d.timed].forEach(e=>{const m=e.rec.reminder;if(m==null||e.done||e.kind==='step'||e.kind==='gcal')return;if(e.kind==='habit'&&(e.rec.tod!=='set'||e.time==null))return;if(e.kind==='allday'&&allDayOccStart(e.rec,dk)!==dk)return;
         push(e,dk,fromK(dk).getTime()+(e.time||0)*6e4,m);(e.rec.reminders2||[]).forEach((m2,j)=>{if(m2!=null&&m2!==m)push(e,dk,fromK(dk).getTime()+(e.time||0)*6e4,m2,'|r'+(j+2));});});}
+    /* v364 · habits that remind you at your usual time */try{if(typeof sm2HabitRems==='function')sm2HabitRems(push);}catch(e){}
     get.all('allday').forEach(r=>{if(r.reminder==null||r.reminder<14*1440)return;for(let i=15;i<=60;i++){const dk=addK(tk,i);if(occursOn(r.start,r.repeat,dk,r.skip))push({kind:'allday',id:r.id,title:r.title},dk,fromK(dk).getTime(),r.reminder);}});
     /* v235 · morning digest: one notification at your chosen time with the Top 3, the first commitment and habits due */
     try{for(let i=0;i<=7;i++){const dk=addK(tk,i);(dayItems(dk).timed||[]).forEach(e=>{const tr=+(e.rec&&e.rec.travel)||0;if(!tr||e.kind!=='block'||e.done||e.cont)return;const fire=fromK(dk).getTime()+(e.time-tr)*6e4;if(fire<=now)return;out.push({key:'leave|'+e.id+'|'+dk,fire_at:new Date(fire).toISOString(),title:'Leave now',body:`${e.title} at ${fmtT(e.time)}${e.rec.place?` · ${e.rec.place}`:` · ${fmtDurS(tr)} away`}`,url:'/#today'});});}}catch(e){}

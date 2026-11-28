@@ -4764,3 +4764,7 @@ textarea.capmirred{position:relative;z-index:1;background:transparent!important}
 .modsub{margin-top:var(--s3)}.modneed small{display:block;font-size:var(--fs-small)}.modact{color:var(--action-text);font-weight:var(--fw-medium);font-size:var(--fs-small)}
 /* Reviews */
 .revtabs{margin:var(--s2) 0 var(--s3)}
+
+/* ===== v364 · smarter round 2 ===== */
+.smfit{margin:var(--s2) 0;flex-wrap:wrap}.smfit .grow{min-width:60%}
+.prepcard{border-left:3px solid var(--accent)}

@@ -289,6 +289,7 @@ window.lifeosPWA = {
   async setReminders(items) { const { error } = await sb.rpc('set_reminders', { items }); if (error) throw mapErr(error); },
   async setCalFeed(tok, ics) { const { error } = await sb.from('cal_feeds').upsert({ token: tok, user_id: session.user.id, ics, updated_at: new Date().toISOString() }, { onConflict: 'token' }); if (error) throw mapErr(error); },
   async dropCalFeed(tok) { await sb.from('cal_feeds').delete().eq('token', tok); },
+  async applyProposal(id, keep) { const r = await fetch('/api/mcp?x=apply', { method: 'POST', headers: { 'content-type': 'application/json', authorization: 'Bearer ' + (await token()) }, body: JSON.stringify({ id, keep }) }); return r.ok ? r.json() : null; },
   async reportError(e) { try { await fetch('/api/mcp?x=err', { method: 'POST', headers: { 'content-type': 'application/json', authorization: 'Bearer ' + (await token()) }, body: JSON.stringify(e) }); } catch (x) {} },
   async recipe(u) { const r = await fetch('/api/title?recipe=1&u=' + encodeURIComponent(u), { headers: { authorization: 'Bearer ' + (await token()) } }); if (!r.ok) return null; return r.json(); },
   async linkMeta(u) { const r = await fetch('/api/title?u=' + encodeURIComponent(u), { headers: { authorization: 'Bearer ' + (await token()) } }); if (!r.ok) return null; return r.json(); },

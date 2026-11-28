@@ -1,0 +1,23 @@
+// v366 · approvals, Ask first, ideas for Claude Code: `bash mk.sh && node test/r366.cjs`. The connector tools are tested in test-pwa.
+const {chromium}=require('playwright');const path=require('path');
+const CHROME=process.env.CHROME||'/opt/pw-browsers/chromium-1243/chrome-linux64/chrome';
+(async()=>{const b=await chromium.launch({executablePath:CHROME});const p=await (await b.newContext({viewport:{width:390,height:844}})).newPage();
+  const errs=[];p.on('pageerror',x=>errs.push(x.message));await p.goto('file://'+path.join(__dirname,'page.html'));await p.waitForTimeout(900);
+  let fails=0;const ok=(n,c,i)=>{console.log((c?'  ok   ':'  FAIL ')+n+(c?'':'  → '+JSON.stringify(i)));if(!c)fails++;};
+  const ev=(f,a)=>p.evaluate(f,a);const go=async(v,o)=>{await p.evaluate(([v,o])=>window.__lifeos.App.go(v,o),[v,o]);await p.waitForTimeout(600);};const txt=()=>ev(()=>document.querySelector('#view').innerText);
+  await ev(()=>{const L=window.__lifeos;L.put({id:'cp1',kind:'claudeprop',at:Date.now(),status:'pending',summary:'Next week: 12 tasks placed',items:[{what:'Added “Prep the board memo”',rec:{id:'tX',kind:'task',title:'Prep the board memo'},created:true}],via:'Claude'});L.App.state._sugOpen={[L.todayK()]:true};});
+  await go('today');ok('a proposal waits on Today',/Next week: 12 tasks placed/.test(await txt()));
+  await go('studio');ok('and in Studio',/Claude drafted changes/.test(await txt()));
+  await ev(()=>[...document.querySelectorAll('#view button')].find(x=>x.textContent==='Review').click());await p.waitForTimeout(500);
+  ok('the review sheet lists the changes',await ev(()=>/Prep the board memo/.test(document.querySelector('.sheet').innerText)));
+  await ev(()=>[...document.querySelectorAll('.sheet button')].find(x=>x.textContent==='Not this time').click());await p.waitForTimeout(400);
+  ok('dismissing marks it',await ev(()=>window.__lifeos.get.id('cp1').status==='dismissed'));
+  await go('setpage',{id:'claude'});await ev(()=>[...document.querySelectorAll('#view .row,#view button')].find(x=>/^Finances/.test(x.textContent)).click());await p.waitForTimeout(400);
+  ok('Ask first is an access level',await ev(()=>/Ask first/.test(document.body.innerText)));
+  await ev(()=>{const c=[...document.querySelectorAll('.sheet button, .sheet [role=option], .sheet .row')].find(x=>/^Ask first/.test(x.textContent));c&&c.click();});await p.waitForTimeout(400);
+  ok('choosing it saves it',await ev(()=>((window.__lifeos.get.settings().claudeAccess||{}).areas||{}).Finances==='ask'));
+  await go('setpage',{id:'claude'});const t=await txt();ok('more ready-made asks',/Sunday plan/.test(t)&&/Voice journal/.test(t)&&/Clip this page/.test(t));
+  await ev(()=>[...document.querySelectorAll('#view .row,#view button')].find(x=>/^Suggest an idea/.test(x.textContent)).click());await p.waitForTimeout(400);
+  await ev(()=>{const a=document.querySelector('.sheet textarea');a.value='A lock screen widget with the Top 3';a.dispatchEvent(new Event('input',{bubbles:true}));});await ev(()=>[...document.querySelectorAll('.sheet button')].find(x=>x.textContent==='Send').click());await p.waitForTimeout(400);
+  ok('an idea is saved for Claude Code',await ev(()=>window.__lifeos.get.all('featurereq').some(x=>/lock screen/.test(x.text))));
+  ok('no page errors',!errs.length,errs.slice(0,3));await b.close();process.exit(fails?1:0);})();

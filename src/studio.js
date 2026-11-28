@@ -133,6 +133,7 @@ function viewStudio(root){
   page.append(focusChip(fk,st.mode==='q'?`${P.head.split(' ')[0]} focus`:st.mode==='m'?`${P.head} focus`:'Week focus',st.mode==='q'?'quarter':st.mode==='m'?'month':'week',st.mode==='m'?[`${P.key.slice(2)}-01`,k(new Date(+P.key.slice(2,6),+P.key.slice(7),0))]:[P.slots[0].from,P.slots[P.slots.length-1].to]));
   if(st.only){const o=get.id(st.only);if(!o)st.only=null;else page.append(el('div',{class:'focus-chip'},el('span',{class:'grow small',style:'text-align:left'},`Showing ${o.title} only`),el('button',{class:'fa',onclick:()=>{st.only=null;App.refresh();}},'Show all')));}
   studioExtras(page,st,P);
+  try{const cp=cxStudioCard();if(cp)page.append(cp);}catch(e){}
   if(st.mode==='w'){try{page.append(stLoadStrip(st,P,cards));}catch(e){console.warn(e);}}
   const allPast=P.slots.every(x=>x.past);
   /* ---- what needs a day ---- */

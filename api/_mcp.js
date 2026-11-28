@@ -71,10 +71,10 @@ export function areaOf(r, ctx) {
 }
 export function access(ctx, r) {
   const A = ctx.settings.claudeAccess || {}; const a = areaOf(r, ctx); const lvl = (a && A.areas && A.areas[a]) || 'write';
-  if (A.off) return 'none'; if (A.mode === 'read' && lvl === 'write') return 'read'; return lvl;
+  if (A.off) return 'none'; if (A.mode === 'read' && (lvl === 'write' || lvl === 'ask')) return 'read'; return lvl;
 }
 export const canRead = (ctx, r) => access(ctx, r) !== 'none';
-export const canWrite = (ctx, r) => access(ctx, r) === 'write';
+export const canWrite = (ctx, r) => ['write', 'ask'].includes(access(ctx, r));
 export function guard(ctx, r, what) { if (!canWrite(ctx, r)) { const a = areaOf(r, ctx); throw Object.assign(new Error(`Life OS settings don’t let Claude ${what}${a ? ` in ${a}` : ''}. The owner can change this in Settings › Claude.`), { user: true }); } }
 
 /* every change, logged with what it replaced, so the app can undo it */
@@ -96,3 +96,24 @@ export function dayView(ctx, dk) {
 }
 export function overdue(ctx, tk) { return ctx.of('task').filter(t => canRead(ctx, t) && !t.archived && t.date && t.date < tk && (!t.repeat || t.repeat.type === 'never') && !isDoneOn(t, t.date)).map(t => ({ id: t.id, title: t.title, from: t.date, moved: t.slips || 0 })); }
 export const compact = o => JSON.parse(JSON.stringify(o, (k, v) => (v === null || v === undefined || (Array.isArray(v) && !v.length) ? undefined : v)));
+
+const clone = o => JSON.parse(JSON.stringify(o));
+/* v366 · one write path: saved and logged, or held for approval ("Ask first" areas, and propose_changes) */
+export async function writeRec(ctx, rec, what, isNew) {
+  const old = isNew ? undefined : clone(ctx.byId.get(rec.id) || rec);
+  if (ctx.proposeAll || (access(ctx, rec) === 'ask' && !ctx.approved)) {
+    (ctx.pending = ctx.pending || []).push({ what, rec: clone(rec), old: old === undefined ? null : old, created: !!isNew, base: old ? old.updatedAt || 0 : 0 });
+    ctx.byId.set(rec.id, rec); if (isNew) ctx.all.push(rec); return rec;
+  }
+  await saveRec(ctx.db, ctx.uid, rec); ctx.byId.set(rec.id, rec); if (isNew) ctx.all.push(rec); await logChange(ctx.db, ctx.uid, ctx, what, rec, old); return rec;
+}
+/* settings are one record the app also writes: re-read it, change only the keys given */
+export async function patchSettings(ctx, patch) {
+  const { data } = await ctx.db.from('records').select('data').eq('user_id', ctx.uid).eq('id', 'settings').limit(1);
+  const cur = (data && data[0] && data[0].data) || { id: 'settings', kind: 'settings' };
+  const next = Object.assign({}, cur, typeof patch === 'function' ? patch(cur) : patch); await saveRec(ctx.db, ctx.uid, next); ctx.settings = next; ctx.byId.set('settings', next); return next;
+}
+export async function toolOnFor(ctx, hub, id) { const s = ctx.settings; const hid = (s.hubHidden || {})[hub] || [], sh = (s.hubShown || {})[hub] || []; if (hid.includes(id) || !sh.includes(id)) await patchSettings(ctx, cur => ({ hubHidden: Object.assign({}, cur.hubHidden, { [hub]: ((cur.hubHidden || {})[hub] || []).filter(x => x !== id) }), hubShown: Object.assign({}, cur.hubShown, { [hub]: [...new Set([...((cur.hubShown || {})[hub] || []), id])] }) })); }
+/* shared by the in-chat apps */
+export const APP_CSS = `:root{color-scheme:light}*{box-sizing:border-box}body{margin:0;font:15px/1.4 -apple-system,system-ui,sans-serif;color:#1f2623;background:transparent}.c{background:#fff;border-radius:16px;padding:14px 16px;border:1px solid #ebe8e1}h3{margin:0 0 8px;font:500 17px Georgia,serif}.r{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid #f0ede6}.r:first-of-type{border-top:0}.r b{font-weight:500;flex:1}.r small{color:#68716c}.tk{width:22px;height:22px;border-radius:50%;border:1.5px solid #a7aea9;background:none;cursor:pointer;flex:none}.tk.on{background:#3f6b57;border-color:#3f6b57}.lbl{font-size:12px;color:#68716c;margin:12px 0 2px}.bar{height:8px;border-radius:8px;background:#e2ece6;overflow:hidden}.bar i{display:block;height:100%;background:#3f6b57}.m{display:grid;grid-template-columns:110px 1fr 70px;gap:8px;align-items:center;padding:6px 0}.m span:last-child{text-align:right;font-variant-numeric:tabular-nums}.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}.chip{border:0;border-radius:999px;background:#e2ece6;color:#3f6b57;font:600 13px inherit;padding:8px 14px;cursor:pointer}.ring{width:40px;height:40px;flex:none}.wk{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}.day{background:#f4f4ef;border-radius:10px;min-height:120px;padding:5px;display:flex;flex-direction:column;gap:4px}.day.over{outline:2px solid #3f6b57}.day b{font-size:11px;color:#68716c;text-align:center}.t{background:#fff;border-radius:7px;padding:4px 5px;font-size:11px;line-height:1.25;cursor:grab;border:1px solid #ebe8e1}.t.done{opacity:.5;text-decoration:line-through}`;
+export const APP_JS = `let n=0;const P={};const rpc=(m,p)=>new Promise(r=>{const id=++n;P[id]=r;parent.postMessage({jsonrpc:'2.0',id,method:m,params:p},'*');});addEventListener('message',e=>{const d=e.data||{};if(d.id&&P[d.id]){P[d.id](d.result||d.error);delete P[d.id];return;}if(d.method==='ui/notifications/tool-result'){const r=d.params||{};draw(r.structuredContent||{});}});const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));const size=()=>parent.postMessage({jsonrpc:'2.0',method:'ui/notifications/size-changed',params:{height:document.documentElement.scrollHeight}},'*');const ring=p=>{const R=16,C=2*Math.PI*R;return '<svg class="ring" viewBox="0 0 40 40"><circle cx="20" cy="20" r="'+R+'" fill="none" stroke="#e2ece6" stroke-width="4"/><circle cx="20" cy="20" r="'+R+'" fill="none" stroke="#3f6b57" stroke-width="4" stroke-linecap="round" stroke-dasharray="'+C.toFixed(1)+'" stroke-dashoffset="'+(C*(1-Math.max(0,Math.min(1,p)))).toFixed(1)+'" transform="rotate(-90 20 20)"/></svg>';};rpc('ui/initialize',{protocolVersion:'2026-01-26',appInfo:{name:'Life OS',version:'1'},appCapabilities:{}}).then(()=>parent.postMessage({jsonrpc:'2.0',method:'ui/notifications/initialized',params:{}},'*'));`;

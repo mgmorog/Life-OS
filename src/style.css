@@ -4571,7 +4571,7 @@ body.sheet-open .fab.fabfloat,body:has(.sheet.open) .fab.fabfloat{opacity:0;poin
 .gsumi{background:var(--card-bg);border-radius:var(--r-row);padding:var(--s3);display:flex;flex-direction:column;box-shadow:var(--e-raised)}.gsumi b{font-size:var(--fs-title);font-weight:var(--fw-strong)}.gsumi small{color:var(--text-muted)}
 .gsumi.behind b,.gsumi.well-behind b{color:var(--overdue)}
 .ggrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:var(--s3)}
-.gcard{display:flex;align-items:center;gap:var(--s3);background:var(--card-bg);border-radius:var(--r-row);padding:var(--s3) var(--s4);box-shadow:var(--e-raised);border:var(--hairline) solid var(--edge);text-align:left;font:inherit;color:var(--text)}
+/* v362 · scoped: .gcard is also the Goals and Projects list card */.ggrid>.gcard{display:flex;align-items:center;gap:var(--s3);background:var(--card-bg);border-radius:var(--r-row);padding:var(--s3) var(--s4);box-shadow:var(--e-raised);border:var(--hairline) solid var(--edge);text-align:left;font:inherit;color:var(--text)}
 .gct{display:flex;flex-direction:column;gap:2px;min-width:0}.gct b{font-weight:var(--fw-medium)}.gst{color:var(--text-muted)}.gst.behind,.gst.well-behind{color:var(--overdue)}.gst.ontrack{color:var(--action-text)}
 .ygrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:var(--s3)}
 .ymon{background:var(--card-bg);border-radius:var(--r-row);padding:var(--s3);display:flex;flex-direction:column;gap:4px;min-height:110px;box-shadow:var(--e-raised);border:var(--hairline) solid var(--edge)}

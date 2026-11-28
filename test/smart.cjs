@@ -45,8 +45,8 @@ const CHROME=process.env.CHROME||'/opt/pw-browsers/chromium-1243/chrome-linux64/
   // 24 · set aside
   await ev(()=>window.__lifeos.t.setSettings({yearlyCosts:[{what:'Car insurance',amount:840,month:2}]}));ok('set-aside totals yearly costs',(await ev(()=>window.__lifeos.sm.yearly().reduce((n,x)=>n+x.amount,0)))>=840);
   // Today shows the rows
-  await go('today');const tt=await ev(()=>document.querySelector('#view').innerText);
-  ok('Today shows smart rows',/3 calls/.test(tt)&&/Start Grant report today/.test(tt)&&/overlaps/.test(tt),tt.slice(0,600));
+  await ev(()=>{const S=window.__lifeos.App.state;S._sugOpen={[window.__lifeos.todayK()]:true};});await go('today');const tt=await ev(()=>document.querySelector('#view').innerText);
+  ok('Today shows smart rows',/3 calls/.test(tt)&&/Start Grant report today/.test(tt)&&/overlap/.test(tt),tt.slice(0,600));
   ok('Today shows keep in touch and running low',/Jordan Test/.test(tt)&&/running low/i.test(tt));
   // 2 · low-energy mode orders short tasks first
   await ev(()=>window.__lifeos.t.setSettings({lowE:window.__lifeos.todayK()}));await go('today');ok('low-energy chip shows',/Low energy/.test(await ev(()=>document.querySelector('#view').innerText)));

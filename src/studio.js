@@ -133,6 +133,7 @@ function viewStudio(root){
   page.append(focusChip(fk,st.mode==='q'?`${P.head.split(' ')[0]} focus`:st.mode==='m'?`${P.head} focus`:'Week focus',st.mode==='q'?'quarter':st.mode==='m'?'month':'week',st.mode==='m'?[`${P.key.slice(2)}-01`,k(new Date(+P.key.slice(2,6),+P.key.slice(7),0))]:[P.slots[0].from,P.slots[P.slots.length-1].to]));
   if(st.only){const o=get.id(st.only);if(!o)st.only=null;else page.append(el('div',{class:'focus-chip'},el('span',{class:'grow small',style:'text-align:left'},`Showing ${o.title} only`),el('button',{class:'fa',onclick:()=>{st.only=null;App.refresh();}},'Show all')));}
   studioExtras(page,st,P);
+  if(st.mode==='w'){try{page.append(stLoadStrip(st,P,cards));}catch(e){console.warn(e);}}
   const allPast=P.slots.every(x=>x.past);
   /* ---- what needs a day ---- */
   const ghostIds=new Set(st.ghosts.map(g=>g.card.id));
@@ -171,7 +172,7 @@ function viewStudio(root){
 }
 /* one card in Needs a day: tap to open its day circles, tap a circle to place it */
 function stRow(c,why,st,P){const open=st.open===c.id;
-  const head=el('button',{class:'strow-h','aria-expanded':String(open),onclick:()=>{st.open=open?null:c.id;App.refresh();}},stAi(c),el('span',{class:'grow'},el('b',{},c.type==='step'?c.m:c.t),el('small',{class:/Overdue/.test(why)?'late':null},c.type==='step'?[why==='Next step'?'':why,`Next: ${c.t}`,c.more>1?`${c.more} steps`:''].filter(Boolean).join(' · '):[why,c.type==='habit'?c.src:(/^Due /.test(why)&&/^Due /.test(c.m||'')?String(c.m).split(' · ').slice(1).join(' · '):c.m)].filter(Boolean).join(' · '))));
+  const head=el('button',{class:'strow-h','aria-expanded':String(open),onclick:()=>{st.open=open?null:c.id;App.refresh();}},el('span',{class:'stgrip','aria-hidden':'true',html:GRIPSVG}),stAi(c),el('span',{class:'grow'},el('b',{},c.type==='step'?c.m:c.t),el('small',{class:/Overdue/.test(why)?'late':null},c.type==='step'?[why==='Next step'?'':why,`Next: ${c.t}`,c.more>1?`${c.more} steps`:''].filter(Boolean).join(' · '):[why,c.type==='habit'?c.src:(/^Due /.test(why)&&/^Due /.test(c.m||'')?String(c.m).split(' · ').slice(1).join(' · '):c.m)].filter(Boolean).join(' · '))));
   const n=el('div',{class:'li strow'+(open?' open':''),'data-cid':c.id},head);
   if(open){n.append(el('div',{class:'stpick'},P.slots.map(sl=>{const done=c.placedIn.includes(sl.id),late=c.due&&sl.from>c.due;const fm=st.mode==='w'&&!sl.past?freeMinutes(sl.id):null;return el('button',{class:'stc'+(done?' on':'')+(late?' late':'')+(fm!=null&&fm<60?' full':''),disabled:sl.past||(done&&c.type!=='habit')||null,'aria-label':`${sl.label}${done?', placed':''}`,onclick:()=>{if(done){unplaceCard(c,sl.id,st);App.refresh();return;}st.open=c.type==='habit'&&c.q>1?c.id:null;doPlace(c,sl.id,st,P,sl);}},el('b',{},st.mode==='w'?sl.a[0]:st.mode==='m'?String(fromK(sl.from).getDate()):sl.a.slice(0,3)),st.mode==='w'?el('small',{},sl.past?sl.b:fm<60?'Full':`${Math.round(fm/60)}h`):null);})),
     el('div',{class:'stacts'},Button('Open',{variant:'link',size:'sm',onclick:()=>stOpen(c)}),c.type==='task'&&st.mode==='w'?Button('Next week',{variant:'link',size:'sm',onclick:()=>{c.rec.planWeek=addK(P.slots[0].id,7);put(c.rec);toast('Moved to next week',()=>{c.rec.planWeek=null;put(c.rec);});}}):null));}
@@ -230,3 +231,8 @@ function newCardSheet(st,P){menuAt(st.mode==='w'?[{label:'Task',icon:'task',oncl
     Row({onclick:()=>{inst.close();projectSheet(null);}},IconTile(null,{html:ic('project',IC.md)}),el('span',{class:'grow'},el('b',{},'Project'),el('small',{},'A bigger effort with steps'))),
     Row({onclick:()=>{inst.close();taskSheet(null,{date:null,deadline:P.slots[P.slots.length-1].to});}},IconTile(null,{html:ic('task',IC.md)}),el('span',{class:'grow'},el('b',{},'Task with a deadline'),el('small',{},'Something due this period')))));}});}
 }
+
+/* v363 · the week at a glance: seven bars, planned against room; tap to jump, drop a card on one to plan it */
+function stLoadStrip(st,P,cards){const tk=todayK();return el('div',{class:'stload',role:'group','aria-label':'How full each day is'},P.slots.map(sl=>{const ld=sl.past?0:slotLoad(sl,st,cards),cap=Math.max(slotCap(sl,st,P),1),f=Math.min(1,ld/cap),hol=Holidays.off(sl.id);
+  return el('button',{class:'stlb'+(sl.id===tk?' tod':'')+(sl.past?' past':'')+(ld>cap?' over':'')+(hol?' hol':''),'data-slot':sl.past?null:sl.id,'aria-label':`${sl.label}: ${ld} planned, room for ${cap}`,onclick:()=>{const n=document.querySelector(`.stslot[data-slot="${sl.id}"]`);if(n){scrollTo({top:n.getBoundingClientRect().top+scrollY-90,behavior:motionOK()?'smooth':'auto'});n.classList.remove('flash');void n.offsetWidth;n.classList.add('flash');}}},
+    el('span',{class:'stlbar'},el('i',{style:`height:${Math.max(sl.past?0:6,Math.round(f*100))}%`})),el('small',{},sl.a.slice(0,1)));}));}

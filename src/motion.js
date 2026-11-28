@@ -164,7 +164,7 @@ function todayHeaderScroll(){
   Object.assign(m.style,{visibility:p>.02?'visible':'hidden',color:`color-mix(in srgb,var(--text) ${Math.round(Math.max(0,(p-.6)/.4)*100)}%,transparent)`,backgroundColor:`color-mix(in srgb,var(--surface) ${Math.round(p*78)}%,transparent)`,borderBottomColor:`color-mix(in srgb,var(--card-edge) ${Math.round(p*100)}%,transparent)`,pointerEvents:p>.9?'auto':'none',boxShadow:p>=1?'var(--e-raised)':'none',transition:'none'});
 }
 /* v229 · every page: its big title fades into the same compact bar as Today; tap the bar to go back to the top */
-function pageTitleScroll(m){const h=$('#view .pgtitle');if(!h){if(m._pg){m.style.cssText='';m.textContent='';m.onclick=null;m._pg=null;}return;}
+function pageTitleScroll(m){/* v363 · Studio's period title shrinks into the bar too */const h=$('#view .pgtitle')||$('#view .studio2 .ptitle');if(!h){if(m._pg){m.style.cssText='';m.textContent='';m.onclick=null;m._pg=null;}return;}
   const t=h.textContent.trim(),bk=$('#view .back');if(m._pg!==t){m._pg=t;m.replaceChildren(t);if(bk){const lab=bk.textContent.trim()||'Back';m.append(el('button',{class:'mback','aria-label':'Back to '+lab,html:ic('chevl',IC.md),onclick:e=>{e.stopPropagation();const b=$('#view .back');if(b)b.click();}}));}m.onclick=()=>scrollTo({top:0,behavior:motionOK()?'smooth':'auto'});}
   const top=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--sat'))||0,r=h.getBoundingClientRect(),bar=52+top;
   const p=Math.max(0,Math.min(1,(scrollY-4)/44));

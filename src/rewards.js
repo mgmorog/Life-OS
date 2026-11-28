@@ -98,10 +98,10 @@ function rwAreaMonth(a){const m0=k(new Date(today().getFullYear(),today().getMon
   return r;}
 function rwAreaCard(a){if(!rwOn('rwLevels'))return null;const L=rwLevel(rwPoints()[a]||0),m=rwAreaMonth(a),tot=m.tasks+m.steps+m.logs;
   const c=AREA_COLOR[a]||'var(--accent)';
-  return el('div',{class:'rwlvl',style:`--ac:${c}`},
-    el('div',{class:'rwlh'},el('span',{class:'rwlp'},`Level ${L.level}`),el('small',{},`${L.into} of ${L.need} points · ${L.need-L.into} to Level ${L.level+1}`)),
-    el('div',{class:'rwxp',role:'progressbar','aria-valuemin':'0','aria-valuemax':String(L.need),'aria-valuenow':String(L.into),'aria-label':`Level ${L.level} progress`},el('i',{style:`width:${Math.round(L.into/L.need*100)}%`})),
-    tot?el('small',{class:'rwlm'},`This month: +${tot}`+[m.steps?` · goal steps ${m.steps}`:'',m.tasks?` · tasks ${m.tasks}`:'',m.logs?` · check-ins and logs ${m.logs}`:''].join('')):null);}
+  /* v363 · one compact line: a level ring, then points to go and this month */const p=L.into/L.need,R=15,C=2*Math.PI*R;
+  return el('div',{class:'rwlvl rwlvl2',style:`--ac:${c}`,role:'group','aria-label':`Level ${L.level}, ${L.need-L.into} points to Level ${L.level+1}`},
+    el('span',{class:'rwlring','aria-hidden':'true',html:`<svg viewBox="0 0 36 36" width="36" height="36"><circle cx="18" cy="18" r="${R}" fill="none" stroke="var(--line)" stroke-width="3"/><circle cx="18" cy="18" r="${R}" fill="none" stroke="var(--ac)" stroke-width="3" stroke-linecap="round" stroke-dasharray="${C.toFixed(2)}" stroke-dashoffset="${(C*(1-p)).toFixed(2)}" transform="rotate(-90 18 18)"/></svg><b>${L.level}</b>`}),
+    el('span',{class:'grow'},el('b',{class:'rwlp2'},`Level ${L.level}`),el('small',{class:'muted'},[`${L.need-L.into} points to Level ${L.level+1}`,tot?`+${tot} this month`:null].filter(Boolean).join(' · '))));}
 
 /* ---------- badges ---------- */
 const RW_BADGES=[

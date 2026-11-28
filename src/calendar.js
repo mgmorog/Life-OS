@@ -55,7 +55,8 @@ function focusChip(fk,label,mode,range){
   return el('div',{class:'bars'},
     el('div',{style:'display:flex;justify-content:space-between;align-items:center'},el('span',{class:'fl seclbl'},label),Button('Edit',{variant:'link',size:'sm',onclick:()=>focusSheet(fk,label)})),
     el('div',{class:'bars-plan'},Button('Plan in Studio ›',{variant:'link',size:'sm',onclick:()=>{App.state.studio=Object.assign(App.state.studio||{},{mode:mode==='quarter'?'q':mode==='month'?'m':'w',anchor:range[0]});App.go('studio');}})),
-    areas.map(ar=>{const list=steps.filter(s=>s.parent.kind==='goal'&&s.parent.area===ar),done=list.filter(s=>s.step.d&&inRange(s.step)).length,open=list.filter(s=>!s.step.d).length,tot=done+open;return el('div',{class:'bar-row'},el('span',{class:'clip'},ar),Progress(tot?done/tot:0,{size:'lg','aria-label':`${done} of ${tot} goal steps finished this period`}),el('span',{class:'small muted tnum'},tot?`${done}/${tot}`:'—'));}));
+    areas.map(ar=>{/* v363 · what you actually did in the area this period, and what's next */const fp=focusProgress(ar,range,steps,inRange),tot=fp.done+fp.open;
+      return el('div',{class:'bar-row fprow'},el('span',{class:'clip'},ar),Progress(tot?fp.done/tot:0,{size:'lg','aria-label':`${fp.done} done, ${fp.open} left in ${ar}`}),el('span',{class:'small muted tnum'},`${fp.done} done`),el('small',{class:'fpnext muted'},fp.next?`Next: ${fp.next}`:fp.done?'Nothing left planned':'Nothing planned yet'));}));
 }
 function focusSheet(fk,label){
   const f=focusRec(fk)||{id:'focus-'+fk,kind:'focus',areas:[]};let D=[...(f.areas||[])],inst;
@@ -283,3 +284,10 @@ function tlTray(days,{h0,HH,grid}){const set=new Set(days),ts=get.all('task').fi
     const end=e=>{clearTimeout(tm);if(!live)return;live=false;c.classList.remove('lifted');grid.classList.remove('dropping');if(ghost){ghost.remove();ghost=null;}if(e&&e.type==='pointerup')drop(e.clientX,e.clientY);};
     c.addEventListener('pointerup',end);c.addEventListener('pointercancel',end);c.addEventListener('click',()=>{if(!live)openRec(t);});return c;};
   return el('div',{class:'tltray'},SectionLabel('Unscheduled',{count:ts.length,action:Caption('Drag onto the timeline')}),el('div',{class:'trlist'},ts.map(chip)));}
+
+/* v363 · a focus area's progress: tasks, habit check-ins and goal steps done in the range, and what's left */
+function focusProgress(ar,range,steps,inRange){const [a,b]=range,inR=d=>d&&d>=a&&d<=b;let done=0,open=0;const nexts=[];
+  get.all('task').forEach(t=>{if(areaOfTask(t)!==ar)return;done+=Object.keys(t.doneDates||{}).filter(inR).length;if(isOpenTask(t)&&(inR(t.date)||(!t.date&&t.planWeek&&inR(t.planWeek)))&&!(t.repeat&&t.repeat.type!=='never')){open++;nexts.push([t.date||t.planWeek,t.title]);}});
+  get.all('habit').forEach(h=>{if(h.area!==ar)return;done+=Object.keys(h.logs||{}).filter(d=>inR(d)&&h.logs[d]).length;});
+  steps.filter(s=>s.parent.kind==='goal'&&s.parent.area===ar).forEach(s=>{if(s.step.d){if(inRange(s.step))done++;}else{open++;nexts.push([s.step.date||'9',s.step.t]);}});
+  nexts.sort((x,y)=>x[0]<y[0]?-1:1);return{done,open,next:nexts.length?nexts[0][1]:null};}

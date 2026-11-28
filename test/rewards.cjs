@@ -62,7 +62,7 @@ const SHOTS=process.env.SHOTS||'';
   ok('5 Done lists what you finished this week',d5.rows>0&&/Done/.test(d5.h||''),d5);
 
   // 6 · Reviews: badges and personal bests
-  await go('reviews');await shot('reviews');
+  await ev(()=>{window.__lifeos.App.state.revTab='bests';});await go('reviews');await shot('reviews');
   const r6=await ev(()=>({bd:document.querySelectorAll('.rwbd').length,on:document.querySelectorAll('.rwbd.on').length,bests:[...document.querySelectorAll('.lbl,.sectlabel,h2,h3')].some(n=>/Personal bests/.test(n.textContent))}));
   ok('6 Reviews shows every badge, earned ones in color',r6.bd===22&&r6.on>=1,r6);
   ok('6 Reviews shows personal bests',r6.bests,r6);
@@ -76,8 +76,8 @@ const SHOTS=process.env.SHOTS||'';
   // 8 · project fill and the 100% card
   const pid=await ev(()=>{const pr=L.create('project',{title:'Kitchen refresh test',area:'Home',steps:[]});['Tiles','Quotes'].forEach(t=>L.create('task',{title:t,part:pr.id,date:K(0),doneDates:{[K(0)]:Date.now()},repeat:{type:'never'},steps:[]}));return pr.id;});
   await go('plan',{id:pid});await shot('project');
-  await W(1000);const p8=await ev(()=>{const w=document.querySelector('.rwwash'),h=document.querySelector('.pchead');return{w:w&&Math.round(w.getBoundingClientRect().height),h:h&&Math.round(h.getBoundingClientRect().height),done:!!document.querySelector('.rwpdone')};});
-  ok('8 a finished project fills its header and offers Mark it done',p8.w>=p8.h&&p8.h>0&&p8.done,p8);
+  await W(1000);const p8=await ev(()=>{/* v363 · the header shows a thin line now, full when every task is done */const l=document.querySelector('.pcline'),i=l&&l.firstElementChild;return{w:i&&Math.round(i.getBoundingClientRect().width),h:l&&Math.round(l.getBoundingClientRect().width),done:!!document.querySelector('.rwpdone')};});
+  ok('8 a finished project fills its progress line and offers Mark it done',p8.w>=p8.h&&p8.h>0&&p8.done,p8);
 
   // 9 · the idea garden
   const g9=await ev(async()=>{const i=L.create('idea',{title:'Plant me',notes:'',photos:[]});await new Promise(r=>setTimeout(r,50));L.create('project',{title:'From an idea',area:'Learning',steps:[]});L.remove(i.id);await new Promise(r=>setTimeout(r,900));return RW.rec().planted.slice(-1)[0];});

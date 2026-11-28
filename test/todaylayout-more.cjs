@@ -244,3 +244,14 @@ global.__todayMore.push(async({ev,ok,today})=>{
   const h=new Date().getHours();if(h>=5&&h<11){ok('v355 morning card shows',await ev(()=>!!document.querySelector('.mcard')));await ev(()=>document.querySelector('.mcard .notex').click());await today();ok('v355 morning card dismissed',await ev(()=>!document.querySelector('.mcard')));}
   await ev(()=>window.__lifeos.t.setSettings({themes:{},morningDone:null}));
 });
+/* v363 · Suggestions card, jump bar, clash row, layout order still respected */
+global.__todayMore.push(async({ev,ok,today,setL,W})=>{
+  await today();
+  ok('v363 Also today renders as one Suggestions card (or nothing)',await ev(()=>!document.querySelector('.lbl.alsol')));
+  const n=await ev(()=>document.querySelectorAll('#view .page > section.card[data-tk], #view .page > .card[data-fold]').length);
+  ok('v363 jump bar appears only with three or more sections',await ev(n=>!!document.querySelector('.jumpbar')===(n>=3),n));
+  await ev(()=>window.__lifeos.t.setSettings({todayJump:false}));await today();
+  ok('v363 jump bar can be switched off',await ev(()=>!document.querySelector('.jumpbar')));
+  await ev(()=>window.__lifeos.t.setSettings({todayJump:true}));
+  ok('v363 no per-row overlap tags',await ev(()=>!document.querySelector('.ovtag')));
+});

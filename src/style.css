@@ -4696,3 +4696,71 @@ textarea.capmirred{position:relative;z-index:1;background:transparent!important}
 .calbar .cbtoday{padding:0 var(--s2)}
 .dayline .plink{flex:0 1 auto;max-width:34%;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .dayline>button.grow{min-width:0;flex:1 1 auto}
+
+/* ===== v363 · round of 40 ===== */
+/* Today: one clash row in Schedule */
+.upclash{display:flex;align-items:center;gap:var(--s2);margin:0 0 var(--s2);padding:var(--s2) var(--s3);border-radius:var(--r-inner);background:color-mix(in srgb,var(--warn,#b7791f) 9%,var(--card-bg));text-align:left}
+.upclash b{display:block;font-weight:var(--fw-medium)}.upclash small{display:block;color:var(--text-muted);font-size:var(--fs-small)}
+/* Today: Suggestions card */
+.sugcard .suglist{display:grid}
+.sugcard .suglist>*{border-top:var(--hairline) solid var(--line)}.sugcard .suglist>*:first-child{border-top:0}
+.sugcard .suglist>.row,.sugcard .suglist>button{padding-inline:0;background:none;box-shadow:none}
+.sugcard .sugn{padding:var(--s2) 0}
+.sugcard .sugmore{justify-self:start;margin-top:var(--s1)}
+/* Today: jump bar */
+.jumpbar{position:sticky;top:calc(var(--ctl-lg) + env(safe-area-inset-top,0px));z-index:3;display:flex;gap:var(--s2);overflow-x:auto;scrollbar-width:none;margin:var(--s2) calc(var(--pad) * -1) 0;padding:var(--s1) var(--pad);background:color-mix(in srgb,var(--surface) 88%,transparent);-webkit-backdrop-filter:var(--blur-bar);backdrop-filter:var(--blur-bar)}
+.jumpbar::-webkit-scrollbar{display:none}
+.jchip{flex:none;height:var(--size-32);padding:0 var(--s3);border-radius:var(--r-full);background:var(--accent-pale);color:var(--action-text);font-size:var(--fs-small);font-weight:var(--fw-medium);transition:transform var(--dur-fast) var(--ease)}
+.jchip:active{transform:scale(var(--press,.96))}
+/* Today: done habits stay, faded */
+.fhab.done{opacity:.5}
+/* Studio: week load strip */
+.stload{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:var(--s2);margin:var(--s3) 0 var(--s1);padding:var(--s3);background:var(--card-bg);border-radius:var(--r-row);box-shadow:var(--e-raised)}
+.stlb{display:grid;justify-items:center;gap:var(--s1);min-height:var(--size-44)}
+.stlbar{position:relative;width:100%;max-width:28px;height:44px;border-radius:var(--r-micro,4px);background:var(--line);overflow:hidden;display:block}
+.stlbar i{position:absolute;left:0;right:0;bottom:0;background:var(--accent-mid,var(--accent));border-radius:var(--r-micro,4px);transition:height var(--dur-base) var(--ease)}
+.stlb.tod .stlbar i{background:var(--action)}.stlb.over .stlbar i{background:var(--overdue)}.stlb.past{opacity:.45}.stlb.hol .stlbar{background:repeating-linear-gradient(45deg,var(--line) 0 4px,transparent 4px 8px)}
+.stlb small{font-size:var(--fs-micro);color:var(--text-muted);font-weight:var(--fw-medium)}.stlb.tod small{color:var(--action-text)}
+.stlb.over-drop .stlbar,.stlb.over .stlbar{outline:0}.stload .stlb[data-slot].over .stlbar{box-shadow:0 0 0 2px var(--action)}
+.stslot.flash{animation:stflash 1s var(--ease)}@keyframes stflash{0%{box-shadow:0 0 0 2px var(--action)}100%{box-shadow:var(--e-raised)}}
+.stgrip{display:grid;color:var(--ink-3);opacity:.7;margin-right:calc(var(--s1) * -1);cursor:grab}
+/* Studio: week focus */
+.fprow{grid-template-rows:auto auto}.fprow .fpnext{grid-column:1 / -1;font-size:var(--fs-micro);margin-top:calc(var(--nudge) * -1)}
+/* Tasks: labelled tool chips, folding days, Also today heading */
+.fchip.flab{gap:var(--s1);padding-inline:var(--s3)}.fchip.flab>span:not(.n){font-size:var(--fs-small)}
+.tday.tdfold{display:flex;align-items:center;gap:var(--s2);padding:var(--s2) var(--pad);font-size:var(--fs-small);color:var(--text-muted);background:var(--surface-raised)}
+.tday.tdfold .tdname{flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start;text-align:left;min-height:var(--size-40);justify-content:center}
+.tday.tdfold .tdname b{font-weight:var(--fw-medium);color:var(--text);font-size:var(--fs-body)}.tday.tdfold .tdname small{max-width:100%;color:var(--text-muted)}
+.tday.tdfold>span{margin-left:0}.tday.tdfold .tdchev{display:grid;place-items:center;width:var(--size-32);height:var(--size-32);color:var(--ink-3)}
+.tday.tdfold.open{background:var(--surface-raised)}
+.tday.tsub{display:flex;align-items:baseline;justify-content:space-between;padding:var(--s3) var(--pad) var(--s1);font-size:var(--fs-small);color:var(--text-muted)}
+.tday.tsub b{font-weight:var(--fw-medium);color:var(--text)}
+/* Habits: eight weeks as columns */
+.rwwks{align-items:end;height:48px}
+.rwwks i,.rwwks i.now{position:relative;inset:auto;height:var(--h,26px);min-height:4px;align-self:end;border-radius:var(--r-micro,4px) var(--r-micro,4px) 2px 2px;transition:height var(--dur-base) var(--ease)}
+.hlring:active .hring{transform:scale(.92)}.hlring .hring{transition:transform var(--dur-fast) var(--ease)}
+/* Goals and projects */
+.gpace.ok{color:var(--action-text)}.gpace.late{color:var(--overdue)}
+.gstall{display:inline-flex;align-items:center;gap:var(--s1);color:var(--overdue)}.gstall .btn{min-height:0;height:auto;padding:0}
+.msfold{display:flex;align-items:center;gap:var(--s2);width:100%;padding:var(--s3) 0;border-top:var(--hairline) solid var(--line)}
+.msfold .chev{display:grid;transition:transform var(--dur-fast) var(--ease)}.msfold:not(.open) .chev{transform:rotate(-90deg)}
+.gcheck{margin-top:var(--s3)}.gcheck .bl{display:flex;justify-content:space-between;align-items:baseline}.gcheck.due{box-shadow:var(--e-raised),inset 0 0 0 1.5px var(--accent-pale)}
+.gcheck .gcmoods{margin:var(--s2) 0 var(--s1)}
+.pcline{height:4px;border-radius:4px;background:var(--line);overflow:hidden;margin:var(--s3) 0 var(--s1)}.pcline i{display:block;height:100%;background:var(--accent);border-radius:4px}
+/* Inbox */
+.ibgo.guess{color:var(--action-text)}
+.ibsort{display:flex;align-items:center;gap:var(--s3);width:100%;height:auto;min-height:64px;line-height:1.3;margin:var(--s2) 0 var(--s3);padding:var(--s3) var(--s4);border-radius:var(--r-row);background:var(--accent-pale);color:var(--text);text-align:left}
+.ibsort b{display:block;font-weight:var(--fw-medium)}.ibsort small{display:block;color:var(--text-muted);font-size:var(--fs-small)}
+.ibsorti{display:grid;place-items:center;width:var(--size-32);height:var(--size-32);border-radius:var(--r-full);background:var(--card-bg);color:var(--action-text)}
+/* More: life areas as a grid */
+.arail.agrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:var(--s2) var(--s1);overflow:visible;margin-inline:0;padding-inline:0;-webkit-mask:none;mask:none}
+.arail.agrid .acirc{width:auto}.arail.agrid .acirc .an{white-space:normal;text-align:center;line-height:1.2;max-width:100%}
+/* Lists */
+.aisleh{margin-top:var(--s3)}.ochip.usual{color:var(--action-text)}
+/* Life areas */
+.rwlvl.rwlvl2{display:flex;align-items:center;gap:var(--s3);padding:var(--s1) 0}
+.rwlring{position:relative;display:grid;place-items:center;width:36px;height:36px;flex:none}.rwlring svg{position:absolute;inset:0}.rwlring b{font-size:var(--fs-small);font-weight:var(--fw-strong)}
+.rwlvl2 .rwlp2{display:block;font-weight:var(--fw-medium)}.rwlvl2 small{display:block}
+.modsub{margin-top:var(--s3)}.modneed small{display:block;font-size:var(--fs-small)}.modact{color:var(--action-text);font-weight:var(--fw-medium);font-size:var(--fs-small)}
+/* Reviews */
+.revtabs{margin:var(--s2) 0 var(--s3)}
